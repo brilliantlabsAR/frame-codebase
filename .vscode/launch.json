@@ -1,0 +1,23 @@
+{
+    // Requires Cortex-Debug plugin for VSCode:
+    // https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug
+    "configurations": [
+        {
+            "cwd": "${workspaceFolder}",
+            "executable": "build/application.elf",
+            "name": "JLink",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "nRF5340_xxAA",
+            "showDevDebugOutput": "none",
+            "servertype": "jlink",
+            "svdFile": "nrfx/mdk/nrf53.svd",
+            "preLaunchTask": "Build",
+            "preLaunchCommands": [
+                "monitor halt",
+                "monitor speed 2000",
+                "load"
+            ],
+        }
+    ]
+}
