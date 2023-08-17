@@ -1,0 +1,12 @@
+[submodule "micropython"]
+	path = micropython
+	url = https://github.com/micropython/micropython.git
+[submodule "nrfx"]
+	path = nrfx
+	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "cmsis"]
+	path = cmsis
+	url = https://github.com/ARM-software/CMSIS_5.git
+[submodule "sdk-nrfxlib"]
+	path = sdk-nrfxlib
+	url = https://github.com/nrfconnect/sdk-nrfxlib.git
