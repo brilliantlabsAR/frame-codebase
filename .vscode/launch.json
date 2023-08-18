@@ -4,20 +4,42 @@
     "configurations": [
         {
             "cwd": "${workspaceFolder}",
-            "executable": "build/application.elf",
-            "name": "JLink",
+            "executable": "build/application-core.elf",
+            "name": "Application Core",
             "request": "launch",
             "type": "cortex-debug",
-            "device": "nRF5340_xxAA",
+            "device": "nRF5340_XXAA_application",
             "showDevDebugOutput": "none",
             "servertype": "jlink",
-            "svdFile": "nrfx/mdk/nrf53.svd",
+            "svdFile": "nrfx/mdk/nrf5340_application.svd",
             "preLaunchTask": "Build",
             "preLaunchCommands": [
-                "monitor halt",
-                "monitor speed 2000",
                 "load"
             ],
+        },
+        {
+            "cwd": "${workspaceFolder}",
+            "executable": "build/network-core.elf",
+            "name": "Network Core",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "nRF5340_XXAA_network",
+            "showDevDebugOutput": "none",
+            "servertype": "jlink",
+            "svdFile": "nrfx/mdk/nrf5340_network.svd",
+            "preLaunchCommands": [
+                "load"
+            ],
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Both Cores",
+            "configurations": [
+                "Application Core",
+                "Network Core"
+            ],
+            "stopAll": true
         }
     ]
 }

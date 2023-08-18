@@ -26,7 +26,7 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 
 # C source files
-# SOURCE_FILES += config/nrfx_glue.c
+SOURCE_FILES += nrfx_glue.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_nvmc.c
@@ -40,27 +40,28 @@ BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 # SOURCE_FILES += segger/SEGGER_RTT_Syscalls_GCC.c
 # SOURCE_FILES += segger/SEGGER_RTT.c
 
-APPLICATION_CORE_SOURCE_FILES += application_core_main.c
+APPLICATION_CORE_SOURCE_FILES += main_application_core.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 
-# NETWORK_CORE_SOURCE_FILES += net/main.c
+NETWORK_CORE_SOURCE_FILES += main_network_core.c
+NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
+NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 # NETWORK_CORE_SOURCE_FILES += net/rng_helper.c
 # NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_rng.c
-# NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
-# NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 # NETWORK_CORE_SOURCE_FILES += sdk-nrfxlib/mpsl/lib/cortex-m33+nodsp/soft-float/libmpsl.a
 # NETWORK_CORE_SOURCE_FILES += sdk-nrfxlib/softdevice_controller/lib/cortex-m33+nodsp/soft-float/libsoftdevice_controller_multirole.a
 # NETWORK_CORE_SOURCE_FILES += sdk-nrfxlib/mpsl/fem/common/lib/cortex-m33+nodsp/soft-float/libmpsl_fem_common.a
 
 # Header file paths
+FLAGS += -I.
 # FLAGS += -Iconfig
 # FLAGS += -Ibuild
-# FLAGS += -Inrfx
+FLAGS += -Inrfx
 # FLAGS += -Inrfx/drivers
-# FLAGS += -Inrfx/drivers/include
+FLAGS += -Inrfx/drivers/include
 # FLAGS += -Inrfx/drivers/src
-# FLAGS += -Inrfx/hal
+FLAGS += -Inrfx/hal
 # FLAGS += -Inrfx/helpers
 FLAGS += -Inrfx/mdk
 # FLAGS += -Inrfx/soc
@@ -83,7 +84,8 @@ FLAGS += -Wfloat-conversion
 FLAGS += -mthumb 
 FLAGS += -mabi=aapcs
 FLAGS += -std=gnu17
-FLAGS += -Og -g3
+# FLAGS += -Og 
+FLAGS += -g
 FLAGS += -fdata-sections -ffunction-sections 
 FLAGS += -fshort-enums
 FLAGS += -fno-strict-aliasing
@@ -104,10 +106,8 @@ FLAGS += -DBUILD_VERSION='"$(BUILD_VERSION)"'
 # FLAGS += -DNDEBUG
 
 APPLICATION_CORE_FLAGS += -DNRF5340_XXAA_APPLICATION
-APPLICATION_CORE_FLAGS += -DFLOAT_ABI_HARD
 
 NETWORK_CORE_FLAGS += -DNRF5340_XXAA_NETWORK
-NETWORK_CORE_FLAGS += -DNRF_MCU_NETWORK
 
 # Linker options & linker script paths
 FLAGS += -Wl,--gc-sections
@@ -123,7 +123,7 @@ FLAGS += -lm -lc -lnosys -lgcc
 
 all: build/application-core.elf build/network-core.elf
 	@arm-none-eabi-objcopy -O ihex build/application-core.elf build/application-core.hex
-	@# arm-none-eabi-objcopy -O ihex build/network-core.elf build/network-core.hex
+	@arm-none-eabi-objcopy -O ihex build/network-core.elf build/network-core.hex
 
 build/application-core.elf: $(SOURCE_FILES) $(APPLICATION_CORE_SOURCE_FILES)
 	@mkdir -p build
@@ -132,10 +132,13 @@ build/application-core.elf: $(SOURCE_FILES) $(APPLICATION_CORE_SOURCE_FILES)
 
 build/network-core.elf: $(SOURCE_FILES) $(NETWORK_CORE_SOURCE_FILES)
 	@mkdir -p build
-	@# arm-none-eabi-gcc $(FLAGS) $(NETWORK_CORE_SOURCE_FILES) -o $@ $^
-	@# arm-none-eabi-size $@
+	@arm-none-eabi-gcc $(FLAGS) $(NETWORK_CORE_FLAGS) -o $@ $^
+	@arm-none-eabi-size $@
 
-flash:
+flash: all
+	nrfjprog -q --coprocessor CP_APPLICATION --program build/application-core.hex --sectorerase
+	nrfjprog -q --coprocessor CP_NETWORK --program build/network-core.hex --sectorerase
+	nrfjprog --reset
 
 clean:
 	rm -rf build/

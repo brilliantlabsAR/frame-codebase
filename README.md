@@ -32,6 +32,8 @@ For those of you who want to modify the standard firmware, keep on reading.
     1. Erase Chip
     1. Release
 
+1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
+
 ## FPGA
 
 For information on developing and flashing the FPGA binary. Check the [Frame FPGA](https://github.com/brilliantlabsAR/frame-fpga) repository.

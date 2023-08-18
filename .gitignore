@@ -1,5 +1,5 @@
 # Ignore build files
 build/
 
-# Don't need the user's vscode settings
+# Ignore VSCode user settings
 .vscode/settings.json

@@ -2,8 +2,6 @@
     "configurations": [
         {
             "name": "monocle-micropython",
-            // Set this to your compiler path
-            "compilerPath": "/opt/homebrew/bin/arm-none-eabi-gcc",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "includePath": [
@@ -31,9 +29,8 @@
                 "nrfx/soc"
             ],
             "defines": [
-                "NRF5340_XXAA",
-                "NDEBUG",
-                "CONFIG_NFCT_PINS_AS_GPIOS",
+                "NRF5340_XXAA_APPLICATION",
+                "NRF5340_XXAA_NETWORK",
                 "GIT_COMMIT=\"abcdefg\"",
                 "BUILD_VERSION=\"vYY.DDD.HHMM\""
             ]
