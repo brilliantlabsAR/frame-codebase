@@ -1,158 +1,36 @@
 /*
- * Copyright (c) 2019 - 2023, Nordic Semiconductor ASA
- * All rights reserved.
+ * This file is part of the MicroPython for Frame project:
+ *      https://github.com/brilliantlabsAR/frame-micropython
  *
- * SPDX-License-Identifier: BSD-3-Clause
+ * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
+ * ISC Licence
  *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
+ * Copyright © 2023 Brilliant Labs Ltd.
  *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
  *
- * 3. Neither the name of the copyright holder nor the names of its
- *    contributors may be used to endorse or promote products derived from this
- *    software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+ * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+ * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+ * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+ * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+ * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+ * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef NRFX_CONFIG_H__
+#pragma once
+
 #define NRFX_CONFIG_H__
+#include "nrfx/templates/nrfx_config_common.h"
 
-#ifndef NRFX_CONFIG_API_VER_MAJOR
-#define NRFX_CONFIG_API_VER_MAJOR 3
+#ifdef NRF5340_XXAA_APPLICATION
+#include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 
-#ifndef NRFX_CONFIG_API_VER_MINOR
-#define NRFX_CONFIG_API_VER_MINOR 0
-#endif
-
-#ifndef NRFX_CONFIG_API_VER_MICRO
-#define NRFX_CONFIG_API_VER_MICRO 0
-#endif
-
-#if defined(NRF5340_XXAA_APPLICATION)
-#define NRF_CLOCK NRF_CLOCK_S
-#define NRF_COMP NRF_COMP_S
-#define NRF_DCNF NRF_DCNF_S
-#define NRF_DPPIC NRF_DPPIC_S
-#define NRF_EGU0 NRF_EGU0_S
-#define NRF_EGU1 NRF_EGU1_S
-#define NRF_EGU2 NRF_EGU2_S
-#define NRF_EGU3 NRF_EGU3_S
-#define NRF_EGU4 NRF_EGU4_S
-#define NRF_EGU5 NRF_EGU5_S
-#define NRF_FPU NRF_FPU_S
-#define NRF_I2S0 NRF_I2S0_S
-#define NRF_IPC NRF_IPC_S
-#define NRF_KMU NRF_KMU_S
-#define NRF_LPCOMP NRF_LPCOMP_S
-#define NRF_MUTEX NRF_MUTEX_S
-#define NRF_NFCT NRF_NFCT_S
-#define NRF_NVMC NRF_NVMC_S
-#define NRF_OSCILLATORS NRF_OSCILLATORS_S
-#define NRF_P0 NRF_P0_S
-#define NRF_P1 NRF_P1_S
-#define NRF_PDM0 NRF_PDM0_S
-#define NRF_POWER NRF_POWER_S
-#define NRF_PWM0 NRF_PWM0_S
-#define NRF_PWM1 NRF_PWM1_S
-#define NRF_PWM2 NRF_PWM2_S
-#define NRF_PWM3 NRF_PWM3_S
-#define NRF_QDEC0 NRF_QDEC0_S
-#define NRF_QDEC1 NRF_QDEC1_S
-#define NRF_QSPI NRF_QSPI_S
-#define NRF_REGULATORS NRF_REGULATORS_S
-#define NRF_RESET NRF_RESET_S
-#define NRF_RTC0 NRF_RTC0_S
-#define NRF_RTC1 NRF_RTC1_S
-#define NRF_SAADC NRF_SAADC_S
-#define NRF_SPIM0 NRF_SPIM0_S
-#define NRF_SPIM1 NRF_SPIM1_S
-#define NRF_SPIM2 NRF_SPIM2_S
-#define NRF_SPIM3 NRF_SPIM3_S
-#define NRF_SPIM4 NRF_SPIM4_S
-#define NRF_SPIS0 NRF_SPIS0_S
-#define NRF_SPIS1 NRF_SPIS1_S
-#define NRF_SPIS2 NRF_SPIS2_S
-#define NRF_SPIS3 NRF_SPIS3_S
-#define NRF_TIMER0 NRF_TIMER0_S
-#define NRF_TIMER1 NRF_TIMER1_S
-#define NRF_TIMER2 NRF_TIMER2_S
-#define NRF_TWIM0 NRF_TWIM0_S
-#define NRF_TWIM1 NRF_TWIM1_S
-#define NRF_TWIM2 NRF_TWIM2_S
-#define NRF_TWIM3 NRF_TWIM3_S
-#define NRF_TWIS0 NRF_TWIS0_S
-#define NRF_TWIS1 NRF_TWIS1_S
-#define NRF_TWIS2 NRF_TWIS2_S
-#define NRF_TWIS3 NRF_TWIS3_S
-#define NRF_UARTE0 NRF_UARTE0_S
-#define NRF_UARTE1 NRF_UARTE1_S
-#define NRF_UARTE2 NRF_UARTE2_S
-#define NRF_UARTE3 NRF_UARTE3_S
-#define NRF_USBD NRF_USBD_S
-#define NRF_USBREGULATOR NRF_USBREGULATOR_S
-#define NRF_VMC NRF_VMC_S
-#define NRF_WDT0 NRF_WDT0_S
-#define NRF_WDT1 NRF_WDT1_S
-#endif
-
-#if defined(NRF5340_XXAA_NETWORK)
-#define NRF_AAR NRF_AAR_NS
-#define NRF_ACL NRF_ACL_NS
-#define NRF_CCM NRF_CCM_NS
-#define NRF_CLOCK NRF_CLOCK_NS
-#define NRF_CTI NRF_CTI_NS
-#define NRF_CTRLAP NRF_CTRLAP_NS
-#define NRF_DCNF NRF_DCNF_NS
-#define NRF_DPPIC NRF_DPPIC_NS
-#define NRF_ECB NRF_ECB_NS
-#define NRF_EGU0 NRF_EGU0_NS
-#define NRF_FICR NRF_FICR_NS
-#define NRF_GPIOTE NRF_GPIOTE_NS
-#define NRF_IPC NRF_IPC_NS
-#define NRF_NVMC NRF_NVMC_NS
-#define NRF_P0 NRF_P0_NS
-#define NRF_P1 NRF_P1_NS
-#define NRF_POWER NRF_POWER_NS
-#define NRF_RADIO NRF_RADIO_NS
-#define NRF_RESET NRF_RESET_NS
-#define NRF_RNG NRF_RNG_NS
-#define NRF_RTC0 NRF_RTC0_NS
-#define NRF_RTC1 NRF_RTC1_NS
-#define NRF_SPIM0 NRF_SPIM0_NS
-#define NRF_SPIS0 NRF_SPIS0_NS
-#define NRF_SWI0 NRF_SWI0_NS
-#define NRF_SWI1 NRF_SWI1_NS
-#define NRF_SWI2 NRF_SWI2_NS
-#define NRF_SWI3 NRF_SWI3_NS
-#define NRF_TEMP NRF_TEMP_NS
-#define NRF_TIMER0 NRF_TIMER0_NS
-#define NRF_TIMER1 NRF_TIMER1_NS
-#define NRF_TIMER2 NRF_TIMER2_NS
-#define NRF_TWIM0 NRF_TWIM0_NS
-#define NRF_TWIS0 NRF_TWIS0_NS
-#define NRF_UARTE0 NRF_UARTE0_NS
-#define NRF_UICR NRF_UICR_NS
-#define NRF_VMC NRF_VMC_NS
-#define NRF_VREQCTRL NRF_VREQCTRL_NS
-#define NRF_WDT NRF_WDT_NS
-#endif
-
+#ifdef NRF5340_XXAA_NETWORK
+#include "nrfx/templates/nrfx_config_nrf5340_network.h"
 #endif

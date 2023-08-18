@@ -26,7 +26,6 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 
 # C source files
-SOURCE_FILES += nrfx_glue.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_nvmc.c
@@ -36,9 +35,9 @@ SOURCE_FILES += nrfx_glue.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_timer.c
 # SOURCE_FILES += nrfx/drivers/src/prs/nrfx_prs.c
 # SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
-# SOURCE_FILES += segger/SEGGER_RTT_printf.c
-# SOURCE_FILES += segger/SEGGER_RTT_Syscalls_GCC.c
-# SOURCE_FILES += segger/SEGGER_RTT.c
+SOURCE_FILES += nrfx_glue.c
+SOURCE_FILES += segger/SEGGER_RTT_printf.c
+SOURCE_FILES += segger/SEGGER_RTT.c
 
 APPLICATION_CORE_SOURCE_FILES += main_application_core.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
@@ -55,18 +54,15 @@ NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 
 # Header file paths
 FLAGS += -I.
-# FLAGS += -Iconfig
-# FLAGS += -Ibuild
-FLAGS += -Inrfx
-# FLAGS += -Inrfx/drivers
-FLAGS += -Inrfx/drivers/include
-# FLAGS += -Inrfx/drivers/src
-FLAGS += -Inrfx/hal
-# FLAGS += -Inrfx/helpers
-FLAGS += -Inrfx/mdk
-# FLAGS += -Inrfx/soc
 FLAGS += -Icmsis/CMSIS/Core/Include
-# FLAGS += -Isegger
+FLAGS += -Inrfx
+FLAGS += -Inrfx/drivers
+FLAGS += -Inrfx/drivers/include
+FLAGS += -Inrfx/hal
+FLAGS += -Inrfx/helpers
+FLAGS += -Inrfx/mdk
+FLAGS += -Inrfx/soc
+FLAGS += -Isegger
 
 # APPLICATION_CORE_FLAGS += -Iapp
 
@@ -84,7 +80,7 @@ FLAGS += -Wfloat-conversion
 FLAGS += -mthumb 
 FLAGS += -mabi=aapcs
 FLAGS += -std=gnu17
-# FLAGS += -Og 
+FLAGS += -Os
 FLAGS += -g
 FLAGS += -fdata-sections -ffunction-sections 
 FLAGS += -fshort-enums
@@ -102,8 +98,7 @@ NETWORK_CORE_FLAGS += -mfloat-abi=soft
 
 # Preprocessor defines
 FLAGS += -DBUILD_VERSION='"$(BUILD_VERSION)"'
-# FLAGS += -DNRF_TRUSTZONE_NONSECURE
-# FLAGS += -DNDEBUG
+FLAGS += -DNDEBUG
 
 APPLICATION_CORE_FLAGS += -DNRF5340_XXAA_APPLICATION
 
@@ -111,7 +106,6 @@ NETWORK_CORE_FLAGS += -DNRF5340_XXAA_NETWORK
 
 # Linker options & linker script paths
 FLAGS += -Wl,--gc-sections
-# FLAGS += -Xlinker -Map=$(@:.elf=.map)
 FLAGS += --specs=nano.specs
 
 APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld

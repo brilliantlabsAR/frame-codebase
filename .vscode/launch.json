@@ -15,7 +15,7 @@
             "preLaunchTask": "Build",
             "preLaunchCommands": [
                 "load"
-            ],
+            ]
         },
         {
             "cwd": "${workspaceFolder}",
@@ -29,7 +29,7 @@
             "svdFile": "nrfx/mdk/nrf5340_network.svd",
             "preLaunchCommands": [
                 "load"
-            ],
+            ]
         }
     ],
     "compounds": [
