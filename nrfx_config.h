@@ -28,6 +28,10 @@
 #include "nrfx/templates/nrfx_config_common.h"
 
 #ifdef NRF5340_XXAA_APPLICATION
+#define NRFX_CLOCK_ENABLED 1
+#define NRFX_CLOCK_CONFIG_HFCLK192M_SRC 1
+#define NRFX_CLOCK_CONFIG_LF_SRC 3
+#define NRFX_GPIOTE_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 

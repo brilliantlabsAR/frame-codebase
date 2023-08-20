@@ -26,15 +26,15 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 
 # C source files
-# SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
-# SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
+SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
+SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_nvmc.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_rtc.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_systick.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_systick.c
 # SOURCE_FILES += nrfx/drivers/src/nrfx_timer.c
 # SOURCE_FILES += nrfx/drivers/src/prs/nrfx_prs.c
-# SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
+SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
 SOURCE_FILES += nrfx_glue.c
 SOURCE_FILES += segger/SEGGER_RTT_printf.c
 SOURCE_FILES += segger/SEGGER_RTT.c
@@ -71,27 +71,31 @@ FLAGS += -Isegger
 # NETWORK_CORE_FLAGS += -Isdk-nrfxlib/softdevice_controller/include
 
 # Warnings
-FLAGS += -Wall 
-FLAGS += -Werror 
+FLAGS += -Wall
+FLAGS += -Werror
 FLAGS += -Wdouble-promotion 
 FLAGS += -Wfloat-conversion
 
 # Build options and optimizations
-FLAGS += -mthumb 
-FLAGS += -mabi=aapcs
-FLAGS += -std=gnu17
-FLAGS += -Os
-FLAGS += -g
-FLAGS += -fdata-sections -ffunction-sections 
-FLAGS += -fshort-enums
-FLAGS += -fno-strict-aliasing
-FLAGS += -fno-common
+FLAGS += -falign-functions=16
+FLAGS += -fdata-sections 
+FLAGS += -ffunction-sections 
 FLAGS += -flto
+FLAGS += -fmax-errors=1
+FLAGS += -fno-common
+FLAGS += -fno-delete-null-pointer-checks
+FLAGS += -fno-strict-aliasing
+FLAGS += -fshort-enums
+FLAGS += -g
+FLAGS += -mabi=aapcs
+FLAGS += -mcmse
+FLAGS += -mthumb
+FLAGS += -Os
+FLAGS += -std=gnu17
 
 APPLICATION_CORE_FLAGS += -mcpu=cortex-m33
 APPLICATION_CORE_FLAGS += -mfloat-abi=hard
 APPLICATION_CORE_FLAGS += -mfpu=fpv4-sp-d16
-APPLICATION_CORE_FLAGS += -fsingle-precision-constant
 
 NETWORK_CORE_FLAGS += -mcpu=cortex-m33+nodsp
 NETWORK_CORE_FLAGS += -mfloat-abi=soft
