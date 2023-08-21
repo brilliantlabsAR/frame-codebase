@@ -22,56 +22,107 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "frame.h"
 #include "nrf.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
 #include "nrfx_clock.h"
 #include "nrfx_gpiote.h"
 
-void clock_event_handler(nrfx_clock_evt_type_t event)
+static void unused_clock_event_handler(nrfx_clock_evt_type_t event)
 {
     (void)event;
 }
 
-void gpiote_interrupt_handler(nrfx_gpiote_pin_t pin,
-                              nrfx_gpiote_trigger_t trigger,
-                              void *p_context)
+static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
+                                              nrfx_gpiote_trigger_t trigger,
+                                              void *p_context)
 {
+    // Inform the network core that we're about to sleep
+
+    // Wait for network core to complete the shutdown process
+
     NRFX_LOG("Going to sleep");
 
     NRF_REGULATORS->SYSTEMOFF = 1;
     __DSB();
+
+    // Only required for debug mode where core doesn't actually sleep
+    while (1)
+    {
+    }
+}
+
+static void frame_setup_application_core(void)
+{
+    // Start the clocks
+    {
+        app_err(nrfx_clock_init(unused_clock_event_handler));
+        nrfx_clock_enable();
+
+        // High frequency crystal uses internally configurable capacitors
+        uint32_t capacitance_pf = 8;
+        int32_t slope = NRF_FICR->XOSC32MTRIM & 0x1F;
+        int32_t trim = (NRF_FICR->XOSC32MTRIM >> 5) & 0x1F;
+
+        nrf_oscillators_hfxo_cap_set(
+            NRF_OSCILLATORS,
+            true,
+            (1 + slope / 16) * (capacitance_pf * 2 - 14) + trim);
+
+        nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK);
+        nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK192M);
+        nrfx_clock_start(NRF_CLOCK_DOMAIN_LFCLK);
+    }
+
+    // Configure case detect pin for sleeping
+    {
+        app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+
+        nrfx_gpiote_input_config_t input_config = {
+            .pull = NRF_GPIO_PIN_PULLUP, // TODO decide on this
+        };
+
+        nrfx_gpiote_trigger_config_t trigger_config = {
+            .trigger = NRFX_GPIOTE_TRIGGER_TOGGLE, // TODO decide on this
+            .p_in_channel = NULL,
+        };
+
+        nrfx_gpiote_handler_config_t handler_config = {
+            .handler = case_detect_pin_interrupt_handler,
+            .p_context = NULL,
+        };
+
+        app_err(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                            &input_config,
+                                            &trigger_config,
+                                            &handler_config));
+
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+    }
+
+    // Set up ADC for battery level monitoring
+    {}
+
+    // Turn on the network core
+    {
+        NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1 << 4);
+        NRF_RESET_S->NETWORK.FORCEOFF = 0;
+    }
+
+    // Pass pins to network core control
+    {
+        nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN, NRF_GPIO_PIN_SEL_NETWORK);
+        nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN, NRF_GPIO_PIN_SEL_NETWORK);
+    }
 }
 
 int main(void)
 {
-    // Start clocks
-    app_err(nrfx_clock_init(clock_event_handler));
-    nrfx_clock_enable();
-    uint32_t capacitance_pf = 7;
-    int32_t slope = NRF_FICR->XOSC32MTRIM & 0x1F;
-    int32_t trim = (NRF_FICR->XOSC32MTRIM >> 5) & 0x1F;
-    uint32_t reg_value = (1 + slope / 16) * (capacitance_pf * 2 - 14) + trim;
-    nrf_oscillators_hfxo_cap_set(NRF_OSCILLATORS, true, reg_value);
-    nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK);
-    nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK192M);
-    nrfx_clock_start(NRF_CLOCK_DOMAIN_LFCLK);
+    NRFX_LOG("MicroPython on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
 
-    // Configure case detect pin falling edge as wakeup
-    app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
-    nrfx_gpiote_input_config_t input_config = {.pull = NRF_GPIO_PIN_PULLUP};
-    nrfx_gpiote_trigger_config_t trigger_config = {.trigger = NRFX_GPIOTE_TRIGGER_LOTOHI, .p_in_channel = NULL};
-    nrfx_gpiote_handler_config_t handler_config = {.handler = gpiote_interrupt_handler, .p_context = NULL};
-    app_err(nrfx_gpiote_input_configure(30, &input_config, &trigger_config, &handler_config));
+    frame_setup_application_core();
 
-    // Turn on the network core
-    NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1 << 4);
-    NRF_RESET_S->NETWORK.FORCEOFF = 0;
-    nrf_gpio_pin_control_select(NRF_GPIO_PIN_MAP(0, 30), NRF_GPIO_PIN_SEL_NETWORK);
-
-    NRFX_LOG("Hello from application core");
-
-    // Should never return from system off. This is just for debug mode
     while (1)
     {
     }

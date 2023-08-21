@@ -24,6 +24,7 @@
 
 # Use date and time as build version "vYY.DDD.HHMM". := forces evaluation once
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # C source files
 SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
@@ -102,6 +103,7 @@ NETWORK_CORE_FLAGS += -mfloat-abi=soft
 
 # Preprocessor defines
 FLAGS += -DBUILD_VERSION='"$(BUILD_VERSION)"'
+FLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 FLAGS += -DNDEBUG
 
 APPLICATION_CORE_FLAGS += -DNRF5340_XXAA_APPLICATION

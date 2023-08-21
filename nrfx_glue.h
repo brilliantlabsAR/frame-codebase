@@ -48,20 +48,6 @@ extern "C"
 #include <soc/nrfx_atomic.h>
 #include "nrfx_log.h"
 
-#define app_err(eval)                                             \
-    do                                                            \
-    {                                                             \
-        nrfx_err_t err = (eval);                                  \
-        if (0x0000FFFF & err)                                     \
-        {                                                         \
-            if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) \
-            {                                                     \
-                __BKPT();                                         \
-            }                                                     \
-            NVIC_SystemReset();                                   \
-        }                                                         \
-    } while (0)
-
 #define sd_err(eval)                                                          \
     do                                                                        \
     {                                                                         \
