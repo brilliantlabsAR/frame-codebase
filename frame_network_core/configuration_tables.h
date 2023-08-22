@@ -23,50 +23,7 @@
  */
 
 #pragma once
-
 #include <stdint.h>
-#include <stdbool.h>
-#include "nrfx.h"
-#include "nrfx_log.h"
-
-/**
- * @brief Frame PCB pinout.
- */
-
-#define BATTERY_LEVEL_PIN NRF_SAADC_INPUT_AIN4        //
-#define CAMERA_SLEEP_PIN NRF_GPIO_PIN_MAP(0, 10)      // Inverted pin
-#define CASE_DETECT_PIN NRF_GPIO_PIN_MAP(0, 20)       //
-#define DISPLAY_SPI_CLOCK_PIN NRF_GPIO_PIN_MAP(0, 15) //
-#define DISPLAY_SPI_DATA_PIN NRF_GPIO_PIN_MAP(0, 9)   //
-#define DISPLAY_SPI_SELECT_PIN NRF_GPIO_PIN_MAP(1, 2) // Inverted pin
-#define FPGA_PROGRAM_PIN NRF_GPIO_PIN_MAP(1, 4)       // Inverted pin
-#define FPGA_SPI_CLOCK_PIN NRF_GPIO_PIN_MAP(0, 17)    //
-#define FPGA_SPI_IO0_PIN NRF_GPIO_PIN_MAP(0, 13)      //
-#define FPGA_SPI_IO1_PIN NRF_GPIO_PIN_MAP(0, 14)      //
-#define FPGA_SPI_SELECT_PIN NRF_GPIO_PIN_MAP(0, 22)   // Inverted pin
-#define I2C_SCL_PIN NRF_GPIO_PIN_MAP(0, 31)           //
-#define I2C_SDA_PIN NRF_GPIO_PIN_MAP(0, 30)           //
-#define MICROPHONE_CLOCK_PIN NRF_GPIO_PIN_MAP(1, 1)   //
-#define MICROPHONE_DATA_PIN NRF_GPIO_PIN_MAP(1, 0)    //
-
-/**
- * @brief Error handling macro.
- */
-
-#define app_err(eval)                                                      \
-    do                                                                     \
-    {                                                                      \
-        nrfx_err_t err = (eval);                                           \
-        if (0x0000FFFF & err)                                              \
-        {                                                                  \
-            NRFX_LOG("App error: 0x%x at %s:%u", err, __FILE__, __LINE__); \
-            if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)          \
-            {                                                              \
-                __BKPT();                                                  \
-            }                                                              \
-            NVIC_SystemReset();                                            \
-        }                                                                  \
-    } while (0)
 
 /**
  * @brief Display & camera configuration tables.

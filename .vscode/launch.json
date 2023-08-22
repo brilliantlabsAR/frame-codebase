@@ -37,7 +37,7 @@
             "name": "Both Cores",
             "configurations": [
                 "Application Core",
-                // "Network Core"
+                "Network Core"
             ],
             "stopAll": true
         }

@@ -22,14 +22,22 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "nrf.h"
+#pragma once
+
 #include "nrf_gpio.h"
 
-int main(void)
-{
-    NRFX_LOG("Hello from network core");
-
-    while (1)
-    {
-    }
-}
+#define BATTERY_LEVEL_PIN NRF_SAADC_INPUT_AIN4
+#define CAMERA_SLEEP_PIN NRF_GPIO_PIN_MAP(0, 10)      // Inverted pin
+#define CASE_DETECT_PIN NRF_GPIO_PIN_MAP(0, 20)       //
+#define DISPLAY_SPI_CLOCK_PIN NRF_GPIO_PIN_MAP(0, 15) //
+#define DISPLAY_SPI_DATA_PIN NRF_GPIO_PIN_MAP(0, 9)   //
+#define DISPLAY_SPI_SELECT_PIN NRF_GPIO_PIN_MAP(1, 2) // Inverted pin
+#define FPGA_PROGRAM_PIN NRF_GPIO_PIN_MAP(1, 4)       // Inverted pin
+#define FPGA_SPI_CLOCK_PIN NRF_GPIO_PIN_MAP(0, 17)    //
+#define FPGA_SPI_IO0_PIN NRF_GPIO_PIN_MAP(0, 13)      //
+#define FPGA_SPI_IO1_PIN NRF_GPIO_PIN_MAP(0, 14)      //
+#define FPGA_SPI_SELECT_PIN NRF_GPIO_PIN_MAP(0, 22)   // Inverted pin
+#define I2C_SCL_PIN NRF_GPIO_PIN_MAP(0, 31)           //
+#define I2C_SDA_PIN NRF_GPIO_PIN_MAP(0, 30)           //
+#define MICROPHONE_CLOCK_PIN NRF_GPIO_PIN_MAP(1, 1)   //
+#define MICROPHONE_DATA_PIN NRF_GPIO_PIN_MAP(1, 0)    //

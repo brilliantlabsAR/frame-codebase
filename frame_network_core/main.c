@@ -22,22 +22,54 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
+#include "frame_pinout.h"
+#include "nrf.h"
+#include "nrfx_log.h"
+#include "nrfx_twim.h"
 
-#define NRFX_CONFIG_H__
-#include "nrfx/templates/nrfx_config_common.h"
+static const nrfx_twim_t i2c_bus = NRFX_TWIM_INSTANCE(0);
 
-#ifdef NRF5340_XXAA_APPLICATION
-#define NRFX_CLOCK_ENABLED 1
-#define NRFX_CLOCK_CONFIG_HFCLK192M_SRC 1
-#define NRFX_CLOCK_CONFIG_LF_SRC 3
-#define NRFX_GPIOTE_ENABLED 1
-#define NRFX_SAADC_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_application.h"
-#endif
+void app_err(nrfx_err_t eval)
+{
+    if (0x0000FFFF & eval)
+    {
+        NRFX_LOG("App error: 0x%x at %s:%u", eval, __FILE__, __LINE__);
+        if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+        {
+            __BKPT();
+        }
+        // TODO ask main core to reset
+        NVIC_SystemReset();
+    }
+}
 
-#ifdef NRF5340_XXAA_NETWORK
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_network.h"
-#endif
+void frame_setup_network_core(void)
+{
+    // Start I2C driver
+    {
+        nrfx_twim_config_t i2c_config = {
+            .scl_pin = I2C_SCL_PIN,
+            .sda_pin = I2C_SDA_PIN,
+            .frequency = NRF_TWIM_FREQ_100K,
+            .interrupt_priority = NRFX_TWIM_DEFAULT_CONFIG_IRQ_PRIORITY,
+            .hold_bus_uninit = false,
+        };
+
+        app_err(nrfx_twim_init(&i2c_bus, &i2c_config, NULL, NULL));
+
+        nrfx_twim_enable(&i2c_bus);
+    }
+
+    // Set up PMIC
+    {
+    }
+}
+
+int main(void)
+{
+    frame_setup_network_core();
+
+    while (1)
+    {
+    }
+}
