@@ -17,9 +17,9 @@ For those of you who want to modify the standard firmware, keep on reading.
     cd frame-micropython
 
     git submodule update --init
-    git -C micropython submodule update --init lib/micropython-lib
+    git -C frame_network_core/micropython submodule update --init lib/micropython-lib
 
-    make -C micropython/mpy-cross
+    make -C frame_network_core/micropython/mpy-cross
     ```
 
 1. Open the project in [VSCode](https://code.visualstudio.com).
