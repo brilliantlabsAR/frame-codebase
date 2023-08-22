@@ -22,26 +22,14 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "frame_pinout.h"
+#include "error_helpers.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
 #include "nrf.h"
 #include "nrfx_clock.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
-
-void app_err(nrfx_err_t eval)
-{
-    if (0x0000FFFF & eval)
-    {
-        NRFX_LOG("App error: 0x%x at %s:%u", eval, __FILE__, __LINE__);
-        if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
-        {
-            __BKPT();
-        }
-        NVIC_SystemReset();
-    }
-}
+#include "pinout.h"
 
 static void unused_clock_event_handler(nrfx_clock_evt_type_t event)
 {
@@ -128,6 +116,8 @@ static void frame_setup_application_core(void)
     {
         nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN, NRF_GPIO_PIN_SEL_NETWORK);
         nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN, NRF_GPIO_PIN_SEL_NETWORK);
+        nrf_gpio_pin_control_select(I2C_SCL_PIN, NRF_GPIO_PIN_SEL_NETWORK);
+        nrf_gpio_pin_control_select(I2C_SDA_PIN, NRF_GPIO_PIN_SEL_NETWORK);
     }
 }
 

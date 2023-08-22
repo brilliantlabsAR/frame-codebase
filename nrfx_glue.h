@@ -56,20 +56,19 @@
 
 #pragma once
 
+#include "error_helpers.h"
 #include "nrfx.h"
-#include "nrfx_errors.h"
-#include <soc/nrfx_coredep.h>
+#include "nrfx_log.h"
 #include <soc/nrfx_atomic.h>
+#include <soc/nrfx_coredep.h>
 
-void app_err(nrfx_err_t eval);
-
-#define NRFX_ASSERT(expression)  \
-    do                           \
-    {                            \
-        if ((expression) == 0)   \
-        {                        \
-            app_err(0xDEAD0A55); \
-        }                        \
+#define NRFX_ASSERT(expression) \
+    do                          \
+    {                           \
+        if ((expression) == 0)  \
+        {                       \
+            assert_handler();   \
+        }                       \
     } while (0)
 
 #define NRFX_STATIC_ASSERT(expression) \

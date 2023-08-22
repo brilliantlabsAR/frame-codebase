@@ -24,33 +24,10 @@
 
 #pragma once
 
-#include "SEGGER_RTT.h"
 // #include "nrf.h"
 // #include "nrfx.h"
 // #include "nrfx_errors.h"
-// #include "nrfx_log.h"
-
-/**
- * @brief Logging macros.
- */
-
-#define NRFX_LOG(format, ...) \
-    SEGGER_RTT_printf(0, format "\r\n", ##__VA_ARGS__)
-
-#define NRFX_LOG_ERROR(format, ...)
-#define NRFX_LOG_WARNING(format, ...)
-#define NRFX_LOG_INFO(format, ...)
-#define NRFX_LOG_DEBUG(format, ...)
-
-#define NRFX_LOG_HEXDUMP_ERROR(p_memory, length)
-#define NRFX_LOG_HEXDUMP_WARNING(p_memory, length)
-#define NRFX_LOG_HEXDUMP_INFO(p_memory, length)
-#define NRFX_LOG_HEXDUMP_DEBUG(p_memory, length)
-#define NRFX_LOG_ERROR_STRING_GET(error_code)
-
-/**
- * @brief Error macros.
- */
+#include "nrfx_log.h"
 
 void assert_handler(void);
 
