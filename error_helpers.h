@@ -24,12 +24,17 @@
 
 #pragma once
 
-// #include "nrf.h"
-// #include "nrfx.h"
-// #include "nrfx_errors.h"
 #include "nrfx_log.h"
 
-void assert_handler(void);
+/**
+ * @brief These error codes extend the standard nrfx_err_t.
+ */
+typedef enum extended_error_codes_t
+{
+    HARDWARE_ERROR = 0x0BAC0001,
+    ASSERT,
+    HARD_FAULT
+} extended_error_codes_t;
 
 const char *lookup_error_code(uint32_t error_code);
 

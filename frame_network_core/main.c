@@ -201,7 +201,7 @@ static void setup_network_core(void)
         nrfx_twim_enable(&i2c_bus);
     }
 
-    // Scan for all the I2C devices
+    // Scan all the I2C devices for their chip IDs
     {
         i2c_response_t accelerometer_response =
             monocle_i2c_read(ACCELEROMETER_I2C_ADDRESS, 0x03, 0xFF);
@@ -215,28 +215,28 @@ static void setup_network_core(void)
         i2c_response_t pmic_response =
             monocle_i2c_read(PMIC_I2C_ADDRESS, 0x14, 0x0F);
 
-        // If all chips fail to respond, we must be using a devkit
-        if (accelerometer_response.fail &&
-            camera_response.fail &&
-            magnetometer_response.fail &&
-            pmic_response.fail)
+        // If all chips fail to respond, it means that we're using a devkit
+        if (accelerometer_response.fail && camera_response.fail &&
+            magnetometer_response.fail && pmic_response.fail)
         {
             NRFX_LOG("Running on nRF5340-DK");
             not_real_hardware_flag = true;
         }
 
-        // Otherwise if any individual chips fail, it implies bad soldering
-        else
+        if (not_real_hardware_flag == false)
         {
-            app_err(0); // TODO enable this once we have hardware
-        }
+            // Otherwise, if any chip fails to respond, it's an error
+            if (accelerometer_response.fail || camera_response.fail ||
+                magnetometer_response.fail || pmic_response.fail)
+            {
+                app_err(HARDWARE_ERROR); // TODO enable this
+            }
 
-        // This checks incase incorrect chips were populated
-        if (camera_response.value != 0x97 ||
-            magnetometer_response.value != 0x49 ||
-            pmic_response.value != 0x02)
-        {
-            app_err(0); // TODO enable this once we have hardware
+            // If the PMIC returns the wrong chip ID, it's also an error
+            if (pmic_response.value != 0x02)
+            {
+                app_err(HARDWARE_ERROR); // TODO enable this
+            }
         }
     }
 

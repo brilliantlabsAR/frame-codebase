@@ -25,10 +25,6 @@
 #pragma once
 
 #include "SEGGER_RTT.h"
-// #include "nrf.h"
-// #include "nrfx.h"
-// #include "nrfx_errors.h"
-// #include "nrfx_log.h"
 
 /**
  * @brief Logging macros.

@@ -24,22 +24,9 @@
 
 #include "nrfx.h"
 
-static const uint32_t ASSERT = 0x10000000;
-static const uint32_t HARDFAULT = 0x10000002;
-
-void assert_handler(void)
-{
-    app_err(ASSERT);
-}
-
-// void Default_Handler(void)
-// {
-//     app_err(DEFAULT_HANDLER);
-// }
-
 void HardFault_Handler(void)
 {
-    app_err(HARDFAULT);
+    app_err(HARD_FAULT);
 }
 
 const char *lookup_error_code(uint32_t error_code)
@@ -49,8 +36,11 @@ const char *lookup_error_code(uint32_t error_code)
     case ASSERT:
         return "NRFX_ASSERT";
 
-    case HARDFAULT:
-        return "HARDFAULT";
+    case HARDWARE_ERROR:
+        return "HARDWARE_ERROR";
+
+    case HARD_FAULT:
+        return "HARD_FAULT";
 
     case NRFX_SUCCESS:
         return "NRFX_SUCCESS";

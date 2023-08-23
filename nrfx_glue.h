@@ -67,7 +67,7 @@
     {                           \
         if ((expression) == 0)  \
         {                       \
-            assert_handler();   \
+            app_err(ASSERT);    \
         }                       \
     } while (0)
 
