@@ -39,5 +39,7 @@
 #ifdef NRF5340_XXAA_NETWORK
 #define NRFX_TWIM_ENABLED 1
 #define NRFX_TWIM0_ENABLED 1
+#define NRFX_SPIM_ENABLED 1
+#define NRFX_SPIM0_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_network.h"
 #endif

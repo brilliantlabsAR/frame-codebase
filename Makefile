@@ -34,6 +34,7 @@ APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
 
 NETWORK_CORE_SOURCE_FILES += frame_network_core/main.c
+NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_spim.c
 NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_twim.c
 NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
