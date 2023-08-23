@@ -26,9 +26,11 @@
 #include "nrf.h"
 #include "nrfx_log.h"
 #include "nrfx_twim.h"
+#include "nrfx_spim.h"
 #include "pinout.h"
 
 static const nrfx_twim_t i2c_bus = NRFX_TWIM_INSTANCE(0);
+static const nrfx_spim_t spi_bus = NRFX_SPIM_INSTANCE(0);
 
 static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
@@ -184,6 +186,10 @@ i2c_response_t monocle_i2c_write(uint8_t device_address_7bit,
     return resp;
 }
 
+// static void power_down_network_core(void)
+// {
+// }
+
 static void setup_network_core(void)
 {
     // Start I2C driver
@@ -229,20 +235,83 @@ static void setup_network_core(void)
             if (accelerometer_response.fail || camera_response.fail ||
                 magnetometer_response.fail || pmic_response.fail)
             {
-                app_err(HARDWARE_ERROR); // TODO enable this
+                // app_err(HARDWARE_ERROR); // TODO enable this
             }
 
             // If the PMIC returns the wrong chip ID, it's also an error
             if (pmic_response.value != 0x02)
             {
-                app_err(HARDWARE_ERROR); // TODO enable this
+                // app_err(HARDWARE_ERROR); // TODO enable this
             }
         }
     }
 
     // Set up PMIC
     {
+        // Set the SBB drive strength
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
+
+        // Set SBB0 to 1.0V
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x29, 0x7F, 0x04).fail);
+
+        // Set SBB2 to 2.7V
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2D, 0x7F, 0x26).fail);
+
+        // Set LDO0 to 1.2V
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
+
+        // Turn on SBB0 (1.0V rail) with 500mA limit
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
+
+        // Turn on LDO0 (1.2V rail)
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
+
+        // Turn on SBB2 (2.7V rail) with 333mA limit
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
+
+        // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
+
+        // Set CHGIN limit to 475mA
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x21, 0x1C, 0x10).fail);
+
+        // Charge termination current to 5%, and top-off timer to 30mins
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x22, 0x1F, 0x06).fail);
+
+        // Set junction regulation temperature to 70 degrees
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x23, 0xE0, 0x20).fail);
+
+        // Set the fast charge current value to 225mA
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x24, 0xFC, 0x74).fail);
+
+        // Set the Vcool & Vwarm current to 112.5mA, and enable the thermistor
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x25, 0xFE, 0x3A).fail);
+
+        // Set constant voltage to 4.3V for both fast charge and JEITA
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x26, 0xFC, 0x70).fail);
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x27, 0xFC, 0x70).fail);
+
+        // Connect AMUX to battery voltage
+        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
     }
+
+    // Start the SPI drivers so deinit doesn't fail during shutdown
+    {
+        nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
+            DISPLAY_SPI_CLOCK_PIN,
+            DISPLAY_SPI_DATA_PIN,
+            NRF_SPIM_PIN_NOT_CONNECTED,
+            NRF_SPIM_PIN_NOT_CONNECTED);
+
+        spi_config.mode = NRF_SPIM_MODE_3;
+        spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
+
+        app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
+    }
+
+    // Check the case detect pin and set up interrupt
+    {
+        }
 }
 
 int main(void)
@@ -250,6 +319,8 @@ int main(void)
     NRFX_LOG("Starting network core");
 
     setup_network_core();
+
+    // TODO inform the application processor that the network has started
 
     while (1)
     {
