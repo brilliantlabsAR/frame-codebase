@@ -22,17 +22,44 @@ For those of you who want to modify the standard firmware, keep on reading.
     make -C frame_network_core/micropython/mpy-cross
     ```
 
+1. You should now be able to build the project by calling `make` from the `frame-micropython` folder.
+
+    ```sh
+    make
+    ```
+
+1. Before flashing an nRF5340, you may need to unlock the chip first.
+
+
+    ```sh
+    nrfjprog --recover
+    ```
+
+1. You should then be able to flash the device.
+
+    ```sh
+    make flash
+    ```
+
+### Debugging
+
 1. Open the project in [VSCode](https://code.visualstudio.com).
 
-    There are some build tasks already configured and ready for use. Access them by pressing `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `Tasks: Run Task`.
+    There are some build tasks already configured within `.vscode/tasks.json`. Access them by pressing `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `Tasks: Run Task`.
 
     1. Build
-    1. Build & Flash
+    1. Build & Flash Chip
+    1. Erase & Unlock Chip
     1. Clean
-    1. Erase Chip
     1. Release
 
+1. You many need to unlock the device by using the `Erase Chip` task before programming or debugging.
+
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
+
+1. A debugging launch is already configured within `.vscode/launch.json`. Run the `Both Cores` launch configuration from the `Run and Debug` panel, or press `F5`. The project will automatically build and flash before launching.
+
+1. To monitor the logs, run the task `RTT Console` and ensure the `Both Cores` launch configuration is running.
 
 ## FPGA
 

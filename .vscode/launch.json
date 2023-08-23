@@ -12,10 +12,13 @@
             "showDevDebugOutput": "none",
             "servertype": "jlink",
             "svdFile": "nrfx/mdk/nrf5340_application.svd",
-            "preLaunchTask": "Build",
-            "preLaunchCommands": [
-                "load"
-            ]
+            "preLaunchTask": "Pre-launch Delay",
+            "presentation": {
+                "hidden": true,
+                "group": "",
+                "order": 1
+            },
+            "internalConsoleOptions": "neverOpen"
         },
         {
             "cwd": "${workspaceFolder}",
@@ -27,9 +30,12 @@
             "showDevDebugOutput": "none",
             "servertype": "jlink",
             "svdFile": "nrfx/mdk/nrf5340_network.svd",
-            "preLaunchCommands": [
-                "load"
-            ]
+            "presentation": {
+                "hidden": true,
+                "group": "",
+                "order": 1
+            },
+            "internalConsoleOptions": "neverOpen"
         }
     ],
     "compounds": [
@@ -39,6 +45,7 @@
                 "Application Core",
                 "Network Core"
             ],
+            "preLaunchTask": "Build",
             "stopAll": true
         }
     ]

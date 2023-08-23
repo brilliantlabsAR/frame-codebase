@@ -123,7 +123,9 @@ static void frame_setup_application_core(void)
 
 int main(void)
 {
+    NRFX_LOG(RTT_CTRL_CLEAR);
     NRFX_LOG("MicroPython on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
+    NRFX_LOG("Logging from application core");
 
     frame_setup_application_core();
 

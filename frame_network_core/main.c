@@ -311,12 +311,14 @@ static void setup_network_core(void)
 
     // Check the case detect pin and set up interrupt
     {
-        }
+    }
 }
 
 int main(void)
 {
-    NRFX_LOG("Starting network core");
+    NRFX_LOG(RTT_CTRL_CLEAR);
+    NRFX_LOG("MicroPython on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
+    NRFX_LOG("Logging from network core");
 
     setup_network_core();
 

@@ -12,7 +12,7 @@
             ],
             "presentation": {
                 "echo": false,
-                "reveal": "always",
+                "reveal": "silent",
                 "focus": false,
                 "panel": "shared",
                 "showReuseMessage": false,
@@ -24,7 +24,7 @@
             },
         },
         {
-            "label": "Build & Flash",
+            "label": "Build & Flash Chip",
             "type": "shell",
             "command": "make -j`getconf _NPROCESSORS_ONLN` flash",
             "problemMatcher": [
@@ -44,9 +44,9 @@
             },
         },
         {
-            "label": "Clean",
+            "label": "Erase & Unlock Chip",
             "type": "shell",
-            "command": "make clean",
+            "command": "make recover",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,
@@ -58,13 +58,13 @@
             },
         },
         {
-            "label": "Erase Chip",
+            "label": "Clean",
             "type": "shell",
-            "command": "nrfjprog --recover",
+            "command": "make clean",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,
-                "reveal": "always",
+                "reveal": "silent",
                 "focus": false,
                 "panel": "shared",
                 "showReuseMessage": false,
@@ -89,6 +89,34 @@
             "group": {
                 "kind": "build",
                 "isDefault": false
+            },
+        },
+        {
+            "label": "RTT Debug Console",
+            "type": "shell",
+            "command": "JLinkRTTClient",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            },
+        },
+        {
+            "label": "Pre-launch Delay",
+            "type": "shell",
+            "command": "sleep 1",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
             },
         }
     ]

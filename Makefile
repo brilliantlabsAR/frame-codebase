@@ -132,7 +132,7 @@ flash: all
 clean:
 	rm -rf build/
 
-erase-chip:
+recover:
 	nrfjprog --recover
 
 release:
