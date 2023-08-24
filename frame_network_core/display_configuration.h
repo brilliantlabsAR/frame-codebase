@@ -25,17 +25,13 @@
 #pragma once
 #include <stdint.h>
 
-/**
- * @brief Display & camera configuration tables.
- */
-
 typedef struct display_config_t
 {
     uint8_t address;
     uint8_t value;
 } display_config_t;
 
-const display_config_t display_config[] = {
+static const display_config_t display_config[] = {
     {0x00, 0x92},
     {0x01, 0x20},
     {0x02, 0x00},
@@ -165,14 +161,4 @@ const display_config_t display_config[] = {
     {0x7E, 0x00},
     {0x7F, 0x00},
     {0x00, 0x93},
-};
-
-typedef struct camera_config_t
-{
-    uint16_t address;
-    uint8_t value;
-} camera_config_t;
-
-const camera_config_t camera_config[] = {
-    {0x0000, 0x00},
 };

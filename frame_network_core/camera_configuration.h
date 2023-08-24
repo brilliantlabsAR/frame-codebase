@@ -23,24 +23,14 @@
  */
 
 #pragma once
+#include <stdint.h>
 
-#define NRFX_CONFIG_H__
-#include "nrfx/templates/nrfx_config_common.h"
+typedef struct camera_config_t
+{
+    uint16_t address;
+    uint8_t value;
+} camera_config_t;
 
-#ifdef NRF5340_XXAA_APPLICATION
-#define NRFX_CLOCK_ENABLED 1
-#define NRFX_CLOCK_CONFIG_HFCLK192M_SRC 1
-#define NRFX_GPIOTE_ENABLED 1
-#define NRFX_SAADC_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_application.h"
-#endif
-
-#ifdef NRF5340_XXAA_NETWORK
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC0_ENABLED 1
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM0_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_network.h"
-#endif
+static const camera_config_t camera_config[] = {
+    {0x0000, 0x00},
+};

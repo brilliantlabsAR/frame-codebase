@@ -31,10 +31,7 @@
 #include "nrfx_log.h"
 #include "pinout.h"
 
-static void unused_clock_event_handler(nrfx_clock_evt_type_t event)
-{
-    (void)event;
-}
+static void unused_clock_event_handler(nrfx_clock_evt_type_t event) {}
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
@@ -114,10 +111,26 @@ static void frame_setup_application_core(void)
 
     // Pass pins to network core control
     {
-        nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN, NRF_GPIO_PIN_SEL_NETWORK);
-        nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN, NRF_GPIO_PIN_SEL_NETWORK);
-        nrf_gpio_pin_control_select(I2C_SCL_PIN, NRF_GPIO_PIN_SEL_NETWORK);
-        nrf_gpio_pin_control_select(I2C_SDA_PIN, NRF_GPIO_PIN_SEL_NETWORK);
+        nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(DISPLAY_SPI_CLOCK_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(DISPLAY_SPI_DATA_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(DISPLAY_SPI_SELECT_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(I2C_SCL_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(I2C_SDA_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
     }
 }
 

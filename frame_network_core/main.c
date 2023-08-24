@@ -22,22 +22,30 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "camera_configuration.h"
+#include "display_configuration.h"
 #include "error_helpers.h"
 #include "nrf.h"
 #include "nrfx_log.h"
-#include "nrfx_twim.h"
+#include "nrfx_rtc.h"
 #include "nrfx_spim.h"
+#include "nrfx_twim.h"
 #include "pinout.h"
 
 static const nrfx_twim_t i2c_bus = NRFX_TWIM_INSTANCE(0);
 static const nrfx_spim_t spi_bus = NRFX_SPIM_INSTANCE(0);
 
-static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
+// static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
 static bool not_real_hardware_flag = false;
+
+void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type)
+{
+    NRFX_LOG("Int");
+}
 
 typedef struct i2c_response_t
 {
@@ -45,9 +53,9 @@ typedef struct i2c_response_t
     uint8_t value;
 } i2c_response_t;
 
-i2c_response_t monocle_i2c_read(uint8_t device_address_7bit,
-                                uint16_t register_address,
-                                uint8_t register_mask)
+i2c_response_t i2c_read(uint8_t device_address_7bit,
+                        uint16_t register_address,
+                        uint8_t register_mask)
 {
     if (not_real_hardware_flag)
     {
@@ -114,10 +122,10 @@ i2c_response_t monocle_i2c_read(uint8_t device_address_7bit,
     return i2c_response;
 }
 
-i2c_response_t monocle_i2c_write(uint8_t device_address_7bit,
-                                 uint16_t register_address,
-                                 uint8_t register_mask,
-                                 uint8_t set_value)
+i2c_response_t i2c_write(uint8_t device_address_7bit,
+                         uint16_t register_address,
+                         uint8_t register_mask,
+                         uint8_t set_value)
 {
     i2c_response_t resp = {.fail = false, .value = 0x00};
 
@@ -128,7 +136,7 @@ i2c_response_t monocle_i2c_write(uint8_t device_address_7bit,
 
     if (register_mask != 0xFF)
     {
-        resp = monocle_i2c_read(device_address_7bit, register_address, 0xFF);
+        resp = i2c_read(device_address_7bit, register_address, 0xFF);
 
         if (resp.fail)
         {
@@ -186,12 +194,77 @@ i2c_response_t monocle_i2c_write(uint8_t device_address_7bit,
     return resp;
 }
 
+void spi_read(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
+{
+    nrf_gpio_pin_clear(cs_pin);
+
+    nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_RX(data, length);
+    app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+
+    if (!hold_down_cs)
+    {
+        nrf_gpio_pin_set(cs_pin);
+    }
+}
+
+void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
+{
+    nrf_gpio_pin_clear(cs_pin);
+
+    if (!nrfx_is_in_ram(data))
+    {
+        uint8_t *m_data = malloc(length);
+        memcpy(m_data, data, length);
+        nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
+        app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+        free(m_data);
+    }
+    else
+    {
+        nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(data, length);
+        app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+    }
+
+    if (!hold_down_cs)
+    {
+        nrf_gpio_pin_set(cs_pin);
+    }
+}
+
 // static void power_down_network_core(void)
 // {
 // }
 
 static void setup_network_core(void)
 {
+
+    // Start the RTC
+    {
+        nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
+        nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
+
+        // 1024Hz = >1ms resolution
+        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
+
+        app_err(nrfx_rtc_init(&rtc, &config, unused_rtc_event_handler));
+        nrfx_rtc_enable(&rtc);
+
+        // Call tick interrupt every ms to wake up the core
+        nrfx_rtc_tick_enable(&rtc, true);
+    }
+
+    while (1)
+    {
+        nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
+        NRFX_LOG("Time = %u", nrfx_rtc_counter_get(&rtc));
+
+        // Clear exceptions and PendingIRQ from the FPU
+        // __set_FPSCR(__get_FPSCR() & ~(0x0000009F));
+        // (void)__get_FPSCR();
+
+        // __WFI();
+    }
+
     // Start I2C driver
     {
         nrfx_twim_config_t i2c_config = {
@@ -207,23 +280,16 @@ static void setup_network_core(void)
         nrfx_twim_enable(&i2c_bus);
     }
 
-    // Scan all the I2C devices for their chip IDs
+    // Scan PMIC & IMU for their chip IDs. Camera is checked later
     {
-        i2c_response_t accelerometer_response =
-            monocle_i2c_read(ACCELEROMETER_I2C_ADDRESS, 0x03, 0xFF);
-
-        i2c_response_t camera_response =
-            monocle_i2c_read(CAMERA_I2C_ADDRESS, 0x300A, 0xFF);
-
         i2c_response_t magnetometer_response =
-            monocle_i2c_read(MAGNETOMETER_I2C_ADDRESS, 0x0F, 0xFF);
+            i2c_read(MAGNETOMETER_I2C_ADDRESS, 0x0F, 0xFF);
 
         i2c_response_t pmic_response =
-            monocle_i2c_read(PMIC_I2C_ADDRESS, 0x14, 0x0F);
+            i2c_read(PMIC_I2C_ADDRESS, 0x14, 0x0F);
 
-        // If all chips fail to respond, it means that we're using a devkit
-        if (accelerometer_response.fail && camera_response.fail &&
-            magnetometer_response.fail && pmic_response.fail)
+        // If both chips fail to respond, it likely that we're using a devkit
+        if (magnetometer_response.fail && pmic_response.fail)
         {
             NRFX_LOG("Running on nRF5340-DK");
             not_real_hardware_flag = true;
@@ -231,17 +297,14 @@ static void setup_network_core(void)
 
         if (not_real_hardware_flag == false)
         {
-            // Otherwise, if any chip fails to respond, it's an error
-            if (accelerometer_response.fail || camera_response.fail ||
-                magnetometer_response.fail || pmic_response.fail)
+            if (magnetometer_response.value != 0x49)
             {
-                // app_err(HARDWARE_ERROR); // TODO enable this
+                app_err(HARDWARE_ERROR);
             }
 
-            // If the PMIC returns the wrong chip ID, it's also an error
             if (pmic_response.value != 0x02)
             {
-                // app_err(HARDWARE_ERROR); // TODO enable this
+                app_err(HARDWARE_ERROR);
             }
         }
     }
@@ -249,53 +312,53 @@ static void setup_network_core(void)
     // Set up PMIC
     {
         // Set the SBB drive strength
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
 
         // Set SBB0 to 1.0V
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x29, 0x7F, 0x04).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x29, 0x7F, 0x04).fail);
 
         // Set SBB2 to 2.7V
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2D, 0x7F, 0x26).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2D, 0x7F, 0x26).fail);
 
         // Set LDO0 to 1.2V
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
 
         // Turn on SBB0 (1.0V rail) with 500mA limit
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
 
         // Turn on LDO0 (1.2V rail)
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
 
         // Turn on SBB2 (2.7V rail) with 333mA limit
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
 
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
 
         // Set CHGIN limit to 475mA
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x21, 0x1C, 0x10).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x21, 0x1C, 0x10).fail);
 
         // Charge termination current to 5%, and top-off timer to 30mins
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x22, 0x1F, 0x06).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x22, 0x1F, 0x06).fail);
 
         // Set junction regulation temperature to 70 degrees
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x23, 0xE0, 0x20).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x23, 0xE0, 0x20).fail);
 
         // Set the fast charge current value to 225mA
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x24, 0xFC, 0x74).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x24, 0xFC, 0x74).fail);
 
         // Set the Vcool & Vwarm current to 112.5mA, and enable the thermistor
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x25, 0xFE, 0x3A).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x25, 0xFE, 0x3A).fail);
 
         // Set constant voltage to 4.3V for both fast charge and JEITA
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x26, 0xFC, 0x70).fail);
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x27, 0xFC, 0x70).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x26, 0xFC, 0x70).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x27, 0xFC, 0x70).fail);
 
         // Connect AMUX to battery voltage
-        app_err(monocle_i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
+        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
     }
 
-    // Start the SPI drivers so deinit doesn't fail during shutdown
+    // Configure the display
     {
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             DISPLAY_SPI_CLOCK_PIN,
@@ -307,11 +370,85 @@ static void setup_network_core(void)
         spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
 
         app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
+
+        for (size_t i = 0;
+             i < sizeof(display_config) / sizeof(display_config_t);
+             i++)
+        {
+            uint8_t command[2] = {display_config[i].address,
+                                  display_config[i].value};
+
+            spi_write(command, sizeof(command), DISPLAY_SPI_SELECT_PIN, false);
+        }
+
+        nrfx_spim_uninit(&spi_bus);
     }
 
-    // Check the case detect pin and set up interrupt
+    // Configure the FPGA
     {
+        nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
+            FPGA_SPI_CLOCK_PIN,
+            FPGA_SPI_IO0_PIN,
+            FPGA_SPI_IO1_PIN,
+            NRF_SPIM_PIN_NOT_CONNECTED);
+
+        app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
+
+        // Program the FPGA
+
+        // Wait until FPGA has started
+
+        // Check the chip ID
+        uint8_t id_register[1] = {0x00};
+        uint8_t id_value[1];
+
+        spi_write(id_register, sizeof(id_register), FPGA_SPI_SELECT_PIN, true);
+        spi_read(id_value, sizeof(id_value), FPGA_SPI_SELECT_PIN, false);
+
+        if (not_real_hardware_flag == false)
+        {
+            if (id_value[0] != 0x0A)
+            {
+                app_err(HARDWARE_ERROR);
+            }
+        }
+
+        nrfx_spim_uninit(&spi_bus);
     }
+
+    // Configure the camera
+    {
+        // Wake up the camera
+        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+
+        // Check the chip ID
+        i2c_response_t camera_response =
+            i2c_read(CAMERA_I2C_ADDRESS, 0x300A, 0xFF);
+
+        if (not_real_hardware_flag == false)
+        {
+            if (camera_response.value != 0x97)
+            {
+                app_err(HARDWARE_ERROR);
+            }
+        }
+
+        // Program the configuration
+        for (size_t i = 0;
+             i < sizeof(camera_config) / sizeof(camera_config_t);
+             i++)
+        {
+            i2c_write(CAMERA_I2C_ADDRESS,
+                      camera_config[i].address,
+                      0xFF,
+                      camera_config[i].value);
+        }
+
+        // Put the camera to sleep
+        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+    }
+
+    // Inform the application processor that the hardware is configured
 }
 
 int main(void)
@@ -321,8 +458,6 @@ int main(void)
     NRFX_LOG("Logging from network core");
 
     setup_network_core();
-
-    // TODO inform the application processor that the network has started
 
     while (1)
     {
