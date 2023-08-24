@@ -42,10 +42,7 @@ static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
 static bool not_real_hardware_flag = false;
 
-void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type)
-{
-    NRFX_LOG("Int");
-}
+void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 
 typedef struct i2c_response_t
 {
@@ -237,7 +234,6 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void setup_network_core(void)
 {
-
     // Start the RTC
     {
         nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
@@ -251,18 +247,6 @@ static void setup_network_core(void)
 
         // Call tick interrupt every ms to wake up the core
         nrfx_rtc_tick_enable(&rtc, true);
-    }
-
-    while (1)
-    {
-        nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
-        NRFX_LOG("Time = %u", nrfx_rtc_counter_get(&rtc));
-
-        // Clear exceptions and PendingIRQ from the FPU
-        // __set_FPSCR(__get_FPSCR() & ~(0x0000009F));
-        // (void)__get_FPSCR();
-
-        // __WFI();
     }
 
     // Start I2C driver
@@ -356,10 +340,15 @@ static void setup_network_core(void)
 
         // Connect AMUX to battery voltage
         app_err(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
+
+        nrfx_twim_uninit(&i2c_bus);
     }
 
     // Configure the display
     {
+        nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
+        nrf_gpio_pin_set(DISPLAY_SPI_SELECT_PIN);
+
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             DISPLAY_SPI_CLOCK_PIN,
             DISPLAY_SPI_DATA_PIN,
@@ -386,10 +375,13 @@ static void setup_network_core(void)
 
     // Configure the FPGA
     {
+        nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             FPGA_SPI_CLOCK_PIN,
             FPGA_SPI_IO0_PIN,
-            FPGA_SPI_IO1_PIN,
+            NRF_SPIM_PIN_NOT_CONNECTED,
             NRF_SPIM_PIN_NOT_CONNECTED);
 
         app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
@@ -447,6 +439,8 @@ static void setup_network_core(void)
         // Put the camera to sleep
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     }
+
+    // TODO re-init the I2C
 
     // Inform the application processor that the hardware is configured
 }

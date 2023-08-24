@@ -57,10 +57,12 @@
 #pragma once
 
 #include "error_helpers.h"
+// #include "nrfx_log.h"
 #include "nrfx.h"
-#include "nrfx_log.h"
 #include <soc/nrfx_atomic.h>
 #include <soc/nrfx_coredep.h>
+
+#define nrfx_rtc_0_irq_handler RTC0_IRQHandler
 
 #define NRFX_ASSERT(expression) \
     do                          \

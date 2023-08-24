@@ -126,6 +126,18 @@ static void frame_setup_application_core(void)
         nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN,
                                     NRF_GPIO_PIN_SEL_NETWORK);
 
+        nrf_gpio_pin_control_select(FPGA_SPI_CLOCK_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(FPGA_SPI_IO0_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(FPGA_SPI_IO1_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
+        nrf_gpio_pin_control_select(FPGA_SPI_SELECT_PIN,
+                                    NRF_GPIO_PIN_SEL_NETWORK);
+
         nrf_gpio_pin_control_select(I2C_SCL_PIN,
                                     NRF_GPIO_PIN_SEL_NETWORK);
 
