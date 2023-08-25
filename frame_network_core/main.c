@@ -32,8 +32,9 @@
 #include "nrfx_twim.h"
 #include "pinout.h"
 
-static const nrfx_twim_t i2c_bus = NRFX_TWIM_INSTANCE(0);
-static const nrfx_spim_t spi_bus = NRFX_SPIM_INSTANCE(0);
+static const nrfx_rtc_t rtc_instance = NRFX_RTC_INSTANCE(0);
+static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(0);
+static const nrfx_twim_t i2c_instance = NRFX_TWIM_INSTANCE(0);
 
 // static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
@@ -42,7 +43,7 @@ static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
 static bool not_real_hardware_flag = false;
 
-void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
+static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 
 typedef struct i2c_response_t
 {
@@ -87,7 +88,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
-        nrfx_err_t tx_err = nrfx_twim_xfer(&i2c_bus, &i2c_tx, 0);
+        nrfx_err_t tx_err = nrfx_twim_xfer(&i2c_instance, &i2c_tx, 0);
 
         if (tx_err == NRFX_ERROR_NOT_SUPPORTED ||
             tx_err == NRFX_ERROR_INTERNAL ||
@@ -97,7 +98,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
             app_err(tx_err);
         }
 
-        nrfx_err_t rx_err = nrfx_twim_xfer(&i2c_bus, &i2c_rx, 0);
+        nrfx_err_t rx_err = nrfx_twim_xfer(&i2c_instance, &i2c_rx, 0);
 
         if (rx_err == NRFX_ERROR_NOT_SUPPORTED ||
             rx_err == NRFX_ERROR_INTERNAL ||
@@ -164,7 +165,7 @@ i2c_response_t i2c_write(uint8_t device_address_7bit,
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
-        nrfx_err_t err = nrfx_twim_xfer(&i2c_bus, &i2c_tx, 0);
+        nrfx_err_t err = nrfx_twim_xfer(&i2c_instance, &i2c_tx, 0);
 
         if (err == NRFX_ERROR_BUSY ||
             err == NRFX_ERROR_NOT_SUPPORTED ||
@@ -196,7 +197,7 @@ void spi_read(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
     nrf_gpio_pin_clear(cs_pin);
 
     nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_RX(data, length);
-    app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+    app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
 
     if (!hold_down_cs)
     {
@@ -213,13 +214,13 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
         uint8_t *m_data = malloc(length);
         memcpy(m_data, data, length);
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
-        app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+        app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
         free(m_data);
     }
     else
     {
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(data, length);
-        app_err(nrfx_spim_xfer(&spi_bus, &xfer, 0));
+        app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
     }
 
     if (!hold_down_cs)
@@ -234,22 +235,21 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void setup_network_core(void)
 {
-    // Start the RTC
+    // Configure the RTC
     {
-        nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
         nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
 
         // 1024Hz = >1ms resolution
         config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
 
-        app_err(nrfx_rtc_init(&rtc, &config, unused_rtc_event_handler));
-        nrfx_rtc_enable(&rtc);
+        app_err(nrfx_rtc_init(&rtc_instance, &config, unused_rtc_event_handler));
+        nrfx_rtc_enable(&rtc_instance);
 
         // Call tick interrupt every ms to wake up the core
-        nrfx_rtc_tick_enable(&rtc, true);
+        nrfx_rtc_tick_enable(&rtc_instance, true);
     }
 
-    // Start I2C driver
+    // Configure the I2C driver
     {
         nrfx_twim_config_t i2c_config = {
             .scl_pin = I2C_SCL_PIN,
@@ -259,12 +259,12 @@ static void setup_network_core(void)
             .hold_bus_uninit = false,
         };
 
-        app_err(nrfx_twim_init(&i2c_bus, &i2c_config, NULL, NULL));
+        app_err(nrfx_twim_init(&i2c_instance, &i2c_config, NULL, NULL));
 
-        nrfx_twim_enable(&i2c_bus);
+        nrfx_twim_enable(&i2c_instance);
     }
 
-    // Scan PMIC & IMU for their chip IDs. Camera is checked later
+    // Scan the PMIC & IMU for their chip IDs. Camera is checked later
     {
         i2c_response_t magnetometer_response =
             i2c_read(MAGNETOMETER_I2C_ADDRESS, 0x0F, 0xFF);
@@ -293,7 +293,7 @@ static void setup_network_core(void)
         }
     }
 
-    // Set up PMIC
+    // Configure the PMIC registers
     {
         // Set the SBB drive strength
         app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
@@ -340,14 +340,20 @@ static void setup_network_core(void)
 
         // Connect AMUX to battery voltage
         app_err(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
-
-        nrfx_twim_uninit(&i2c_bus);
     }
 
-    // Configure the display
+    // Configure the display and FPGA CS pins, and set them to high
     {
         nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
+        nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
         nrf_gpio_pin_set(DISPLAY_SPI_SELECT_PIN);
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+    }
+
+    // Initialize the SPI and configure the display
+    {
+        // nrfx_twim_uninit(&i2c_instance);
+        nrfx_twim_disable(&i2c_instance);
 
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             DISPLAY_SPI_CLOCK_PIN,
@@ -358,7 +364,7 @@ static void setup_network_core(void)
         spi_config.mode = NRF_SPIM_MODE_3;
         spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
 
-        app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
+        app_err(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
 
         for (size_t i = 0;
              i < sizeof(display_config) / sizeof(display_config_t);
@@ -369,14 +375,11 @@ static void setup_network_core(void)
 
             spi_write(command, sizeof(command), DISPLAY_SPI_SELECT_PIN, false);
         }
-
-        nrfx_spim_uninit(&spi_bus);
     }
 
-    // Configure the FPGA
+    // Re-initialize SPI and configure the FPGA
     {
-        nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
-        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+        nrfx_spim_uninit(&spi_instance);
 
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             FPGA_SPI_CLOCK_PIN,
@@ -384,7 +387,7 @@ static void setup_network_core(void)
             NRF_SPIM_PIN_NOT_CONNECTED,
             NRF_SPIM_PIN_NOT_CONNECTED);
 
-        app_err(nrfx_spim_init(&spi_bus, &spi_config, NULL, NULL));
+        app_err(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
 
         // Program the FPGA
 
@@ -404,12 +407,14 @@ static void setup_network_core(void)
                 app_err(HARDWARE_ERROR);
             }
         }
-
-        nrfx_spim_uninit(&spi_bus);
     }
 
-    // Configure the camera
+    // Re-initialize the I2C and configure the camera
     {
+        nrfx_spim_uninit(&spi_instance);
+
+        nrfx_twim_enable(&i2c_instance);
+
         // Wake up the camera
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
 
@@ -439,8 +444,6 @@ static void setup_network_core(void)
         // Put the camera to sleep
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     }
-
-    // TODO re-init the I2C
 
     // Inform the application processor that the hardware is configured
 }
