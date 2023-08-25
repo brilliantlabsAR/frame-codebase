@@ -103,12 +103,6 @@ static void frame_setup_application_core(void)
     // Set up ADC for battery level monitoring
     {}
 
-    // Turn on the network core
-    {
-        NRF_SPU_S->EXTDOMAIN[0].PERM = 2 | (1 << 4);
-        NRF_RESET_S->NETWORK.FORCEOFF = 0;
-    }
-
     // Pass pins to network core control
     {
         nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN,
@@ -143,6 +137,11 @@ static void frame_setup_application_core(void)
 
         nrf_gpio_pin_control_select(I2C_SDA_PIN,
                                     NRF_GPIO_PIN_SEL_NETWORK);
+    }
+
+    // Turn on the network core
+    {
+        NRF_RESET_S->NETWORK.FORCEOFF = 0;
     }
 }
 
