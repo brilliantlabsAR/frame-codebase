@@ -1,11 +1,11 @@
 {
-    // Requires Cortex-Debug plugin for VSCode:
+    // Launch requires the Cortex-Debug plugin for VSCode:
     // https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug
     "configurations": [
         {
             "cwd": "${workspaceFolder}",
             "executable": "build/application-core.elf",
-            "name": "Application Core",
+            "name": "Application Core L-Link",
             "request": "launch",
             "type": "cortex-debug",
             "device": "nRF5340_XXAA_application",
@@ -23,7 +23,7 @@
         {
             "cwd": "${workspaceFolder}",
             "executable": "build/network-core.elf",
-            "name": "Network Core",
+            "name": "Network Core L-Link",
             "request": "launch",
             "type": "cortex-debug",
             "device": "nRF5340_XXAA_network",
@@ -40,10 +40,10 @@
     ],
     "compounds": [
         {
-            "name": "Both Cores",
+            "name": "J-Link",
             "configurations": [
-                "Application Core",
-                "Network Core"
+                "Application Core L-Link",
+                "Network Core L-Link"
             ],
             "preLaunchTask": "Build",
             "stopAll": true

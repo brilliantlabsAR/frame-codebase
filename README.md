@@ -57,6 +57,8 @@ For those of you who want to modify the standard firmware, keep on reading.
 
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
 
+1. Install the [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug) extension for VSCode in order to enable debugging.
+
 1. A debugging launch is already configured within `.vscode/launch.json`. Run the `Both Cores` launch configuration from the `Run and Debug` panel, or press `F5`. The project will automatically build and flash before launching.
 
 1. To monitor the logs, run the task `RTT Console` and ensure the `Both Cores` launch configuration is running.
