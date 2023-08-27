@@ -31,7 +31,13 @@ void _app_err(nrfx_err_t error_code, const char *file, const int line)
     {
         if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
         {
-            NRFX_LOG("Network core crashed: %s at %s:%u",
+#ifdef NRF5340_XXAA_APPLICATION
+            const char *core = "Application";
+#elif NRF5340_XXAA_NETWORK
+            const char *core = "Network";
+#endif
+            NRFX_LOG("%s core crashed: %s at %s:%u",
+                     core,
                      lookup_error_code(error_code),
                      file,
                      line);
