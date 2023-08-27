@@ -8,10 +8,8 @@
                 ".",
                 "cmsis/CMSIS/Core/Include",
                 "nrfx",
-                "nrfx/drivers",
                 "nrfx/drivers/include",
                 "nrfx/hal",
-                "nrfx/helpers",
                 "nrfx/mdk",
                 "nrfx/soc",
                 "segger"
