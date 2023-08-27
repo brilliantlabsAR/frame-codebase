@@ -22,7 +22,28 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "nrfx.h"
+#include "error_helpers.h"
+#include "nrfx_log.h"
+
+void _app_err(nrfx_err_t error_code, const char *file, const int line)
+{
+    if (0xF000FFFF & (error_code))
+    {
+        if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+        {
+            NRFX_LOG("Network core crashed: %s at %s:%u",
+                     lookup_error_code(error_code),
+                     file,
+                     line);
+            __BKPT();
+        }
+#ifdef NRF5340_XXAA_APPLICATION
+        NVIC_SystemReset();
+#elif NRF5340_XXAA_NETWORK
+        NVIC_SystemReset(); /* TODO: Notify application processor */
+#endif
+    }
+}
 
 void HardFault_Handler(void)
 {

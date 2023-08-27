@@ -24,11 +24,9 @@
 
 #pragma once
 
-#include "nrfx_log.h"
+#include "nrfx.h"
+#include <drivers/nrfx_errors.h>
 
-/**
- * @brief These error codes extend the standard nrfx_err_t.
- */
 typedef enum extended_error_codes_t
 {
     HARDWARE_ERROR = 0x0BAC0001,
@@ -38,40 +36,6 @@ typedef enum extended_error_codes_t
 
 const char *lookup_error_code(uint32_t error_code);
 
-#ifdef NRF5340_XXAA_APPLICATION
-#define app_err(eval)                                             \
-    do                                                            \
-    {                                                             \
-        if (0xF000FFFF & (eval))                                  \
-        {                                                         \
-            if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) \
-            {                                                     \
-                NRFX_LOG("Network core crashed: %s at %s:%u",     \
-                         lookup_error_code(eval),                 \
-                         __FILE__,                                \
-                         __LINE__);                               \
-                __BKPT();                                         \
-            }                                                     \
-            NVIC_SystemReset();                                   \
-        }                                                         \
-    } while (0)
-#endif
+void _app_err(nrfx_err_t error_code, const char *file, const int line);
 
-#ifdef NRF5340_XXAA_NETWORK
-#define app_err(eval)                                                    \
-    do                                                                   \
-    {                                                                    \
-        if (0xF000FFFF & (eval))                                         \
-        {                                                                \
-            if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)        \
-            {                                                            \
-                NRFX_LOG("Network core crashed: %s at %s:%u",            \
-                         lookup_error_code(eval),                        \
-                         __FILE__,                                       \
-                         __LINE__);                                      \
-                __BKPT();                                                \
-            }                                                            \
-            NVIC_SystemReset(); /* TODO: Notify application processor */ \
-        }                                                                \
-    } while (0)
-#endif
+#define app_err(error_code) _app_err(error_code, __FILE__, __LINE__)

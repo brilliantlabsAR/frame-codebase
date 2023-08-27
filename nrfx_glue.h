@@ -57,7 +57,6 @@
 #pragma once
 
 #include "error_helpers.h"
-// #include "nrfx_log.h"
 #include "nrfx.h"
 #include <soc/nrfx_atomic.h>
 #include <soc/nrfx_coredep.h>

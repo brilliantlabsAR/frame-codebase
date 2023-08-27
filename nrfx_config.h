@@ -32,6 +32,7 @@
 #define NRFX_CLOCK_CONFIG_HFCLK192M_SRC 1
 #define NRFX_GPIOTE_ENABLED 1
 #define NRFX_SAADC_ENABLED 1
+#define NRFX_IPC_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 
@@ -42,5 +43,6 @@
 #define NRFX_TWIM0_ENABLED 1
 #define NRFX_SPIM_ENABLED 1
 #define NRFX_SPIM0_ENABLED 1
+#define NRFX_IPC_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_network.h"
 #endif
