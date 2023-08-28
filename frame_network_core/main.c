@@ -25,6 +25,7 @@
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_helpers.h"
+#include "interprocessor_communication.h"
 #include "nrf.h"
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
@@ -444,6 +445,13 @@ static void setup_network_core(void)
         // Put the camera to sleep
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     }
+
+    // Initialize the inter-processor communication
+    {
+        setup_interprocessor_memory();
+    }
+
+    NRFX_LOG("IPC Reg = %u", interprocessor_memory->application_to_network.buffer[0]);
 
     // Inform the application processor that the hardware is configured
 }

@@ -23,6 +23,7 @@
  */
 
 #include "error_helpers.h"
+#include "interprocessor_communication.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
 #include "nrf.h"
@@ -139,9 +140,14 @@ static void frame_setup_application_core(void)
                                     NRF_GPIO_PIN_SEL_NETWORK);
     }
 
+    // Initialize the inter-processor communication
+    {
+        setup_interprocessor_memory();
+    }
+    interprocessor_memory->application_to_network.buffer[0] = 34;
     // Turn on the network core
     {
-        NRF_RESET_S->NETWORK.FORCEOFF = 0;
+        NRF_RESET->NETWORK.FORCEOFF = 0;
     }
 }
 

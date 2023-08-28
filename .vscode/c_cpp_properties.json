@@ -15,8 +15,8 @@
                 "segger"
             ],
             "defines": [
-                // "NRF5340_XXAA_APPLICATION",
-                "NRF5340_XXAA_NETWORK",
+                "NRF5340_XXAA_APPLICATION",
+                // "NRF5340_XXAA_NETWORK",
                 "GIT_COMMIT=\"abcdefg\"",
                 "BUILD_VERSION=\"vYY.DDD.HHMM\""
             ]
