@@ -23,7 +23,7 @@
  */
 
 #include "error_helpers.h"
-#include "interprocessor_communication.h"
+#include "interprocessor_messaging.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
 #include "nrf.h"
@@ -51,6 +51,10 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     while (1)
     {
     }
+}
+
+static void interprocessor_message_handler(void)
+{
 }
 
 static void frame_setup_application_core(void)
@@ -142,12 +146,21 @@ static void frame_setup_application_core(void)
 
     // Initialize the inter-processor communication
     {
-        setup_interprocessor_memory();
+        setup_interprocessor_messaging(interprocessor_message_handler);
     }
-    interprocessor_memory->application_to_network.buffer[0] = 34;
+
     // Turn on the network core
     {
         NRF_RESET->NETWORK.FORCEOFF = 0;
+    }
+
+    // Log that everything is ready on the application core
+    {
+        interprocessor_message_t message = INTERPROCESSOR_MESSAGE(
+            LOG_FROM_APPLICATION_CORE,
+            (uint8_t *)"Application processor started");
+
+        push_interprocessor_message(message);
     }
 }
 

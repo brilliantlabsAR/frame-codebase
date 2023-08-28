@@ -41,6 +41,8 @@ NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
 
 SHARED_SOURCE_FILES += error_helpers.c
+SHARED_SOURCE_FILES += interprocessor_messaging.c
+SHARED_SOURCE_FILES += nrfx/drivers/src/nrfx_ipc.c
 SHARED_SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
 SHARED_SOURCE_FILES += segger/SEGGER_RTT_printf.c
 SHARED_SOURCE_FILES += segger/SEGGER_RTT.c

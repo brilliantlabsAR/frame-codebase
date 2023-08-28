@@ -25,7 +25,7 @@
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_helpers.h"
-#include "interprocessor_communication.h"
+#include "interprocessor_messaging.h"
 #include "nrf.h"
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
@@ -233,6 +233,24 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 // static void power_down_network_core(void)
 // {
 // }
+
+static void interprocessor_message_handler(void)
+{
+    while (interprocessor_message_pending())
+    {
+        interprocessor_message_t *message = pop_interprocessor_message();
+
+        switch (message->instruction)
+        {
+        case LOG_FROM_APPLICATION_CORE:
+            NRFX_LOG("App: %s", message->payload);
+            break;
+
+        default:
+            break;
+        }
+    }
+}
 
 static void setup_network_core(void)
 {
@@ -448,10 +466,8 @@ static void setup_network_core(void)
 
     // Initialize the inter-processor communication
     {
-        setup_interprocessor_memory();
+        setup_interprocessor_messaging(interprocessor_message_handler);
     }
-
-    NRFX_LOG("IPC Reg = %u", interprocessor_memory->application_to_network.buffer[0]);
 
     // Inform the application processor that the hardware is configured
 }
