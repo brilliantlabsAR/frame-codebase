@@ -32,6 +32,8 @@
 #include "nrfx_log.h"
 #include "pinout.h"
 
+static bool network_core_ready = false;
+
 static void unused_clock_event_handler(nrfx_clock_evt_type_t event) {}
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
@@ -53,9 +55,29 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     }
 }
 
-static void message_handler(void)
+static void interprocessor_message_handler(void)
 {
-    NRFX_LOG("Message");
+    NRFX_LOG("New message from network core");
+
+    while (pending_message_length() > 0)
+    {
+        message_t *message = new_message(pending_message_length());
+
+        pop_message(message);
+
+        switch (message->instruction)
+        {
+        case NETWORK_CORE_READY:
+            NRFX_LOG("Network core ready");
+            network_core_ready = true;
+            break;
+
+        default:
+            break;
+        }
+
+        free_message(message);
+    }
 }
 
 static void frame_setup_application_core(void)
@@ -147,12 +169,21 @@ static void frame_setup_application_core(void)
 
     // Initialize the inter-processor communication
     {
-        setup_messaging(message_handler);
+        setup_messaging(interprocessor_message_handler);
     }
 
     // Turn on the network core
     {
         NRF_RESET->NETWORK.FORCEOFF = 0;
+    }
+
+    // Wait for the network core to start up
+    while (network_core_ready == false)
+    {
+    }
+
+    // Initialize SPI to the FPGA
+    {
     }
 }
 

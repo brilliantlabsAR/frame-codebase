@@ -23,7 +23,7 @@
  */
 
 #include "error_helpers.h"
-#include "messaging.h"
+#include "interprocessor_messaging.h"
 #include "nrfx_ipc.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -102,11 +102,11 @@ void setup_messaging(message_handler_t handler)
 
 void push_message(message_t message)
 {
-    NRFX_LOG("Pushing message. Ins: %u, Len: %u, Payload: %s", message.instruction, message.size, message.payload);
+    // NRFX_LOG("Pushing message. Ins: %u, Len: %u, Payload: %s", message.instruction, message.size, message.payload);
 
     for (size_t position = 0; position < message.size; position++)
     {
-        size_t next = tx->head;
+        size_t next = tx->head + 1;
 
         if (next >= sizeof(tx->buffer))
         {
@@ -150,37 +150,37 @@ void pop_message(message_t *message)
     {
         if (rx->tail == rx->head)
         {
-            // app_err(MESSAGING_ERROR);
-        }
-
-        if (position == 0)
-        {
-            message->size = rx->buffer[rx->tail++];
-        }
-
-        else if (position == 1)
-        {
-            message->instruction = rx->buffer[rx->tail++];
-        }
-
-        else
-        {
-            message->payload[position - 2] = rx->buffer[rx->tail++];
-        }
-
-        if (rx->tail == sizeof(rx->buffer))
-        {
-            rx->tail = 0;
-        }
-
-        if (position - 2 == message->size)
-        {
+            NRFX_LOG("Message buffer empty");
             return;
         }
+
+        size_t next = rx->tail + 1;
+
+        if (next == sizeof(rx->buffer))
+        {
+            next = 0;
+        }
+
+        switch (position)
+        {
+        case 0:
+            message->size = rx->buffer[rx->tail];
+            break;
+
+        case 1:
+            message->instruction = rx->buffer[rx->tail];
+            break;
+
+        default:
+            message->payload[position - 2] = rx->buffer[rx->tail];
+            break;
+        }
+
+        tx->tail = next;
     }
 }
 
-uint8_t message_pending_length(void)
+uint8_t pending_message_length(void)
 {
     NRFX_LOG("Checking for message");
 

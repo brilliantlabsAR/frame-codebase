@@ -49,6 +49,13 @@ typedef struct message_t
         .payload = (uint8_t *)PAYLOAD, \
     }
 
+#define MESSAGE_WITHOUT_PAYLOAD(INSTRUCTION) \
+    {                                        \
+        .size = 2,                           \
+        .instruction = INSTRUCTION,          \
+        .payload = NULL,                     \
+    }
+
 typedef void (*message_handler_t)(void);
 
 void setup_messaging(message_handler_t handler);
@@ -57,7 +64,7 @@ void push_message(message_t message);
 
 void pop_message(message_t *message);
 
-uint8_t message_pending_length(void);
+uint8_t pending_message_length(void);
 
 struct message_t *new_message(uint8_t length);
 
