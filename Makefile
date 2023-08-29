@@ -84,7 +84,7 @@ SHARED_FLAGS += -fno-common
 SHARED_FLAGS += -fno-delete-null-pointer-checks
 SHARED_FLAGS += -fno-strict-aliasing
 SHARED_FLAGS += -fshort-enums
-SHARED_FLAGS += -g
+SHARED_FLAGS += -g3
 SHARED_FLAGS += -mabi=aapcs
 SHARED_FLAGS += -mcmse
 SHARED_FLAGS += -mthumb

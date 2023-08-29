@@ -53,8 +53,9 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     }
 }
 
-static void interprocessor_message_handler(void)
+static void message_handler(void)
 {
+    NRFX_LOG("Message");
 }
 
 static void frame_setup_application_core(void)
@@ -146,21 +147,12 @@ static void frame_setup_application_core(void)
 
     // Initialize the inter-processor communication
     {
-        setup_interprocessor_messaging(interprocessor_message_handler);
+        setup_messaging(message_handler);
     }
 
     // Turn on the network core
     {
         NRF_RESET->NETWORK.FORCEOFF = 0;
-    }
-
-    // Log that everything is ready on the application core
-    {
-        interprocessor_message_t message = INTERPROCESSOR_MESSAGE(
-            LOG_FROM_APPLICATION_CORE,
-            (uint8_t *)"Application processor started");
-
-        push_interprocessor_message(message);
     }
 }
 
@@ -171,6 +163,8 @@ int main(void)
     NRFX_LOG("Logging from application core");
 
     frame_setup_application_core();
+
+    NRFX_LOG("Application core ready");
 
     while (1)
     {

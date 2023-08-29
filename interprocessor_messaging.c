@@ -22,62 +22,77 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "interprocessor_messaging.h"
+#include "error_helpers.h"
+#include "messaging.h"
 #include "nrfx_ipc.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include "nrfx_log.h"
 
 #ifdef NRF5340_XXAA_APPLICATION
 #include "nrf_spu.h"
 #endif
 
-typedef struct message_buffer_t
+typedef struct fifo_t
 {
     size_t head;
     size_t tail;
     uint8_t buffer[100];
-} message_buffer_t;
+} fifo_t;
 
-typedef struct message_memory_t
+typedef struct memory_t
 {
-    message_buffer_t application_to_network;
-    message_buffer_t network_to_application;
-} message_memory_t;
+    fifo_t application_to_network;
+    fifo_t network_to_application;
+} memory_t;
 
-static const uint32_t message_memory_address = 0x20000000;
+static const uint32_t memory_address = 0x20000000;
 
-static volatile message_memory_t *message_memory =
-    (message_memory_t *)message_memory_address;
+static memory_t *memory = (memory_t *)memory_address;
 
-#ifdef NRF5340_XXAA_APPLICATION
-static const uint8_t ipc_rx_channel = 0;
-static const uint8_t ipc_tx_channel = 1;
-#elif NRF5340_XXAA_NETWORK
-static const uint8_t ipc_rx_channel = 1;
-static const uint8_t ipc_tx_channel = 0;
-#endif
+static fifo_t *tx;
+static fifo_t *rx;
+
+static uint8_t ipc_tx_channel;
+static uint8_t ipc_rx_channel;
 
 static void ipc_handler(uint8_t event_idx, void *p_context)
 {
-    ((interprocessor_message_handler_t)p_context)();
+    NRFX_LOG("New interrupt on channel: %u", event_idx);
+
+    ((message_handler_t)p_context)();
 }
 
-void setup_interprocessor_messaging(interprocessor_message_handler_t handler)
+void setup_messaging(message_handler_t handler)
 {
 #ifdef NRF5340_XXAA_APPLICATION
+
     // Unlock the RAM region so that the network processor can access it
     nrf_spu_ramregion_set(NRF_SPU,
-                          0, // TODO make this based on message_memory_address
+                          0, // TODO make this based on memory_address
                           false,
                           NRF_SPU_MEM_PERM_READ | NRF_SPU_MEM_PERM_WRITE,
                           false);
 
-    message_memory->application_to_network.head = 0;
-    message_memory->application_to_network.tail = 0;
+    tx = &memory->application_to_network;
+    rx = &memory->network_to_application;
+
+    ipc_rx_channel = 0;
+    ipc_tx_channel = 1;
+
 #elif NRF5340_XXAA_NETWORK
-    message_memory->network_to_application.head = 0;
-    message_memory->network_to_application.tail = 0;
+
+    tx = &memory->network_to_application;
+    rx = &memory->application_to_network;
+
+    ipc_rx_channel = 1;
+    ipc_tx_channel = 0;
+
 #endif
+
+    tx->head = 0;
+    rx->tail = 0;
 
     nrfx_ipc_init(7, ipc_handler, handler);
     nrfx_ipc_send_task_channel_assign(ipc_tx_channel, ipc_tx_channel);
@@ -85,37 +100,123 @@ void setup_interprocessor_messaging(interprocessor_message_handler_t handler)
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
 }
 
-void push_interprocessor_message(interprocessor_message_t message)
+void push_message(message_t message)
 {
-#ifdef NRF5340_XXAA_APPLICATION
-// message_buffer_t buffer = message_memory->network_to_application;
-#elif NRF5340_XXAA_NETWORK
-// message_buffer_t buffer = message_memory->application_to_network;
-#endif
+    NRFX_LOG("Pushing message. Ins: %u, Len: %u, Payload: %s", message.instruction, message.size, message.payload);
+
+    for (size_t position = 0; position < message.size; position++)
+    {
+        size_t next = tx->head;
+
+        if (next >= sizeof(tx->buffer))
+        {
+            next = 0;
+        }
+
+        while (next == tx->tail)
+        {
+            NRFX_LOG("TX Buffer is full");
+            // Buffer is full. Do nothing
+        }
+
+        switch (position)
+        {
+        case 0:
+            tx->buffer[tx->head] = message.size;
+            break;
+
+        case 1:
+            tx->buffer[tx->head] = message.instruction;
+            break;
+
+        default:
+            tx->buffer[tx->head] = message.payload[position - 2];
+            break;
+        }
+
+        tx->head = next;
+    }
+
+    NRFX_LOG("Message written. TX head = %u, RX tail = %u", tx->head, rx->tail);
+
+    NRFX_LOG("Generating interrupt on channel: %u", ipc_tx_channel);
+
     nrfx_ipc_signal(ipc_tx_channel);
 }
 
-interprocessor_message_t *pop_interprocessor_message(void)
+void pop_message(message_t *message)
 {
-#ifdef NRF5340_XXAA_APPLICATION
-    // message_buffer_t buffer = message_memory->network_to_application;
-#elif NRF5340_XXAA_NETWORK
-    // message_buffer_t buffer = message_memory->application_to_network;
-#endif
-    return NULL;
+    for (size_t position = 0;; position++)
+    {
+        if (rx->tail == rx->head)
+        {
+            // app_err(MESSAGING_ERROR);
+        }
+
+        if (position == 0)
+        {
+            message->size = rx->buffer[rx->tail++];
+        }
+
+        else if (position == 1)
+        {
+            message->instruction = rx->buffer[rx->tail++];
+        }
+
+        else
+        {
+            message->payload[position - 2] = rx->buffer[rx->tail++];
+        }
+
+        if (rx->tail == sizeof(rx->buffer))
+        {
+            rx->tail = 0;
+        }
+
+        if (position - 2 == message->size)
+        {
+            return;
+        }
+    }
 }
 
-bool interprocessor_message_pending(void)
+uint8_t message_pending_length(void)
 {
-#ifdef NRF5340_XXAA_APPLICATION
-    message_buffer_t buffer = message_memory->network_to_application;
-#elif NRF5340_XXAA_NETWORK
-    message_buffer_t buffer = message_memory->application_to_network;
-#endif
-    if (buffer.head == buffer.tail)
+    NRFX_LOG("Checking for message");
+
+    if (rx->head == rx->tail)
     {
-        return false;
+        NRFX_LOG("No messages");
+        return 0;
     }
 
-    return true;
+    NRFX_LOG("Message length = %u", rx->buffer[rx->tail]);
+    return rx->buffer[rx->tail];
+}
+
+struct message_t *new_message(uint8_t size)
+{
+    struct message_t *message =
+        malloc(sizeof(struct message_t));
+    if (message == NULL)
+        return NULL;
+
+    message->payload = malloc(size);
+    if (message->payload == NULL)
+    {
+        free(message);
+        return NULL;
+    }
+
+    message->size = size;
+    return message;
+}
+
+void free_message(struct message_t *message)
+{
+    if (message != NULL)
+    {
+        free(message->payload);
+        free(message);
+    }
 }

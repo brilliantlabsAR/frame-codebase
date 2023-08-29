@@ -26,34 +26,39 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum interprocessor_instruction_t
+typedef enum instruction_t
 {
     RESET_CHIP,
     RESET_FOR_FIRMWARE_UPDATE,
+    NETWORK_CORE_READY,
     GET_FPGA_ID,
     LOG_FROM_APPLICATION_CORE,
-} interprocessor_instruction_t;
+} instruction_t;
 
-typedef struct interprocessor_message_t
+typedef struct message_t
 {
-    interprocessor_instruction_t instruction;
+    uint8_t size;
+    instruction_t instruction;
     uint8_t *payload;
-    size_t payload_length;
-} interprocessor_message_t;
+} message_t;
 
-#define INTERPROCESSOR_MESSAGE(INSTRUCTION, PAYLOAD) \
-    {                                                \
-        .instruction = INSTRUCTION,                  \
-        .payload = PAYLOAD,                          \
-        .payload_length = sizeof(PAYLOAD)            \
+#define MESSAGE(INSTRUCTION, PAYLOAD)  \
+    {                                  \
+        .size = sizeof(PAYLOAD) + 2,   \
+        .instruction = INSTRUCTION,    \
+        .payload = (uint8_t *)PAYLOAD, \
     }
 
-typedef void (*interprocessor_message_handler_t)(void);
+typedef void (*message_handler_t)(void);
 
-void setup_interprocessor_messaging(interprocessor_message_handler_t handler);
+void setup_messaging(message_handler_t handler);
 
-void push_interprocessor_message(interprocessor_message_t message);
+void push_message(message_t message);
 
-interprocessor_message_t *pop_interprocessor_message(void);
+void pop_message(message_t *message);
 
-bool interprocessor_message_pending(void);
+uint8_t message_pending_length(void);
+
+struct message_t *new_message(uint8_t length);
+
+void free_message(struct message_t *message);

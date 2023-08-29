@@ -234,11 +234,15 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 // {
 // }
 
-static void interprocessor_message_handler(void)
+static void message_handler(void)
 {
-    while (interprocessor_message_pending())
+    NRFX_LOG("New message");
+
+    while (message_pending_length() > 0)
     {
-        interprocessor_message_t *message = pop_interprocessor_message();
+        message_t *message = new_message(message_pending_length());
+
+        pop_message(message);
 
         switch (message->instruction)
         {
@@ -249,6 +253,8 @@ static void interprocessor_message_handler(void)
         default:
             break;
         }
+
+        free_message(message);
     }
 }
 
@@ -466,10 +472,14 @@ static void setup_network_core(void)
 
     // Initialize the inter-processor communication
     {
-        setup_interprocessor_messaging(interprocessor_message_handler);
+        setup_messaging(message_handler);
     }
 
     // Inform the application processor that the hardware is configured
+    {
+        message_t message = MESSAGE(NETWORK_CORE_READY, "Ready");
+        push_message(message);
+    }
 }
 
 int main(void)
