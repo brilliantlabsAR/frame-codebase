@@ -79,11 +79,11 @@
 #define MICROPY_PY_BUILTINS_ROUND_INT (1)
 #define MICROPY_PY_BUILTINS_NOTIMPLEMENTED (1)
 #define MICROPY_PY_BUILTINS_HELP (1)
-#define MICROPY_PY_BUILTINS_HELP_TEXT help_text
+// #define MICROPY_PY_BUILTINS_HELP_TEXT help_text
 #define MICROPY_PY_BUILTINS_HELP_MODULES (1)
 #define MICROPY_PY_BUILTINS_INPUT (1)
 
-#define MICROPY_QSTR_EXTRA_POOL mp_qstr_frozen_const_pool
+// #define MICROPY_QSTR_EXTRA_POOL mp_qstr_frozen_const_pool
 #define MICROPY_PY_BUILTINS_FROZENSET (1)
 
 #define MICROPY_ENABLE_GC (1)
@@ -105,7 +105,7 @@
 #define MICROPY_PY_JSON (1)
 
 #define MICROPY_PY_OS (1)
-#define MICROPY_VFS (1)
+// #define MICROPY_VFS (1)
 #define MICROPY_VFS_LFS2 (1)
 #define MICROPY_READER_VFS (1)
 
@@ -118,7 +118,7 @@
 #define MICROPY_PY_HEAPQ (1)
 
 #define MICROPY_PY_TIME (1)
-#define MICROPY_PY_TIME_INCLUDEFILE "../modules/time.c"
+// #define MICROPY_PY_TIME_INCLUDEFILE "../modules/time.c"
 
 #define MICROPY_MAKE_POINTER_CALLABLE(p) ((void *)((mp_uint_t)(p) | 1))
 

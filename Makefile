@@ -36,7 +36,7 @@ PY_SRC = frame_network_core/micropython/py
 # Set makefile-level MicroPython feature configurations
 MICROPY_ROM_TEXT_COMPRESSION ?= 1
 # Which python files to freeze into the firmware are listed in here
-FROZEN_MANIFEST = modules/frozen-manifest.py
+FROZEN_MANIFEST = frame_network_core/modules/frozen-manifest.py
 # Include py core make definitions
 include frame_network_core/micropython/py/py.mk
 
@@ -158,14 +158,15 @@ SHARED_FLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 SHARED_FLAGS += -DNDEBUG
 
 
-# CFLAGS += -mfpu=fpv5-sp-d16
-# CFLAGS += -mcmse
 # Linker options & linker script paths
 APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld
 
 NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
 NETWORK_CORE_FLAGS += -Iframe_network_core/micropython
+NETWORK_CORE_FLAGS += -Iframe_network_core/micropython/py
 NETWORK_CORE_FLAGS += -Ibuild
+NETWORK_CORE_FLAGS += -Iframe_network_core/lib/cmsis/inc
+NETWORK_CORE_FLAGS += -Iframe_network_core/shared/readline
 
 SHARED_FLAGS += --specs=nano.specs
 SHARED_FLAGS += -Wl,--gc-sections
@@ -173,20 +174,18 @@ SHARED_FLAGS += -Wl,--gc-sections
 # Link required libraries
 SHARED_FLAGS += -lm -lc -lnosys -lgcc
 
-# for micropython
-CFLAGS += -Iframe_network_core/micropython
-CFLAGS += -Ibuild
+# for micropython headers generation flags
 CFLAGS += $(SHARED_FLAGS)
 CFLAGS += $(NETWORK_CORE_FLAGS)
 
-SRC_QSTR = $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
-SRC_QSTR += $(NETWORK_CORE_SOURCE_FILES)
+#  MIcropython core base libraries
 NETWORK_CORE_SOURCE_FILES += $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
-# NETWORK_CORE_FLAGS += -I.
+SRC_QSTR += $(NETWORK_CORE_SOURCE_FILES)
 
-OBJ_EXTRA_ORDER_DEPS = $(HEADER_BUILD)/qstrdefs.generated.h $(HEADER_BUILD)/mpversion.h $(HEADER_BUILD)/moduledefs.h $(HEADER_BUILD)/root_pointers.h $(HEADER_BUILD)/compressed.data.h
+# Micropython header makinf rules from py.mk and mkrules.mk
+MICROPYTHON_HEADERS = $(HEADER_BUILD)/qstrdefs.generated.h $(HEADER_BUILD)/mpversion.h $(HEADER_BUILD)/moduledefs.h $(HEADER_BUILD)/root_pointers.h $(HEADER_BUILD)/compressed.data.h
 
-all:build/application-core.elf $(OBJ_EXTRA_ORDER_DEPS)  build/network-core.elf
+all:build/application-core.elf $(MICROPYTHON_HEADERS) build/network-core.elf
 	@arm-none-eabi-objcopy -O ihex build/application-core.elf build/application-core.hex
 	@arm-none-eabi-objcopy -O ihex build/network-core.elf build/network-core.hex
 
