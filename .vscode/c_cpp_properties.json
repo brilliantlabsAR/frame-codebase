@@ -14,10 +14,11 @@
                 "nrfx/helpers",
                 "nrfx/mdk",
                 "nrfx/soc",
-                "segger"
+                "segger",
+                "${workspaceFolder}/frame_network_core/micropython",
+                "${workspaceFolder}/frame_network_core"
             ],
             "defines": [
-                // "NRF5340_XXAA_APPLICATION",
                 "NRF5340_XXAA_NETWORK",
                 "GIT_COMMIT=\"abcdefg\"",
                 "BUILD_VERSION=\"vYY.DDD.HHMM\""

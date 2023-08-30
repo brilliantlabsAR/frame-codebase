@@ -22,9 +22,27 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
+
 # Use date and time as build version "vYY.DDD.HHMM". := forces evaluation once
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
+
+# Include the core environment definitions
+include frame_network_core/micropython/py/mkenv.mk
+#  for micropython 
+PY_SRC = frame_network_core/micropython/py
+# QSTR_GEN_CFLAGS += -Iframe_application_core/micropython
+
+# Set makefile-level MicroPython feature configurations
+MICROPY_ROM_TEXT_COMPRESSION ?= 1
+# Which python files to freeze into the firmware are listed in here
+FROZEN_MANIFEST = modules/frozen-manifest.py
+# Include py core make definitions
+include frame_network_core/micropython/py/py.mk
+
+
+# Define the toolchain prefix for ARM GCC
+CROSS_COMPILE = arm-none-eabi-
 
 # C source files
 APPLICATION_CORE_SOURCE_FILES += frame_application_core/main.c
@@ -32,6 +50,45 @@ APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
+
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/readline/readline.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/gchelper_generic.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/interrupt_char.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/pyexec.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/stdout_helpers.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/sys_stdio_mphal.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/timeutils/timeutils.c
+
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/acoshf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/asinfacosf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/asinhf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/atan2f.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/atanf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/atanhf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/ef_rem_pio2.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/ef_sqrt.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/erf_lgamma.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/fmodf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/kf_cos.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/kf_rem_pio2.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/kf_sin.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/kf_tan.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/log1pf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/math.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/nearbyintf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/roundf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_cos.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_erf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_frexp.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_ldexp.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_modf.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_sin.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_tan.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/wf_lgamma.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/wf_tgamma.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/littlefs/lfs2_util.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/littlefs/lfs2.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/uzlib/crc32.c
 
 NETWORK_CORE_SOURCE_FILES += frame_network_core/main.c
 NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_spim.c
@@ -90,6 +147,7 @@ SHARED_FLAGS += -mthumb
 SHARED_FLAGS += -Os
 SHARED_FLAGS += -std=gnu17
 
+
 # Preprocessor defines
 APPLICATION_CORE_FLAGS += -DNRF5340_XXAA_APPLICATION
 
@@ -99,10 +157,15 @@ SHARED_FLAGS += -DBUILD_VERSION='"$(BUILD_VERSION)"'
 SHARED_FLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 SHARED_FLAGS += -DNDEBUG
 
+
+# CFLAGS += -mfpu=fpv5-sp-d16
+# CFLAGS += -mcmse
 # Linker options & linker script paths
 APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld
 
 NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
+NETWORK_CORE_FLAGS += -Iframe_network_core/micropython
+NETWORK_CORE_FLAGS += -Ibuild
 
 SHARED_FLAGS += --specs=nano.specs
 SHARED_FLAGS += -Wl,--gc-sections
@@ -110,7 +173,20 @@ SHARED_FLAGS += -Wl,--gc-sections
 # Link required libraries
 SHARED_FLAGS += -lm -lc -lnosys -lgcc
 
-all: build/application-core.elf build/network-core.elf
+# for micropython
+CFLAGS += -Iframe_network_core/micropython
+CFLAGS += -Ibuild
+CFLAGS += $(SHARED_FLAGS)
+CFLAGS += $(NETWORK_CORE_FLAGS)
+
+SRC_QSTR = $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
+SRC_QSTR += $(NETWORK_CORE_SOURCE_FILES)
+NETWORK_CORE_SOURCE_FILES += $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
+# NETWORK_CORE_FLAGS += -I.
+
+OBJ_EXTRA_ORDER_DEPS = $(HEADER_BUILD)/qstrdefs.generated.h $(HEADER_BUILD)/mpversion.h $(HEADER_BUILD)/moduledefs.h $(HEADER_BUILD)/root_pointers.h $(HEADER_BUILD)/compressed.data.h
+
+all:build/application-core.elf $(OBJ_EXTRA_ORDER_DEPS)  build/network-core.elf
 	@arm-none-eabi-objcopy -O ihex build/application-core.elf build/application-core.hex
 	@arm-none-eabi-objcopy -O ihex build/network-core.elf build/network-core.hex
 
@@ -136,3 +212,5 @@ recover:
 	nrfjprog --recover
 
 release:
+
+include frame_network_core/micropython/py/mkrules.mk

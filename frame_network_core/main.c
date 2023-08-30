@@ -22,6 +22,22 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include "genhdr/mpversion.h"
+#include "mpconfigport.h"
+#include "mphalport.h"
+#include "py/builtin.h"
+#include "py/compile.h"
+#include "py/gc.h"
+#include "py/mphal.h"
+#include "py/mperrno.h"
+#include "py/repl.h"
+#include "py/runtime.h"
+#include "py/stackctrl.h"
+#include "py/stream.h"
+#include "shared/readline/readline.h"
+#include "shared/runtime/interrupt_char.h"
+#include "shared/runtime/pyexec.h"
+
 #include "error_helpers.h"
 #include "nrf.h"
 #include "nrfx_log.h"
@@ -36,7 +52,12 @@ static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
-
+// extern uint32_t _ram_start;
+// static uint32_t ram_start = (uint32_t)&_ram_start;
+extern uint32_t _stack_top;
+extern uint32_t _stack_bot;
+extern uint32_t _heap_start;
+extern uint32_t _heap_end;
 static bool not_real_hardware_flag = false;
 
 typedef struct i2c_response_t
@@ -324,7 +345,54 @@ int main(void)
 
     // TODO inform the application processor that the network has started
 
-    while (1)
+    // while (1)
+    // {
+    // }
+    // Soft resets will always restart micropython,
+    while (true)
     {
+        // Initialise the stack pointer for the main thread
+        mp_stack_set_top(&_stack_top);
+
+        // Set the stack limit as smaller than the real stack so we can recover
+        mp_stack_set_limit((char *)&_stack_top - (char *)&_stack_bot - 512);
+
+        // Start garbage collection, micropython and the REPL
+        gc_init(&_heap_start, &_heap_end);
+        mp_init();
+        readline_init0();
+
+        // Mount the filesystem, or format if needed
+        // pyexec_frozen_module("_mountfs.py", false);
+        // pyexec_frozen_module("_splashscreen.py", false);
+
+        // If safe mode is not enabled, run the user's main.py file
+        // monocle_started_in_safe_mode() ? NRFX_LOG("Starting in safe mode")
+        //                                : pyexec_file_if_exists("main.py");
+
+        // Stay in the friendly or raw REPL until a reset is called
+        for (;;)
+        {
+            if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL)
+            {
+                if (pyexec_raw_repl() != 0)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if (pyexec_friendly_repl() != 0)
+                {
+                    break;
+                }
+            }
+        }
+
+        // On exit, clean up before reset
+        gc_sweep_all();
+        mp_deinit();
+
+        // mp_hal_stdout_tx_str("MPY: soft reboot\r\n");
     }
 }
