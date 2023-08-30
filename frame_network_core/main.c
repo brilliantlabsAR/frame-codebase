@@ -44,6 +44,8 @@ static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
 static bool not_real_hardware_flag = false;
 
+static bool prevent_sleep = true;
+
 static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 
 typedef struct i2c_response_t
@@ -232,7 +234,14 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void power_down_network_core(void)
 {
-    message_t response = MESSAGE_WITHOUT_PAYLOAD(READY_TO_SHUTDOWN);
+    if (prevent_sleep)
+    {
+        message_t response = MESSAGE_WITHOUT_PAYLOAD(SLEEP_PREVENTED);
+        push_message(response);
+        return;
+    }
+
+    message_t response = MESSAGE_WITHOUT_PAYLOAD(READY_TO_SLEEP);
     push_message(response);
 }
 
@@ -246,15 +255,16 @@ static void interprocessor_message_handler(void)
 
         switch (message->instruction)
         {
+        case PREPARE_FOR_SLEEP:
+            power_down_network_core();
+            break;
+
         case LOG_FROM_APPLICATION_CORE:
             NRFX_LOG("%s", message->payload);
             break;
 
-        case PREPARE_FOR_SHUTDOWN:
-            power_down_network_core();
-            break;
-
         default:
+            app_err(UNHANDLED_MESSAGE_INSTRUCTION);
             break;
         }
 

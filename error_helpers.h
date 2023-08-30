@@ -31,7 +31,8 @@ typedef enum extended_error_codes_t
 {
     HARDWARE_ERROR = 0x0BAC0001,
     ASSERT,
-    HARD_FAULT
+    HARD_FAULT,
+    UNHANDLED_MESSAGE_INSTRUCTION
 } extended_error_codes_t;
 
 const char *lookup_error_code(uint32_t error_code);

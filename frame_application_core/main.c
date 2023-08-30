@@ -30,24 +30,39 @@
 #include "nrf.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
+#include "nrfx_systick.h"
 #include "pinout.h"
 
 static volatile bool network_core_ready = false;
-static volatile bool ready_to_shutdown = false;
+static volatile bool ready_to_sleep = false;
+static volatile bool sleep_prevented = false;
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
                                               void *p_context)
 {
+    // Disable interrupts to prevent too many triggers from pin bounces
+    nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
     NRFX_LOG("Going to sleep");
 
     // Inform the network core that we're about to sleep
-    message_t message = MESSAGE_WITHOUT_PAYLOAD(PREPARE_FOR_SHUTDOWN);
+    message_t message = MESSAGE_WITHOUT_PAYLOAD(PREPARE_FOR_SLEEP);
     push_message(message);
 
-    // Wait for network core to complete the shutdown process
-    while (ready_to_shutdown == false)
+    // Wait for the network core to complete the shutdown process
+    while (ready_to_sleep == false)
     {
+        if (sleep_prevented)
+        {
+            NRFX_LOG("Sleep prevented");
+
+            // Short delay to prevent too many messages clogging things up
+            nrfx_systick_delay_ms(100);
+
+            // Re-enable interrupts before exiting
+            nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+            return;
+        }
     }
 
     NRF_REGULATORS->SYSTEMOFF = 1;
@@ -69,15 +84,24 @@ static void interprocessor_message_handler(void)
 
         switch (message->instruction)
         {
+        case RESET_CHIP:
+            NVIC_SystemReset();
+            break;
+
         case NETWORK_CORE_READY:
             network_core_ready = true;
             break;
 
-        case READY_TO_SHUTDOWN:
-            ready_to_shutdown = true;
+        case READY_TO_SLEEP:
+            ready_to_sleep = true;
+            break;
+
+        case SLEEP_PREVENTED:
+            sleep_prevented = true;
             break;
 
         default:
+            app_err(UNHANDLED_MESSAGE_INSTRUCTION);
             break;
         }
 
@@ -106,6 +130,11 @@ static void frame_setup_application_core(void)
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLK192MSTART);
+    }
+
+    // Configure systick so we can use it for simple delays
+    {
+        nrfx_systick_init();
     }
 
     // Set up ADC for battery level monitoring
@@ -167,11 +196,11 @@ static void frame_setup_application_core(void)
         app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
         nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLUP, // TODO decide on this
+            .pull = NRF_GPIO_PIN_PULLUP, // TODO pull this up with a large resistor
         };
 
         nrfx_gpiote_trigger_config_t trigger_config = {
-            .trigger = NRFX_GPIOTE_TRIGGER_TOGGLE, // TODO decide on this
+            .trigger = NRFX_GPIOTE_TRIGGER_HITOLO,
             .p_in_channel = NULL,
         };
 

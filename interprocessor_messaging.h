@@ -30,13 +30,18 @@
 
 typedef enum instruction_t
 {
+    // Network -> Application core commands
     RESET_CHIP,
-    RESET_FOR_FIRMWARE_UPDATE,
     NETWORK_CORE_READY,
-    PREPARE_FOR_SHUTDOWN,
-    READY_TO_SHUTDOWN,
-    GET_FPGA_ID,
+    READY_TO_SLEEP,
+    SLEEP_PREVENTED,
+
+    // Application -> Network core commands
+    PREPARE_FOR_SLEEP,
     LOG_FROM_APPLICATION_CORE,
+
+    // nRF53 -> FPGA commands
+    GET_FPGA_ID,
 } instruction_t;
 
 typedef struct message_t

@@ -23,6 +23,7 @@
  */
 
 #include "error_helpers.h"
+#include "interprocessor_messaging.h"
 #include "nrfx_log.h"
 
 void _app_err(nrfx_err_t error_code, const char *file, const int line)
@@ -46,7 +47,8 @@ void _app_err(nrfx_err_t error_code, const char *file, const int line)
 #ifdef NRF5340_XXAA_APPLICATION
         NVIC_SystemReset();
 #elif NRF5340_XXAA_NETWORK
-        NVIC_SystemReset(); /* TODO: Notify application processor */
+        message_t reset = MESSAGE_WITHOUT_PAYLOAD(RESET_CHIP);
+        push_message(reset);
 #endif
     }
 }
@@ -68,6 +70,9 @@ const char *lookup_error_code(uint32_t error_code)
 
     case HARD_FAULT:
         return "HARD_FAULT";
+
+    case UNHANDLED_MESSAGE_INSTRUCTION:
+        return "UNHANDLED_MESSAGE_INSTRUCTION";
 
     case NRFX_SUCCESS:
         return "NRFX_SUCCESS";

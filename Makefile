@@ -29,6 +29,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 # C source files
 APPLICATION_CORE_SOURCE_FILES += frame_application_core/main.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
+APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_systick.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
 
