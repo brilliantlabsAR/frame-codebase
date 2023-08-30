@@ -24,14 +24,30 @@
 
 #pragma once
 
+#include "interprocessor_messaging.h"
 #include "SEGGER_RTT.h"
+#include <stdio.h>
 
 /**
  * @brief Logging macros.
  */
 
+#ifdef NRF5340_XXAA_APPLICATION
+
+#define NRFX_LOG(format, ...)                                                   \
+    {                                                                           \
+        char log_string[50];                                                    \
+        sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__);                  \
+        message_t log_message = MESSAGE(LOG_FROM_APPLICATION_CORE, log_string); \
+        push_message(log_message);                                              \
+    }
+
+#elif NRF5340_XXAA_NETWORK
+
 #define NRFX_LOG(format, ...) \
-    SEGGER_RTT_printf(0, format "\r\n", ##__VA_ARGS__)
+    SEGGER_RTT_printf(0, "\x1B[92m" format "\r\n", ##__VA_ARGS__)
+
+#endif
 
 #define NRFX_LOG_ERROR(format, ...)
 #define NRFX_LOG_WARNING(format, ...)

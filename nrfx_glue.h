@@ -61,6 +61,7 @@
 #include <soc/nrfx_atomic.h>
 #include <soc/nrfx_coredep.h>
 
+#define nrfx_ipc_irq_handler IPC_IRQHandler
 #define nrfx_rtc_0_irq_handler RTC0_IRQHandler
 
 #define NRFX_ASSERT(expression) \

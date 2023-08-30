@@ -59,8 +59,6 @@ static uint8_t ipc_rx_channel;
 
 static void ipc_handler(uint8_t event_idx, void *p_context)
 {
-    NRFX_LOG("New interrupt on channel: %u", event_idx);
-
     ((message_handler_t)p_context)();
 }
 
@@ -94,7 +92,7 @@ void setup_messaging(message_handler_t handler)
     tx->head = 0;
     rx->tail = 0;
 
-    nrfx_ipc_init(7, ipc_handler, handler);
+    app_err(nrfx_ipc_init(7, ipc_handler, handler));
     nrfx_ipc_send_task_channel_assign(ipc_tx_channel, ipc_tx_channel);
     nrfx_ipc_receive_event_channel_assign(ipc_rx_channel, ipc_rx_channel);
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
@@ -102,8 +100,6 @@ void setup_messaging(message_handler_t handler)
 
 void push_message(message_t message)
 {
-    // NRFX_LOG("Pushing message. Ins: %u, Len: %u, Payload: %s", message.instruction, message.size, message.payload);
-
     for (size_t position = 0; position < message.size; position++)
     {
         size_t next = tx->head + 1;
@@ -115,7 +111,6 @@ void push_message(message_t message)
 
         while (next == tx->tail)
         {
-            NRFX_LOG("TX Buffer is full");
             // Buffer is full. Do nothing
         }
 
@@ -137,20 +132,15 @@ void push_message(message_t message)
         tx->head = next;
     }
 
-    NRFX_LOG("Message written. TX head = %u, RX tail = %u", tx->head, rx->tail);
-
-    NRFX_LOG("Generating interrupt on channel: %u", ipc_tx_channel);
-
     nrfx_ipc_signal(ipc_tx_channel);
 }
 
 void pop_message(message_t *message)
 {
-    for (size_t position = 0;; position++)
+    for (size_t position = 0; position < message->size; position++)
     {
         if (rx->tail == rx->head)
         {
-            NRFX_LOG("Message buffer empty");
             return;
         }
 
@@ -164,7 +154,7 @@ void pop_message(message_t *message)
         switch (position)
         {
         case 0:
-            message->size = rx->buffer[rx->tail];
+            // message->size should already be populated, so we skip this
             break;
 
         case 1:
@@ -176,21 +166,17 @@ void pop_message(message_t *message)
             break;
         }
 
-        tx->tail = next;
+        rx->tail = next;
     }
 }
 
 uint8_t pending_message_length(void)
 {
-    NRFX_LOG("Checking for message");
-
     if (rx->head == rx->tail)
     {
-        NRFX_LOG("No messages");
         return 0;
     }
 
-    NRFX_LOG("Message length = %u", rx->buffer[rx->tail]);
     return rx->buffer[rx->tail];
 }
 

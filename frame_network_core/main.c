@@ -236,8 +236,6 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void interprocessor_message_handler(void)
 {
-    NRFX_LOG("New message");
-
     while (pending_message_length() > 0)
     {
         message_t *message = new_message(pending_message_length());
@@ -247,7 +245,7 @@ static void interprocessor_message_handler(void)
         switch (message->instruction)
         {
         case LOG_FROM_APPLICATION_CORE:
-            NRFX_LOG("App log: %s", message->payload);
+            NRFX_LOG("%s", message->payload);
             break;
 
         default:
@@ -479,21 +477,15 @@ static void setup_network_core(void)
     {
         message_t message = MESSAGE(NETWORK_CORE_READY, "Ready");
         push_message(message);
-
-        message_t message_2 = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_READY);
-        push_message(message_2);
-
-        uint8_t arr_2[] = {0x61, 0x62, 0x63, 0};
-        message_t message_3 = MESSAGE(LOG_FROM_APPLICATION_CORE, arr_2);
-        push_message(message_3);
     }
+
+    NRFX_LOG("Network core configured");
 }
 
 int main(void)
 {
-    NRFX_LOG(RTT_CTRL_CLEAR);
+    NRFX_LOG(RTT_CTRL_RESET RTT_CTRL_CLEAR);
     NRFX_LOG("MicroPython on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
-    NRFX_LOG("Logging from network core");
 
     setup_network_core();
 

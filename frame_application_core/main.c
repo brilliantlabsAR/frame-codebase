@@ -24,17 +24,15 @@
 
 #include "error_helpers.h"
 #include "interprocessor_messaging.h"
+#include "nrf_clock.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
 #include "nrf.h"
-#include "nrfx_clock.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
 #include "pinout.h"
 
-static bool network_core_ready = false;
-
-static void unused_clock_event_handler(nrfx_clock_evt_type_t event) {}
+static volatile bool network_core_ready = false;
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
@@ -57,8 +55,6 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
 
 static void interprocessor_message_handler(void)
 {
-    NRFX_LOG("New message from network core");
-
     while (pending_message_length() > 0)
     {
         message_t *message = new_message(pending_message_length());
@@ -68,7 +64,6 @@ static void interprocessor_message_handler(void)
         switch (message->instruction)
         {
         case NETWORK_CORE_READY:
-            NRFX_LOG("Network core ready");
             network_core_ready = true;
             break;
 
@@ -82,12 +77,9 @@ static void interprocessor_message_handler(void)
 
 static void frame_setup_application_core(void)
 {
-    // Start the clocks
+    // Configure the clock sources
     {
-        app_err(nrfx_clock_init(unused_clock_event_handler));
-        nrfx_clock_enable();
-
-        // High frequency crystal uses internally configurable capacitors
+        // // High frequency crystal uses internally configurable capacitors
         uint32_t capacitance_pf = 8;
         int32_t slope = NRF_FICR->XOSC32MTRIM & 0x1F;
         int32_t trim = (NRF_FICR->XOSC32MTRIM >> 5) & 0x1F;
@@ -97,9 +89,13 @@ static void frame_setup_application_core(void)
             true,
             (1 + slope / 16) * (capacitance_pf * 2 - 14) + trim);
 
-        nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK);
-        nrfx_clock_start(NRF_CLOCK_DOMAIN_HFCLK192M);
-        nrfx_clock_start(NRF_CLOCK_DOMAIN_LFCLK);
+        nrf_clock_lf_src_set(NRF_CLOCK, NRFX_CLOCK_CONFIG_LF_SRC);
+        nrf_clock_hf_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
+        nrf_clock_hfclk192m_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
+
+        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
+        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
+        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLK192MSTART);
     }
 
     // Configure case detect pin for sleeping
@@ -185,17 +181,13 @@ static void frame_setup_application_core(void)
     // Initialize SPI to the FPGA
     {
     }
+
+    NRFX_LOG("Application core configured");
 }
 
 int main(void)
 {
-    NRFX_LOG(RTT_CTRL_CLEAR);
-    NRFX_LOG("MicroPython on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
-    NRFX_LOG("Logging from application core");
-
     frame_setup_application_core();
-
-    NRFX_LOG("Application core ready");
 
     while (1)
     {

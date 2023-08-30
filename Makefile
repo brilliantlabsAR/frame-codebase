@@ -28,7 +28,6 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # C source files
 APPLICATION_CORE_SOURCE_FILES += frame_application_core/main.c
-APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_clock.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
@@ -39,13 +38,13 @@ NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_spim.c
 NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_twim.c
 NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
 NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
+NETWORK_CORE_SOURCE_FILES += segger/SEGGER_RTT_printf.c
+NETWORK_CORE_SOURCE_FILES += segger/SEGGER_RTT.c
 
 SHARED_SOURCE_FILES += error_helpers.c
 SHARED_SOURCE_FILES += interprocessor_messaging.c
 SHARED_SOURCE_FILES += nrfx/drivers/src/nrfx_ipc.c
 SHARED_SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
-SHARED_SOURCE_FILES += segger/SEGGER_RTT_printf.c
-SHARED_SOURCE_FILES += segger/SEGGER_RTT.c
 
 # Header file paths
 APPLICATION_CORE_FLAGS += -Iframe_application_core
