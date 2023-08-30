@@ -33,6 +33,8 @@ typedef enum instruction_t
     RESET_CHIP,
     RESET_FOR_FIRMWARE_UPDATE,
     NETWORK_CORE_READY,
+    PREPARE_FOR_SHUTDOWN,
+    READY_TO_SHUTDOWN,
     GET_FPGA_ID,
     LOG_FROM_APPLICATION_CORE,
 } instruction_t;

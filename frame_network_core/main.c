@@ -230,9 +230,11 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
     }
 }
 
-// static void power_down_network_core(void)
-// {
-// }
+static void power_down_network_core(void)
+{
+    message_t response = MESSAGE_WITHOUT_PAYLOAD(READY_TO_SHUTDOWN);
+    push_message(response);
+}
 
 static void interprocessor_message_handler(void)
 {
@@ -246,6 +248,10 @@ static void interprocessor_message_handler(void)
         {
         case LOG_FROM_APPLICATION_CORE:
             NRFX_LOG("%s", message->payload);
+            break;
+
+        case PREPARE_FOR_SHUTDOWN:
+            power_down_network_core();
             break;
 
         default:
@@ -475,7 +481,7 @@ static void setup_network_core(void)
 
     // Inform the application processor that the hardware is configured
     {
-        message_t message = MESSAGE(NETWORK_CORE_READY, "Ready");
+        message_t message = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_READY);
         push_message(message);
     }
 

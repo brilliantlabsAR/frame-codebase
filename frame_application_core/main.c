@@ -33,16 +33,22 @@
 #include "pinout.h"
 
 static volatile bool network_core_ready = false;
+static volatile bool ready_to_shutdown = false;
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
                                               void *p_context)
 {
+    NRFX_LOG("Going to sleep");
+
     // Inform the network core that we're about to sleep
+    message_t message = MESSAGE_WITHOUT_PAYLOAD(PREPARE_FOR_SHUTDOWN);
+    push_message(message);
 
     // Wait for network core to complete the shutdown process
-
-    NRFX_LOG("Going to sleep");
+    while (ready_to_shutdown == false)
+    {
+    }
 
     NRF_REGULATORS->SYSTEMOFF = 1;
     __DSB();
@@ -65,6 +71,10 @@ static void interprocessor_message_handler(void)
         {
         case NETWORK_CORE_READY:
             network_core_ready = true;
+            break;
+
+        case READY_TO_SHUTDOWN:
+            ready_to_shutdown = true;
             break;
 
         default:
@@ -96,32 +106,6 @@ static void frame_setup_application_core(void)
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLK192MSTART);
-    }
-
-    // Configure case detect pin for sleeping
-    {
-        app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
-
-        nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLUP, // TODO decide on this
-        };
-
-        nrfx_gpiote_trigger_config_t trigger_config = {
-            .trigger = NRFX_GPIOTE_TRIGGER_TOGGLE, // TODO decide on this
-            .p_in_channel = NULL,
-        };
-
-        nrfx_gpiote_handler_config_t handler_config = {
-            .handler = case_detect_pin_interrupt_handler,
-            .p_context = NULL,
-        };
-
-        app_err(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
-                                            &input_config,
-                                            &trigger_config,
-                                            &handler_config));
-
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
     // Set up ADC for battery level monitoring
@@ -176,6 +160,32 @@ static void frame_setup_application_core(void)
     // Wait for the network core to start up
     while (network_core_ready == false)
     {
+    }
+
+    // Configure case detect pin for sleeping
+    {
+        app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+
+        nrfx_gpiote_input_config_t input_config = {
+            .pull = NRF_GPIO_PIN_PULLUP, // TODO decide on this
+        };
+
+        nrfx_gpiote_trigger_config_t trigger_config = {
+            .trigger = NRFX_GPIOTE_TRIGGER_TOGGLE, // TODO decide on this
+            .p_in_channel = NULL,
+        };
+
+        nrfx_gpiote_handler_config_t handler_config = {
+            .handler = case_detect_pin_interrupt_handler,
+            .p_context = NULL,
+        };
+
+        app_err(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                            &input_config,
+                                            &trigger_config,
+                                            &handler_config));
+
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
     // Initialize SPI to the FPGA

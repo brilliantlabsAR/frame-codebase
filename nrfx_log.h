@@ -35,12 +35,13 @@
 #ifdef NRF5340_XXAA_APPLICATION
 
 #define NRFX_LOG(format, ...)                                                   \
+    do                                                                          \
     {                                                                           \
         char log_string[50];                                                    \
         sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__);                  \
         message_t log_message = MESSAGE(LOG_FROM_APPLICATION_CORE, log_string); \
         push_message(log_message);                                              \
-    }
+    } while (0)
 
 #elif NRF5340_XXAA_NETWORK
 

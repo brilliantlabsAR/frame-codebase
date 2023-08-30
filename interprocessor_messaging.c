@@ -92,8 +92,12 @@ void setup_messaging(message_handler_t handler)
     tx->head = 0;
     rx->tail = 0;
 
-    app_err(nrfx_ipc_init(7, ipc_handler, handler));
+    app_err(nrfx_ipc_init(NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY,
+                          ipc_handler,
+                          handler));
+
     nrfx_ipc_send_task_channel_assign(ipc_tx_channel, ipc_tx_channel);
+
     nrfx_ipc_receive_event_channel_assign(ipc_rx_channel, ipc_rx_channel);
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
 }

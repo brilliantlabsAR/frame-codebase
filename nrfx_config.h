@@ -29,8 +29,10 @@
 
 #ifdef NRF5340_XXAA_APPLICATION
 #define NRFX_GPIOTE_ENABLED 1
+#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
 #define NRFX_SAADC_ENABLED 1
 #define NRFX_IPC_ENABLED 1
+#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 
@@ -42,5 +44,6 @@
 #define NRFX_SPIM_ENABLED 1
 #define NRFX_SPIM0_ENABLED 1
 #define NRFX_IPC_ENABLED 1
+#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 7
 #include "nrfx/templates/nrfx_config_nrf5340_network.h"
 #endif
