@@ -10,3 +10,6 @@
 [submodule "frame_network_core/sdk-nrfxlib"]
 	path = frame_network_core/sdk-nrfxlib
 	url = https://github.com/nrfconnect/sdk-nrfxlib.git
+[submodule "frame_application_core/frame-fpga"]
+	path = frame_application_core/frame-fpga
+	url = https://github.com/brilliantlabsAR/frame-fpga
