@@ -42,7 +42,7 @@ static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
-static bool not_real_hardware_flag = false;
+static bool not_real_hardware = false;
 
 static bool prevent_sleep = true;
 
@@ -58,7 +58,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
                         uint16_t register_address,
                         uint8_t register_mask)
 {
-    if (not_real_hardware_flag)
+    if (not_real_hardware)
     {
         return (i2c_response_t){.fail = false, .value = 0x00};
     }
@@ -130,7 +130,7 @@ i2c_response_t i2c_write(uint8_t device_address_7bit,
 {
     i2c_response_t resp = {.fail = false, .value = 0x00};
 
-    if (not_real_hardware_flag)
+    if (not_real_hardware)
     {
         return resp;
     }
@@ -315,10 +315,10 @@ static void setup_network_core(void)
         if (magnetometer_response.fail && pmic_response.fail)
         {
             NRFX_LOG("Running on nRF5340-DK");
-            not_real_hardware_flag = true;
+            not_real_hardware = true;
         }
 
-        if (not_real_hardware_flag == false)
+        if (not_real_hardware == false)
         {
             if (magnetometer_response.value != 0x49)
             {
@@ -381,17 +381,11 @@ static void setup_network_core(void)
         app_err(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
     }
 
-    // Configure the display and FPGA CS pins, and set them to high
-    {
-        nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
-        nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
-        nrf_gpio_pin_set(DISPLAY_SPI_SELECT_PIN);
-        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
-    }
-
     // Initialize the SPI and configure the display
     {
-        // nrfx_twim_uninit(&i2c_instance);
+        nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
+        nrf_gpio_pin_set(DISPLAY_SPI_SELECT_PIN);
+
         nrfx_twim_disable(&i2c_instance);
 
         nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
@@ -416,38 +410,6 @@ static void setup_network_core(void)
         }
     }
 
-    // Re-initialize SPI and configure the FPGA
-    {
-        nrfx_spim_uninit(&spi_instance);
-
-        nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
-            FPGA_SPI_CLOCK_PIN,
-            FPGA_SPI_IO0_PIN,
-            NRF_SPIM_PIN_NOT_CONNECTED,
-            NRF_SPIM_PIN_NOT_CONNECTED);
-
-        app_err(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
-
-        // Program the FPGA
-
-        // Wait until FPGA has started
-
-        // Check the chip ID
-        uint8_t id_register[1] = {0x00};
-        uint8_t id_value[1];
-
-        spi_write(id_register, sizeof(id_register), FPGA_SPI_SELECT_PIN, true);
-        spi_read(id_value, sizeof(id_value), FPGA_SPI_SELECT_PIN, false);
-
-        if (not_real_hardware_flag == false)
-        {
-            if (id_value[0] != 0x0A)
-            {
-                app_err(HARDWARE_ERROR);
-            }
-        }
-    }
-
     // Re-initialize the I2C and configure the camera
     {
         nrfx_spim_uninit(&spi_instance);
@@ -461,7 +423,7 @@ static void setup_network_core(void)
         i2c_response_t camera_response =
             i2c_read(CAMERA_I2C_ADDRESS, 0x300A, 0xFF);
 
-        if (not_real_hardware_flag == false)
+        if (not_real_hardware == false)
         {
             if (camera_response.value != 0x97)
             {
@@ -492,6 +454,13 @@ static void setup_network_core(void)
     // Inform the application processor that the hardware is configured
     {
         message_t message = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_READY);
+        push_message(message);
+    }
+
+    // If not real hardware, inform the application processor
+    if (not_real_hardware)
+    {
+        message_t message = MESSAGE_WITHOUT_PAYLOAD(NOT_REAL_HARDWARE);
         push_message(message);
     }
 

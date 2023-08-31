@@ -35,6 +35,7 @@
 #define NRFX_SAADC_ENABLED 1
 #define NRFX_IPC_ENABLED 1
 #define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
+#define NRFX_QSPI_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 

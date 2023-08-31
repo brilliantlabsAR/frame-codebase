@@ -35,6 +35,7 @@ typedef enum instruction_t
     NETWORK_CORE_READY,
     READY_TO_SLEEP,
     SLEEP_PREVENTED,
+    NOT_REAL_HARDWARE,
 
     // Application -> Network core commands
     PREPARE_FOR_SLEEP,

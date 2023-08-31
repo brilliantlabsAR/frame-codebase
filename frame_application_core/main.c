@@ -30,12 +30,14 @@
 #include "nrf.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
+#include "nrfx_qspi.h"
 #include "nrfx_systick.h"
 #include "pinout.h"
 
 static volatile bool network_core_ready = false;
 static volatile bool ready_to_sleep = false;
 static volatile bool sleep_prevented = false;
+static volatile bool not_real_hardware = false;
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
@@ -65,6 +67,11 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
         }
     }
 
+    // Disable SPI to the FPGA
+
+    // Deinitialize pins
+
+    // Power off until the next pin interrupt
     NRF_REGULATORS->SYSTEMOFF = 1;
     __DSB();
 
@@ -98,6 +105,10 @@ static void interprocessor_message_handler(void)
 
         case SLEEP_PREVENTED:
             sleep_prevented = true;
+            break;
+
+        case NOT_REAL_HARDWARE:
+            not_real_hardware = true;
             break;
 
         default:
@@ -137,9 +148,6 @@ static void frame_setup_application_core(void)
         nrfx_systick_init();
     }
 
-    // Set up ADC for battery level monitoring
-    {}
-
     // Pass pins to network core control
     {
         nrf_gpio_pin_control_select(CAMERA_SLEEP_PIN,
@@ -152,21 +160,6 @@ static void frame_setup_application_core(void)
                                     NRF_GPIO_PIN_SEL_NETWORK);
 
         nrf_gpio_pin_control_select(DISPLAY_SPI_SELECT_PIN,
-                                    NRF_GPIO_PIN_SEL_NETWORK);
-
-        nrf_gpio_pin_control_select(FPGA_PROGRAM_PIN,
-                                    NRF_GPIO_PIN_SEL_NETWORK);
-
-        nrf_gpio_pin_control_select(FPGA_SPI_CLOCK_PIN,
-                                    NRF_GPIO_PIN_SEL_NETWORK);
-
-        nrf_gpio_pin_control_select(FPGA_SPI_IO0_PIN,
-                                    NRF_GPIO_PIN_SEL_NETWORK);
-
-        nrf_gpio_pin_control_select(FPGA_SPI_IO1_PIN,
-                                    NRF_GPIO_PIN_SEL_NETWORK);
-
-        nrf_gpio_pin_control_select(FPGA_SPI_SELECT_PIN,
                                     NRF_GPIO_PIN_SEL_NETWORK);
 
         nrf_gpio_pin_control_select(I2C_SCL_PIN,
@@ -189,6 +182,12 @@ static void frame_setup_application_core(void)
     // Wait for the network core to start up
     while (network_core_ready == false)
     {
+        // Do nothing
+    }
+
+    // Read the case detect pin. If docked, we sleep right away
+    {
+        // TODO
     }
 
     // Configure case detect pin for sleeping
@@ -217,8 +216,44 @@ static void frame_setup_application_core(void)
         nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
-    // Initialize SPI to the FPGA
+    // Initialize SPI and control pins to the FPGA
     {
+        // nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
+        // nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
+        nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+
+        nrfx_qspi_config_t qspi_config = NRFX_QSPI_DEFAULT_CONFIG(
+            FPGA_SPI_CLOCK_PIN,
+            FPGA_SPI_SELECT_PIN,
+            FPGA_SPI_IO0_PIN,
+            FPGA_SPI_IO1_PIN,
+            NRF_QSPI_PIN_NOT_CONNECTED,
+            NRF_QSPI_PIN_NOT_CONNECTED);
+
+        app_err(nrfx_qspi_init(&qspi_config, NULL, NULL));
+    }
+
+    // Run the FPGA application loading sequence
+    {
+        // Program the FPGA
+
+        // Wait until FPGA has started
+
+        // Check the chip ID
+
+        if (not_real_hardware == false)
+        {
+            // if (id_value[0] != 0x0A)
+            {
+                app_err(HARDWARE_ERROR);
+            }
+        }
+    }
+
+    // Set up ADC for battery level monitoring
+    {
+        // TODO
     }
 
     NRFX_LOG("Application core configured");
