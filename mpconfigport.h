@@ -79,7 +79,7 @@
 #define MICROPY_PY_BUILTINS_ROUND_INT (1)
 #define MICROPY_PY_BUILTINS_NOTIMPLEMENTED (1)
 #define MICROPY_PY_BUILTINS_HELP (1)
-// #define MICROPY_PY_BUILTINS_HELP_TEXT help_text
+#define MICROPY_PY_BUILTINS_HELP_TEXT help_text
 #define MICROPY_PY_BUILTINS_HELP_MODULES (1)
 #define MICROPY_PY_BUILTINS_INPUT (1)
 
@@ -127,6 +127,5 @@
 #define MP_SSIZE_MAX (0x7fffffff)
 
 #define MP_STATE_PORT MP_STATE_VM
-
 void mp_event_poll_hook(void);
 #define MICROPY_EVENT_POLL_HOOK mp_event_poll_hook();

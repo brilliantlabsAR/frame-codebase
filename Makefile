@@ -32,7 +32,7 @@ include frame_network_core/micropython/py/mkenv.mk
 #  for micropython 
 PY_SRC = frame_network_core/micropython/py
 # QSTR_GEN_CFLAGS += -Iframe_application_core/micropython
-
+TOP = frame_network_core
 # Set makefile-level MicroPython feature configurations
 MICROPY_ROM_TEXT_COMPRESSION ?= 1
 # Which python files to freeze into the firmware are listed in here
@@ -51,12 +51,30 @@ APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
 APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
 
+NETWORK_CORE_SOURCE_FILES += mphalport.c
+
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modasyncio.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modbinascii.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modhashlib.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modjson.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modos.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modrandom.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modre.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modselect.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/modtime.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs_blockdev.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs_lfs.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs_lfsx_file.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs_lfsx.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs_reader.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/extmod/vfs.c
+
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/readline/readline.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/gchelper_generic.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/interrupt_char.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/pyexec.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/stdout_helpers.c
-NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/sys_stdio_mphal.c
+# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/runtime/sys_stdio_mphal.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/shared/timeutils/timeutils.c
 
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/acoshf.c
@@ -86,7 +104,7 @@ NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_sin.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/sf_tan.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/wf_lgamma.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/libm/wf_tgamma.c
-# NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/littlefs/lfs2_util.c
+NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/littlefs/lfs2_util.c
 # NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/littlefs/lfs2.c
 NETWORK_CORE_SOURCE_FILES += frame_network_core/micropython/lib/uzlib/crc32.c
 
@@ -165,22 +183,26 @@ NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
 NETWORK_CORE_FLAGS += -Iframe_network_core/micropython
 NETWORK_CORE_FLAGS += -Iframe_network_core/micropython/py
 NETWORK_CORE_FLAGS += -Ibuild
-NETWORK_CORE_FLAGS += -Iframe_network_core/lib/cmsis/inc
-NETWORK_CORE_FLAGS += -Iframe_network_core/shared/readline
+NETWORK_CORE_FLAGS += -Iframe_network_core/micropython/lib/cmsis/inc
+NETWORK_CORE_FLAGS += -Iframe_network_core/micropython/shared/readline
+
 
 SHARED_FLAGS += --specs=nano.specs
 SHARED_FLAGS += -Wl,--gc-sections
 
 # Link required libraries
 SHARED_FLAGS += -lm -lc -lnosys -lgcc
+SHARED_FLAGS += -Xlinker -Map=$(@:.elf=.map)
+# SHARED_FLAGS += --specs=nano.specs
 
 # for micropython headers generation flags
 CFLAGS += $(SHARED_FLAGS)
 CFLAGS += $(NETWORK_CORE_FLAGS)
+LDFLAGS += $(SHARED_FLAGS)
+LDFLAGS += $(NETWORK_CORE_FLAGS)
 
 #  MIcropython core base libraries
-NETWORK_CORE_SOURCE_FILES += $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
-SRC_QSTR += $(NETWORK_CORE_SOURCE_FILES)
+SRC_QSTR = $(patsubst %.o,frame_network_core/micropython/%.c,$(PY_CORE_O_BASENAME))
 
 # Micropython header makinf rules from py.mk and mkrules.mk
 MICROPYTHON_HEADERS = $(HEADER_BUILD)/qstrdefs.generated.h $(HEADER_BUILD)/mpversion.h $(HEADER_BUILD)/moduledefs.h $(HEADER_BUILD)/root_pointers.h $(HEADER_BUILD)/compressed.data.h

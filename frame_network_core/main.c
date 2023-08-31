@@ -27,6 +27,7 @@
 #include "mphalport.h"
 #include "py/builtin.h"
 #include "py/compile.h"
+#include <unistd.h>
 #include "py/gc.h"
 #include "py/mphal.h"
 #include "py/mperrno.h"
@@ -55,9 +56,9 @@ static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 // extern uint32_t _ram_start;
 // static uint32_t ram_start = (uint32_t)&_ram_start;
 static uint32_t _stack_top;
-// static uint32_t _stack_bot;
-// static uint32_t _heap_start;
-// static uint32_t _heap_end;
+static uint32_t _stack_bot;
+static uint32_t _heap_start;
+static uint32_t _heap_end;
 static bool not_real_hardware_flag = true;
 
 typedef struct i2c_response_t
@@ -334,44 +335,7 @@ static void setup_network_core(void)
     {
     }
 }
-void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len)
-{
-    for (uint16_t position = 0; position < len; position++)
-    {
-        // while (repl_tx.head == repl_tx.tail - 1)
-        // {
-        //     MICROPY_EVENT_POLL_HOOK;
-        // }
 
-        // repl_tx.buffer[repl_tx.head++] = str[position];
-
-        // if (repl_tx.head == sizeof(repl_tx.buffer))
-        // {
-        //     repl_tx.head = 0;
-        // }
-    }
-}
-
-int mp_hal_stdin_rx_chr(void)
-{
-    // while (repl_rx.head == repl_rx.tail)
-    // {
-    //     MICROPY_EVENT_POLL_HOOK;
-    // }
-
-    // uint16_t next = repl_rx.tail + 1;
-
-    // if (next == sizeof(repl_rx.buffer))
-    // {
-    //     next = 0;
-    // }
-
-    // int character = repl_rx.buffer[repl_rx.tail];
-
-    // repl_rx.tail = next;
-
-    return 03;
-}
 uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags)
 {
     // return (repl_rx.head == repl_rx.tail) ? poll_flags & MP_STREAM_POLL_RD : 0;
@@ -388,56 +352,56 @@ int main(void)
 
     // TODO inform the application processor that the network has started
 
-    while (1)
-    {
-    }
-    // Soft resets will always restart micropython,
-    // while (true)
+    // while (1)
     // {
-    //     //     // Initialise the stack pointer for the main thread
-    //     mp_stack_set_top(&_stack_top);
-
-    //     //     // Set the stack limit as smaller than the real stack so we can recover
-    //     mp_stack_set_limit((char *)&_stack_top - (char *)&_stack_bot - 512);
-
-    //     //     // Start garbage collection, micropython and the REPL
-    //     gc_init(&_heap_start, &_heap_end);
-    //     mp_init();
-    //     // readline_init0();
-    //     pyexec_friendly_repl();
-    //     //     // Mount the filesystem, or format if needed
-    //     //     // pyexec_frozen_module("_mountfs.py", false);
-    //     //     // pyexec_frozen_module("_splashscreen.py", false);
-
-    //     //     // If safe mode is not enabled, run the user's main.py file
-    //     //     // monocle_started_in_safe_mode() ? NRFX_LOG("Starting in safe mode")
-    //     //     //                                : pyexec_file_if_exists("main.py");
-
-    //     //     // Stay in the friendly or raw REPL until a reset is called
-    //     //     for (;;)
-    //     //     {
-    //     //         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL)
-    //     //         {
-    //     //             if (pyexec_raw_repl() != 0)
-    //     //             {
-    //     //                 break;
-    //     //             }
-    //     //         }
-    //     //         else
-    //     //         {
-    //     //             if (pyexec_friendly_repl() != 0)
-    //     //             {
-    //     //                 break;
-    //     //             }
-    //     //         }
-    //     //     }
-
-    //     //     // On exit, clean up before reset
-    //     // gc_sweep_all();
-    //     // mp_deinit();
-
-    //     // mp_hal_stdout_tx_str("MPY: soft reboot\r\n");
     // }
+    // Soft resets will always restart micropython,
+    while (true)
+    {
+        //     // Initialise the stack pointer for the main thread
+        mp_stack_set_top(&_stack_top);
+
+        //     // Set the stack limit as smaller than the real stack so we can recover
+        mp_stack_set_limit((char *)&_stack_top - (char *)&_stack_bot - 512);
+
+        //     // Start garbage collection, micropython and the REPL
+        gc_init(&_heap_start, &_heap_end);
+        mp_init();
+        // readline_init0();
+        pyexec_friendly_repl();
+        //     // Mount the filesystem, or format if needed
+        //     // pyexec_frozen_module("_mountfs.py", false);
+        //     // pyexec_frozen_module("_splashscreen.py", false);
+
+        //     // If safe mode is not enabled, run the user's main.py file
+        //     // monocle_started_in_safe_mode() ? NRFX_LOG("Starting in safe mode")
+        //     //                                : pyexec_file_if_exists("main.py");
+
+        //     // Stay in the friendly or raw REPL until a reset is called
+        //     for (;;)
+        //     {
+        //         if (pyexec_mode_kind == PYEXEC_MODE_RAW_REPL)
+        //         {
+        //             if (pyexec_raw_repl() != 0)
+        //             {
+        //                 break;
+        //             }
+        //         }
+        //         else
+        //         {
+        //             if (pyexec_friendly_repl() != 0)
+        //             {
+        //                 break;
+        //             }
+        //         }
+        //     }
+
+        //     // On exit, clean up before reset
+        // gc_sweep_all();
+        // mp_deinit();
+
+        // mp_hal_stdout_tx_str("MPY: soft reboot\r\n");
+    }
 }
 
 void gc_collect(void)
@@ -463,17 +427,30 @@ void nlr_jump_fail(void *val)
     app_err((uint32_t)val);
     NVIC_SystemReset();
 }
-mp_lexer_t *mp_lexer_new_from_file(const char *filename)
-{
-    mp_raise_OSError(MP_ENOENT);
-}
-
+// There is no filesystem so stat'ing returns nothing.
 mp_import_stat_t mp_import_stat(const char *path)
 {
     return MP_IMPORT_STAT_NO_EXIST;
 }
 
-mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs)
+// There is no filesystem so opening a file raises an exception.
+mp_lexer_t *mp_lexer_new_from_file(const char *filename)
 {
-    return mp_const_none;
+    mp_raise_OSError(MP_ENOENT);
+}
+
+// Receive single character, blocking until one is available.
+int mp_hal_stdin_rx_chr(void)
+{
+    unsigned char c = 0;
+    int r = read(STDIN_FILENO, &c, 1);
+    (void)r;
+    return c;
+}
+
+// Send the string of given length.
+void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len)
+{
+    int r = write(STDOUT_FILENO, str, len);
+    (void)r;
 }
