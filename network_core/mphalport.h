@@ -27,29 +27,29 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "mphalport.h"
-// #include "nrfx_rtc.h"
 
-typedef int mp_int_t;
-typedef unsigned int mp_uint_t;
+typedef intptr_t mp_int_t;
+typedef uintptr_t mp_uint_t;
 typedef long mp_off_t;
-
-mp_uint_t mp_hal_ticks_ms(void);
-
-void mp_hal_set_interrupt_char(int c);
 
 int mp_hal_generate_random_seed(void);
 
-// touch_button_t touch_get_state(void);
+mp_uint_t mp_hal_ticks_ms(void);
 
-typedef enum ble_tx_channel_t
-{
-    REPL_TX,
-    DATA_TX,
-} ble_tx_channel_t;
+void mp_event_poll_hook(void);
 
-bool ble_are_tx_notifications_enabled(ble_tx_channel_t channel);
+void mp_hal_set_interrupt_char(int c);
 
-size_t ble_get_max_payload_size(void);
+void run_micropython(void);
 
-bool ble_send_raw_data(const uint8_t *bytes, size_t len);
+// typedef enum ble_tx_channel_t
+// {
+//     REPL_TX,
+//     DATA_TX,
+// } ble_tx_channel_t;
+
+// bool ble_are_tx_notifications_enabled(ble_tx_channel_t channel);
+
+// size_t ble_get_max_payload_size(void);
+
+// bool ble_send_raw_data(const uint8_t *bytes, size_t len);

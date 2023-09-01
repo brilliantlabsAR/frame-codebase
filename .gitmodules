@@ -4,12 +4,12 @@
 [submodule "nrfx"]
 	path = nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
-[submodule "frame_network_core/micropython"]
-	path = frame_network_core/micropython
+[submodule "network_core/micropython"]
+	path = network_core/micropython
 	url = https://github.com/micropython/micropython.git
-[submodule "frame_network_core/sdk-nrfxlib"]
-	path = frame_network_core/sdk-nrfxlib
+[submodule "network_core/sdk-nrfxlib"]
+	path = network_core/sdk-nrfxlib
 	url = https://github.com/nrfconnect/sdk-nrfxlib.git
-[submodule "frame_application_core/frame-fpga"]
-	path = frame_application_core/frame-fpga
+[submodule "application_core/frame-fpga"]
+	path = application_core/frame-fpga
 	url = https://github.com/brilliantlabsAR/frame-fpga

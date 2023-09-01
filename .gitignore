@@ -1,5 +1,6 @@
 # Ignore build files
 build/
+network_core/micropython_generated/
 
 # Ignore VSCode user settings
 .vscode/settings.json
