@@ -1,9 +1,9 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is part of the MicroPython for Monocle project:
+ *      https://github.com/brilliantlabsAR/monocle-micropython
  *
- * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
- *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
- *              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
+ * Authored by: Josuah Demangeon (me@josuah.net)
+ *              Raj Nakarja / Brilliant Labs Ltd. (raj@itsbrilliant.co)
  *
  * ISC Licence
  *
@@ -24,19 +24,32 @@
 
 #pragma once
 
-#include "nrfx.h"
-#include <drivers/nrfx_errors.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include "mphalport.h"
+// #include "nrfx_rtc.h"
 
-typedef enum extended_error_codes_t
+typedef int mp_int_t;
+typedef unsigned int mp_uint_t;
+typedef long mp_off_t;
+
+mp_uint_t mp_hal_ticks_ms(void);
+
+void mp_hal_set_interrupt_char(int c);
+
+int mp_hal_generate_random_seed(void);
+
+// touch_button_t touch_get_state(void);
+
+typedef enum ble_tx_channel_t
 {
-    HARDWARE_ERROR = 0x0BAC0001,
-    ASSERT,
-    HARD_FAULT,
-    UNHANDLED_MESSAGE_INSTRUCTION
-} extended_error_codes_t;
+    REPL_TX,
+    DATA_TX,
+} ble_tx_channel_t;
 
-const char *lookup_error_code(uint32_t error_code);
+bool ble_are_tx_notifications_enabled(ble_tx_channel_t channel);
 
-void _app_err(nrfx_err_t error_code, const char *file, const int line);
+size_t ble_get_max_payload_size(void);
 
-#define app_err(error_code) _app_err(error_code, __FILE__, __LINE__)
+bool ble_send_raw_data(const uint8_t *bytes, size_t len);

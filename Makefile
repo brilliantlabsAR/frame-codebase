@@ -1,9 +1,9 @@
 #
-# This file is part of the MicroPython for Frame project:
-#      https://github.com/brilliantlabsAR/frame-micropython
+# This file is a part https://github.com/brilliantlabsAR/frame-micropython
 #
-# Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
-#              Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
+# Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
+#              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+#              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
 #
 # ISC Licence
 #
