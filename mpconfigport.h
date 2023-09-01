@@ -26,10 +26,9 @@
 
 #include <alloca.h>
 #include "mphalport.h"
-
 #define MICROPY_BANNER_MACHINE "Monocle on nRF52832"
 
-#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
+// #define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_CORE_FEATURES)
 
 #define MICROPY_NLR_SETJMP (1)
 #define MICROPY_GCREGS_SETJMP (1)
@@ -106,8 +105,8 @@
 
 #define MICROPY_PY_OS (1)
 // #define MICROPY_VFS (1)
-#define MICROPY_VFS_LFS2 (1)
-#define MICROPY_READER_VFS (1)
+// #define MICROPY_VFS_LFS2 (1)
+// #define MICROPY_READER_VFS (1)
 
 #define MICROPY_PY_RANDOM (1)
 #define MICROPY_PY_RANDOM_EXTRA_FUNCS (1)
@@ -125,7 +124,7 @@
 #define MICROPY_EPOCH_IS_1970 (1)
 
 #define MP_SSIZE_MAX (0x7fffffff)
-
+// const char *readline_hist[(10)];
 #define MP_STATE_PORT MP_STATE_VM
 void mp_event_poll_hook(void);
 #define MICROPY_EVENT_POLL_HOOK mp_event_poll_hook();
