@@ -218,20 +218,18 @@ static void frame_setup_application_core(void)
 
     // Initialize SPI and control pins to the FPGA
     {
-        // nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
-        // nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
+        nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
         nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
-        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
 
-        nrfx_qspi_config_t qspi_config = NRFX_QSPI_DEFAULT_CONFIG(
-            FPGA_SPI_CLOCK_PIN,
-            FPGA_SPI_SELECT_PIN,
-            FPGA_SPI_IO0_PIN,
-            FPGA_SPI_IO1_PIN,
-            NRF_QSPI_PIN_NOT_CONNECTED,
-            NRF_QSPI_PIN_NOT_CONNECTED);
+        // nrfx_qspi_config_t qspi_config = NRFX_QSPI_DEFAULT_CONFIG(
+        //     FPGA_SPI_CLOCK_PIN,
+        //     FPGA_SPI_SELECT_PIN,
+        //     FPGA_SPI_IO0_PIN,
+        //     FPGA_SPI_IO1_PIN,
+        //     NRF_QSPI_PIN_NOT_CONNECTED,
+        //     NRF_QSPI_PIN_NOT_CONNECTED);
 
-        app_err(nrfx_qspi_init(&qspi_config, NULL, NULL));
+        // app_err(nrfx_qspi_init(&qspi_config, NULL, NULL));
     }
 
     // Run the FPGA application loading sequence
