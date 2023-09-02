@@ -37,6 +37,7 @@ APPLICATION_CORE_C_FILES += nrfx/mdk/system_nrf5340_application.c
 # NETWORK_CORE_C_FILES += TODO add module files
 # NETWORK_CORE_C_FILES += TODO add micropython math libraries
 NETWORK_CORE_C_FILES += network_core/main.c
+NETWORK_CORE_C_FILES += network_core/micropython_modules/device.c
 NETWORK_CORE_C_FILES += network_core/micropython/py/argcheck.c
 NETWORK_CORE_C_FILES += network_core/micropython/py/asmarm.c
 NETWORK_CORE_C_FILES += network_core/micropython/py/asmbase.c
