@@ -252,7 +252,7 @@ build/application_core.elf: $(SHARED_C_FILES) $(APPLICATION_CORE_C_FILES)
 	@arm-none-eabi-size $@
 
 # TODO add special opt flags for some of the micropython .c files
-build/network_core.elf: $(SHARED_C_FILES) $(NETWORK_CORE_C_FILES) micropython_generated_headers
+build/network_core.elf: $(SHARED_C_FILES) $(NETWORK_CORE_C_FILES) | micropython_generated_headers
 	@mkdir -p build
 	@arm-none-eabi-gcc $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -o $@ $^
 	@arm-none-eabi-size $@

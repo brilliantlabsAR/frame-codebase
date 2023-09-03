@@ -9,7 +9,7 @@
                 "cmsis/CMSIS/Core/Include",
                 "application_core",
                 "network_core",
-                "network_core/micropython_generated_files",
+                "network_core/micropython_generated",
                 "network_core/micropython_modules",
                 "network_core/micropython",
                 "nrfx",

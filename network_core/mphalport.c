@@ -22,12 +22,22 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "py/builtin.h"
-#include "py/mperrno.h"
-#include "py/lexer.h"
-#include "py/runtime.h"
-#include "mpconfigport.h"
+#include <string.h>
 #include "error_helpers.h"
+#include "nrfx_log.h"
+#include "py/builtin.h"
+#include "py/gc.h"
+#include "py/lexer.h"
+#include "py/mperrno.h"
+#include "py/runtime.h"
+#include "py/stackctrl.h"
+#include "shared/readline/readline.h"
+#include "shared/runtime/pyexec.h"
+
+extern uint32_t __StackTop;
+extern uint32_t __StackLimit;
+extern uint32_t __heap_start;
+extern uint32_t __heap_end;
 
 const char help_text[] = {
     "Welcome to MicroPython!\n\n"
@@ -106,10 +116,16 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len)
     NRFX_LOG("Micropython output:\n%s", str);
 }
 
+void mp_hal_stdout_tx_str(const char *str)
+{
+    mp_hal_stdout_tx_strn(str, strlen(str));
+}
+
 uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags)
 {
     // TODO
     // return (repl_rx.head == repl_rx.tail) ? poll_flags & MP_STREAM_POLL_RD : 0;
+    return 0;
 }
 
 void mp_event_poll_hook(void)
@@ -135,16 +151,19 @@ void gc_collect(void)
 void nlr_jump_fail(void *val)
 {
     app_err((uint32_t)val);
+    while (1)
+    {
+    }
 }
 
 void run_micropython(void)
 {
-    mp_stack_set_top(&_stack_top);
+    mp_stack_set_top(&__StackTop);
 
     // Set the stack limit as smaller than the real stack so we can recover
-    mp_stack_set_limit((char *)&_stack_top - (char *)&_stack_bot - 512);
+    mp_stack_set_limit((char *)&__StackTop - (char *)&__StackLimit - 512);
 
-    gc_init(&_heap_start, &_heap_end);
+    gc_init(&__heap_start, &__heap_end);
     mp_init();
     readline_init0();
     pyexec_friendly_repl();
