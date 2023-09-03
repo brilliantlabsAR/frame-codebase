@@ -48,6 +48,9 @@
 #define NRFX_LOG(format, ...) \
     SEGGER_RTT_printf(0, "\x1B[92m" format "\r\n", ##__VA_ARGS__)
 
+#define MICROPYTHON_LOG(format, ...) \
+    SEGGER_RTT_printf(0, "\x1B[95m" format, ##__VA_ARGS__)
+
 #endif
 
 #define NRFX_LOG_ERROR(format, ...)

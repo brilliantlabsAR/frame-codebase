@@ -29,7 +29,7 @@
 
 #define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_MINIMUM) // TODO Enable extra features
 
-#define MICROPY_BANNER_MACHINE "Monocle on nRF5340 Network Processor"
+#define MICROPY_BANNER_MACHINE "Frame on nRF5340 Network Processor"
 #define MICROPY_ENABLE_COMPILER (1)
 #define MICROPY_ENABLE_GC (1)
 #define MICROPY_EVENT_POLL_HOOK mp_event_poll_hook();
