@@ -276,14 +276,7 @@ build/application_core.elf: $(SHARED_C_FILES) \
 
 build/network_core.elf: $(SHARED_C_FILES) \
 						$(NETWORK_CORE_C_FILES) \
-						| micropython_generated_headers
-	@python3 network_core/micropython/tools/makemanifest.py \
-		-o "$(MP_GEN_FOLDER)/frozen_content.c" \
-		-b "$(MP_GEN_FOLDER)/.." \
-		-v "MPY_DIR=network_core/micropython" \
-		-v "PORT_DIR=network_core" \
-		network_core/micropython_modules/frozen_manifest.py
-
+						$(MP_GEN_FOLDER)/frozen_content.c
 	@mkdir -p build
 	@mkdir -p build/network_core_objects
 
@@ -298,11 +291,19 @@ build/network_core.elf: $(SHARED_C_FILES) \
 	@arm-none-eabi-gcc \
 		$(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
 		-o $@ \
-		$(MP_GEN_FOLDER)/frozen_content.c \
 		build/network_core_objects/gc.o \
 		build/network_core_objects/vm.o \
 		$^
 
+$(MP_GEN_FOLDER)/frozen_content.c: $(FROZEN_PYTHON_FILES) \
+								   | micropython_generated_headers
+	@python3 network_core/micropython/tools/makemanifest.py \
+		-o "$@" \
+		-b "$(MP_GEN_FOLDER)/.." \
+		-v "MPY_DIR=network_core/micropython" \
+		-v "PORT_DIR=network_core" \
+		network_core/micropython_modules/frozen_manifest.py
+		
 micropython_generated_headers: $(SHARED_C_FILES) \
 							   $(NETWORK_CORE_C_FILES)
 	@mkdir -p $(MP_GEN_FOLDER)
