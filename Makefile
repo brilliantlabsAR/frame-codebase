@@ -267,14 +267,13 @@ all: build/application_core.elf \
 	 build/network_core.elf
 	@arm-none-eabi-objcopy -O ihex build/application_core.elf build/application_core.hex
 	@arm-none-eabi-objcopy -O ihex build/network_core.elf build/network_core.hex
+	@arm-none-eabi-size $^
 
 build/application_core.elf: $(SHARED_C_FILES) \
 							$(APPLICATION_CORE_C_FILES)
 	@mkdir -p build
 	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^
-	@arm-none-eabi-size $@
 
-# TODO add special opt flags for some of the micropython .c files
 build/network_core.elf: $(SHARED_C_FILES) \
 						$(NETWORK_CORE_C_FILES) \
 						| micropython_generated_headers
@@ -303,8 +302,6 @@ build/network_core.elf: $(SHARED_C_FILES) \
 		build/network_core_objects/gc.o \
 		build/network_core_objects/vm.o \
 		$^
-
-	@arm-none-eabi-size $@
 
 micropython_generated_headers: $(SHARED_C_FILES) \
 							   $(NETWORK_CORE_C_FILES)
