@@ -1,10 +1,10 @@
-# MicroPython for Frame
+# Frame Firmware & RTL Codebase
 
-A custom deployment of MicroPython designed specifically for Frame. Check out the user docs [here](https://docs.brilliant.xyz).
+Welcome to the complete codebase of the Frame Hardware. For regular usage, check out the docs [here](https://docs.brilliant.xyz).
 
-For those of you who want to modify the standard firmware, keep on reading.
+For those of you who want to modify the standard firmware or RTL, keep on reading.
 
-## Getting started with development
+## Getting started with firmware development
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
 
@@ -13,8 +13,8 @@ For those of you who want to modify the standard firmware, keep on reading.
 1. Clone this repository along with submodules and build the mpy-cross toolchain:
 
     ```sh
-    git clone https://github.com/brilliantlabsAR/frame-micropython.git
-    cd frame-micropython
+    git clone https://github.com/brilliantlabsAR/frame-codebase.git
+    cd frame-codebase
 
     git submodule update --init
     git -C network_core/micropython submodule update --init lib/micropython-lib
@@ -22,7 +22,7 @@ For those of you who want to modify the standard firmware, keep on reading.
     make -C network_core/micropython/mpy-cross
     ```
 
-1. You should now be able to build the project by calling `make` from the `frame-micropython` folder.
+1. You should now be able to build the project by calling `make` from the `frame-codebase` folder.
 
     ```sh
     make
@@ -64,4 +64,22 @@ For those of you who want to modify the standard firmware, keep on reading.
 
 ## FPGA
 
-For information on developing and flashing the FPGA binary. Check the [Frame FPGA](https://github.com/brilliantlabsAR/frame-fpga) repository.
+For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `frame_fpga.h` file which contains the entire FPGA application.
+
+1. Ensure you have the [Yosys](https://github.com/YosysHQ/yosys) installed.
+
+1. Ensure you have the [Project Oxide](https://github.com/gatecat/prjoxide) installed.
+
+1. Ensure you have the [nextpnr](https://github.com/YosysHQ/nextpnr) installed.
+
+1. **MacOS users** can do the above three steps in one using [Homebrew](https://brew.sh).
+
+    ```sh
+    brew install --HEAD siliconwitchery/oss-fpga/nextpnr-nexus
+    ```
+
+1. You should now be able to rebuild the project by calling `make`:
+
+    ```sh
+    make -C application_core/frame_fpga
+    ```
