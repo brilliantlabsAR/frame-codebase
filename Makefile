@@ -26,33 +26,13 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
-# C source files
-APPLICATION_CORE_SOURCE_FILES += frame_application_core/main.c
-APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_gpiote.c
-APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_qspi.c
-APPLICATION_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_systick.c
-APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_application.S
-APPLICATION_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_application.c
-
-NETWORK_CORE_SOURCE_FILES += frame_network_core/main.c
-NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_rtc.c
-NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_spim.c
-NETWORK_CORE_SOURCE_FILES += nrfx/drivers/src/nrfx_twim.c
-NETWORK_CORE_SOURCE_FILES += nrfx/mdk/gcc_startup_nrf5340_network.S
-NETWORK_CORE_SOURCE_FILES += nrfx/mdk/system_nrf5340_network.c
-NETWORK_CORE_SOURCE_FILES += segger/SEGGER_RTT_printf.c
-NETWORK_CORE_SOURCE_FILES += segger/SEGGER_RTT.c
-
-SHARED_SOURCE_FILES += error_helpers.c
-SHARED_SOURCE_FILES += interprocessor_messaging.c
-SHARED_SOURCE_FILES += nrfx/drivers/src/nrfx_ipc.c
-SHARED_SOURCE_FILES += nrfx/helpers/nrfx_flag32_allocator.c
+# Source files
+SHARED_C_FILES += error_helpers.c
+SHARED_C_FILES += interprocessor_messaging.c
+SHARED_C_FILES += nrfx/drivers/src/nrfx_ipc.c
+SHARED_C_FILES += nrfx/helpers/nrfx_flag32_allocator.c
 
 # Header file paths
-APPLICATION_CORE_FLAGS += -Iframe_application_core
-
-NETWORK_CORE_FLAGS += -Iframe_network_core
-
 SHARED_FLAGS += -I.
 SHARED_FLAGS += -Icmsis/CMSIS/Core/Include
 SHARED_FLAGS += -Inrfx
@@ -69,13 +49,6 @@ SHARED_FLAGS += -Wdouble-promotion
 SHARED_FLAGS += -Wfloat-conversion
 
 # Build options and optimizations
-APPLICATION_CORE_FLAGS += -mcpu=cortex-m33
-APPLICATION_CORE_FLAGS += -mfloat-abi=hard
-APPLICATION_CORE_FLAGS += -mfpu=fpv4-sp-d16
-
-NETWORK_CORE_FLAGS += -mcpu=cortex-m33+nodsp
-NETWORK_CORE_FLAGS += -mfloat-abi=soft
-
 SHARED_FLAGS += -falign-functions=16
 SHARED_FLAGS += -fdata-sections 
 SHARED_FLAGS += -ffunction-sections 
@@ -93,48 +66,36 @@ SHARED_FLAGS += -Os
 SHARED_FLAGS += -std=gnu17
 
 # Preprocessor defines
-APPLICATION_CORE_FLAGS += -DNRF5340_XXAA_APPLICATION
-
-NETWORK_CORE_FLAGS += -DNRF5340_XXAA_NETWORK
-
 SHARED_FLAGS += -DBUILD_VERSION='"$(BUILD_VERSION)"'
 SHARED_FLAGS += -DGIT_COMMIT='"$(GIT_COMMIT)"'
 SHARED_FLAGS += -DNDEBUG
 
-# Linker options & linker script paths
-APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld
-
-NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
-
+# Linker options
 SHARED_FLAGS += --specs=nano.specs
 SHARED_FLAGS += -Wl,--gc-sections
 
 # Link required libraries
 SHARED_FLAGS += -lm -lc -lnosys -lgcc
 
-all: build/application-core.elf build/network-core.elf
-	@arm-none-eabi-objcopy -O ihex build/application-core.elf build/application-core.hex
-	@arm-none-eabi-objcopy -O ihex build/network-core.elf build/network-core.hex
-
-build/application-core.elf: $(SHARED_SOURCE_FILES) $(APPLICATION_CORE_SOURCE_FILES)
-	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^
-	@arm-none-eabi-size $@
-
-build/network-core.elf: $(SHARED_SOURCE_FILES) $(NETWORK_CORE_SOURCE_FILES)
-	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -o $@ $^
-	@arm-none-eabi-size $@
+all: build/application_core.elf build/network_core.elf
+	@arm-none-eabi-objcopy -O ihex build/application_core.elf build/application_core.hex
+	@arm-none-eabi-objcopy -O ihex build/network_core.elf build/network_core.hex
 
 flash: all
-	nrfjprog -q --coprocessor CP_APPLICATION --program build/application-core.hex --sectorerase
-	nrfjprog -q --coprocessor CP_NETWORK --program build/network-core.hex --sectorerase
+	nrfjprog -q --coprocessor CP_APPLICATION --program build/application_core.hex --sectorerase
+	nrfjprog -q --coprocessor CP_NETWORK --program build/network_core.hex --sectorerase
 	nrfjprog --reset
 
 clean:
 	rm -rf build/
+	rm -rf network_core/micropython_generated/
 
 recover:
 	nrfjprog --recover
 
 release:
+	@echo TODO
+
+include network_core/network_core.mk
+
+include application_core/application_core.mk

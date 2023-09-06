@@ -1,9 +1,9 @@
 /*
- * This file is part of the MicroPython for Monocle project:
- *      https://github.com/brilliantlabsAR/monocle-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-micropython
  *
- * Authored by: Josuah Demangeon (me@josuah.net)
- *              Raj Nakarja / Brilliant Labs Ltd. (raj@itsbrilliant.co)
+ * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
+ *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
  *
  * ISC Licence
  *
@@ -24,32 +24,14 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <alloca.h>
 #include "mphalport.h"
-// #include "nrfx_rtc.h"
 
-typedef int mp_int_t;
-typedef unsigned int mp_uint_t;
-typedef long mp_off_t;
+#define MICROPY_CONFIG_ROM_LEVEL (MICROPY_CONFIG_ROM_LEVEL_MINIMUM) // TODO Enable extra features
 
-mp_uint_t mp_hal_ticks_ms(void);
-
-void mp_hal_set_interrupt_char(int c);
-
-int mp_hal_generate_random_seed(void);
-
-// touch_button_t touch_get_state(void);
-
-typedef enum ble_tx_channel_t
-{
-    REPL_TX,
-    DATA_TX,
-} ble_tx_channel_t;
-
-bool ble_are_tx_notifications_enabled(ble_tx_channel_t channel);
-
-size_t ble_get_max_payload_size(void);
-
-bool ble_send_raw_data(const uint8_t *bytes, size_t len);
+#define MICROPY_BANNER_MACHINE "Frame on nRF5340 Network Processor"
+#define MICROPY_ENABLE_COMPILER (1)
+#define MICROPY_ENABLE_GC (1)
+#define MICROPY_EVENT_POLL_HOOK mp_event_poll_hook();
+#define MICROPY_HELPER_REPL (1)
+#define MP_STATE_PORT MP_STATE_VM

@@ -4,7 +4,7 @@
     "configurations": [
         {
             "cwd": "${workspaceFolder}",
-            "executable": "build/application-core.elf",
+            "executable": "build/application_core.elf",
             "name": "Application Core L-Link",
             "request": "launch",
             "type": "cortex-debug",
@@ -22,7 +22,7 @@
         },
         {
             "cwd": "${workspaceFolder}",
-            "executable": "build/network-core.elf",
+            "executable": "build/network_core.elf",
             "name": "Network Core L-Link",
             "request": "launch",
             "type": "cortex-debug",

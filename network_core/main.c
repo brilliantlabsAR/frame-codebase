@@ -26,6 +26,7 @@
 #include "display_configuration.h"
 #include "error_helpers.h"
 #include "interprocessor_messaging.h"
+#include "mphalport.h"
 #include "nrf.h"
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
@@ -476,5 +477,6 @@ int main(void)
 
     while (1)
     {
+        run_micropython();
     }
 }
