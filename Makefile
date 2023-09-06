@@ -178,7 +178,7 @@ NETWORK_CORE_C_FILES += \
 	segger/SEGGER_RTT.c \
 
 FROZEN_PYTHON_FILES += \
-	network_core/micropython_modules/test.py
+	network_core/micropython_modules/test.py \
 
 # Header file paths
 SHARED_FLAGS += \
@@ -228,11 +228,11 @@ SHARED_FLAGS += \
 APPLICATION_CORE_FLAGS += \
 	-mcpu=cortex-m33 \
 	-mfloat-abi=hard \
-	-mfpu=fpv4-sp-d16
+	-mfpu=fpv4-sp-d16 \
 
 NETWORK_CORE_FLAGS += \
 	-mcpu=cortex-m33+nodsp \
-	-mfloat-abi=soft
+	-mfloat-abi=soft \
 
 # Preprocessor defines
 SHARED_FLAGS += \
@@ -285,8 +285,7 @@ build/network_core.elf: $(SHARED_C_FILES) \
 		-c network_core/micropython/py/gc.c \
 		   network_core/micropython/py/vm.c \
 
-	# TODO generate these files in the correct place
-	mv gc.o vm.o build/network_core_objects
+	@mv gc.o vm.o build/network_core_objects
 
 	@arm-none-eabi-gcc \
 		$(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
