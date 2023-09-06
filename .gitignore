@@ -4,3 +4,6 @@ network_core/micropython_generated/
 
 # Ignore VSCode user settings
 .vscode/settings.json
+
+# Ignore draw.io backup files
+*.png.bkp

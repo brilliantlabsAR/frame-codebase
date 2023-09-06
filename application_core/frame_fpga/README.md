@@ -4,7 +4,7 @@ FPGA architecture for Frame.
 
 ## Architecture
 
-![FPGA architecture block diagram for Frame](/docs/top-level-architecture.drawio.png)
+![FPGA architecture block diagram for Frame](docs/top-level-architecture.drawio.png)
 
 ## SPI Driver
 
@@ -33,11 +33,11 @@ FPGA architecture for Frame.
 
 ### Vector Printing
 
-![](/docs/graphics-vector-printing.drawio.png)
+![](docs/graphics-vector-printing.drawio.png)
 
 ### Fast Printing of Raster Images
 
-![](/docs/graphics-drawing-raster-images.drawio.png)
+![](docs/graphics-drawing-raster-images.drawio.png)
 
 ## Licence
 
