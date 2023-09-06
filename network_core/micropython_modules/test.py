@@ -22,4 +22,6 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-module("test.py")
+
+def test():
+    print("test")
