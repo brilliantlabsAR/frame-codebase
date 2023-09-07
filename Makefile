@@ -353,13 +353,24 @@ micropython_generated_headers: $(SHARED_C_FILES) \
 
 application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 	@mkdir -p build
-	@cd application_core/fpga_rtl && iverilog -Wall -g2012 -o /dev/null -i top.sv
-	@yosys -p "synth_nexus -json build/fpga_rtl.json" application_core/fpga_rtl/top.sv
+
+	@cd application_core/fpga_rtl && \
+		iverilog -Wall \
+				 -g2012 \
+				 -o /dev/null \
+				 -i top.sv
+
+	@yosys -p "synth_nexus \
+		   -json build/fpga_rtl.json" \
+		   application_core/fpga_rtl/top.sv
+
 	@nextpnr-nexus --device LIFCL-17-7UWG72 \
 			       --pdc application_core/fpga_rtl/fpga_pinout.pdc \
 				   --json build/fpga_rtl.json \
 				   --fasm build/fpga_rtl.fasm
+
 	@prjoxide pack build/fpga_rtl.fasm build/fpga_rtl.bit
+	
 	@xxd -i build/fpga_rtl.bit build/fpga_binfile_ram.h
 	@sed '1s/^/const /' build/fpga_binfile_ram.h > $@
 
