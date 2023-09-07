@@ -265,39 +265,47 @@ SHARED_FLAGS += \
 	-lnosys \
 	-lgcc
 
+
 all: build/application_core.elf \
-	 build/network_core.elf
+     build/network_core.elf
+
 	@arm-none-eabi-objcopy -O ihex build/application_core.elf build/application_core.hex
 	@arm-none-eabi-objcopy -O ihex build/network_core.elf build/network_core.hex
 	@arm-none-eabi-size $^
 
+
 build/application_core.elf: $(SHARED_C_FILES) \
-							$(APPLICATION_CORE_C_FILES)
+                            $(APPLICATION_CORE_C_FILES)
+
 	@mkdir -p build
 	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^
 
+
 build/network_core.elf: $(SHARED_C_FILES) \
-						$(NETWORK_CORE_C_FILES) \
-						$(MP_GEN_FOLDER)/frozen_content.c
+                        $(NETWORK_CORE_C_FILES) \
+                        $(MP_GEN_FOLDER)/frozen_content.c
+
 	@mkdir -p build
 	@mkdir -p build/network_core_objects
 
 	@arm-none-eabi-gcc \
-		$(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -O3 \
-		-c network_core/micropython/py/gc.c \
-		   network_core/micropython/py/vm.c \
+	    $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -O3 \
+	    -c network_core/micropython/py/gc.c \
+	       network_core/micropython/py/vm.c \
 
 	@mv gc.o vm.o build/network_core_objects
 
 	@arm-none-eabi-gcc \
-		$(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
-		-o $@ \
-		build/network_core_objects/gc.o \
-		build/network_core_objects/vm.o \
-		$^
+	    $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
+	    -o $@ \
+	    build/network_core_objects/gc.o \
+	    build/network_core_objects/vm.o \
+	    $^
+
 
 $(MP_GEN_FOLDER)/frozen_content.c: $(FROZEN_PYTHON_FILES) \
-								   | micropython_generated_headers
+                                   | micropython_generated_headers
+
 	@python3 network_core/micropython/tools/makemanifest.py \
 		-o "$@" \
 		-b "$(MP_GEN_FOLDER)/.." \
@@ -305,74 +313,79 @@ $(MP_GEN_FOLDER)/frozen_content.c: $(FROZEN_PYTHON_FILES) \
 		-v "PORT_DIR=network_core" \
 		network_core/micropython_modules/frozen_manifest.py
 		
+
 micropython_generated_headers: $(SHARED_C_FILES) \
-							   $(NETWORK_CORE_C_FILES)
+                               $(NETWORK_CORE_C_FILES)
+
 	@mkdir -p $(MP_GEN_FOLDER)
 	
 	@python3 $(MP_PY_FOLDER)/makeversionhdr.py $(MP_GEN_FOLDER)/mpversion.h
 
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		pp arm-none-eabi-gcc -E \
-		output $(MP_GEN_FOLDER)/qstr.i.last \
-		cflags -DNO_QSTR $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
-		sources $(NETWORK_CORE_C_FILES) \
-		dependencies $(MP_PY_FOLDER)/mpconfig.h network_core/mpconfigport.h \
-		changed_sources $(NETWORK_CORE_C_FILES)
+	    pp arm-none-eabi-gcc -E \
+	    output $(MP_GEN_FOLDER)/qstr.i.last \
+	    cflags -DNO_QSTR $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
+	    sources $(NETWORK_CORE_C_FILES) \
+	    dependencies $(MP_PY_FOLDER)/mpconfig.h network_core/mpconfigport.h \
+	    changed_sources $(NETWORK_CORE_C_FILES)
 
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		split root_pointer $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/root_pointer _
+	    split root_pointer $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/root_pointer _
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		cat root_pointer _ $(MP_GEN_FOLDER)/root_pointer $(MP_GEN_FOLDER)/root_pointers.collected
+	    cat root_pointer _ $(MP_GEN_FOLDER)/root_pointer $(MP_GEN_FOLDER)/root_pointers.collected
 	@python3 $(MP_PY_FOLDER)/make_root_pointers.py \
-		$(MP_GEN_FOLDER)/root_pointers.collected > $(MP_GEN_FOLDER)/root_pointers.h
+	    $(MP_GEN_FOLDER)/root_pointers.collected > $(MP_GEN_FOLDER)/root_pointers.h
 
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		split module $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/module _
+	    split module $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/module _
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		cat module _ $(MP_GEN_FOLDER)/module $(MP_GEN_FOLDER)/moduledefs.collected
+	    cat module _ $(MP_GEN_FOLDER)/module $(MP_GEN_FOLDER)/moduledefs.collected
 	@python3 $(MP_PY_FOLDER)/makemoduledefs.py \
-		$(MP_GEN_FOLDER)/moduledefs.collected > $(MP_GEN_FOLDER)/moduledefs.h
+	    $(MP_GEN_FOLDER)/moduledefs.collected > $(MP_GEN_FOLDER)/moduledefs.h
 
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		split compress $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/compress _
+	    split compress $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/compress _
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		cat compress _ $(MP_GEN_FOLDER)/compress $(MP_GEN_FOLDER)/compressed.collected
+	    cat compress _ $(MP_GEN_FOLDER)/compress $(MP_GEN_FOLDER)/compressed.collected
 	@python3 $(MP_PY_FOLDER)/makecompresseddata.py \
-		$(MP_GEN_FOLDER)/compressed.collected > $(MP_GEN_FOLDER)/compressed.data.h
+	    $(MP_GEN_FOLDER)/compressed.collected > $(MP_GEN_FOLDER)/compressed.data.h
 
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		split qstr $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/qstr _
+	    split qstr $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/qstr _
 	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-		cat qstr _ $(MP_GEN_FOLDER)/qstr $(MP_GEN_FOLDER)/qstrdefs.collected.h
+	    cat qstr _ $(MP_GEN_FOLDER)/qstr $(MP_GEN_FOLDER)/qstrdefs.collected.h
 
 	@cat $(MP_PY_FOLDER)/qstrdefs.h $(MP_GEN_FOLDER)/qstrdefs.collected.h \
-		| sed 's/^Q(.*)/"&"/' | arm-none-eabi-gcc -E $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) - \
-		| sed 's/^\"\(Q(.*)\)\"/\1/' > $(MP_GEN_FOLDER)/qstrdefs.preprocessed.h
+	    | sed 's/^Q(.*)/"&"/' | arm-none-eabi-gcc -E $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) - \
+	    | sed 's/^\"\(Q(.*)\)\"/\1/' > $(MP_GEN_FOLDER)/qstrdefs.preprocessed.h
 	@python3 $(MP_PY_FOLDER)/makeqstrdata.py \
-		$(MP_GEN_FOLDER)/qstrdefs.preprocessed.h > $(MP_GEN_FOLDER)/qstrdefs.generated.h
+	    $(MP_GEN_FOLDER)/qstrdefs.preprocessed.h > $(MP_GEN_FOLDER)/qstrdefs.generated.h
+
 
 application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+	
 	@mkdir -p build
 
 	@cd application_core/fpga_rtl && \
-		iverilog -Wall \
-				 -g2012 \
-				 -o /dev/null \
-				 -i top.sv
+	    iverilog -Wall \
+	             -g2012 \
+	             -o /dev/null \
+	             -i top.sv
 
 	@yosys -p "synth_nexus \
-		   -json build/fpga_rtl.json" \
-		   application_core/fpga_rtl/top.sv
+	       -json build/fpga_rtl.json" \
+	       application_core/fpga_rtl/top.sv
 
 	@nextpnr-nexus --device LIFCL-17-7UWG72 \
-			       --pdc application_core/fpga_rtl/fpga_pinout.pdc \
-				   --json build/fpga_rtl.json \
-				   --fasm build/fpga_rtl.fasm
+	               --pdc application_core/fpga_rtl/fpga_pinout.pdc \
+	               --json build/fpga_rtl.json \
+	               --fasm build/fpga_rtl.fasm
 
 	@prjoxide pack build/fpga_rtl.fasm build/fpga_rtl.bit
 	
 	@xxd -i build/fpga_rtl.bit build/fpga_binfile_ram.h
 	@sed '1s/^/const /' build/fpga_binfile_ram.h > $@
+
 
 release:
 	@echo TODO

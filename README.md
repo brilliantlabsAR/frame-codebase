@@ -48,7 +48,7 @@ For those of you who want to modify the standard firmware or RTL, keep on readin
 
     Try running the `Build Firmware` task. The project should build normally.
 
-    You many need to unlock the device by using the `Erase Chip` task before programming or debugging.
+    You many need to unlock the device by using the `Erase & Unlock nRF53` task before programming or debugging.
 
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
 
