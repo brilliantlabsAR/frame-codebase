@@ -275,7 +275,8 @@ all: build/application_core.elf \
 
 
 build/application_core.elf: $(SHARED_C_FILES) \
-                            $(APPLICATION_CORE_C_FILES)
+                            $(APPLICATION_CORE_C_FILES) \
+                            | application_core/fpga_application.h
 
 	@mkdir -p build
 	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^
