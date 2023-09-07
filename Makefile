@@ -180,6 +180,8 @@ NETWORK_CORE_C_FILES += \
 FROZEN_PYTHON_FILES += \
 	network_core/micropython_modules/test.py \
 
+FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
+
 # Header file paths
 SHARED_FLAGS += \
 	-I. \
@@ -349,17 +351,29 @@ micropython_generated_headers: $(SHARED_C_FILES) \
 	@python3 $(MP_PY_FOLDER)/makeqstrdata.py \
 		$(MP_GEN_FOLDER)/qstrdefs.preprocessed.h > $(MP_GEN_FOLDER)/qstrdefs.generated.h
 
-flash: all
-	nrfjprog -q --coprocessor CP_APPLICATION --program build/application_core.hex --sectorerase
-	nrfjprog -q --coprocessor CP_NETWORK --program build/network_core.hex --sectorerase
-	nrfjprog --reset
+application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+	@mkdir -p build
+	@cd application_core/fpga_rtl && iverilog -Wall -g2012 -o /dev/null -i top.sv
+	@yosys -p "synth_nexus -json build/fpga_rtl.json" application_core/fpga_rtl/top.sv
+	@nextpnr-nexus --device LIFCL-17-7UWG72 \
+			       --pdc application_core/fpga_rtl/fpga_pinout.pdc \
+				   --json build/fpga_rtl.json \
+				   --fasm build/fpga_rtl.fasm
+	@prjoxide pack build/fpga_rtl.fasm build/fpga_rtl.bit
+	@xxd -i build/fpga_rtl.bit build/fpga_binfile_ram.h
+	@sed '1s/^/const /' build/fpga_binfile_ram.h > $@
+
+release:
+	@echo TODO
 
 clean:
 	rm -rf build/
 	rm -rf network_core/micropython_generated/
 
+flash: all
+	nrfjprog -q --coprocessor CP_APPLICATION --program build/application_core.hex --sectorerase
+	nrfjprog -q --coprocessor CP_NETWORK --program build/network_core.hex --sectorerase
+	nrfjprog --reset
+
 recover:
 	nrfjprog --recover
-
-release:
-	@echo TODO

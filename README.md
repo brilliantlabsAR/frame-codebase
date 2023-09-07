@@ -46,13 +46,9 @@ For those of you who want to modify the standard firmware or RTL, keep on readin
 
     There are some build tasks already configured within `.vscode/tasks.json`. Access them by pressing `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `Tasks: Run Task`.
 
-    1. Build
-    1. Build & Flash Chip
-    1. Erase & Unlock Chip
-    1. Clean
-    1. Release
+    Try running the `Build Firmware` task. The project should build normally.
 
-1. You many need to unlock the device by using the `Erase Chip` task before programming or debugging.
+    You many need to unlock the device by using the `Erase Chip` task before programming or debugging.
 
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
 
@@ -64,7 +60,7 @@ For those of you who want to modify the standard firmware or RTL, keep on readin
 
 ## FPGA
 
-For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `frame_fpga.h` file which contains the entire FPGA application.
+For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `fpga_application.h` file which contains the entire FPGA application.
 
 1. Ensure you have the [Yosys](https://github.com/YosysHQ/yosys) installed.
 
@@ -81,5 +77,5 @@ For quickly getting up and running, the accelerators which run on the FPGA are a
 1. You should now be able to rebuild the project by calling `make`:
 
     ```sh
-    make -C application_core/frame_fpga
+    make application_core/fpga_application.h
     ```

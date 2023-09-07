@@ -45,7 +45,7 @@
                 "Application Core L-Link",
                 "Network Core L-Link"
             ],
-            "preLaunchTask": "Build",
+            "preLaunchTask": "Build Firmware",
             "stopAll": true
         }
     ]
