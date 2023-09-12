@@ -1,8 +1,6 @@
 # Frame Firmware & RTL Codebase
 
-Welcome to the complete codebase of the Frame Hardware. For regular usage, check out the docs [here](https://docs.brilliant.xyz).
-
-For those of you who want to modify the standard firmware or RTL, keep on reading.
+Welcome to the complete codebase of the Frame hardware. For regular usage, check out the docs [here](https://docs.brilliant.xyz).
 
 ## System architecture
 
@@ -12,7 +10,7 @@ The nRF53 is designed to handle the overall system operation. It runs the MicroP
 
 ![Frame system architecture diagram](docs/frame-system-architecture.drawio.png)
 
-## Getting started with firmware development
+## Getting started with nRF53 firmware development
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
 
@@ -66,7 +64,7 @@ The nRF53 is designed to handle the overall system operation. It runs the MicroP
 
 1. To monitor the logs, run the task `RTT Console` and ensure the `J-Link` launch configuration is running.
 
-## FPGA
+## Getting started with FPGA development
 
 For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `fpga_application.h` file which contains the entire FPGA application.
 
