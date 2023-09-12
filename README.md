@@ -4,6 +4,14 @@ Welcome to the complete codebase of the Frame Hardware. For regular usage, check
 
 For those of you who want to modify the standard firmware or RTL, keep on reading.
 
+## System architecture
+
+The codebase is split into two sections. The **nRF53 Firmware**, and the **FPGA RTL**. 
+
+The nRF53 is designed to handle the overall system operation. It runs the MicroPython OS, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
+
+![Frame system architecture diagram](docs/frame-system-architecture.drawio.png)
+
 ## Getting started with firmware development
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
