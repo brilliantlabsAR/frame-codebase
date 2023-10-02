@@ -27,6 +27,8 @@
 #define NRFX_CONFIG_H__
 #include "nrfx/templates/nrfx_config_common.h"
 
+#define NRFX_CLOCK_CONFIG_LF_SRC 3
+
 #ifdef NRF5340_XXAA_APPLICATION
 #define NRFX_SYSTICK_ENABLED 1
 #define NRFX_GPIOTE_ENABLED 1

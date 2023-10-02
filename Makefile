@@ -168,6 +168,7 @@ NETWORK_CORE_C_FILES += \
 	network_core/micropython/shared/runtime/gchelper_generic.c \
 	network_core/micropython/shared/runtime/interrupt_char.c \
 	network_core/micropython/shared/runtime/pyexec.c \
+	network_core/micropython/shared/runtime/stdout_helpers.c \
 	network_core/mphalport.c \
 	nrfx/drivers/src/nrfx_rtc.c \
 	nrfx/drivers/src/nrfx_spim.c \
@@ -176,7 +177,7 @@ NETWORK_CORE_C_FILES += \
 	nrfx/mdk/system_nrf5340_network.c \
 	segger/SEGGER_RTT_printf.c \
 	segger/SEGGER_RTT.c \
-
+	
 FROZEN_PYTHON_FILES += \
 	network_core/micropython_modules/test.py \
 
@@ -247,6 +248,7 @@ APPLICATION_CORE_FLAGS += \
 
 NETWORK_CORE_FLAGS += \
 	-DNRF5340_XXAA_NETWORK \
+	-D__STACK_SIZE=8192 \
 
 # Linker options
 SHARED_FLAGS += \
@@ -259,7 +261,7 @@ APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld
 NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
 
 # Link required libraries
-SHARED_FLAGS += \
+SHARED_LIBS += \
 	-lm \
 	-lc \
 	-lnosys \
@@ -279,7 +281,7 @@ build/application_core.elf: $(SHARED_C_FILES) \
                             | application_core/fpga_application.h
 
 	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^
+	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^ $(SHARED_LIBS)
 
 
 build/network_core.elf: $(SHARED_C_FILES) \
@@ -301,7 +303,7 @@ build/network_core.elf: $(SHARED_C_FILES) \
 	    -o $@ \
 	    build/network_core_objects/gc.o \
 	    build/network_core_objects/vm.o \
-	    $^
+	    $^ $(SHARED_LIBS)
 
 
 $(MP_GEN_FOLDER)/frozen_content.c: $(FROZEN_PYTHON_FILES) \

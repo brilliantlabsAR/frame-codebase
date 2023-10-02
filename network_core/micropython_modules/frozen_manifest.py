@@ -23,3 +23,4 @@
 #
 
 module("test.py")
+module("calc_pi.py")

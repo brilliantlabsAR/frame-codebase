@@ -29,6 +29,7 @@
 #include "py/gc.h"
 #include "py/lexer.h"
 #include "py/mperrno.h"
+#include "py/mphal.h"
 #include "py/runtime.h"
 #include "py/stackctrl.h"
 #include "shared/readline/readline.h"
@@ -107,7 +108,19 @@ mp_lexer_t *mp_lexer_new_from_file(const char *filename)
 int mp_hal_stdin_rx_chr(void)
 {
     // TODO
-    return 0;
+    int key = SEGGER_RTT_GetKey();
+
+    if (key < 0)
+    {
+        return 0;
+    }
+
+    if (key == 10)
+    {
+        return 13;
+    }
+
+    return key;
 }
 
 void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len)
@@ -116,17 +129,18 @@ void mp_hal_stdout_tx_strn(const char *str, mp_uint_t len)
     MICROPYTHON_LOG("%s", str);
 }
 
-void mp_hal_stdout_tx_str(const char *str)
-{
-    mp_hal_stdout_tx_strn(str, strlen(str));
-}
-
 uintptr_t mp_hal_stdio_poll(uintptr_t poll_flags)
 {
     // TODO
     // return (repl_rx.head == repl_rx.tail) ? poll_flags & MP_STREAM_POLL_RD : 0;
     return 0;
 }
+
+mp_obj_t mp_builtin_open(size_t n_args, const mp_obj_t *args, mp_map_t *kwargs)
+{
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
 
 void mp_event_poll_hook(void)
 {
@@ -161,7 +175,7 @@ void run_micropython(void)
     mp_stack_set_top(&__StackTop);
 
     // Set the stack limit as smaller than the real stack so we can recover
-    mp_stack_set_limit((char *)&__StackTop - (char *)&__StackLimit - 512);
+    mp_stack_set_limit((char *)&__StackTop - (char *)&__StackLimit - 128);
 
     gc_init(&__heap_start, &__heap_end);
     mp_init();
@@ -169,6 +183,7 @@ void run_micropython(void)
     pyexec_friendly_repl();
 
     // // Mount the filesystem, or format if needed
+    pyexec_frozen_module("calc_pi.py", false);
     // pyexec_frozen_module("_mountfs.py", false);
     // pyexec_frozen_module("_splashscreen.py", false);
 
