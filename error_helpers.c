@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -47,7 +47,7 @@ void _app_err(nrfx_err_t error_code, const char *file, const int line)
 #ifdef NRF5340_XXAA_APPLICATION
         NVIC_SystemReset();
 #elif NRF5340_XXAA_NETWORK
-        message_t reset = MESSAGE_WITHOUT_PAYLOAD(RESET_CHIP);
+        message_t reset = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_ERROR);
         push_message(reset);
 #endif
     }
@@ -70,6 +70,9 @@ const char *lookup_error_code(uint32_t error_code)
 
     case HARD_FAULT:
         return "HARD_FAULT";
+
+    case NETWORK_CORE_APP_ERROR:
+        return "NETWORK_CORE_APP_ERROR";
 
     case UNHANDLED_MESSAGE_INSTRUCTION:
         return "UNHANDLED_MESSAGE_INSTRUCTION";

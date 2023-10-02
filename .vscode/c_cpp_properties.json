@@ -7,11 +7,9 @@
             "includePath": [
                 ".",
                 "application_core",
+                "application_core/lua",
                 "cmsis/CMSIS/Core/Include",
                 "network_core",
-                "network_core/micropython_generated",
-                "network_core/micropython_modules",
-                "network_core/micropython",
                 "nrfx",
                 "nrfx/drivers/include",
                 "nrfx/hal",
@@ -20,8 +18,8 @@
                 "segger",
             ],
             "defines": [
-                // "NRF5340_XXAA_APPLICATION",
-                "NRF5340_XXAA_NETWORK",
+                "NRF5340_XXAA_APPLICATION",
+                // "NRF5340_XXAA_NETWORK",
                 "GIT_COMMIT=\"abcdefg\"",
                 "BUILD_VERSION=\"vYY.DDD.HHMM\""
             ]

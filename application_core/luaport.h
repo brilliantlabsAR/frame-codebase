@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -23,14 +23,9 @@
  */
 
 #pragma once
+
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
-typedef struct camera_config_t
-{
-    uint16_t address;
-    uint8_t value;
-} camera_config_t;
-
-static const camera_config_t camera_config[] = {
-    {0x0000, 0x00},
-};
+void run_lua(void);

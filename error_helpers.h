@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -32,6 +32,7 @@ typedef enum extended_error_codes_t
     HARDWARE_ERROR = 0x0BAC0001,
     ASSERT,
     HARD_FAULT,
+    NETWORK_CORE_APP_ERROR,
     UNHANDLED_MESSAGE_INSTRUCTION
 } extended_error_codes_t;
 

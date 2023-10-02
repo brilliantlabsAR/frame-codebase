@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -34,22 +34,22 @@
 
 #ifdef NRF5340_XXAA_APPLICATION
 
-#define NRFX_LOG(format, ...)                                                   \
-    do                                                                          \
-    {                                                                           \
-        char log_string[50];                                                    \
-        sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__);                  \
-        message_t log_message = MESSAGE(LOG_FROM_APPLICATION_CORE, log_string); \
-        push_message(log_message);                                              \
-    } while (0)
-
-#elif NRF5340_XXAA_NETWORK
-
 #define NRFX_LOG(format, ...) \
     SEGGER_RTT_printf(0, "\x1B[92m" format "\r\n", ##__VA_ARGS__)
 
 #define MICROPYTHON_LOG(format, ...) \
     SEGGER_RTT_printf(0, "\x1B[95m" format, ##__VA_ARGS__)
+
+#elif NRF5340_XXAA_NETWORK
+
+#define NRFX_LOG(format, ...)                                               \
+    do                                                                      \
+    {                                                                       \
+        char log_string[50];                                                \
+        sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__);              \
+        message_t log_message = MESSAGE(LOG_FROM_NETWORK_CORE, log_string); \
+        push_message(log_message);                                          \
+    } while (0)
 
 #endif
 

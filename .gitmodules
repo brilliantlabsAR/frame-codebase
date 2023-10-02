@@ -4,9 +4,3 @@
 [submodule "nrfx"]
 	path = nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
-[submodule "network_core/micropython"]
-	path = network_core/micropython
-	url = https://github.com/micropython/micropython.git
-[submodule "network_core/sdk-nrfxlib"]
-	path = network_core/sdk-nrfxlib
-	url = https://github.com/nrfconnect/sdk-nrfxlib.git

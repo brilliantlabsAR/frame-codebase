@@ -1,9 +1,9 @@
 /*
- * This file is part of the MicroPython for Monocle project:
- *      https://github.com/brilliantlabsAR/monocle-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
- * Authored by: Josuah Demangeon (me@josuah.net)
- *              Raj Nakarja / Brilliant Labs Ltd. (raj@itsbrilliant.co)
+ * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
+ *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
  *
  * ISC Licence
  *
@@ -23,33 +23,14 @@
  */
 
 #pragma once
-
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 
-typedef intptr_t mp_int_t;
-typedef uintptr_t mp_uint_t;
-typedef long mp_off_t;
+typedef struct camera_config_t
+{
+    uint16_t address;
+    uint8_t value;
+} camera_config_t;
 
-int mp_hal_generate_random_seed(void);
-
-mp_uint_t mp_hal_ticks_ms(void);
-
-void mp_event_poll_hook(void);
-
-void mp_hal_set_interrupt_char(int c);
-
-void run_micropython(void);
-
-// typedef enum ble_tx_channel_t
-// {
-//     REPL_TX,
-//     DATA_TX,
-// } ble_tx_channel_t;
-
-// bool ble_are_tx_notifications_enabled(ble_tx_channel_t channel);
-
-// size_t ble_get_max_payload_size(void);
-
-// bool ble_send_raw_data(const uint8_t *bytes, size_t len);
+static const camera_config_t camera_config[] = {
+    {0x0000, 0x00},
+};

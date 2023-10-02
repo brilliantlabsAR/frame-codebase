@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -30,24 +30,24 @@
 #define NRFX_CLOCK_CONFIG_LF_SRC 3
 
 #ifdef NRF5340_XXAA_APPLICATION
-#define NRFX_SYSTICK_ENABLED 1
-#define NRFX_GPIOTE_ENABLED 1
 #define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
 #define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#define NRFX_SAADC_ENABLED 1
-#define NRFX_IPC_ENABLED 1
+#define NRFX_GPIOTE_ENABLED 1
 #define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
+#define NRFX_IPC_ENABLED 1
 #define NRFX_QSPI_ENABLED 1
+#define NRFX_RTC_ENABLED 1
+#define NRFX_RTC0_ENABLED 1
+#define NRFX_SAADC_ENABLED 1
+#define NRFX_SPIM_ENABLED 1
+#define NRFX_SPIM0_ENABLED 1
+#define NRFX_SYSTICK_ENABLED 1
+#define NRFX_TWIM_ENABLED 1
+#define NRFX_TWIM0_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 
 #ifdef NRF5340_XXAA_NETWORK
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC0_ENABLED 1
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM0_ENABLED 1
 #define NRFX_IPC_ENABLED 1
 #define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 7
 #include "nrfx/templates/nrfx_config_nrf5340_network.h"

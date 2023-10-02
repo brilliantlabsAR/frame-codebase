@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-micropython
+ * This file is a part https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -31,18 +31,13 @@
 typedef enum instruction_t
 {
     // Network -> Application core commands
-    RESET_CHIP,
+    LOG_FROM_NETWORK_CORE,
     NETWORK_CORE_READY,
-    READY_TO_SLEEP,
-    SLEEP_PREVENTED,
-    NOT_REAL_HARDWARE,
+    NETWORK_CORE_ERROR,
 
     // Application -> Network core commands
     PREPARE_FOR_SLEEP,
-    LOG_FROM_APPLICATION_CORE,
 
-    // nRF53 -> FPGA commands
-    GET_FPGA_ID,
 } instruction_t;
 
 typedef struct message_t
