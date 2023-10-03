@@ -24,6 +24,9 @@
 
 #include <string.h>
 #include "error_helpers.h"
+#include "lauxlib.h"
+#include "lua.h"
+#include "lualib.h"
 #include "nrfx_log.h"
 
 // extern uint32_t __heap_start;
@@ -31,4 +34,13 @@
 
 void run_lua(void)
 {
+    lua_State *L = luaL_newstate();
+    luaL_openlibs(L);
+
+    if (L == NULL)
+    {
+        NRFX_LOG("Cannot create lua state: not enough memory");
+        app_err(1);
+    }
+    lua_close(L);
 }

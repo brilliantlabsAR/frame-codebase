@@ -33,6 +33,38 @@ SHARED_C_FILES += \
 	nrfx/helpers/nrfx_flag32_allocator.c \
 
 APPLICATION_CORE_C_FILES += \
+	application_core/lua/lapi.c \
+	application_core/lua/lauxlib.c \
+	application_core/lua/lbaselib.c \
+	application_core/lua/lcode.c \
+	application_core/lua/lcorolib.c \
+	application_core/lua/lctype.c \
+	application_core/lua/ldblib.c \
+	application_core/lua/ldebug.c \
+	application_core/lua/ldo.c \
+	application_core/lua/ldump.c \
+	application_core/lua/lfunc.c \
+	application_core/lua/lgc.c \
+	application_core/lua/linit.c \
+	application_core/lua/liolib.c \
+	application_core/lua/llex.c \
+	application_core/lua/lmathlib.c \
+	application_core/lua/lmem.c \
+	application_core/lua/loadlib.c \
+	application_core/lua/lobject.c \
+	application_core/lua/lopcodes.c \
+	application_core/lua/loslib.c \
+	application_core/lua/lparser.c \
+	application_core/lua/lstate.c \
+	application_core/lua/lstring.c \
+	application_core/lua/lstrlib.c \
+	application_core/lua/ltable.c \
+	application_core/lua/ltablib.c \
+	application_core/lua/ltm.c \
+	application_core/lua/lundump.c \
+	application_core/lua/lutf8lib.c \
+	application_core/lua/lvm.c \
+	application_core/lua/lzio.c \
 	application_core/main.c \
 	nrfx/drivers/src/nrfx_gpiote.c \
 	nrfx/drivers/src/nrfx_qspi.c \
