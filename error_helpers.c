@@ -26,57 +26,26 @@
 #include "interprocessor_messaging.h"
 #include "nrfx_log.h"
 
-void _app_err(nrfx_err_t error_code, const char *file, const int line)
-{
-    if (0xF000FFFF & (error_code))
-    {
-        if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
-        {
 #ifdef NRF5340_XXAA_APPLICATION
-            const char *core = "Application";
+static const char *core = "Application";
 #elif NRF5340_XXAA_NETWORK
-            const char *core = "Network";
+static const char *core = "Network";
 #endif
-            LOG("%s core crashed: %s at %s:%u",
-                     core,
-                     lookup_error_code(error_code),
-                     file,
-                     line);
-            __BKPT();
-        }
-#ifdef NRF5340_XXAA_APPLICATION
-        NVIC_SystemReset();
-#elif NRF5340_XXAA_NETWORK
-        message_t reset = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_ERROR);
-        push_message(reset);
-#endif
-    }
-}
 
-void HardFault_Handler(void)
+static void issue_reset(void)
 {
-    app_err(HARD_FAULT);
+#ifdef NRF5340_XXAA_APPLICATION
+    NVIC_SystemReset();
+#elif NRF5340_XXAA_NETWORK
+    message_t reset = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_ERROR);
+    push_message(reset);
+#endif
 }
 
 const char *lookup_error_code(uint32_t error_code)
 {
     switch (error_code)
     {
-    case ASSERT:
-        return "NRFX_ASSERT";
-
-    case HARDWARE_ERROR:
-        return "HARDWARE_ERROR";
-
-    case HARD_FAULT:
-        return "HARD_FAULT";
-
-    case NETWORK_CORE_APP_ERROR:
-        return "NETWORK_CORE_APP_ERROR";
-
-    case UNHANDLED_MESSAGE_INSTRUCTION:
-        return "UNHANDLED_MESSAGE_INSTRUCTION";
-
     case NRFX_SUCCESS:
         return "NRFX_SUCCESS";
 
@@ -128,4 +97,33 @@ const char *lookup_error_code(uint32_t error_code)
     default:
         return "UNKOWN_ERROR";
     }
+}
+
+void _app_err(nrfx_err_t error_code, const char *file, const int line)
+{
+    if (0xF000FFFF & (error_code))
+    {
+        if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+        {
+            LOG("%s core crashed at %s:%u. %s", core, file, line,
+                lookup_error_code(error_code));
+            __BKPT();
+        }
+        issue_reset();
+    }
+}
+
+void _app_err_message(const char *message, const char *file, const int line)
+{
+    if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+    {
+        LOG("%s core crashed at %s:%u. %s", core, file, line, message);
+        __BKPT();
+    }
+    issue_reset();
+}
+
+void HardFault_Handler(void)
+{
+    app_err_message("HARD_FAULT");
 }

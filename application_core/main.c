@@ -117,7 +117,7 @@ static void interprocessor_message_handler(void)
             break;
 
         default:
-            app_err(UNHANDLED_MESSAGE_INSTRUCTION);
+            app_err_message("Unhandled interprocessor message");
             break;
         }
 
@@ -390,12 +390,12 @@ static void frame_setup_application_core(void)
         {
             if (magnetometer_response.value != 0x49)
             {
-                app_err(HARDWARE_ERROR);
+                app_err_message("Magnetometer not found");
             }
 
             if (pmic_response.value != 0x02)
             {
-                app_err(HARDWARE_ERROR);
+                app_err_message("PMIC not found");
             }
         }
     }
@@ -495,7 +495,7 @@ static void frame_setup_application_core(void)
         {
             if (camera_response.value != 0x97)
             {
-                app_err(HARDWARE_ERROR);
+                app_err_message("Camera not found");
             }
         }
 
@@ -585,7 +585,7 @@ static void frame_setup_application_core(void)
         {
             // if (id_value[0] != 0x0A)
             {
-                app_err(HARDWARE_ERROR);
+                app_err_message("FPGA not found");
             }
         }
     }

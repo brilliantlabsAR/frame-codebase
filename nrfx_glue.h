@@ -33,13 +33,13 @@
 #define nrfx_ipc_irq_handler IPC_IRQHandler
 #define nrfx_rtc_0_irq_handler RTC0_IRQHandler
 
-#define NRFX_ASSERT(expression) \
-    do                          \
-    {                           \
-        if ((expression) == 0)  \
-        {                       \
-            app_err(ASSERT);    \
-        }                       \
+#define NRFX_ASSERT(expression)             \
+    do                                      \
+    {                                       \
+        if ((expression) == 0)              \
+        {                                   \
+            app_err_message("NRFX assert"); \
+        }                                   \
     } while (0)
 
 #define NRFX_STATIC_ASSERT(expression) \

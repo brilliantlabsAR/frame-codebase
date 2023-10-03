@@ -27,17 +27,8 @@
 #include "nrfx.h"
 #include <drivers/nrfx_errors.h>
 
-typedef enum extended_error_codes_t
-{
-    HARDWARE_ERROR = 0x0BAC0001,
-    ASSERT,
-    HARD_FAULT,
-    NETWORK_CORE_APP_ERROR,
-    UNHANDLED_MESSAGE_INSTRUCTION
-} extended_error_codes_t;
-
-const char *lookup_error_code(uint32_t error_code);
-
 void _app_err(nrfx_err_t error_code, const char *file, const int line);
+void _app_err_message(const char *message, const char *file, const int line);
 
 #define app_err(error_code) _app_err(error_code, __FILE__, __LINE__)
+#define app_err_message(message) _app_err_message(message, __FILE__, __LINE__)
