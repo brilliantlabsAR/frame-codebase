@@ -65,6 +65,7 @@ APPLICATION_CORE_C_FILES += \
 	application_core/lua/lutf8lib.c \
 	application_core/lua/lvm.c \
 	application_core/lua/lzio.c \
+	application_core/luaport.c \
 	application_core/main.c \
 	nrfx/drivers/src/nrfx_gpiote.c \
 	nrfx/drivers/src/nrfx_qspi.c \
@@ -115,7 +116,6 @@ SHARED_FLAGS += \
 	-ffunction-sections  \
 	-flto \
 	-fmax-errors=1 \
-	-fno-common \
 	-fno-delete-null-pointer-checks \
 	-fno-strict-aliasing \
 	-fshort-enums \
@@ -123,17 +123,18 @@ SHARED_FLAGS += \
 	-mabi=aapcs \
 	-mcmse \
 	-mthumb \
-	-Os \
 	-std=gnu17 \
 
 APPLICATION_CORE_FLAGS += \
 	-mcpu=cortex-m33 \
 	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
+	-O2 \
 
 NETWORK_CORE_FLAGS += \
 	-mcpu=cortex-m33+nodsp \
 	-mfloat-abi=soft \
+	-O3 \
 
 # Preprocessor defines
 SHARED_FLAGS += \
@@ -159,11 +160,10 @@ NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
 
 # Link required libraries
 SHARED_LIBS += \
-	-lm \
 	-lc \
+	-lgcc \
+	-lm \
 	-lnosys \
-	-lgcc
-
 
 all: build/application_core.elf \
      build/network_core.elf

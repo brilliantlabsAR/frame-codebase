@@ -26,6 +26,7 @@
 #include "display_configuration.h"
 #include "error_helpers.h"
 #include "interprocessor_messaging.h"
+#include "luaport.h"
 #include "nrf_clock.h"
 #include "nrf_gpio.h"
 #include "nrf_oscillators.h"
@@ -605,6 +606,6 @@ int main(void)
 
     while (1)
     {
-        // run_lua();
+        run_lua();
     }
 }

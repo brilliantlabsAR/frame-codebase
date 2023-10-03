@@ -34,6 +34,22 @@
 
 void run_lua(void)
 {
+    const char *LUA_FILE = "\
+    function test_me()\n\
+        k = 1\n\
+        s = 0\n\
+        for i = 0, 100000 do\n\
+            if math.fmod(i, 2) == 0 then\n\
+                s = s + (4 / k)\n\
+            else\n\
+                s = s - (4 / k)\n\
+            end\n\
+            k = k + 2\n\
+        end\n\
+        return s\n\
+    end\n\
+    ";
+
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
@@ -41,6 +57,23 @@ void run_lua(void)
     {
         LOG("Cannot create lua state: not enough memory");
         app_err(1);
+    }
+
+    luaL_dostring(L, LUA_FILE);
+    lua_getglobal(L, "test_me");
+    if (lua_isfunction(L, -1))
+    {
+
+        lua_pcall(L, 0, 1, 0);
+        if (lua_isnumber(L, -1))
+        {
+            lua_Number ret = lua_tonumber(L, -1);
+            LUA_LOG("ret = %d", (int)ret);
+        }
+        else
+        {
+            LUA_LOG("ret = NaN");
+        }
     }
     lua_close(L);
 }
