@@ -42,7 +42,7 @@ static void interprocessor_message_handler(void)
             break;
 
         default:
-            app_err_message("Unhandled interprocessor message");
+            error_with_message("Unhandled interprocessor message");
             break;
         }
 

@@ -42,7 +42,7 @@ static void issue_reset(void)
 #endif
 }
 
-const char *lookup_error_code(uint32_t error_code)
+static const char *lookup_error_code(uint32_t error_code)
 {
     switch (error_code)
     {
@@ -99,13 +99,16 @@ const char *lookup_error_code(uint32_t error_code)
     }
 }
 
-void _app_err(nrfx_err_t error_code, const char *file, const int line)
+void _check_error(nrfx_err_t error_code, const char *file, const int line)
 {
     if (0xF000FFFF & (error_code))
     {
         if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
         {
-            LOG("%s core crashed at %s:%u. %s", core, file, line,
+            LOG("%s core crashed at %s:%u. %s",
+                core,
+                file,
+                line,
                 lookup_error_code(error_code));
             __BKPT();
         }
@@ -113,7 +116,7 @@ void _app_err(nrfx_err_t error_code, const char *file, const int line)
     }
 }
 
-void _app_err_message(const char *message, const char *file, const int line)
+void _error_with_message(const char *message, const char *file, const int line)
 {
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
     {
@@ -125,5 +128,5 @@ void _app_err_message(const char *message, const char *file, const int line)
 
 void HardFault_Handler(void)
 {
-    app_err_message("HARD_FAULT");
+    error_with_message("Hard fault");
 }

@@ -55,8 +55,7 @@ void run_lua(void)
 
     if (L == NULL)
     {
-        LOG("Cannot create lua state: not enough memory");
-        app_err(1);
+        error_with_message("Cannot create lua state: not enough memory");
     }
 
     luaL_dostring(L, LUA_FILE);

@@ -113,11 +113,11 @@ static void interprocessor_message_handler(void)
             break;
 
         case NETWORK_CORE_ERROR:
-            app_err(1);
+            NVIC_SystemReset();
             break;
 
         default:
-            app_err_message("Unhandled interprocessor message");
+            error_with_message("Unhandled interprocessor message");
             break;
         }
 
@@ -175,7 +175,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
             tx_err == NRFX_ERROR_INVALID_ADDR ||
             tx_err == NRFX_ERROR_DRV_TWI_ERR_OVERRUN)
         {
-            app_err(tx_err);
+            check_error(tx_err);
         }
 
         nrfx_err_t rx_err = nrfx_twim_xfer(&i2c_instance, &i2c_rx, 0);
@@ -185,7 +185,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
             rx_err == NRFX_ERROR_INVALID_ADDR ||
             rx_err == NRFX_ERROR_DRV_TWI_ERR_OVERRUN)
         {
-            app_err(rx_err);
+            check_error(rx_err);
         }
 
         if (tx_err == NRFX_SUCCESS && rx_err == NRFX_SUCCESS)
@@ -253,7 +253,7 @@ i2c_response_t i2c_write(uint8_t device_address_7bit,
             err == NRFX_ERROR_INVALID_ADDR ||
             err == NRFX_ERROR_DRV_TWI_ERR_OVERRUN)
         {
-            app_err(err);
+            check_error(err);
         }
 
         if (err == NRFX_SUCCESS)
@@ -277,7 +277,7 @@ void spi_read(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
     nrf_gpio_pin_clear(cs_pin);
 
     nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_RX(data, length);
-    app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+    check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
 
     if (!hold_down_cs)
     {
@@ -294,13 +294,13 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
         uint8_t *m_data = malloc(length);
         memcpy(m_data, data, length);
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
-        app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+        check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
         free(m_data);
     }
     else
     {
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(data, length);
-        app_err(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+        check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
     }
 
     if (!hold_down_cs)
@@ -349,7 +349,9 @@ static void frame_setup_application_core(void)
         // 1024Hz = >1ms resolution
         config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
 
-        app_err(nrfx_rtc_init(&rtc_instance, &config, unused_rtc_event_handler));
+        check_error(nrfx_rtc_init(&rtc_instance,
+                                  &config,
+                                  unused_rtc_event_handler));
         nrfx_rtc_enable(&rtc_instance);
 
         // Call tick interrupt every ms to wake up the core
@@ -366,7 +368,7 @@ static void frame_setup_application_core(void)
             .hold_bus_uninit = false,
         };
 
-        app_err(nrfx_twim_init(&i2c_instance, &i2c_config, NULL, NULL));
+        check_error(nrfx_twim_init(&i2c_instance, &i2c_config, NULL, NULL));
 
         nrfx_twim_enable(&i2c_instance);
     }
@@ -390,12 +392,12 @@ static void frame_setup_application_core(void)
         {
             if (magnetometer_response.value != 0x49)
             {
-                app_err_message("Magnetometer not found");
+                error_with_message("Magnetometer not found");
             }
 
             if (pmic_response.value != 0x02)
             {
-                app_err_message("PMIC not found");
+                error_with_message("PMIC not found");
             }
         }
     }
@@ -403,50 +405,50 @@ static void frame_setup_application_core(void)
     // Configure the PMIC registers
     {
         // Set the SBB drive strength
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
 
         // Set SBB0 to 1.0V
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x29, 0x7F, 0x04).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x29, 0x7F, 0x04).fail);
 
         // Set SBB2 to 2.7V
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2D, 0x7F, 0x26).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2D, 0x7F, 0x26).fail);
 
         // Set LDO0 to 1.2V
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
 
         // Turn on SBB0 (1.0V rail) with 500mA limit
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
 
         // Turn on LDO0 (1.2V rail)
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
 
         // Turn on SBB2 (2.7V rail) with 333mA limit
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
 
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
 
         // Set CHGIN limit to 475mA
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x21, 0x1C, 0x10).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x21, 0x1C, 0x10).fail);
 
         // Charge termination current to 5%, and top-off timer to 30mins
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x22, 0x1F, 0x06).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x22, 0x1F, 0x06).fail);
 
         // Set junction regulation temperature to 70 degrees
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x23, 0xE0, 0x20).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x23, 0xE0, 0x20).fail);
 
         // Set the fast charge current value to 225mA
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x24, 0xFC, 0x74).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x24, 0xFC, 0x74).fail);
 
         // Set the Vcool & Vwarm current to 112.5mA, and enable the thermistor
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x25, 0xFE, 0x3A).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x25, 0xFE, 0x3A).fail);
 
         // Set constant voltage to 4.3V for both fast charge and JEITA
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x26, 0xFC, 0x70).fail);
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x27, 0xFC, 0x70).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x26, 0xFC, 0x70).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x27, 0xFC, 0x70).fail);
 
         // Connect AMUX to battery voltage
-        app_err(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
     }
 
     // Initialize the SPI and configure the display
@@ -465,7 +467,7 @@ static void frame_setup_application_core(void)
         spi_config.mode = NRF_SPIM_MODE_3;
         spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
 
-        app_err(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
+        check_error(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
 
         for (size_t i = 0;
              i < sizeof(display_config) / sizeof(display_config_t);
@@ -495,7 +497,7 @@ static void frame_setup_application_core(void)
         {
             if (camera_response.value != 0x97)
             {
-                app_err_message("Camera not found");
+                error_with_message("Camera not found");
             }
         }
 
@@ -516,7 +518,6 @@ static void frame_setup_application_core(void)
 
     // Turn on the network core
     {
-        // TODO
         NRF_RESET->NETWORK.FORCEOFF = 0;
     }
 
@@ -533,7 +534,7 @@ static void frame_setup_application_core(void)
 
     // Configure case detect pin for sleeping
     {
-        app_err(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
         nrfx_gpiote_input_config_t input_config = {
             .pull = NRF_GPIO_PIN_PULLUP, // TODO pull this up with a large resistor
@@ -549,10 +550,10 @@ static void frame_setup_application_core(void)
             .p_context = NULL,
         };
 
-        app_err(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
-                                            &input_config,
-                                            &trigger_config,
-                                            &handler_config));
+        check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                                &input_config,
+                                                &trigger_config,
+                                                &handler_config));
 
         nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
@@ -570,7 +571,7 @@ static void frame_setup_application_core(void)
         //     NRF_QSPI_PIN_NOT_CONNECTED,
         //     NRF_QSPI_PIN_NOT_CONNECTED);
 
-        // app_err(nrfx_qspi_init(&qspi_config, NULL, NULL));
+        // check_error(nrfx_qspi_init(&qspi_config, NULL, NULL));
     }
 
     // Run the FPGA application loading sequence
@@ -585,7 +586,7 @@ static void frame_setup_application_core(void)
         {
             // if (id_value[0] != 0x0A)
             {
-                app_err_message("FPGA not found");
+                error_with_message("FPGA not found");
             }
         }
     }

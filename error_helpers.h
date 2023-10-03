@@ -27,8 +27,12 @@
 #include "nrfx.h"
 #include <drivers/nrfx_errors.h>
 
-void _app_err(nrfx_err_t error_code, const char *file, const int line);
-void _app_err_message(const char *message, const char *file, const int line);
+void _check_error(nrfx_err_t error_code, const char *file, const int line);
 
-#define app_err(error_code) _app_err(error_code, __FILE__, __LINE__)
-#define app_err_message(message) _app_err_message(message, __FILE__, __LINE__)
+void _error_with_message(const char *message, const char *file, const int line);
+
+#define check_error(error_code) \
+    _check_error(error_code, __FILE__, __LINE__)
+
+#define error_with_message(message) \
+    _error_with_message(message, __FILE__, __LINE__)
