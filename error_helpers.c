@@ -37,7 +37,7 @@ void _app_err(nrfx_err_t error_code, const char *file, const int line)
 #elif NRF5340_XXAA_NETWORK
             const char *core = "Network";
 #endif
-            NRFX_LOG("%s core crashed: %s at %s:%u",
+            LOG("%s core crashed: %s at %s:%u",
                      core,
                      lookup_error_code(error_code),
                      file,

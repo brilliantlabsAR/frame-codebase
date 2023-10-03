@@ -74,13 +74,13 @@ APPLICATION_CORE_C_FILES += \
 	nrfx/drivers/src/nrfx_twim.c \
 	nrfx/mdk/gcc_startup_nrf5340_application.S \
 	nrfx/mdk/system_nrf5340_application.c \
-	segger/SEGGER_RTT_printf.c \
-	segger/SEGGER_RTT.c \
 
 NETWORK_CORE_C_FILES += \
 	network_core/main.c \
 	nrfx/mdk/gcc_startup_nrf5340_network.S \
 	nrfx/mdk/system_nrf5340_network.c \
+	segger/SEGGER_RTT_Syscalls_GCC.c \
+	segger/SEGGER_RTT.c \
 
 FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
 

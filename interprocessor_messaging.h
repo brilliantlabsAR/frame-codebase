@@ -31,11 +31,11 @@
 typedef enum instruction_t
 {
     // Network -> Application core commands
-    LOG_FROM_NETWORK_CORE,
     NETWORK_CORE_READY,
     NETWORK_CORE_ERROR,
 
     // Application -> Network core commands
+    LOG_FROM_APPLICATION_CORE,
     PREPARE_FOR_SLEEP,
 
 } instruction_t;

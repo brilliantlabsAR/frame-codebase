@@ -61,7 +61,7 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
 {
     // Disable interrupts to prevent too many triggers from pin bounces
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
-    NRFX_LOG("Going to sleep");
+    LOG("Going to sleep");
 
     // Inform the network core that we're about to sleep
     message_t message = MESSAGE_WITHOUT_PAYLOAD(PREPARE_FOR_SLEEP);
@@ -72,7 +72,7 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     {
         if (sleep_prevented)
         {
-            NRFX_LOG("Sleep prevented");
+            LOG("Sleep prevented");
 
             // Short delay to prevent too many messages clogging things up
             nrfx_systick_delay_ms(100);
@@ -107,10 +107,6 @@ static void interprocessor_message_handler(void)
 
         switch (message->instruction)
         {
-        case LOG_FROM_NETWORK_CORE:
-            NRFX_LOG("%s", message->payload);
-            break;
-
         case NETWORK_CORE_READY:
             network_core_ready = true;
             break;
@@ -314,6 +310,11 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void frame_setup_application_core(void)
 {
+    // Initialize the inter-processor communication for logging and bluetooth
+    {
+        setup_messaging(interprocessor_message_handler);
+    }
+
     // Configure the clock sources
     {
         // // High frequency crystal uses internally configurable capacitors
@@ -380,7 +381,7 @@ static void frame_setup_application_core(void)
         // If both chips fail to respond, it likely that we're using a devkit
         if (magnetometer_response.fail && pmic_response.fail)
         {
-            NRFX_LOG("Running on nRF5340-DK");
+            LOG("Running on nRF5340-DK");
             not_real_hardware = true;
         }
 
@@ -512,11 +513,6 @@ static void frame_setup_application_core(void)
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     }
 
-    // Initialize the inter-processor communication
-    {
-        setup_messaging(interprocessor_message_handler);
-    }
-
     // Turn on the network core
     {
         // TODO
@@ -598,15 +594,14 @@ static void frame_setup_application_core(void)
         // TODO
     }
 
-    NRFX_LOG("Application core configured");
+    LOG("Application core configured");
 }
 
 int main(void)
 {
-    NRFX_LOG(RTT_CTRL_RESET RTT_CTRL_CLEAR);
-    NRFX_LOG("Lua on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
-
     frame_setup_application_core();
+
+    LOG("Lua on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
 
     while (1)
     {

@@ -122,7 +122,7 @@
         {
             "label": "Pre-launch Delay",
             "type": "shell",
-            "command": "sleep 1",
+            "command": "sleep 2",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,

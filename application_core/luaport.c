@@ -39,7 +39,7 @@ void run_lua(void)
 
     if (L == NULL)
     {
-        NRFX_LOG("Cannot create lua state: not enough memory");
+        LOG("Cannot create lua state: not enough memory");
         app_err(1);
     }
     lua_close(L);

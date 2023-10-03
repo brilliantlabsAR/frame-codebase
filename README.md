@@ -6,7 +6,7 @@ Welcome to the complete codebase of the Frame hardware. For regular usage, check
 
 The codebase is split into two sections. The **nRF53 Firmware**, and the **FPGA RTL**. 
 
-The nRF53 is designed to handle the overall system operation. It runs the MicroPython OS, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
+The nRF53 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
 
 ![Frame system architecture diagram](docs/frame-system-architecture.drawio.png)
 
@@ -16,16 +16,14 @@ The nRF53 is designed to handle the overall system operation. It runs the MicroP
 
 1. Ensure you have the [nRF Command Line Tools](https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools) installed.
 
-1. Clone this repository along with submodules and build the mpy-cross toolchain:
+1. Clone this repository along with its submodules:
 
     ```sh
     git clone https://github.com/brilliantlabsAR/frame-codebase.git
+    
     cd frame-codebase
 
     git submodule update --init
-    git -C network_core/micropython submodule update --init lib/micropython-lib
-
-    make -C network_core/micropython/mpy-cross
     ```
 
 1. You should now be able to build the project by calling `make` from the `frame-codebase` folder.

@@ -38,7 +38,7 @@ typedef struct fifo_t
 {
     size_t head;
     size_t tail;
-    uint8_t buffer[100];
+    uint8_t buffer[300];
 } fifo_t;
 
 typedef struct memory_t

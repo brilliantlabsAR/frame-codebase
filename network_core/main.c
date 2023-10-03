@@ -37,6 +37,10 @@ static void interprocessor_message_handler(void)
 
         switch (message->instruction)
         {
+        case LOG_FROM_APPLICATION_CORE:
+            LOG("%s", message->payload);
+            break;
+
         default:
             app_err(UNHANDLED_MESSAGE_INSTRUCTION);
             break;
@@ -46,8 +50,10 @@ static void interprocessor_message_handler(void)
     }
 }
 
-static void setup_network_core(void)
+int main(void)
 {
+    LOG(RTT_CTRL_RESET RTT_CTRL_CLEAR);
+
     // Initialize the inter-processor communication
     {
         setup_messaging(interprocessor_message_handler);
@@ -59,12 +65,7 @@ static void setup_network_core(void)
         push_message(message);
     }
 
-    NRFX_LOG("Network core configured");
-}
-
-int main(void)
-{
-    setup_network_core();
+    LOG("Network core configured");
 
     while (1)
     {
