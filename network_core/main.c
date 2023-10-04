@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -27,18 +27,23 @@
 #include "nrf.h"
 #include "nrfx_log.h"
 
-static void interprocessor_message_handler(void)
+static void application_core_message_handler(void)
 {
-    while (pending_message_length() > 0)
+    while (message_pending())
     {
-        message_t *message = new_message(pending_message_length());
+        uint8_t *payload = malloc(pending_message_payload_length());
 
-        pop_message(message);
+        if (payload == NULL)
+        {
+            error_with_message("Could not allocate memory for message");
+        }
 
-        switch (message->instruction)
+        message_t message = retrieve_message(payload);
+
+        switch (message)
         {
         case LOG_FROM_APPLICATION_CORE:
-            LOG("%s", message->payload);
+            LOG("%s", payload);
             break;
 
         default:
@@ -46,7 +51,7 @@ static void interprocessor_message_handler(void)
             break;
         }
 
-        free_message(message);
+        free(payload);
     }
 }
 
@@ -56,18 +61,19 @@ int main(void)
 
     // Initialize the inter-processor communication
     {
-        setup_messaging(interprocessor_message_handler);
-    }
-
-    // Inform the application processor that the hardware is configured
-    {
-        message_t message = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_READY);
-        push_message(message);
+        setup_messaging(application_core_message_handler);
     }
 
     LOG("Network core configured");
 
     while (1)
     {
+        int key = SEGGER_RTT_GetKey();
+
+        if (key > 0)
+        {
+            uint8_t key_data[1] = {(uint8_t)key};
+            send_message(BLUETOOTH_DATA_RECEIVED, key_data);
+        }
     }
 }

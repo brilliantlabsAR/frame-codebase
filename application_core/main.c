@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -49,7 +49,6 @@ static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
-static volatile bool network_core_ready = false;
 static volatile bool ready_to_sleep = false;
 static volatile bool sleep_prevented = false;
 static volatile bool not_real_hardware = false;
@@ -63,10 +62,6 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     // Disable interrupts to prevent too many triggers from pin bounces
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
     LOG("Going to sleep");
-
-    // Inform the network core that we're about to sleep
-    message_t message = MESSAGE_WITHOUT_PAYLOAD(PREPARE_FOR_SLEEP);
-    push_message(message);
 
     // Wait for the network core to complete the shutdown process
     while (ready_to_sleep == false)
@@ -98,22 +93,27 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     }
 }
 
-static void interprocessor_message_handler(void)
+static void network_core_message_handler(void)
 {
-    while (pending_message_length() > 0)
+    while (message_pending())
     {
-        message_t *message = new_message(pending_message_length());
+        uint8_t *payload = malloc(pending_message_payload_length());
 
-        pop_message(message);
-
-        switch (message->instruction)
+        if (payload == NULL)
         {
-        case NETWORK_CORE_READY:
-            network_core_ready = true;
+            error_with_message("Could not allocate memory for message");
+        }
+
+        message_t message = retrieve_message(payload);
+
+        switch (message)
+        {
+        case RESET_REQUEST_FROM_NETWORK_CORE:
+            NVIC_SystemReset();
             break;
 
-        case NETWORK_CORE_ERROR:
-            NVIC_SystemReset();
+        case BLUETOOTH_DATA_RECEIVED:
+            LOG("New data: %s", payload);
             break;
 
         default:
@@ -121,7 +121,7 @@ static void interprocessor_message_handler(void)
             break;
         }
 
-        free_message(message);
+        free(payload);
     }
 }
 
@@ -313,7 +313,7 @@ static void frame_setup_application_core(void)
 {
     // Initialize the inter-processor communication for logging and bluetooth
     {
-        setup_messaging(interprocessor_message_handler);
+        setup_messaging(network_core_message_handler);
     }
 
     // Configure the clock sources
@@ -519,12 +519,6 @@ static void frame_setup_application_core(void)
     // Turn on the network core
     {
         NRF_RESET->NETWORK.FORCEOFF = 0;
-    }
-
-    // Wait for the network core to start up
-    while (network_core_ready == false)
-    {
-        // Do nothing
     }
 
     // Read the case detect pin. If docked, we sleep right away

@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -34,11 +34,14 @@ static const char *core = "Network";
 
 static void issue_reset(void)
 {
+    // Simply pause here if debugging
+    __BKPT();
+
+    // Otherwise reset
 #ifdef NRF5340_XXAA_APPLICATION
     NVIC_SystemReset();
 #elif NRF5340_XXAA_NETWORK
-    message_t reset = MESSAGE_WITHOUT_PAYLOAD(NETWORK_CORE_ERROR);
-    push_message(reset);
+    send_message(RESET_REQUEST_FROM_NETWORK_CORE, NULL);
 #endif
 }
 
@@ -105,12 +108,11 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
     {
         if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
         {
-            LOG("%s core crashed at %s:%u. %s",
+            LOG("%s core crashed at %s:%u - %s",
                 core,
                 file,
                 line,
                 lookup_error_code(error_code));
-            __BKPT();
         }
         issue_reset();
     }
@@ -120,8 +122,7 @@ void _error_with_message(const char *message, const char *file, const int line)
 {
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
     {
-        LOG("%s core crashed at %s:%u. %s", core, file, line, message);
-        __BKPT();
+        LOG("%s core crashed at %s:%u - %s", core, file, line, message);
     }
     issue_reset();
 }

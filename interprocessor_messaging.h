@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -28,49 +28,28 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum instruction_t
-{
-    // Network -> Application core commands
-    NETWORK_CORE_READY,
-    NETWORK_CORE_ERROR,
-
-    // Application -> Network core commands
-    LOG_FROM_APPLICATION_CORE,
-    PREPARE_FOR_SLEEP,
-
-} instruction_t;
-
-typedef struct message_t
-{
-    uint8_t size;
-    instruction_t instruction;
-    uint8_t *payload;
-} message_t;
-
-#define MESSAGE(INSTRUCTION, PAYLOAD)  \
-    {                                  \
-        .size = sizeof(PAYLOAD) + 2,   \
-        .instruction = INSTRUCTION,    \
-        .payload = (uint8_t *)PAYLOAD, \
-    }
-
-#define MESSAGE_WITHOUT_PAYLOAD(INSTRUCTION) \
-    {                                        \
-        .size = 2,                           \
-        .instruction = INSTRUCTION,          \
-        .payload = NULL,                     \
-    }
-
 typedef void (*message_handler_t)(void);
 
 void setup_messaging(message_handler_t handler);
 
-void push_message(message_t message);
+typedef enum message_t
+{
+    // Application -> Network core commands
+    LOG_FROM_APPLICATION_CORE,
+    BLUETOOTH_DATA_TO_SEND,
 
-void pop_message(message_t *message);
+    // Network -> Application core commands
+    RESET_REQUEST_FROM_NETWORK_CORE,
+    BLUETOOTH_DATA_RECEIVED,
+} message_t;
 
-uint8_t pending_message_length(void);
+void _send_message(message_t message, uint8_t *payload, uint8_t payload_length);
 
-struct message_t *new_message(uint8_t length);
+#define send_message(message, payload) \
+    _send_message(message, (uint8_t *)payload, sizeof(payload))
 
-void free_message(struct message_t *message);
+bool message_pending(void);
+
+uint8_t pending_message_payload_length();
+
+message_t retrieve_message(uint8_t *payload);

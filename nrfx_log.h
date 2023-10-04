@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -34,22 +34,20 @@
 
 #ifdef NRF5340_XXAA_APPLICATION
 
-#define LOG(format, ...)                                                        \
-    do                                                                          \
-    {                                                                           \
-        char log_string[50];                                                    \
-        sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__);                  \
-        message_t log_message = MESSAGE(LOG_FROM_APPLICATION_CORE, log_string); \
-        push_message(log_message);                                              \
+#define LOG(format, ...)                                       \
+    do                                                         \
+    {                                                          \
+        char log_string[50];                                   \
+        sprintf(log_string, "\x1B[93m" format, ##__VA_ARGS__); \
+        send_message(LOG_FROM_APPLICATION_CORE, log_string);   \
     } while (0)
 
-#define LUA_LOG(format, ...)                                                    \
-    do                                                                          \
-    {                                                                           \
-        char log_string[50];                                                    \
-        sprintf(log_string, "\x1B[95m" format, ##__VA_ARGS__);                  \
-        message_t log_message = MESSAGE(LOG_FROM_APPLICATION_CORE, log_string); \
-        push_message(log_message);                                              \
+#define LUA_LOG(format, ...)                                   \
+    do                                                         \
+    {                                                          \
+        char log_string[50];                                   \
+        sprintf(log_string, "\x1B[95m" format, ##__VA_ARGS__); \
+        send_message(LOG_FROM_APPLICATION_CORE, log_string);   \
     } while (0)
 
 #elif NRF5340_XXAA_NETWORK

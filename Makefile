@@ -1,5 +1,5 @@
 #
-# This file is a part https://github.com/brilliantlabsAR/frame-codebase
+# This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
 #
 # Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
 #              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)

@@ -1,5 +1,5 @@
 /*
- * This file is a part https://github.com/brilliantlabsAR/frame-codebase
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
  * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
  *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -38,7 +38,7 @@ typedef struct fifo_t
 {
     size_t head;
     size_t tail;
-    uint8_t buffer[300];
+    uint8_t buffer[512];
 } fifo_t;
 
 typedef struct memory_t
@@ -102,9 +102,9 @@ void setup_messaging(message_handler_t handler)
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
 }
 
-void push_message(message_t message)
+void _send_message(message_t message, uint8_t *payload, uint8_t payload_length)
 {
-    for (size_t position = 0; position < message.size; position++)
+    for (size_t position = 0; position < payload_length + 2; position++)
     {
         size_t next = tx->head + 1;
 
@@ -115,21 +115,22 @@ void push_message(message_t message)
 
         while (next == tx->tail)
         {
-            // Buffer is full. Do nothing
+            // Buffer is full. TODO
         }
 
         switch (position)
         {
         case 0:
-            tx->buffer[tx->head] = message.size;
+            // Message length include length byte and message type
+            tx->buffer[tx->head] = payload_length + 2;
             break;
 
         case 1:
-            tx->buffer[tx->head] = message.instruction;
+            tx->buffer[tx->head] = message;
             break;
 
         default:
-            tx->buffer[tx->head] = message.payload[position - 2];
+            tx->buffer[tx->head] = payload[position - 2];
             break;
         }
 
@@ -139,13 +140,33 @@ void push_message(message_t message)
     nrfx_ipc_signal(ipc_tx_channel);
 }
 
-void pop_message(message_t *message)
+bool message_pending(void)
 {
-    for (size_t position = 0; position < message->size; position++)
+    if (rx->head == rx->tail)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+uint8_t pending_message_payload_length()
+{
+    // Payload length is the message length - 2
+    return rx->buffer[rx->tail] - 2;
+}
+
+message_t retrieve_message(uint8_t *payload)
+{
+    message_t message;
+
+    uint8_t message_length = rx->buffer[rx->tail];
+
+    for (size_t position = 0; position < message_length; position++)
     {
         if (rx->tail == rx->head)
         {
-            return;
+            break;
         }
 
         size_t next = rx->tail + 1;
@@ -158,55 +179,20 @@ void pop_message(message_t *message)
         switch (position)
         {
         case 0:
-            // message->size should already be populated, so we skip this
+            // We don't need the message length value so we skip this
             break;
 
         case 1:
-            message->instruction = rx->buffer[rx->tail];
+            message = rx->buffer[rx->tail];
             break;
 
         default:
-            message->payload[position - 2] = rx->buffer[rx->tail];
+            payload[position - 2] = rx->buffer[rx->tail];
             break;
         }
 
         rx->tail = next;
     }
-}
 
-uint8_t pending_message_length(void)
-{
-    if (rx->head == rx->tail)
-    {
-        return 0;
-    }
-
-    return rx->buffer[rx->tail];
-}
-
-struct message_t *new_message(uint8_t size)
-{
-    struct message_t *message =
-        malloc(sizeof(struct message_t));
-    if (message == NULL)
-        return NULL;
-
-    message->payload = malloc(size);
-    if (message->payload == NULL)
-    {
-        free(message);
-        return NULL;
-    }
-
-    message->size = size;
     return message;
-}
-
-void free_message(struct message_t *message)
-{
-    if (message != NULL)
-    {
-        free(message->payload);
-        free(message);
-    }
 }
