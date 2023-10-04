@@ -22,12 +22,13 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "error_helpers.h"
-#include "interprocessor_messaging.h"
-#include "nrfx_ipc.h"
+#include <math.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include "error_helpers.h"
+#include "interprocessor_messaging.h"
+#include "nrfx_ipc.h"
 #include "nrfx_log.h"
 
 #ifdef NRF5340_XXAA_APPLICATION
@@ -49,10 +50,10 @@ typedef struct memory_t
 
 static const uint32_t memory_address = 0x20000000;
 
-static memory_t *memory = (memory_t *)memory_address;
+static volatile memory_t memory __attribute__((section(".ipc_ram"))); //= (memory_t *)memory_address;
 
-static fifo_t *tx;
-static fifo_t *rx;
+static volatile fifo_t *tx;
+static volatile fifo_t *rx;
 
 static uint8_t ipc_tx_channel;
 static uint8_t ipc_rx_channel;
@@ -66,23 +67,26 @@ void setup_messaging(message_handler_t handler)
 {
 #ifdef NRF5340_XXAA_APPLICATION
 
+    // RAM starts at 0x20000000 and there are 64 regions in total
+    float ram_region_id = floorf((float)(memory_address - 0x20000000) / 0x2000);
+
     // Unlock the RAM region so that the network processor can access it
     nrf_spu_ramregion_set(NRF_SPU,
-                          0, // TODO make this based on memory_address
+                          (uint8_t)ram_region_id,
                           false,
                           NRF_SPU_MEM_PERM_READ | NRF_SPU_MEM_PERM_WRITE,
                           false);
 
-    tx = &memory->application_to_network;
-    rx = &memory->network_to_application;
+    tx = &memory.application_to_network;
+    rx = &memory.network_to_application;
 
     ipc_rx_channel = 0;
     ipc_tx_channel = 1;
 
 #elif NRF5340_XXAA_NETWORK
 
-    tx = &memory->network_to_application;
-    rx = &memory->application_to_network;
+    tx = &memory.network_to_application;
+    rx = &memory.application_to_network;
 
     ipc_rx_channel = 1;
     ipc_tx_channel = 0;
@@ -104,7 +108,13 @@ void setup_messaging(message_handler_t handler)
 
 void _send_message(message_t message, uint8_t *payload, uint8_t payload_length)
 {
-    for (size_t position = 0; position < payload_length + 2; position++)
+    // Message size is currently limited to 255
+    if (payload_length > 253)
+    {
+        return;
+    }
+
+    for (size_t position = 0; position < (payload_length + 2); position++)
     {
         size_t next = tx->head + 1;
 
@@ -113,15 +123,16 @@ void _send_message(message_t message, uint8_t *payload, uint8_t payload_length)
             next = 0;
         }
 
+        // Throw away messages whenever the buffer is full
         while (next == tx->tail)
         {
-            // Buffer is full. TODO
+            // return;
         }
 
         switch (position)
         {
         case 0:
-            // Message length include length byte and message type
+            // Message length includes length byte and message type
             tx->buffer[tx->head] = payload_length + 2;
             break;
 
@@ -160,7 +171,7 @@ message_t retrieve_message(uint8_t *payload)
 {
     message_t message;
 
-    uint8_t message_length = rx->buffer[rx->tail];
+    size_t message_length = rx->buffer[rx->tail];
 
     for (size_t position = 0; position < message_length; position++)
     {

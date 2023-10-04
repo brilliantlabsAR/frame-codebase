@@ -72,7 +72,7 @@ int main(void)
 
         if (key > 0)
         {
-            uint8_t key_data[1] = {(uint8_t)key};
+            uint8_t key_data[2] = {(uint8_t)key, 0};
             send_message(BLUETOOTH_DATA_RECEIVED, key_data);
         }
     }

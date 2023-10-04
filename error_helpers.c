@@ -34,9 +34,6 @@ static const char *core = "Network";
 
 static void issue_reset(void)
 {
-    // Simply pause here if debugging
-    __BKPT();
-
     // Otherwise reset
 #ifdef NRF5340_XXAA_APPLICATION
     NVIC_SystemReset();
@@ -113,6 +110,9 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
                 file,
                 line,
                 lookup_error_code(error_code));
+
+            // Simply pause here if debugging
+            __BKPT();
         }
         issue_reset();
     }
@@ -123,6 +123,9 @@ void _error_with_message(const char *message, const char *file, const int line)
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
     {
         LOG("%s core crashed at %s:%u - %s", core, file, line, message);
+
+        // Simply pause here if debugging
+        __BKPT();
     }
     issue_reset();
 }
@@ -130,4 +133,24 @@ void _error_with_message(const char *message, const char *file, const int line)
 void HardFault_Handler(void)
 {
     error_with_message("Hard fault");
+}
+
+void MemManage_Handler(void)
+{
+    error_with_message("Memory management fault");
+}
+
+void BusFault_Handler(void)
+{
+    error_with_message("Bus fault");
+}
+
+void UsageFault_Handler(void)
+{
+    error_with_message("Usage fault");
+}
+
+void SecureFault_Handler(void)
+{
+    error_with_message("Secure fault");
 }

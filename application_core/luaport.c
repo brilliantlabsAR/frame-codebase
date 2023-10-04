@@ -38,7 +38,7 @@ void run_lua(void)
     function test_me()\n\
         k = 1\n\
         s = 0\n\
-        for i = 0, 100000 do\n\
+        for i = 0, 1000 do\n\
             if math.fmod(i, 2) == 0 then\n\
                 s = s + (4 / k)\n\
             else\n\

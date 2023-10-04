@@ -601,6 +601,6 @@ int main(void)
 
     while (1)
     {
-        run_lua();
+        // run_lua();
     }
 }
