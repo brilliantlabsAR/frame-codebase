@@ -24,55 +24,59 @@
 
 #include <string.h>
 #include "error_helpers.h"
-#include "lauxlib.h"
+#include "interprocessor_messaging.h"
 #include "lua.h"
 #include "lualib.h"
 #include "nrfx_log.h"
+
+#define lua_writestring(s, l) send_message(BLUETOOTH_DATA_TO_SEND, s, l)
+#define lua_writeline() send_message(BLUETOOTH_DATA_TO_SEND, "\n", 1)
+#define lua_writestringerror(s, p) LOG(s, p)
+
+#include "lauxlib.h"
 
 // extern uint32_t __heap_start;
 // extern uint32_t __heap_end;
 
 void run_lua(void)
 {
-    const char *LUA_FILE = "\
-    function test_me()\n\
-        k = 1\n\
-        s = 0\n\
-        for i = 0, 1000 do\n\
-            if math.fmod(i, 2) == 0 then\n\
-                s = s + (4 / k)\n\
-            else\n\
-                s = s - (4 / k)\n\
-            end\n\
-            k = k + 2\n\
-        end\n\
-        return s\n\
-    end\n\
-    ";
+    char buff[256] = "6 + 7";
 
     lua_State *L = luaL_newstate();
-    luaL_openlibs(L);
 
     if (L == NULL)
     {
         error_with_message("Cannot create lua state: not enough memory");
     }
 
-    luaL_dostring(L, LUA_FILE);
-    lua_getglobal(L, "test_me");
-    if (lua_isfunction(L, -1))
-    {
+    luaL_openlibs(L);
 
-        lua_pcall(L, 0, 1, 0);
-        if (lua_isnumber(L, -1))
-        {
-            lua_Number ret = lua_tonumber(L, -1);
-            LUA_LOG("ret = %d", (int)ret);
-        }
-        else
-        {
-            LUA_LOG("ret = NaN");
+    char *version_string = LUA_RELEASE " on Brilliant Frame";
+    lua_writestring((uint8_t *)version_string, strlen(version_string));
+    lua_writeline();
+
+    int error = luaL_loadstring(L, buff) || lua_pcall(L, 0, 0, 0);
+    if (error)
+    {
+        lua_writestring(lua_tostring(L, -1), strlen(lua_tostring(L, -1)));
+        lua_writeline();
+        lua_pop(L, 1);
+    }
+    else
+    {
+        int n = lua_gettop(L);
+        if (n > 0)
+        { /* any result to be printed? */
+            luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
+            lua_getglobal(L, "print");
+            lua_insert(L, 1);
+            lua_pcall(L, n, 0, 0);
         }
     }
+
     lua_close(L);
+
+    while (1)
+    {
+    }
 }

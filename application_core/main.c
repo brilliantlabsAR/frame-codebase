@@ -41,7 +41,7 @@
 #include "pinout.h"
 
 static const nrfx_rtc_t rtc_instance = NRFX_RTC_INSTANCE(0);
-static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(0);
+static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(1);
 static const nrfx_twim_t i2c_instance = NRFX_TWIM_INSTANCE(0);
 
 // static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
@@ -588,10 +588,10 @@ int main(void)
 {
     frame_setup_application_core();
 
-    LOG("Lua on Frame - " BUILD_VERSION " (" GIT_COMMIT ")");
+    LOG("Lua on Frame - " BUILD_VERSION "(" GIT_COMMIT ")");
 
     while (1)
     {
-        // run_lua();
+        run_lua();
     }
 }

@@ -167,7 +167,6 @@ SHARED_FLAGS += \
 # Link required libraries
 SHARED_LIBS += \
 	-lc \
-	-lgcc \
 	-lm \
 	-lnosys \
 

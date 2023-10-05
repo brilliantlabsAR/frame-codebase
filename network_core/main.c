@@ -39,6 +39,11 @@ static void application_core_message_handler(void)
             LOG("%s", message.payload);
             break;
 
+        case BLUETOOTH_DATA_TO_SEND:
+            // TODO replace this with bluetooth send
+            printf("\x1B[95m%.*s", message.payload_length, message.payload);
+            break;
+
         default:
             error_with_message("Unhandled interprocessor message");
             break;
@@ -59,6 +64,7 @@ int main(void)
 
     while (1)
     {
+        // TODO replace this with Bluetooth receive
         uint8_t buffer[253];
 
         uint32_t buffer_length = SEGGER_RTT_Read(0, buffer, sizeof(buffer));
