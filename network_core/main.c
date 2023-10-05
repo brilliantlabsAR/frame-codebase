@@ -29,29 +29,20 @@
 
 static void application_core_message_handler(void)
 {
-    while (message_pending())
+    message_t message;
+
+    while (message_pending(&message))
     {
-        uint8_t *payload = malloc(pending_message_payload_length());
-
-        if (payload == NULL)
-        {
-            error_with_message("Could not allocate memory for message");
-        }
-
-        message_t message = retrieve_message(payload);
-
-        switch (message)
+        switch (message.command)
         {
         case LOG_FROM_APPLICATION_CORE:
-            LOG("%s", payload);
+            LOG("%s", message.payload);
             break;
 
         default:
             error_with_message("Unhandled interprocessor message");
             break;
         }
-
-        free(payload);
     }
 }
 
@@ -68,12 +59,13 @@ int main(void)
 
     while (1)
     {
-        int key = SEGGER_RTT_GetKey();
+        uint8_t buffer[253];
 
-        if (key > 0)
+        uint32_t buffer_length = SEGGER_RTT_Read(0, buffer, sizeof(buffer));
+
+        if (buffer_length > 0)
         {
-            uint8_t key_data[2] = {(uint8_t)key, 0};
-            send_message(BLUETOOTH_DATA_RECEIVED, key_data);
+            send_message(BLUETOOTH_DATA_RECEIVED, buffer, buffer_length);
         }
     }
 }

@@ -34,20 +34,24 @@
 
 #ifdef NRF5340_XXAA_APPLICATION
 
-#define LOG(format, ...)                                             \
-    do                                                               \
-    {                                                                \
-        char log_string[100];                                        \
-        snprintf(log_string, 100, "\x1B[93m" format, ##__VA_ARGS__); \
-        send_message(LOG_FROM_APPLICATION_CORE, log_string);         \
+#define LOG(format, ...)                                         \
+    do                                                           \
+    {                                                            \
+        char string[100];                                        \
+        snprintf(string, 100, "\x1B[93m" format, ##__VA_ARGS__); \
+        send_message(LOG_FROM_APPLICATION_CORE,                  \
+                     (uint8_t *)string,                          \
+                     strlen(string) + 1);                        \
     } while (0)
 
-#define LUA_LOG(format, ...)                                         \
-    do                                                               \
-    {                                                                \
-        char log_string[100];                                        \
-        snprintf(log_string, 100, "\x1B[95m" format, ##__VA_ARGS__); \
-        send_message(LOG_FROM_APPLICATION_CORE, log_string);         \
+#define LUA_LOG(format, ...)                                     \
+    do                                                           \
+    {                                                            \
+        char string[100];                                        \
+        snprintf(string, 100, "\x1B[95m" format, ##__VA_ARGS__); \
+        send_message(LOG_FROM_APPLICATION_CORE,                  \
+                     (uint8_t *)string,                          \
+                     strlen(string) + 1);                        \
     } while (0)
 
 #elif NRF5340_XXAA_NETWORK

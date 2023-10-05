@@ -95,33 +95,24 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
 
 static void network_core_message_handler(void)
 {
-    while (message_pending())
+    message_t message;
+
+    while (message_pending(&message))
     {
-        uint8_t *payload = malloc(pending_message_payload_length());
-
-        if (payload == NULL)
-        {
-            error_with_message("Could not allocate memory for message");
-        }
-
-        message_t message = retrieve_message(payload);
-
-        switch (message)
+        switch (message.command)
         {
         case RESET_REQUEST_FROM_NETWORK_CORE:
             NVIC_SystemReset();
             break;
 
         case BLUETOOTH_DATA_RECEIVED:
-            LOG("New data: %s", payload);
+            LOG("[%d]", message.payload_length);
             break;
 
         default:
             error_with_message("Unhandled interprocessor message");
             break;
         }
-
-        free(payload);
     }
 }
 

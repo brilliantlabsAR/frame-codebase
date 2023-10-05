@@ -24,15 +24,14 @@
 
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef void (*message_handler_t)(void);
 
 void setup_messaging(message_handler_t handler);
 
-typedef enum message_t
+typedef enum command_t
 {
     // Application -> Network core commands
     LOG_FROM_APPLICATION_CORE,
@@ -41,15 +40,15 @@ typedef enum message_t
     // Network -> Application core commands
     RESET_REQUEST_FROM_NETWORK_CORE,
     BLUETOOTH_DATA_RECEIVED,
+} command_t;
+
+void send_message(command_t command, uint8_t *payload, uint8_t payload_length);
+
+typedef struct message_t
+{
+    command_t command;
+    uint8_t payload[253];
+    uint8_t payload_length;
 } message_t;
 
-void _send_message(message_t message, uint8_t *payload, uint8_t payload_length);
-
-#define send_message(message, payload) \
-    _send_message(message, (uint8_t *)payload, sizeof(payload))
-
-bool message_pending(void);
-
-uint8_t pending_message_payload_length();
-
-message_t retrieve_message(uint8_t *payload);
+bool message_pending(message_t *message);

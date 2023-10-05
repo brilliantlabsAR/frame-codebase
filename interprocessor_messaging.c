@@ -23,7 +23,6 @@
  */
 
 #include <math.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "error_helpers.h"
@@ -35,11 +34,12 @@
 #include "nrf_spu.h"
 #endif
 
+// Two FIFO blocks should fit neatly within the 8KiB RAM region at 0x20000000
 typedef struct fifo_t
 {
-    size_t head;
-    size_t tail;
-    uint8_t buffer[512];
+    uint32_t head;
+    uint32_t tail;
+    uint8_t buffer[4096 - 4 - 4];
 } fifo_t;
 
 typedef struct memory_t
@@ -50,7 +50,7 @@ typedef struct memory_t
 
 static const uint32_t memory_address = 0x20000000;
 
-static volatile memory_t memory __attribute__((section(".ipc_ram"))); //= (memory_t *)memory_address;
+static memory_t *memory = (memory_t *)memory_address;
 
 static volatile fifo_t *tx;
 static volatile fifo_t *rx;
@@ -67,26 +67,23 @@ void setup_messaging(message_handler_t handler)
 {
 #ifdef NRF5340_XXAA_APPLICATION
 
-    // RAM starts at 0x20000000 and there are 64 regions in total
-    float ram_region_id = floorf((float)(memory_address - 0x20000000) / 0x2000);
-
-    // Unlock the RAM region so that the network processor can access it
+    // Unlock RAM region at 0x20000000 so the network processor can access it
     nrf_spu_ramregion_set(NRF_SPU,
-                          (uint8_t)ram_region_id,
+                          0,
                           false,
                           NRF_SPU_MEM_PERM_READ | NRF_SPU_MEM_PERM_WRITE,
                           false);
 
-    tx = &memory.application_to_network;
-    rx = &memory.network_to_application;
+    tx = &memory->application_to_network;
+    rx = &memory->network_to_application;
 
     ipc_rx_channel = 0;
     ipc_tx_channel = 1;
 
 #elif NRF5340_XXAA_NETWORK
 
-    tx = &memory.network_to_application;
-    rx = &memory.application_to_network;
+    tx = &memory->network_to_application;
+    rx = &memory->application_to_network;
 
     ipc_rx_channel = 1;
     ipc_tx_channel = 0;
@@ -106,38 +103,37 @@ void setup_messaging(message_handler_t handler)
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
 }
 
-void _send_message(message_t message, uint8_t *payload, uint8_t payload_length)
+void send_message(command_t command, uint8_t *payload, uint8_t payload_length)
 {
-    // Message size is currently limited to 255
     if (payload_length > 253)
     {
-        return;
+        error_with_message("Message payload size must be less than 254 bytes");
     }
 
-    for (size_t position = 0; position < (payload_length + 2); position++)
+    for (uint32_t position = 0; position < (payload_length + 2); position++)
     {
-        size_t next = tx->head + 1;
+        uint32_t next = tx->head + 1;
 
         if (next >= sizeof(tx->buffer))
         {
             next = 0;
         }
 
-        // Throw away messages whenever the buffer is full
+        // TODO what do we do if the buffer overflows?
         while (next == tx->tail)
         {
+            __NOP();
             // return;
         }
 
         switch (position)
         {
         case 0:
-            // Message length includes length byte and message type
             tx->buffer[tx->head] = payload_length + 2;
             break;
 
         case 1:
-            tx->buffer[tx->head] = message;
+            tx->buffer[tx->head] = command;
             break;
 
         default:
@@ -151,36 +147,23 @@ void _send_message(message_t message, uint8_t *payload, uint8_t payload_length)
     nrfx_ipc_signal(ipc_tx_channel);
 }
 
-bool message_pending(void)
+bool message_pending(message_t *message)
 {
     if (rx->head == rx->tail)
     {
         return false;
     }
 
-    return true;
-}
+    uint8_t message_length = rx->buffer[rx->tail];
 
-uint8_t pending_message_payload_length()
-{
-    // Payload length is the message length - 2
-    return rx->buffer[rx->tail] - 2;
-}
-
-message_t retrieve_message(uint8_t *payload)
-{
-    message_t message;
-
-    size_t message_length = rx->buffer[rx->tail];
-
-    for (size_t position = 0; position < message_length; position++)
+    for (uint8_t position = 0; position < message_length; position++)
     {
         if (rx->tail == rx->head)
         {
             break;
         }
 
-        size_t next = rx->tail + 1;
+        uint32_t next = rx->tail + 1;
 
         if (next == sizeof(rx->buffer))
         {
@@ -190,20 +173,20 @@ message_t retrieve_message(uint8_t *payload)
         switch (position)
         {
         case 0:
-            // We don't need the message length value so we skip this
+            message->payload_length = rx->buffer[rx->tail] - 2;
             break;
 
         case 1:
-            message = rx->buffer[rx->tail];
+            message->command = rx->buffer[rx->tail];
             break;
 
         default:
-            payload[position - 2] = rx->buffer[rx->tail];
+            message->payload[position - 2] = rx->buffer[rx->tail];
             break;
         }
 
         rx->tail = next;
     }
 
-    return message;
+    return true;
 }

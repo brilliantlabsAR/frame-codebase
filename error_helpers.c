@@ -38,7 +38,7 @@ static void issue_reset(void)
 #ifdef NRF5340_XXAA_APPLICATION
     NVIC_SystemReset();
 #elif NRF5340_XXAA_NETWORK
-    send_message(RESET_REQUEST_FROM_NETWORK_CORE, NULL);
+    send_message(RESET_REQUEST_FROM_NETWORK_CORE, NULL, 0);
 #endif
 }
 

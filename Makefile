@@ -155,9 +155,14 @@ SHARED_FLAGS += \
 	-Wl,--gc-sections \
 
 # Linker script paths
-APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld -T interprocessor_messaging.ld
+APPLICATION_CORE_FLAGS += \
+	-T application_core/memory_layout.ld \
 
-NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld -T interprocessor_messaging.ld
+NETWORK_CORE_FLAGS += \
+	-T network_core/memory_layout.ld \
+
+SHARED_FLAGS += \
+	-Lnrfx/mdk \
 
 # Link required libraries
 SHARED_LIBS += \
