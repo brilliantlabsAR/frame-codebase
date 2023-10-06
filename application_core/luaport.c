@@ -36,20 +36,31 @@ static lua_State *globalL = NULL;
 
 static const char *progname = "lua";
 
-#define LUA_MAXINPUT 512
-
-static uint16_t lua_repl_string_index = 0;
-static uint8_t lua_repl_buffer[LUA_MAXINPUT + 1] = "";
-
-void write_lua_repl_buffer(uint8_t *buffer, uint16_t length)
+static struct repl_t
 {
-    if (lua_repl_string_index + length > LUA_MAXINPUT)
+    uint8_t buffer[253];
+    bool locked;
+} repl = {
+    .buffer = "",
+    .locked = false,
+};
+
+bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
+{
+    if (length >= sizeof(repl.buffer))
     {
-        error_with_message("Lua input too large");
-        lua_repl_string_index = 0;
+        return false;
     }
 
-    memcpy(lua_repl_buffer + lua_repl_string_index, buffer, length);
+    if (repl.locked)
+    {
+        return false;
+    }
+
+    memcpy(repl.buffer, buffer, length);
+    repl.buffer[length] = 0;
+
+    return true;
 }
 
 /*
@@ -168,10 +179,6 @@ static int incomplete(lua_State *L, int status)
 */
 static int pushline(lua_State *L, int firstline)
 {
-    char buffer[LUA_MAXINPUT];
-    char *b = buffer;
-    size_t l;
-
     if (firstline)
     {
         lua_writestring("> ", sizeof("> "));
@@ -181,33 +188,20 @@ static int pushline(lua_State *L, int firstline)
         lua_writestring(">> ", sizeof(">> "));
     }
 
-    // while (1)
-    // {
-    // }
+    while (strlen((char *)repl.buffer) == 0)
+    {
+        // Wait for input
+    }
 
-    // TODO this needs to be made thread safe
-    // {
-    //     while (strlen((char *)lua_repl_buffer) == 0)
-    //     {
-    //         // return 0;
-    //     }
+    repl.locked = true;
 
-    //     for (uint16_t i = 0; i < LUA_MAXINPUT; i++)
-    //     {
-    //     }
+    lua_pushlstring(L, (char *)repl.buffer, strlen((char *)repl.buffer));
 
-    //     memcpy(buffer, lua_repl_buffer, LUA_MAXINPUT);
-    //     memset(lua_repl_buffer, 0, LUA_MAXINPUT);
-    // }
+    // Clear the repl buffer
+    repl.buffer[0] = 0;
 
-    lua_pop(L, 1); /* remove prompt */
-    l = strlen(b);
-    if (l > 0 && b[l - 1] == '\n')              /* line ends with newline? */
-        b[--l] = '\0';                          /* remove it */
-    if (firstline && b[0] == '=')               /* for compatibility with 5.2, ... */
-        lua_pushfstring(L, "return %s", b + 1); /* change '=' to 'return' */
-    else
-        lua_pushlstring(L, b, l);
+    repl.locked = false;
+
     return 1;
 }
 

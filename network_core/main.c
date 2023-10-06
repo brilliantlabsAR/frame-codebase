@@ -42,6 +42,7 @@ static void application_core_message_handler(void)
         case BLUETOOTH_DATA_TO_SEND:
             // TODO replace this with bluetooth send
             printf("\x1B[95m%.*s", message.payload_length, message.payload);
+            fflush(stdout);
             break;
 
         default:

@@ -39,6 +39,6 @@
 #define lua_writestringerror(s, p) \
     LOG(s, p)
 
-void write_lua_repl_buffer(uint8_t *buffer, uint16_t length);
+bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
 void run_lua(void);

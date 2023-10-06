@@ -110,9 +110,9 @@ void send_message(command_t command, uint8_t *payload, uint8_t payload_length)
         error_with_message("Message payload size must be less than 254 bytes");
     }
 
-    for (uint32_t position = 0; position < (payload_length + 2); position++)
+    for (uint8_t position = 0; position < (payload_length + 2); position++)
     {
-        uint32_t next = tx->head + 1;
+        uint8_t next = tx->head + 1;
 
         if (next >= sizeof(tx->buffer))
         {
@@ -122,7 +122,7 @@ void send_message(command_t command, uint8_t *payload, uint8_t payload_length)
         // TODO what do we do if the buffer overflows?
         while (next == tx->tail)
         {
-            __NOP();
+            __BKPT();
             // return;
         }
 
@@ -163,7 +163,7 @@ bool message_pending(message_t *message)
             break;
         }
 
-        uint32_t next = rx->tail + 1;
+        uint8_t next = rx->tail + 1;
 
         if (next == sizeof(rx->buffer))
         {
