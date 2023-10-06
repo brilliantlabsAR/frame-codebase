@@ -106,7 +106,7 @@ static void network_core_message_handler(void)
             break;
 
         case BLUETOOTH_DATA_RECEIVED:
-            LOG("[%d]", message.payload_length);
+            write_lua_repl_buffer(message.payload, message.payload_length);
             break;
 
         default:

@@ -785,8 +785,8 @@
 ** without modifying the main part of the file.
 */
 
-
-
+// Required for prints to work correctly
+#include "luaport.h"
 
 
 #endif
