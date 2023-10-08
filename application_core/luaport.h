@@ -27,6 +27,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "interprocessor_messaging.h"
 #include "nrfx_log.h"
 
@@ -36,8 +37,14 @@
 #define lua_writeline() \
     send_message(BLUETOOTH_DATA_TO_SEND, (uint8_t *)"\n", 1)
 
-#define lua_writestringerror(s, p) \
-    LOG("ERROR: " s, p)
+#define lua_writestringerror(s, p)                       \
+    {                                                    \
+        char writestringerror_buffer[250];               \
+        sprintf(writestringerror_buffer, s, p);          \
+        send_message(BLUETOOTH_DATA_TO_SEND,             \
+                     (uint8_t *)writestringerror_buffer, \
+                     strlen(writestringerror_buffer));   \
+    }
 
 bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
