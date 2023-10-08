@@ -123,18 +123,17 @@ SHARED_FLAGS += \
 	-mabi=aapcs \
 	-mcmse \
 	-mthumb \
+	-O2 \
 	-std=gnu17 \
 
 APPLICATION_CORE_FLAGS += \
 	-mcpu=cortex-m33 \
 	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
-	-O0 \
 
 NETWORK_CORE_FLAGS += \
 	-mcpu=cortex-m33+nodsp \
 	-mfloat-abi=soft \
-	-O0 \
 
 # Preprocessor defines
 SHARED_FLAGS += \

@@ -31,13 +31,12 @@
 
 static lua_State *globalL = NULL;
 
-static struct repl_t
+static volatile struct repl_t
 {
-    uint8_t buffer[253];
-    bool locked;
+    char buffer[253];
+    bool new_data;
 } repl = {
-    .buffer = "",
-    .locked = false,
+    .new_data = false,
 };
 
 bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
@@ -47,13 +46,21 @@ bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
         return false;
     }
 
-    if (repl.locked)
+    if (repl.new_data)
     {
         return false;
     }
 
-    memcpy(repl.buffer, buffer, length);
+    // Naive copy because memcpy isn't compatible with volatile
+    for (size_t buffer_index = 0; buffer_index < length; buffer_index++)
+    {
+        repl.buffer[buffer_index] = buffer[buffer_index];
+    }
+
+    // Null terminate the string
     repl.buffer[length] = 0;
+
+    repl.new_data = true;
 
     return true;
 }
@@ -156,16 +163,14 @@ static int pushline(lua_State *L, int firstline)
         lua_writestring(">> ", sizeof(">> "));
     }
 
-    while (strlen((char *)repl.buffer) == 0)
+    while (repl.new_data == false)
     {
         // Wait for input
     }
 
-    repl.locked = true;
+    int status = luaL_dostring(L, repl.buffer);
 
-    int status = luaL_dostring(L, (char *)repl.buffer);
-
-    LOG("Status = %d", status);
+    repl.new_data = false;
 
     if (status == LUA_OK)
     {
@@ -198,11 +203,6 @@ static int pushline(lua_State *L, int firstline)
         LOG("Error: ");
         lua_pop(L, 1);
     }
-
-    // Clear the repl buffer
-    repl.buffer[0] = 0;
-
-    repl.locked = false;
 
     return 1;
 }
