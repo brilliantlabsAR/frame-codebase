@@ -81,22 +81,22 @@
     nrfx_atomic_u32_t
 
 #define NRFX_ATOMIC_FETCH_STORE(p_data, value) \
-    nrfx_atomic_u32_fetch_store(p_data, value)
+    atomic_init(p_data, value)
 
 #define NRFX_ATOMIC_FETCH_OR(p_data, value) \
-    nrfx_atomic_u32_fetch_or(p_data, value)
+    atomic_fetch_or(p_data, value)
 
 #define NRFX_ATOMIC_FETCH_AND(p_data, value) \
-    nrfx_atomic_u32_fetch_and(p_data, value)
+    atomic_fetch_and(p_data, value)
 
 #define NRFX_ATOMIC_FETCH_XOR(p_data, value) \
-    nrfx_atomic_u32_fetch_xor(p_data, value)
+    atomic_fetch_xor(p_data, value)
 
 #define NRFX_ATOMIC_FETCH_ADD(p_data, value) \
-    nrfx_atomic_u32_fetch_add(p_data, value)
+    atomic_fetch_and(p_data, value)
 
 #define NRFX_ATOMIC_FETCH_SUB(p_data, value) \
-    nrfx_atomic_u32_fetch_sub(p_data, value)
+    atomic_fetch_sub(p_data, value)
 
 #define NRFX_CUSTOM_ERROR_CODES 0
 

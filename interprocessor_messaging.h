@@ -42,13 +42,13 @@ typedef enum command_t
     BLUETOOTH_DATA_RECEIVED,
 } command_t;
 
-void send_message(command_t command, uint8_t *payload, uint8_t payload_length);
+bool send_message(command_t command, uint8_t *payload, size_t payload_length);
 
 typedef struct message_t
 {
     command_t command;
     uint8_t payload[253];
-    uint8_t payload_length;
+    size_t payload_length;
 } message_t;
 
 bool message_pending(message_t *message);

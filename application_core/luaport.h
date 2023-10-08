@@ -37,7 +37,7 @@
     send_message(BLUETOOTH_DATA_TO_SEND, (uint8_t *)"\n", 1)
 
 #define lua_writestringerror(s, p) \
-    LOG(s, p)
+    LOG("ERROR: " s, p)
 
 bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
 

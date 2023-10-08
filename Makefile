@@ -119,8 +119,7 @@ SHARED_FLAGS += \
 	-fno-delete-null-pointer-checks \
 	-fno-strict-aliasing \
 	-fshort-enums \
-	-g3 \
-	-ggdb \
+	-g \
 	-mabi=aapcs \
 	-mcmse \
 	-mthumb \
@@ -130,12 +129,12 @@ APPLICATION_CORE_FLAGS += \
 	-mcpu=cortex-m33 \
 	-mfloat-abi=hard \
 	-mfpu=fpv4-sp-d16 \
-	-Og \
+	-O0 \
 
 NETWORK_CORE_FLAGS += \
 	-mcpu=cortex-m33+nodsp \
 	-mfloat-abi=soft \
-	-Og \
+	-O0 \
 
 # Preprocessor defines
 SHARED_FLAGS += \
@@ -167,6 +166,7 @@ SHARED_FLAGS += \
 # Link required libraries
 SHARED_LIBS += \
 	-lc \
+	-lgcc \
 	-lm \
 	-lnosys \
 

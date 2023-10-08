@@ -31,4 +31,11 @@ MEMORY
   RAM1 (rwx) : ORIGIN = 0x20040000, LENGTH = 0x3F000
 }
 
+SECTIONS
+{
+  .ipc_ram 0x20000000 (NOLOAD) : {
+        KEEP(*(.ipc_ram))
+    } > IPC_RAM
+}
+
 INCLUDE "nrf_common.ld"

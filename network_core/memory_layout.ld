@@ -32,4 +32,11 @@ MEMORY
   RAM2 (rwx) : ORIGIN = 0x20040000, LENGTH = 0x40000 /* Application core RAM */
 }
 
+SECTIONS
+{
+  .ipc_ram 0x20000000 (NOLOAD) : {
+        KEEP(*(.ipc_ram))
+    } > IPC_RAM
+}
+
 INCLUDE "nrf_common.ld"

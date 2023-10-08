@@ -48,9 +48,7 @@ typedef struct memory_t
     fifo_t network_to_application;
 } memory_t;
 
-static const uint32_t memory_address = 0x20000000;
-
-static memory_t *memory = (memory_t *)memory_address;
+__attribute__((section(".ipc_ram"))) static volatile memory_t memory;
 
 static volatile fifo_t *tx;
 static volatile fifo_t *rx;
@@ -74,16 +72,16 @@ void setup_messaging(message_handler_t handler)
                           NRF_SPU_MEM_PERM_READ | NRF_SPU_MEM_PERM_WRITE,
                           false);
 
-    tx = &memory->application_to_network;
-    rx = &memory->network_to_application;
+    tx = &memory.application_to_network;
+    rx = &memory.network_to_application;
 
     ipc_rx_channel = 0;
     ipc_tx_channel = 1;
 
 #elif NRF5340_XXAA_NETWORK
 
-    tx = &memory->network_to_application;
-    rx = &memory->application_to_network;
+    tx = &memory.network_to_application;
+    rx = &memory.application_to_network;
 
     ipc_rx_channel = 1;
     ipc_tx_channel = 0;
@@ -103,89 +101,99 @@ void setup_messaging(message_handler_t handler)
     nrfx_ipc_receive_event_enable(ipc_rx_channel);
 }
 
-void send_message(command_t command, uint8_t *payload, uint8_t payload_length)
+bool send_message(command_t command, uint8_t *payload, size_t payload_length)
 {
-    if (payload_length > 253)
+    size_t message_length = payload_length + 2;
+
+    if (message_length > 255)
     {
         error_with_message("Message payload size must be less than 254 bytes");
     }
 
-    for (uint8_t position = 0; position < (payload_length + 2); position++)
+    // Check if there's enough space in the buffer for the message
+    if (tx->head >= tx->tail)
     {
-        uint8_t next = tx->head + 1;
-
-        if (next >= sizeof(tx->buffer))
+        if (message_length > sizeof(tx->buffer) - tx->head + tx->tail)
         {
-            next = 0;
+            return false;
         }
+    }
 
-        // TODO what do we do if the buffer overflows?
-        while (next == tx->tail)
+    else // if (tx->head < tx->tail)
+    {
+        if (message_length > tx->tail - tx->head)
         {
-            __BKPT();
-            // return;
+            return false;
         }
+    }
 
-        switch (position)
+    for (size_t payload_index = 0;
+         payload_index < message_length;
+         payload_index++)
+    {
+        switch (payload_index)
         {
         case 0:
-            tx->buffer[tx->head] = payload_length + 2;
+            tx->buffer[tx->head++] = message_length;
             break;
 
         case 1:
-            tx->buffer[tx->head] = command;
+            tx->buffer[tx->head++] = command;
             break;
 
         default:
-            tx->buffer[tx->head] = payload[position - 2];
+            tx->buffer[tx->head++] = payload[payload_index - 2];
             break;
         }
 
-        tx->head = next;
+        if (tx->head >= sizeof(tx->buffer))
+        {
+            tx->head = 0;
+        }
     }
 
     nrfx_ipc_signal(ipc_tx_channel);
+
+    return true;
 }
 
 bool message_pending(message_t *message)
 {
-    if (rx->head == rx->tail)
+    if (rx->tail == rx->head)
     {
         return false;
     }
 
-    uint8_t message_length = rx->buffer[rx->tail];
+    size_t message_length = rx->buffer[rx->tail];
 
-    for (uint8_t position = 0; position < message_length; position++)
+    for (size_t payload_index = 0;
+         payload_index < message_length;
+         payload_index++)
     {
         if (rx->tail == rx->head)
         {
-            break;
+            error_with_message("Incomplete message encountered");
         }
 
-        uint8_t next = rx->tail + 1;
-
-        if (next == sizeof(rx->buffer))
-        {
-            next = 0;
-        }
-
-        switch (position)
+        switch (payload_index)
         {
         case 0:
-            message->payload_length = rx->buffer[rx->tail] - 2;
+            message->payload_length = rx->buffer[rx->tail++] - 2;
             break;
 
         case 1:
-            message->command = rx->buffer[rx->tail];
+            message->command = rx->buffer[rx->tail++];
             break;
 
         default:
-            message->payload[position - 2] = rx->buffer[rx->tail];
+            message->payload[payload_index - 2] = rx->buffer[rx->tail++];
             break;
         }
 
-        rx->tail = next;
+        if (rx->tail == sizeof(rx->buffer))
+        {
+            rx->tail = 0;
+        }
     }
 
     return true;
