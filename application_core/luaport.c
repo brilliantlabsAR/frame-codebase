@@ -100,8 +100,6 @@ static int pushline(lua_State *L, int firstline)
         // Wait for input
     }
 
-    LOG("Do string: %s", repl.buffer);
-
     int status = luaL_dostring(L, (char *)repl.buffer);
 
     repl.new_data = false;
@@ -112,8 +110,6 @@ static int pushline(lua_State *L, int firstline)
 
         if (printables > 0)
         {
-            LOG("Printing %d results", printables);
-
             luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
 
             lua_getglobal(L, "print");
