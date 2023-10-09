@@ -102,8 +102,7 @@ static int pushline(lua_State *L, int firstline)
 
     LOG("Do string: %s", repl.buffer);
 
-    // int status = luaL_dostring(L, (char *)repl.buffer);
-    int status = luaL_dostring(L, "k=1; s=0; for i = 0,100000 do if math.fmod(i,2)==0 then s=s+(4/k) else s=s-(4/k) end k=k+2 end print(s)");
+    int status = luaL_dostring(L, (char *)repl.buffer);
 
     repl.new_data = false;
 
