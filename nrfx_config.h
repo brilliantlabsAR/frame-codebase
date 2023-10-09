@@ -27,8 +27,6 @@
 #define NRFX_CONFIG_H__
 #include "nrfx/templates/nrfx_config_common.h"
 
-#define NRFX_CLOCK_CONFIG_LF_SRC 3
-
 #ifdef NRF5340_XXAA_APPLICATION
 #define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
 #define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7

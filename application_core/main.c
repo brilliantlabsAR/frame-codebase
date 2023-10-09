@@ -326,8 +326,9 @@ static void frame_setup_application_core(void)
             true,
             (1 + slope / 16) * (capacitance_pf * 2 - 14) + trim);
 
-        nrf_clock_lf_src_set(NRF_CLOCK, NRFX_CLOCK_CONFIG_LF_SRC);
+        nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_SYNTH);
         nrf_clock_hf_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
+        nrf_clock_hfclk_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
         nrf_clock_hfclk192m_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
 
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
