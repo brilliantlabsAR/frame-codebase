@@ -114,7 +114,6 @@ SHARED_FLAGS += \
 	-falign-functions=16 \
 	-fdata-sections  \
 	-ffunction-sections  \
-	-flto \
 	-fmax-errors=1 \
 	-fno-delete-null-pointer-checks \
 	-fno-strict-aliasing \
@@ -149,7 +148,6 @@ NETWORK_CORE_FLAGS += \
 
 # Linker options
 SHARED_FLAGS += \
-	--specs=nano.specs \
 	-Wl,--gc-sections \
 
 # Linker script paths
@@ -165,7 +163,6 @@ SHARED_FLAGS += \
 # Link required libraries
 SHARED_LIBS += \
 	-lc \
-	-lgcc \
 	-lm \
 	-lnosys \
 
