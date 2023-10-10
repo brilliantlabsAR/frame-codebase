@@ -62,6 +62,8 @@ C_FILES += \
 	lua/lzio.c \
 	luaport.c \
 	main.c \
+	startup.c \
+	stubs.c \
 	nrfx/drivers/src/nrfx_gpiote.c \
 	nrfx/drivers/src/nrfx_ipc.c \
 	nrfx/drivers/src/nrfx_qspi.c \
@@ -70,9 +72,7 @@ C_FILES += \
 	nrfx/drivers/src/nrfx_systick.c \
 	nrfx/drivers/src/nrfx_twim.c \
 	nrfx/helpers/nrfx_flag32_allocator.c \
-	nrfx/mdk/gcc_startup_nrf52840.S \
 	nrfx/mdk/system_nrf52840.c \
-	segger/SEGGER_RTT_Syscalls_GCC.c \
 	segger/SEGGER_RTT.c \
 
 FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
@@ -87,6 +87,7 @@ FLAGS += \
 	-Inrfx/hal \
 	-Inrfx/mdk \
 	-Inrfx/soc \
+	-Ipicolibc \
 	-Isegger \
 
 # Warnings
@@ -106,11 +107,12 @@ FLAGS += \
 	-fshort-enums \
 	-g \
 	-mabi=aapcs \
+	-mcpu=cortex-m4 \
+	-mfloat-abi=hard \
 	-mthumb \
+	-nostdlib \
 	-Os \
 	-std=gnu17 \
-	-mcpu=cortex-m4 \
-	-mfloat-abi=soft \
 
 # Preprocessor defines
 FLAGS += \
@@ -125,15 +127,14 @@ FLAGS += \
 
 # Linker script paths
 FLAGS += \
-	-T nrfx/mdk/nrf52840_xxaa.ld \
-	-Lnrfx/mdk \
+	-T linker.ld \
+	-Lpicolibc \
 
 # Link required libraries
 LIBS += \
 	-lc \
-	-lm \
-	-lnosys \
-
+	-lgcc \
+	picolibc/libdummyhost.a \
 
 build/frame.hex: $(C_FILES) | fpga_application.h
 

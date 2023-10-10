@@ -111,23 +111,3 @@ void _error_with_message(const char *message, const char *file, const int line)
     }
     NVIC_SystemReset();
 }
-
-void HardFault_Handler(void)
-{
-    error_with_message("Hard fault");
-}
-
-void MemManage_Handler(void)
-{
-    error_with_message("Memory management fault");
-}
-
-void BusFault_Handler(void)
-{
-    error_with_message("Bus fault");
-}
-
-void UsageFault_Handler(void)
-{
-    error_with_message("Usage fault");
-}

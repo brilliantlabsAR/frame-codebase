@@ -36,8 +36,7 @@
         fflush(stdout);               \
     }
 
-#define lua_writeline() \
-    printf("\n");
+#define lua_writeline() printf("\n")
 
 #define lua_writestringerror(s, p)                  \
     {                                               \
