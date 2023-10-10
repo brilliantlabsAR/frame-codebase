@@ -128,7 +128,6 @@ SHARED_FLAGS += \
 APPLICATION_CORE_FLAGS += \
 	-mcpu=cortex-m33 \
 	-mfloat-abi=hard \
-	-mfpu=fpv4-sp-d16 \
 
 NETWORK_CORE_FLAGS += \
 	-mcpu=cortex-m33+nodsp \

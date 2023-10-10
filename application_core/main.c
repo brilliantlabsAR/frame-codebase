@@ -338,6 +338,7 @@ static void frame_setup_application_core(void)
 
     // Configure systick so we can use it for simple delays
     {
+        SystemCoreClockUpdate();
         nrfx_systick_init();
     }
 
