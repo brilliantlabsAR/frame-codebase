@@ -111,7 +111,7 @@ FLAGS += \
 	-mfloat-abi=hard \
 	-mthumb \
 	-nostdlib \
-	-Os \
+	-O2 \
 	-std=gnu17 \
 
 # Preprocessor defines
