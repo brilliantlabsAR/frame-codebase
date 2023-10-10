@@ -27,26 +27,21 @@
 #define NRFX_CONFIG_H__
 #include "nrfx/templates/nrfx_config_common.h"
 
-#ifdef NRF5340_XXAA_APPLICATION
 #define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
 #define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
 #define NRFX_GPIOTE_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
-#define NRFX_IPC_ENABLED 1
-#define NRFX_QSPI_ENABLED 1
+
 #define NRFX_RTC_ENABLED 1
 #define NRFX_RTC0_ENABLED 1
+
 #define NRFX_SAADC_ENABLED 1
+
 #define NRFX_SPIM_ENABLED 1
 #define NRFX_SPIM1_ENABLED 1
+
 #define NRFX_SYSTICK_ENABLED 1
+
 #define NRFX_TWIM_ENABLED 1
 #define NRFX_TWIM0_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_application.h"
-#endif
 
-#ifdef NRF5340_XXAA_NETWORK
-#define NRFX_IPC_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#include "nrfx/templates/nrfx_config_nrf5340_network.h"
-#endif
+#include "nrfx/templates/nrfx_config_nrf52840.h"

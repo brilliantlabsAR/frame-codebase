@@ -58,7 +58,7 @@
             },
         },
         {
-            "label": "Erase & Unlock nRF53",
+            "label": "Erase & Unlock nRF52",
             "type": "shell",
             "command": "make recover",
             "problemMatcher": [],
@@ -115,20 +115,6 @@
                 "reveal": "always",
                 "focus": false,
                 "panel": "dedicated",
-                "showReuseMessage": false,
-                "clear": true
-            },
-        },
-        {
-            "label": "Pre-launch Delay",
-            "type": "shell",
-            "command": "sleep 2",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": false,
-                "reveal": "never",
-                "focus": false,
-                "panel": "shared",
                 "showReuseMessage": false,
                 "clear": true
             },

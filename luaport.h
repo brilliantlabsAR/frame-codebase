@@ -21,22 +21,31 @@
  * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
- 
-MEMORY
-{
-  FLASH (rx) : ORIGIN = 0x1000000, LENGTH = 0x40000
-  EXTFLASH (rx) : ORIGIN = 0x10000000, LENGTH = 0x8000000
-  RAM (rwx) : ORIGIN = 0x21000000, LENGTH = 0x10000
-  IPC_RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 0x2000
-  RAM1 (rwx) : ORIGIN = 0x20002000, LENGTH = 0x3E000 /* Application core RAM */
-  RAM2 (rwx) : ORIGIN = 0x20040000, LENGTH = 0x40000 /* Application core RAM */
-}
 
-SECTIONS
-{
-  .ipc_ram 0x20000000 (NOLOAD) : {
-        KEEP(*(.ipc_ram))
-    } > IPC_RAM
-}
+#pragma once
 
-INCLUDE "nrf_common.ld"
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "nrfx_log.h"
+
+#define lua_writestring(s, l)     \
+    printf("\x1B[95m%.*s", l, s); \
+    fflush(stdout);
+
+#define lua_writeline() \
+    printf("\n");
+
+#define lua_writestringerror(s, p)                  \
+    {                                               \
+        char writestringerror_buffer[250];          \
+        sprintf(writestringerror_buffer, s, p);     \
+        printf("\x1B[95m%.*s",                      \
+               strlen(writestringerror_buffer),     \
+               (uint8_t *)writestringerror_buffer); \
+    }
+
+bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
+
+void run_lua(void);

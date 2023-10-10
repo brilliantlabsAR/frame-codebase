@@ -95,10 +95,10 @@ static int pushline(lua_State *L, int firstline)
         lua_writestring(">> ", sizeof(">> "));
     }
 
-    while (repl.new_data == false)
-    {
-        // Wait for input
-    }
+    // while (repl.new_data == false)
+    // {
+    //     // Wait for input
+    // }
 
     int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
     // int status = luaL_dostring(L, (char *)repl.buffer);

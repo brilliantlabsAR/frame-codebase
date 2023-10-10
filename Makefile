@@ -26,69 +26,62 @@ BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M) # := forces evaluation once
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Source files
-SHARED_C_FILES += \
+C_FILES += \
 	error_helpers.c \
-	interprocessor_messaging.c \
-	nrfx/drivers/src/nrfx_ipc.c \
-	nrfx/helpers/nrfx_flag32_allocator.c \
-
-APPLICATION_CORE_C_FILES += \
-	application_core/lua/lapi.c \
-	application_core/lua/lauxlib.c \
-	application_core/lua/lbaselib.c \
-	application_core/lua/lcode.c \
-	application_core/lua/lcorolib.c \
-	application_core/lua/lctype.c \
-	application_core/lua/ldblib.c \
-	application_core/lua/ldebug.c \
-	application_core/lua/ldo.c \
-	application_core/lua/ldump.c \
-	application_core/lua/lfunc.c \
-	application_core/lua/lgc.c \
-	application_core/lua/linit.c \
-	application_core/lua/liolib.c \
-	application_core/lua/llex.c \
-	application_core/lua/lmathlib.c \
-	application_core/lua/lmem.c \
-	application_core/lua/loadlib.c \
-	application_core/lua/lobject.c \
-	application_core/lua/lopcodes.c \
-	application_core/lua/loslib.c \
-	application_core/lua/lparser.c \
-	application_core/lua/lstate.c \
-	application_core/lua/lstring.c \
-	application_core/lua/lstrlib.c \
-	application_core/lua/ltable.c \
-	application_core/lua/ltablib.c \
-	application_core/lua/ltm.c \
-	application_core/lua/lundump.c \
-	application_core/lua/lutf8lib.c \
-	application_core/lua/lvm.c \
-	application_core/lua/lzio.c \
-	application_core/luaport.c \
-	application_core/main.c \
+	lua/lapi.c \
+	lua/lauxlib.c \
+	lua/lbaselib.c \
+	lua/lcode.c \
+	lua/lcorolib.c \
+	lua/lctype.c \
+	lua/ldblib.c \
+	lua/ldebug.c \
+	lua/ldo.c \
+	lua/ldump.c \
+	lua/lfunc.c \
+	lua/lgc.c \
+	lua/linit.c \
+	lua/liolib.c \
+	lua/llex.c \
+	lua/lmathlib.c \
+	lua/lmem.c \
+	lua/loadlib.c \
+	lua/lobject.c \
+	lua/lopcodes.c \
+	lua/loslib.c \
+	lua/lparser.c \
+	lua/lstate.c \
+	lua/lstring.c \
+	lua/lstrlib.c \
+	lua/ltable.c \
+	lua/ltablib.c \
+	lua/ltm.c \
+	lua/lundump.c \
+	lua/lutf8lib.c \
+	lua/lvm.c \
+	lua/lzio.c \
+	luaport.c \
+	main.c \
 	nrfx/drivers/src/nrfx_gpiote.c \
+	nrfx/drivers/src/nrfx_ipc.c \
 	nrfx/drivers/src/nrfx_qspi.c \
 	nrfx/drivers/src/nrfx_rtc.c \
 	nrfx/drivers/src/nrfx_spim.c \
 	nrfx/drivers/src/nrfx_systick.c \
 	nrfx/drivers/src/nrfx_twim.c \
-	nrfx/mdk/gcc_startup_nrf5340_application.S \
-	nrfx/mdk/system_nrf5340_application.c \
-
-NETWORK_CORE_C_FILES += \
-	network_core/main.c \
-	nrfx/mdk/gcc_startup_nrf5340_network.S \
-	nrfx/mdk/system_nrf5340_network.c \
+	nrfx/helpers/nrfx_flag32_allocator.c \
+	nrfx/mdk/gcc_startup_nrf52840.S \
+	nrfx/mdk/system_nrf52840.c \
 	segger/SEGGER_RTT_Syscalls_GCC.c \
 	segger/SEGGER_RTT.c \
 
 FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
 
 # Header file paths
-SHARED_FLAGS += \
+FLAGS += \
 	-I. \
 	-Icmsis/CMSIS/Core/Include \
+	-Ilua \
 	-Inrfx \
 	-Inrfx/drivers/include \
 	-Inrfx/hal \
@@ -96,21 +89,14 @@ SHARED_FLAGS += \
 	-Inrfx/soc \
 	-Isegger \
 
-APPLICATION_CORE_FLAGS += \
-	-Iapplication_core \
-	-Iapplication_core/lua \
-
-NETWORK_CORE_FLAGS += \
-	-Inetwork_core \
-
 # Warnings
-SHARED_FLAGS += \
+FLAGS += \
 	-Wall \
 	-Wdouble-promotion  \
 	-Wfloat-conversion \
 
 # Build options and optimizations
-SHARED_FLAGS += \
+FLAGS += \
 	-falign-functions=16 \
 	-fdata-sections  \
 	-ffunction-sections  \
@@ -120,79 +106,48 @@ SHARED_FLAGS += \
 	-fshort-enums \
 	-g \
 	-mabi=aapcs \
-	-mcmse \
 	-mthumb \
-	-O2 \
+	-Os \
 	-std=gnu17 \
-
-APPLICATION_CORE_FLAGS += \
-	-mcpu=cortex-m33 \
-	-mfloat-abi=hard \
-
-NETWORK_CORE_FLAGS += \
-	-mcpu=cortex-m33+nodsp \
+	-mcpu=cortex-m4 \
 	-mfloat-abi=soft \
 
 # Preprocessor defines
-SHARED_FLAGS += \
+FLAGS += \
+	-DNRF52840_XXAA \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
 	-DNDEBUG \
 
-APPLICATION_CORE_FLAGS += \
-	-DNRF5340_XXAA_APPLICATION \
-
-NETWORK_CORE_FLAGS += \
-	-DNRF5340_XXAA_NETWORK \
-
 # Linker options
-SHARED_FLAGS += \
+FLAGS += \
 	-Wl,--gc-sections \
 
 # Linker script paths
-APPLICATION_CORE_FLAGS += \
-	-T application_core/memory_layout.ld \
-
-NETWORK_CORE_FLAGS += \
-	-T network_core/memory_layout.ld \
-
-SHARED_FLAGS += \
+FLAGS += \
+	-T nrfx/mdk/nrf52840_xxaa.ld \
 	-Lnrfx/mdk \
 
 # Link required libraries
-SHARED_LIBS += \
+LIBS += \
 	-lc \
 	-lm \
 	-lnosys \
 
-all: build/application_core.elf \
-     build/network_core.elf
 
-	@arm-none-eabi-objcopy -O ihex build/application_core.elf build/application_core.hex
-	@arm-none-eabi-objcopy -O ihex build/network_core.elf build/network_core.hex
-	@arm-none-eabi-size $^
-
-
-build/application_core.elf: $(SHARED_C_FILES) \
-                            $(APPLICATION_CORE_C_FILES) \
-                            | application_core/fpga_application.h
+build/frame.hex: $(C_FILES) | fpga_application.h
 
 	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^ $(SHARED_LIBS)
+	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $^ $(LIBS)
+	@arm-none-eabi-objcopy -O ihex build/frame.elf $@
+	@arm-none-eabi-size build/frame.elf
 
 
-build/network_core.elf: $(SHARED_C_FILES) \
-                        $(NETWORK_CORE_C_FILES)
-
-	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -o $@ $^ $(SHARED_LIBS)
-
-
-application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 	
 	@mkdir -p build
 
-	@cd application_core/fpga_rtl && \
+	@cd fpga_rtl && \
 	    iverilog -Wall \
 	             -g2012 \
 	             -o /dev/null \
@@ -200,10 +155,10 @@ application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 
 	@yosys -p "synth_nexus \
 	       -json build/fpga_rtl.json" \
-	       application_core/fpga_rtl/top.sv
+	       fpga_rtl/top.sv
 
 	@nextpnr-nexus --device LIFCL-17-7UWG72 \
-	               --pdc application_core/fpga_rtl/fpga_pinout.pdc \
+	               --pdc fpga_rtl/fpga_pinout.pdc \
 	               --json build/fpga_rtl.json \
 	               --fasm build/fpga_rtl.fasm
 
@@ -220,8 +175,7 @@ clean:
 	rm -rf build/
 
 flash: all
-	nrfjprog -q --coprocessor CP_APPLICATION --program build/application_core.hex --sectorerase
-	nrfjprog -q --coprocessor CP_NETWORK --program build/network_core.hex --sectorerase
+	nrfjprog -q --program build/frame.hex --sectorerase
 	nrfjprog --reset
 
 recover:

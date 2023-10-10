@@ -25,30 +25,13 @@
 #pragma once
 
 #include <stdio.h>
-#include "interprocessor_messaging.h"
 #include "SEGGER_RTT.h"
 
 /**
  * @brief Logging macros.
  */
 
-#ifdef NRF5340_XXAA_APPLICATION
-
-#define LOG(format, ...)                                         \
-    do                                                           \
-    {                                                            \
-        char string[100];                                        \
-        snprintf(string, 100, "\x1B[93m" format, ##__VA_ARGS__); \
-        send_message(LOG_FROM_APPLICATION_CORE,                  \
-                     (uint8_t *)string,                          \
-                     strlen(string) + 1);                        \
-    } while (0)
-
-#elif NRF5340_XXAA_NETWORK
-
 #define LOG(format, ...) printf("\x1B[92m" format "\r\n", ##__VA_ARGS__)
-
-#endif
 
 #define NRFX_LOG_ERROR(format, ...)
 #define NRFX_LOG_WARNING(format, ...)

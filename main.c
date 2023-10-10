@@ -25,11 +25,9 @@
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_helpers.h"
-#include "interprocessor_messaging.h"
 #include "luaport.h"
 #include "nrf_clock.h"
 #include "nrf_gpio.h"
-#include "nrf_oscillators.h"
 #include "nrf.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
@@ -41,8 +39,8 @@
 #include "pinout.h"
 
 static const nrfx_rtc_t rtc_instance = NRFX_RTC_INSTANCE(0);
-static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(1);
 static const nrfx_twim_t i2c_instance = NRFX_TWIM_INSTANCE(0);
+static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(1);
 
 // static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
@@ -84,42 +82,12 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     // Deinitialize pins
 
     // Power off until the next pin interrupt
-    NRF_REGULATORS->SYSTEMOFF = 1;
+    // NRF_REGULATORS->SYSTEMOFF = 1;
     __DSB();
 
     // Only required for debug mode where core doesn't actually sleep
     while (1)
     {
-    }
-}
-
-static void network_core_message_handler(void)
-{
-    message_t message;
-
-    while (message_pending(&message))
-    {
-        switch (message.command)
-        {
-        case RESET_REQUEST_FROM_NETWORK_CORE:
-            NVIC_SystemReset();
-            break;
-
-        case BLUETOOTH_DATA_RECEIVED:
-            bool success = lua_write_to_repl(message.payload,
-                                             message.payload_length);
-
-            if (success == false)
-            {
-                // Respond with error
-            }
-
-            break;
-
-        default:
-            error_with_message("Unhandled interprocessor message");
-            break;
-        }
     }
 }
 
@@ -309,36 +277,14 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 
 static void frame_setup_application_core(void)
 {
-    // Initialize the inter-processor communication for logging and bluetooth
-    {
-        setup_messaging(network_core_message_handler);
-    }
-
     // Configure the clock sources
     {
-        // // High frequency crystal uses internally configurable capacitors
-        uint32_t capacitance_pf = 8;
-        int32_t slope = NRF_FICR->XOSC32MTRIM & 0x1F;
-        int32_t trim = (NRF_FICR->XOSC32MTRIM >> 5) & 0x1F;
-
-        nrf_oscillators_hfxo_cap_set(
-            NRF_OSCILLATORS,
-            true,
-            (1 + slope / 16) * (capacitance_pf * 2 - 14) + trim);
-
         nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_SYNTH);
-        nrf_clock_hf_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
-        nrf_clock_hfclk_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
-        nrf_clock_hfclk192m_src_set(NRF_CLOCK, NRF_CLOCK_HFCLK_HIGH_ACCURACY);
-
         nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
-        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLKSTART);
-        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_HFCLK192MSTART);
     }
 
     // Configure systick so we can use it for simple delays
     {
-        SystemCoreClockUpdate();
         nrfx_systick_init();
     }
 
@@ -514,11 +460,6 @@ static void frame_setup_application_core(void)
 
         // Put the camera to sleep
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
-    }
-
-    // Turn on the network core
-    {
-        NRF_RESET->NETWORK.FORCEOFF = 0;
     }
 
     // Read the case detect pin. If docked, we sleep right away

@@ -23,24 +23,7 @@
  */
 
 #include "error_helpers.h"
-#include "interprocessor_messaging.h"
 #include "nrfx_log.h"
-
-#ifdef NRF5340_XXAA_APPLICATION
-static const char *core = "Application";
-#elif NRF5340_XXAA_NETWORK
-static const char *core = "Network";
-#endif
-
-static void issue_reset(void)
-{
-    // Otherwise reset
-#ifdef NRF5340_XXAA_APPLICATION
-    NVIC_SystemReset();
-#elif NRF5340_XXAA_NETWORK
-    send_message(RESET_REQUEST_FROM_NETWORK_CORE, NULL, 0);
-#endif
-}
 
 static const char *lookup_error_code(uint32_t error_code)
 {
@@ -105,8 +88,7 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
     {
         if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
         {
-            LOG("%s core crashed at %s:%u - %s",
-                core,
+            LOG("Crashed at %s:%u - %s",
                 file,
                 line,
                 lookup_error_code(error_code));
@@ -114,7 +96,7 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
             // Simply pause here if debugging
             __BKPT();
         }
-        issue_reset();
+        NVIC_SystemReset();
     }
 }
 
@@ -122,12 +104,12 @@ void _error_with_message(const char *message, const char *file, const int line)
 {
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
     {
-        LOG("%s core crashed at %s:%u - %s", core, file, line, message);
+        LOG("Crashed at %s:%u - %s", file, line, message);
 
         // Simply pause here if debugging
         __BKPT();
     }
-    issue_reset();
+    NVIC_SystemReset();
 }
 
 void HardFault_Handler(void)
@@ -148,9 +130,4 @@ void BusFault_Handler(void)
 void UsageFault_Handler(void)
 {
     error_with_message("Usage fault");
-}
-
-void SecureFault_Handler(void)
-{
-    error_with_message("Secure fault");
 }
