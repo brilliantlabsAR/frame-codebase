@@ -30,9 +30,11 @@
 #include <stdio.h>
 #include "nrfx_log.h"
 
-#define lua_writestring(s, l)     \
-    printf("\x1B[95m%.*s", l, s); \
-    fflush(stdout);
+#define lua_writestring(s, l)         \
+    {                                 \
+        printf("\x1B[95m%.*s", l, s); \
+        fflush(stdout);               \
+    }
 
 #define lua_writeline() \
     printf("\n");
