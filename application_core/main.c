@@ -24,6 +24,7 @@
 
 #include "camera_configuration.h"
 #include "display_configuration.h"
+#include "fpga_application.h"
 #include "error_helpers.h"
 #include "interprocessor_messaging.h"
 #include "luaport.h"
@@ -40,9 +41,10 @@
 #include "nrfx_twim.h"
 #include "pinout.h"
 
-static const nrfx_rtc_t rtc_instance = NRFX_RTC_INSTANCE(0);
-static const nrfx_spim_t spi_instance = NRFX_SPIM_INSTANCE(1);
-static const nrfx_twim_t i2c_instance = NRFX_TWIM_INSTANCE(0);
+static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
+static const nrfx_spim_t display_spi = NRFX_SPIM_INSTANCE(0);
+static const nrfx_spim_t fpga_spi = NRFX_SPIM_INSTANCE(1);
+static const nrfx_twim_t i2c = NRFX_TWIM_INSTANCE(2);
 
 // static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
 static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
@@ -58,6 +60,12 @@ static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
                                               void *p_context)
+{
+    // TODO
+}
+
+// TODO
+static void check_charging_status_rtc_event_handler(nrfx_rtc_int_type_t int_type)
 {
     // Disable interrupts to prevent too many triggers from pin bounces
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
@@ -166,7 +174,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
-        nrfx_err_t tx_err = nrfx_twim_xfer(&i2c_instance, &i2c_tx, 0);
+        nrfx_err_t tx_err = nrfx_twim_xfer(&i2c, &i2c_tx, 0);
 
         if (tx_err == NRFX_ERROR_NOT_SUPPORTED ||
             tx_err == NRFX_ERROR_INTERNAL ||
@@ -176,7 +184,7 @@ i2c_response_t i2c_read(uint8_t device_address_7bit,
             check_error(tx_err);
         }
 
-        nrfx_err_t rx_err = nrfx_twim_xfer(&i2c_instance, &i2c_rx, 0);
+        nrfx_err_t rx_err = nrfx_twim_xfer(&i2c, &i2c_rx, 0);
 
         if (rx_err == NRFX_ERROR_NOT_SUPPORTED ||
             rx_err == NRFX_ERROR_INTERNAL ||
@@ -243,7 +251,7 @@ i2c_response_t i2c_write(uint8_t device_address_7bit,
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
-        nrfx_err_t err = nrfx_twim_xfer(&i2c_instance, &i2c_tx, 0);
+        nrfx_err_t err = nrfx_twim_xfer(&i2c, &i2c_tx, 0);
 
         if (err == NRFX_ERROR_BUSY ||
             err == NRFX_ERROR_NOT_SUPPORTED ||
@@ -270,12 +278,12 @@ i2c_response_t i2c_write(uint8_t device_address_7bit,
     return resp;
 }
 
-void spi_read(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
+void spi_read(nrfx_spim_t const *instance, uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 {
     nrf_gpio_pin_clear(cs_pin);
 
     nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_RX(data, length);
-    check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+    check_error(nrfx_spim_xfer(instance, &xfer, 0));
 
     if (!hold_down_cs)
     {
@@ -283,7 +291,7 @@ void spi_read(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
     }
 }
 
-void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
+void spi_write(nrfx_spim_t const *instance, uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
 {
     nrf_gpio_pin_clear(cs_pin);
 
@@ -292,13 +300,13 @@ void spi_write(uint8_t *data, size_t length, uint32_t cs_pin, bool hold_down_cs)
         uint8_t *m_data = malloc(length);
         memcpy(m_data, data, length);
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
-        check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+        check_error(nrfx_spim_xfer(instance, &xfer, 0));
         free(m_data);
     }
     else
     {
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(data, length);
-        check_error(nrfx_spim_xfer(&spi_instance, &xfer, 0));
+        check_error(nrfx_spim_xfer(instance, &xfer, 0));
     }
 
     if (!hold_down_cs)
@@ -349,13 +357,41 @@ static void frame_setup_application_core(void)
         // 1024Hz = >1ms resolution
         config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
 
-        check_error(nrfx_rtc_init(&rtc_instance,
+        check_error(nrfx_rtc_init(&rtc,
                                   &config,
                                   unused_rtc_event_handler));
-        nrfx_rtc_enable(&rtc_instance);
+        nrfx_rtc_enable(&rtc);
 
-        // Call tick interrupt every ms to wake up the core
-        nrfx_rtc_tick_enable(&rtc_instance, true);
+        // TODO Call interrupt to check wake and also check sleep status every 10ms
+
+        // Call tick interrupt every ms to wake up the core when in light sleep
+        nrfx_rtc_tick_enable(&rtc, true);
+    }
+
+    // Configure case detect pin for detecting unpairings
+    {
+        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+
+        nrfx_gpiote_input_config_t input_config = {
+            .pull = NRF_GPIO_PIN_PULLUP, // TODO pull this up with a large resistor
+        };
+
+        nrfx_gpiote_trigger_config_t trigger_config = {
+            .trigger = NRFX_GPIOTE_TRIGGER_HITOLO,
+            .p_in_channel = NULL,
+        };
+
+        nrfx_gpiote_handler_config_t handler_config = {
+            .handler = case_detect_pin_interrupt_handler,
+            .p_context = NULL,
+        };
+
+        check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                                &input_config,
+                                                &trigger_config,
+                                                &handler_config));
+
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
     // Configure the I2C driver
@@ -368,9 +404,9 @@ static void frame_setup_application_core(void)
             .hold_bus_uninit = false,
         };
 
-        check_error(nrfx_twim_init(&i2c_instance, &i2c_config, NULL, NULL));
+        check_error(nrfx_twim_init(&i2c, &i2c_config, NULL, NULL));
 
-        nrfx_twim_enable(&i2c_instance);
+        nrfx_twim_enable(&i2c);
     }
 
     // Scan the PMIC & IMU for their chip IDs. Camera is checked later
@@ -404,6 +440,11 @@ static void frame_setup_application_core(void)
 
     // Configure the PMIC registers
     {
+        ////// TEMP SET 1.0V RAIL LOW FOR FPGA POWERUP
+        // check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x03, 0x04).fail);
+        nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
+        nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
+
         // Set the SBB drive strength
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
 
@@ -451,23 +492,122 @@ static void frame_setup_application_core(void)
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
     }
 
+    // Set up ADC for battery level monitoring
+    {
+        // TODO
+    }
+
+    // Read the PMIC status pin. If on charge, go to sleep right away
+    {
+        // TODO
+    }
+
+    // Load and start the FPGA image
+    {
+        nrf_gpio_pin_clear(FPGA_PROGRAM_PIN);
+        nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
+
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+        nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
+
+        nrfx_spim_config_t fpga_spi_config = NRFX_SPIM_DEFAULT_CONFIG(
+            FPGA_SPI_CLOCK_PIN,
+            FPGA_SPI_IO0_PIN,
+            FPGA_SPI_IO1_PIN,
+            NRF_SPIM_PIN_NOT_CONNECTED);
+
+        fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(8);
+
+        check_error(nrfx_spim_init(&fpga_spi,
+                                   &fpga_spi_config,
+                                   NULL,
+                                   NULL));
+
+        nrfx_systick_delay_ms(100);
+
+        uint8_t fpga_magic_word[5] = {0xFF, 0xA4, 0xC6, 0xF4, 0x8A};
+        spi_write(&fpga_spi, fpga_magic_word, 5, FPGA_SPI_SELECT_PIN, false);
+
+        nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
+
+        nrfx_systick_delay_ms(1);
+
+        uint8_t fpga_id_code[4] = {0xE0, 0x00, 0x00, 0x00};
+        uint8_t fpga_response[8];
+        spi_write(&fpga_spi, fpga_id_code, 4, FPGA_SPI_SELECT_PIN, true);
+        spi_read(&fpga_spi, fpga_response, 4, FPGA_SPI_SELECT_PIN, false);
+        LOG("FPGA ID: 0x%02hhX%02hhX%02hhX%02hhX", fpga_response[0], fpga_response[1], fpga_response[2], fpga_response[3]);
+
+        uint8_t fpga_prog_enable[4] = {0xC6, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_prog_enable, 4, FPGA_SPI_SELECT_PIN, false);
+
+        nrfx_systick_delay_ms(1);
+
+        uint8_t fpga_erase[4] = {0x0E, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_erase, 4, FPGA_SPI_SELECT_PIN, false);
+
+        nrfx_systick_delay_ms(200);
+
+        uint8_t fpga_init[4] = {0x46, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_init, 4, FPGA_SPI_SELECT_PIN, false);
+
+        uint8_t fpga_bitstream_start[4] = {0x7A, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_bitstream_start, 4, FPGA_SPI_SELECT_PIN, true);
+
+        LOG("Writing FPGA binary");
+        for (uint32_t i = 0; i < build_fpga_rtl_bit_len; i++)
+        {
+            spi_write(&fpga_spi, &build_fpga_rtl_bit[i], 1, FPGA_SPI_SELECT_PIN, true);
+            // if (i % 10000 == 0)
+            //     LOG("--%d/%ldk", i / 1000, build_fpga_rtl_bit_len / 1000);
+        }
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+
+        nrfx_systick_delay_ms(20);
+
+        uint8_t fpga_read_status[4] = {0x3C, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_read_status, 4, FPGA_SPI_SELECT_PIN, true);
+        spi_read(&fpga_spi, fpga_response, 4, FPGA_SPI_SELECT_PIN, false);
+        LOG("FPGA status: 0x%02hhX%02hhX%02hhX%02hhX", fpga_response[0], fpga_response[1], fpga_response[2], fpga_response[3]);
+
+        uint8_t fpga_prog_exit[4] = {0x26, 0x00, 0x00, 0x00};
+        spi_write(&fpga_spi, fpga_prog_exit, 4, FPGA_SPI_SELECT_PIN, false);
+
+        nrfx_systick_delay_ms(200);
+
+        uint8_t fpga_no_op[4] = {0xFF, 0xFF, 0xFF, 0xFF};
+        spi_write(&fpga_spi, fpga_no_op, 4, FPGA_SPI_SELECT_PIN, false);
+
+        LOG("Done");
+
+        // Attempt to read FPGA ID from the running application
+        if (not_real_hardware == false)
+        {
+            // if (id_value[0] != 0x0A)
+            {
+                // error_with_message("FPGA not found");
+            }
+        }
+    }
+
     // Initialize the SPI and configure the display
     {
-        nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
         nrf_gpio_pin_set(DISPLAY_SPI_SELECT_PIN);
+        nrf_gpio_cfg_output(DISPLAY_SPI_SELECT_PIN);
 
-        nrfx_twim_disable(&i2c_instance);
-
-        nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG(
+        nrfx_spim_config_t display_spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             DISPLAY_SPI_CLOCK_PIN,
             DISPLAY_SPI_DATA_PIN,
             NRF_SPIM_PIN_NOT_CONNECTED,
             NRF_SPIM_PIN_NOT_CONNECTED);
 
-        spi_config.mode = NRF_SPIM_MODE_3;
-        spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
+        display_spi_config.mode = NRF_SPIM_MODE_3;
+        display_spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
 
-        check_error(nrfx_spim_init(&spi_instance, &spi_config, NULL, NULL));
+        check_error(nrfx_spim_init(&display_spi,
+                                   &display_spi_config,
+                                   NULL,
+                                   NULL));
 
         for (size_t i = 0;
              i < sizeof(display_config) / sizeof(display_config_t);
@@ -476,16 +616,12 @@ static void frame_setup_application_core(void)
             uint8_t command[2] = {display_config[i].address,
                                   display_config[i].value};
 
-            spi_write(command, sizeof(command), DISPLAY_SPI_SELECT_PIN, false);
+            spi_write(&display_spi, command, sizeof(command), DISPLAY_SPI_SELECT_PIN, false);
         }
     }
 
-    // Re-initialize the I2C and configure the camera
+    // Configure the camera
     {
-        nrfx_spim_uninit(&spi_instance);
-
-        nrfx_twim_enable(&i2c_instance);
-
         // Wake up the camera
         nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
 
@@ -497,7 +633,7 @@ static void frame_setup_application_core(void)
         {
             if (camera_response.value != 0x97)
             {
-                error_with_message("Camera not found");
+                // error_with_message("Camera not found");
             }
         }
 
@@ -519,75 +655,6 @@ static void frame_setup_application_core(void)
     // Turn on the network core
     {
         NRF_RESET->NETWORK.FORCEOFF = 0;
-    }
-
-    // Read the case detect pin. If docked, we sleep right away
-    {
-        // TODO
-    }
-
-    // Configure case detect pin for sleeping
-    {
-        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
-
-        nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLUP, // TODO pull this up with a large resistor
-        };
-
-        nrfx_gpiote_trigger_config_t trigger_config = {
-            .trigger = NRFX_GPIOTE_TRIGGER_HITOLO,
-            .p_in_channel = NULL,
-        };
-
-        nrfx_gpiote_handler_config_t handler_config = {
-            .handler = case_detect_pin_interrupt_handler,
-            .p_context = NULL,
-        };
-
-        check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
-                                                &input_config,
-                                                &trigger_config,
-                                                &handler_config));
-
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
-    }
-
-    // Initialize SPI and control pins to the FPGA
-    {
-        nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
-        nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
-
-        // nrfx_qspi_config_t qspi_config = NRFX_QSPI_DEFAULT_CONFIG(
-        //     FPGA_SPI_CLOCK_PIN,
-        //     FPGA_SPI_SELECT_PIN,
-        //     FPGA_SPI_IO0_PIN,
-        //     FPGA_SPI_IO1_PIN,
-        //     NRF_QSPI_PIN_NOT_CONNECTED,
-        //     NRF_QSPI_PIN_NOT_CONNECTED);
-
-        // check_error(nrfx_qspi_init(&qspi_config, NULL, NULL));
-    }
-
-    // Run the FPGA application loading sequence
-    {
-        // Program the FPGA
-
-        // Wait until FPGA has started
-
-        // Check the chip ID
-
-        if (not_real_hardware == false)
-        {
-            // if (id_value[0] != 0x0A)
-            {
-                error_with_message("FPGA not found");
-            }
-        }
-    }
-
-    // Set up ADC for battery level monitoring
-    {
-        // TODO
     }
 
     LOG("Application core configured");

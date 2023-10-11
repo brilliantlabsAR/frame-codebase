@@ -38,10 +38,11 @@
 #define NRFX_RTC0_ENABLED 1
 #define NRFX_SAADC_ENABLED 1
 #define NRFX_SPIM_ENABLED 1
+#define NRFX_SPIM0_ENABLED 1
 #define NRFX_SPIM1_ENABLED 1
 #define NRFX_SYSTICK_ENABLED 1
 #define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
+#define NRFX_TWIM2_ENABLED 1
 #include "nrfx/templates/nrfx_config_nrf5340_application.h"
 #endif
 
