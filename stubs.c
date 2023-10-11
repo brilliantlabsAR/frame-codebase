@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <sys/cdefs.h>
 #include <sys/times.h>
 #include <sys/types.h>
 #include <sys/time.h>
@@ -50,3 +52,34 @@ int unlink(const char *pathname)
 {
     return 0;
 }
+
+void _ATTRIBUTE((__noreturn__)) _exit(int code)
+{
+    (void)code;
+    for (;;)
+        ;
+}
+
+static int dummy_putc(char c, FILE *file)
+{
+    SEGGER_RTT_Write(0, &c, 1);
+    return (unsigned char)c;
+}
+
+static int dummy_getc(FILE *file)
+{
+    (void)file;
+    return EOF;
+}
+
+static int dummy_flush(FILE *file)
+{
+    (void)file;
+    return 0;
+}
+
+static FILE __stdio = FDEV_SETUP_STREAM(dummy_putc, dummy_getc, dummy_flush, _FDEV_SETUP_RW);
+
+FILE *const stdin = &__stdio;
+FILE *const stdout = &__stdio;
+FILE *const stderr = &__stdio;

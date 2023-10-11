@@ -13,6 +13,7 @@
                 "nrfx/hal",
                 "nrfx/mdk",
                 "nrfx/soc",
+                "picolibc",
                 "segger"
             ],
             "defines": [

@@ -134,7 +134,6 @@ FLAGS += \
 LIBS += \
 	-lc \
 	-lgcc \
-	picolibc/libdummyhost.a \
 
 build/frame.hex: $(C_FILES) | fpga_application.h
 
