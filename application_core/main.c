@@ -315,6 +315,32 @@ void spi_write(nrfx_spim_t const *instance, uint8_t *data, size_t length, uint32
     }
 }
 
+static void set_power_rails(bool enable)
+{
+    if (enable)
+    {
+        // Turn on SBB0 (1.0V rail) with 500mA limit
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
+
+        // Turn on LDO0 (1.2V rail)
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
+
+        // Turn on SBB2 (2.7V rail) with 333mA limit
+        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
+
+        return;
+    }
+
+    // Turn off SBB2 (2.7V rail) with active discharge resistor on
+    check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x0F, 0x0C).fail);
+
+    // Turn off Turn on LDO0 (1.2V rail)
+    check_error(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x0F, 0x0C).fail);
+
+    // Turn off SBB0 (1.0V rail) with active discharge resistor on
+    check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x0F, 0x0C).fail);
+}
+
 static void frame_setup_application_core(void)
 {
     // Initialize the inter-processor communication for logging and bluetooth
@@ -440,11 +466,6 @@ static void frame_setup_application_core(void)
 
     // Configure the PMIC registers
     {
-        ////// TEMP SET 1.0V RAIL LOW FOR FPGA POWERUP
-        // check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x03, 0x04).fail);
-        nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
-        nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
-
         // Set the SBB drive strength
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2F, 0x03, 0x01).fail);
 
@@ -457,14 +478,8 @@ static void frame_setup_application_core(void)
         // Set LDO0 to 1.2V
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x38, 0x7F, 0x10).fail);
 
-        // Turn on SBB0 (1.0V rail) with 500mA limit
-        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x37, 0x26).fail);
-
-        // Turn on LDO0 (1.2V rail)
-        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x39, 0x07, 0x06).fail);
-
-        // Turn on SBB2 (2.7V rail) with 333mA limit
-        check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2E, 0x37, 0x36).fail);
+        // Turn/keep off FPGA before FPGA configuration
+        set_power_rails(false);
 
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x20, 0xFF, 0x2E).fail);
@@ -504,11 +519,14 @@ static void frame_setup_application_core(void)
 
     // Load and start the FPGA image
     {
-        nrf_gpio_pin_clear(FPGA_PROGRAM_PIN);
         nrf_gpio_cfg_output(FPGA_PROGRAM_PIN);
-
-        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
         nrf_gpio_cfg_output(FPGA_SPI_SELECT_PIN);
+
+        nrf_gpio_pin_clear(FPGA_PROGRAM_PIN);
+        nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+
+        set_power_rails(true);
+        nrfx_systick_delay_ms(5);
 
         nrfx_spim_config_t fpga_spi_config = NRFX_SPIM_DEFAULT_CONFIG(
             FPGA_SPI_CLOCK_PIN,
@@ -522,8 +540,6 @@ static void frame_setup_application_core(void)
                                    &fpga_spi_config,
                                    NULL,
                                    NULL));
-
-        nrfx_systick_delay_ms(100);
 
         uint8_t fpga_magic_word[5] = {0xFF, 0xA4, 0xC6, 0xF4, 0x8A};
         spi_write(&fpga_spi, fpga_magic_word, 5, FPGA_SPI_SELECT_PIN, false);
@@ -558,8 +574,6 @@ static void frame_setup_application_core(void)
         for (uint32_t i = 0; i < build_fpga_rtl_bit_len; i++)
         {
             spi_write(&fpga_spi, &build_fpga_rtl_bit[i], 1, FPGA_SPI_SELECT_PIN, true);
-            // if (i % 10000 == 0)
-            //     LOG("--%d/%ldk", i / 1000, build_fpga_rtl_bit_len / 1000);
         }
         nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
 
