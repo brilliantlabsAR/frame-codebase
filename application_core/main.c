@@ -51,9 +51,9 @@ static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
-static volatile bool ready_to_sleep = false;
-static volatile bool sleep_prevented = false;
-static volatile bool not_real_hardware = false;
+static bool prevent_sleep = false;
+static bool not_real_hardware = false;
+static bool unpair = false;
 
 static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 
@@ -61,35 +61,39 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
                                               void *p_context)
 {
-    // TODO
-}
-
-// TODO
-static void check_charging_status_rtc_event_handler(nrfx_rtc_int_type_t int_type)
-{
     // Disable interrupts to prevent too many triggers from pin bounces
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
     LOG("Going to sleep");
 
-    // Wait for the network core to complete the shutdown process
-    while (ready_to_sleep == false)
+    // Ignore high to low interrupt. It's only used to wake up the device
+    if (prevent_sleep)
     {
-        if (sleep_prevented)
-        {
-            LOG("Sleep prevented");
+        LOG("Sleep prevented");
 
-            // Short delay to prevent too many messages clogging things up
-            nrfx_systick_delay_ms(100);
+        // Short delay to prevent too many messages clogging things up
+        nrfx_systick_delay_ms(100);
 
-            // Re-enable interrupts before exiting
-            nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
-            return;
-        }
+        // Re-enable interrupts before exiting
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+        return;
     }
 
-    // Disable SPI to the FPGA
+    // Disable busses
+    // nrfx_spim_uninit(&display_spi);
+    // nrfx_spim_uninit(&fpga_spi);
+    // nrfx_twim_uninit(&i2c);
 
-    // Deinitialize pins
+    // Deinitialize all the pins
+    for (uint8_t pin = 0; pin < 32; pin++)
+    {
+        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
+        // nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
+    }
+
+    // Set the wakeup pin to be the touch input
+    nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
+                             NRF_GPIO_PIN_PULLDOWN, // TODO remove this once we have a resistor
+                             NRF_GPIO_PIN_SENSE_LOW);
 
     // Power off until the next pin interrupt
     NRF_REGULATORS->SYSTEMOFF = 1;
@@ -388,36 +392,9 @@ static void frame_setup_application_core(void)
                                   unused_rtc_event_handler));
         nrfx_rtc_enable(&rtc);
 
-        // TODO Call interrupt to check wake and also check sleep status every 10ms
-
         // Call tick interrupt every ms to wake up the core when in light sleep
+        // TODO we can remove this if using nRF52 with Softdevice S140
         nrfx_rtc_tick_enable(&rtc, true);
-    }
-
-    // Configure case detect pin for detecting unpairings
-    {
-        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
-
-        nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLUP, // TODO pull this up with a large resistor
-        };
-
-        nrfx_gpiote_trigger_config_t trigger_config = {
-            .trigger = NRFX_GPIOTE_TRIGGER_HITOLO,
-            .p_in_channel = NULL,
-        };
-
-        nrfx_gpiote_handler_config_t handler_config = {
-            .handler = case_detect_pin_interrupt_handler,
-            .p_context = NULL,
-        };
-
-        check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
-                                                &input_config,
-                                                &trigger_config,
-                                                &handler_config));
-
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
     // Configure the I2C driver
@@ -505,6 +482,58 @@ static void frame_setup_application_core(void)
 
         // Connect AMUX to battery voltage
         check_error(i2c_write(PMIC_I2C_ADDRESS, 0x28, 0x0F, 0x03).fail);
+    }
+
+    // Configure case detect pin interrupt and check the starting state
+    {
+        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+
+        nrfx_gpiote_input_config_t input_config = {
+            .pull = NRF_GPIO_PIN_PULLDOWN, // TODO remove this once we have a real resistor
+        };
+
+        nrfx_gpiote_trigger_config_t trigger_config = {
+            .trigger = NRFX_GPIOTE_TRIGGER_LOTOHI,
+            .p_in_channel = NULL,
+        };
+
+        nrfx_gpiote_handler_config_t handler_config = {
+            .handler = case_detect_pin_interrupt_handler,
+            .p_context = NULL,
+        };
+
+        check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                                &input_config,
+                                                &trigger_config,
+                                                &handler_config));
+
+        bool case_detect_pin = nrf_gpio_pin_read(CASE_DETECT_PIN);
+
+        // Check if the device is docked by reading STAT_CHG_B
+        i2c_response_t charger_status = i2c_read(PMIC_I2C_ADDRESS, 0x03, 0x0C);
+        check_error(charger_status.fail);
+        bool charging = charger_status.value;
+
+        if (charging)
+        {
+            // Just go to sleep if the case detect pin is high
+            if (case_detect_pin == true)
+            {
+                case_detect_pin_interrupt_handler(CASE_DETECT_PIN,
+                                                  NRFX_GPIOTE_TRIGGER_HIGH,
+                                                  NULL);
+            }
+
+            // Otherwise it means the button was pressed. Un-pair
+            else
+            {
+                LOG("Un-pairing");
+                unpair = true;
+            }
+        }
+
+        // Enable the interrupt for catching the next docking event
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
     }
 
     // Set up ADC for battery level monitoring
