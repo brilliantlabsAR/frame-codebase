@@ -22,33 +22,36 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
+#include <stdint.h>
+#include "error_helpers.h"
+#include "lua.h"
+#include "nrfx_config.h"
+#include "nrfx_pdm.h"
+#include "pinout.h"
 
-#define NRFX_CONFIG_H__
-#include "nrfx/templates/nrfx_config_common.h"
+static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
+{
+}
 
-#ifdef NRF5340_XXAA_APPLICATION
-#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
-#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#define NRFX_GPIOTE_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
-#define NRFX_IPC_ENABLED 1
-#define NRFX_PDM_ENABLED 1
-#define NRFX_QSPI_ENABLED 1
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC0_ENABLED 1
-#define NRFX_SAADC_ENABLED 1
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM0_ENABLED 1
-#define NRFX_SPIM1_ENABLED 1
-#define NRFX_SYSTICK_ENABLED 1
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM2_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_application.h"
-#endif
+void init_microphone_library(lua_State *L)
+{
+    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
+                                                       MICROPHONE_DATA_PIN);
+    config.edge = NRF_PDM_EDGE_LEFTRISING;
 
-#ifdef NRF5340_XXAA_NETWORK
-#define NRFX_IPC_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#include "nrfx/templates/nrfx_config_nrf5340_network.h"
-#endif
+    if (nrfx_pdm_enable_check)
+    {
+        return;
+    }
+
+    check_error(nrfx_pdm_init(&config, pdm_event_handler));
+}
+
+void read_microphone_data(int16_t *buffer, uint32_t samples)
+{
+    // TODO read multiple samples
+
+    check_error(nrfx_pdm_buffer_set(buffer, samples));
+
+    check_error(nrfx_pdm_start());
+}

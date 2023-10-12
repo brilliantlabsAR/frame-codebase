@@ -33,6 +33,8 @@ SHARED_C_FILES += \
 	nrfx/helpers/nrfx_flag32_allocator.c \
 
 APPLICATION_CORE_C_FILES += \
+	application_core/i2c.c \
+	application_core/lua_libraries/microphone.c \
 	application_core/lua/lapi.c \
 	application_core/lua/lauxlib.c \
 	application_core/lua/lbaselib.c \
@@ -67,7 +69,9 @@ APPLICATION_CORE_C_FILES += \
 	application_core/lua/lzio.c \
 	application_core/luaport.c \
 	application_core/main.c \
+	application_core/spi.c \
 	nrfx/drivers/src/nrfx_gpiote.c \
+	nrfx/drivers/src/nrfx_pdm.c \
 	nrfx/drivers/src/nrfx_qspi.c \
 	nrfx/drivers/src/nrfx_rtc.c \
 	nrfx/drivers/src/nrfx_spim.c \
@@ -99,6 +103,7 @@ SHARED_FLAGS += \
 APPLICATION_CORE_FLAGS += \
 	-Iapplication_core \
 	-Iapplication_core/lua \
+	-Iapplication_core/lua_libraries \
 
 NETWORK_CORE_FLAGS += \
 	-Inetwork_core \

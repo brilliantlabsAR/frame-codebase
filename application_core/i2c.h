@@ -24,31 +24,30 @@
 
 #pragma once
 
-#define NRFX_CONFIG_H__
-#include "nrfx/templates/nrfx_config_common.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-#ifdef NRF5340_XXAA_APPLICATION
-#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
-#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#define NRFX_GPIOTE_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 6
-#define NRFX_IPC_ENABLED 1
-#define NRFX_PDM_ENABLED 1
-#define NRFX_QSPI_ENABLED 1
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC0_ENABLED 1
-#define NRFX_SAADC_ENABLED 1
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM0_ENABLED 1
-#define NRFX_SPIM1_ENABLED 1
-#define NRFX_SYSTICK_ENABLED 1
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM2_ENABLED 1
-#include "nrfx/templates/nrfx_config_nrf5340_application.h"
-#endif
+typedef enum i2c_device_t
+{
+    ACCELEROMETER,
+    CAMERA,
+    MAGNETOMETER,
+    PMIC,
+} i2c_device_t;
 
-#ifdef NRF5340_XXAA_NETWORK
-#define NRFX_IPC_ENABLED 1
-#define NRFX_IPC_DEFAULT_CONFIG_IRQ_PRIORITY 7
-#include "nrfx/templates/nrfx_config_nrf5340_network.h"
-#endif
+typedef struct i2c_response_t
+{
+    bool fail;
+    uint8_t value;
+} i2c_response_t;
+
+void i2c_configure(void);
+
+i2c_response_t i2c_read(i2c_device_t device,
+                        uint16_t register_address,
+                        uint8_t register_mask);
+
+i2c_response_t i2c_write(i2c_device_t device,
+                         uint16_t register_address,
+                         uint8_t register_mask,
+                         uint8_t set_value);

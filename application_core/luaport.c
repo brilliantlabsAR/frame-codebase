@@ -27,6 +27,7 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
+#include "microphone.h"
 #include "nrfx_log.h"
 
 // static lua_State *globalL = NULL;
@@ -81,62 +82,6 @@ bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
 //     lua_sethook(globalL, lstop, flag, 1);
 // }
 
-/*
-** Prompt the user, read a line, and push it into the Lua stack.
-*/
-static int pushline(lua_State *L, int firstline)
-{
-    if (firstline)
-    {
-        lua_writestring("> ", sizeof("> "));
-    }
-    else
-    {
-        lua_writestring(">> ", sizeof(">> "));
-    }
-
-    while (repl.new_data == false)
-    {
-        // Wait for input
-    }
-
-    int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
-    // int status = luaL_dostring(L, (char *)repl.buffer);
-
-    repl.new_data = false;
-
-    if (status == LUA_OK)
-    {
-        int printables = lua_gettop(L);
-
-        if (printables > 0)
-        {
-            luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
-
-            lua_getglobal(L, "print");
-            lua_insert(L, 1);
-
-            if (lua_pcall(L, printables, 0, 0) != LUA_OK)
-            {
-                const char *msg = lua_pushfstring(L,
-                                                  "error calling 'print' (%s)",
-                                                  lua_tostring(L, -1));
-
-                lua_writestringerror("%s\n", msg);
-            }
-        }
-    }
-
-    else
-    {
-        const char *msg = lua_tostring(L, -1);
-        lua_writestringerror("%s\n", msg);
-        lua_pop(L, 1);
-    }
-
-    return 1;
-}
-
 void run_lua(void)
 {
     lua_State *L = luaL_newstate();
@@ -147,19 +92,65 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
+    init_microphone_library(L);
 
     char *version_string = LUA_RELEASE " on Brilliant Frame";
     lua_writestring((uint8_t *)version_string, strlen(version_string));
     lua_writeline();
 
+    // TODO attempt to run main.lua
+
     while (true)
     {
-        pushline(L, 1);
+        lua_writestring(">>> ", 5);
+
+        // Wait for input
+        while (repl.new_data == false)
+        {
+        }
+
+        // If we get a reset command
+        if (repl.buffer[0] == 0x04)
+        {
+            repl.new_data = false;
+            break;
+        }
+
+        int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
+        // int status = luaL_dostring(L, (char *)repl.buffer);
+
+        repl.new_data = false;
+
+        if (status == LUA_OK)
+        {
+            int printables = lua_gettop(L);
+
+            if (printables > 0)
+            {
+                luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
+
+                lua_getglobal(L, "print");
+                lua_insert(L, 1);
+
+                if (lua_pcall(L, printables, 0, 0) != LUA_OK)
+                {
+                    const char *msg = lua_pushfstring(
+                        L,
+                        "error calling 'print' (%s)",
+                        lua_tostring(L, -1));
+
+                    lua_writestringerror("%s\n", msg);
+                }
+            }
+        }
+
+        else
+        {
+            const char *msg = lua_tostring(L, -1);
+            lua_writestringerror("%s\n", msg);
+            lua_pop(L, 1);
+        }
     }
 
     lua_close(L);
-
-    while (1)
-    {
-    }
 }
