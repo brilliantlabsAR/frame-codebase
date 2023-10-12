@@ -55,86 +55,6 @@ static bool prevent_sleep = false;
 static bool not_real_hardware = false;
 static bool unpair = false;
 
-static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
-
-static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
-                                              nrfx_gpiote_trigger_t trigger,
-                                              void *p_context)
-{
-    // Disable interrupts to prevent too many triggers from pin bounces
-    nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
-    LOG("Going to sleep");
-
-    // Ignore high to low interrupt. It's only used to wake up the device
-    if (prevent_sleep)
-    {
-        LOG("Sleep prevented");
-
-        // Short delay to prevent too many messages clogging things up
-        nrfx_systick_delay_ms(100);
-
-        // Re-enable interrupts before exiting
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
-        return;
-    }
-
-    // Disable busses
-    // nrfx_spim_uninit(&display_spi);
-    // nrfx_spim_uninit(&fpga_spi);
-    // nrfx_twim_uninit(&i2c);
-
-    // Deinitialize all the pins
-    for (uint8_t pin = 0; pin < 32; pin++)
-    {
-        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
-        // nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
-    }
-
-    // Set the wakeup pin to be the touch input
-    nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
-                             NRF_GPIO_PIN_PULLDOWN, // TODO remove this once we have a resistor
-                             NRF_GPIO_PIN_SENSE_LOW);
-
-    // Power off until the next pin interrupt
-    NRF_REGULATORS->SYSTEMOFF = 1;
-    __DSB();
-
-    // Only required for debug mode where core doesn't actually sleep
-    while (1)
-    {
-    }
-}
-
-static void network_core_message_handler(void)
-{
-    message_t message;
-
-    while (message_pending(&message))
-    {
-        switch (message.command)
-        {
-        case RESET_REQUEST_FROM_NETWORK_CORE:
-            NVIC_SystemReset();
-            break;
-
-        case BLUETOOTH_DATA_RECEIVED:
-            bool success = lua_write_to_repl(message.payload,
-                                             message.payload_length);
-
-            if (success == false)
-            {
-                // Respond with error
-            }
-
-            break;
-
-        default:
-            error_with_message("Unhandled interprocessor message");
-            break;
-        }
-    }
-}
-
 typedef struct i2c_response_t
 {
     bool fail;
@@ -343,6 +263,90 @@ static void set_power_rails(bool enable)
 
     // Turn off SBB0 (1.0V rail) with active discharge resistor on
     check_error(i2c_write(PMIC_I2C_ADDRESS, 0x2A, 0x0F, 0x0C).fail);
+}
+
+static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
+
+static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
+                                              nrfx_gpiote_trigger_t trigger,
+                                              void *p_context)
+{
+    // Disable interrupts to prevent too many triggers from pin bounces
+    nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
+    LOG("Going to sleep");
+
+    // Ignore high to low interrupt. It's only used to wake up the device
+    if (prevent_sleep)
+    {
+        LOG("Sleep prevented");
+
+        // Short delay to prevent too many messages clogging things up
+        nrfx_systick_delay_ms(100);
+
+        // Re-enable interrupts before exiting
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+        return;
+    }
+
+    // Shutdown devices
+    set_power_rails(false);
+    // TODO, do we need a decay time like we had for Monocle?
+
+    // Disable busses
+    // nrfx_spim_uninit(&display_spi);
+    // nrfx_spim_uninit(&fpga_spi);
+    // nrfx_twim_uninit(&i2c);
+
+    // Deinitialize all the pins
+    for (uint8_t pin = 0; pin < 32; pin++)
+    {
+        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
+        // nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
+    }
+
+    // Set the wakeup pin to be the touch input
+    nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
+                             NRF_GPIO_PIN_PULLDOWN, // TODO remove this once we have a resistor
+                             NRF_GPIO_PIN_SENSE_LOW);
+
+    // Power off until the next pin interrupt
+    NRF_REGULATORS->SYSTEMOFF = 1;
+    __DSB();
+
+    // Only required for debug mode where core doesn't actually sleep
+    while (1)
+    {
+    }
+}
+
+static void network_core_message_handler(void)
+{
+    message_t message;
+
+    while (message_pending(&message))
+    {
+        switch (message.command)
+        {
+        case RESET_REQUEST_FROM_NETWORK_CORE:
+            NVIC_SystemReset();
+            break;
+
+        case BLUETOOTH_DATA_RECEIVED:
+            bool success = lua_write_to_repl(message.payload,
+                                             message.payload_length);
+
+            if (success == false)
+            {
+                // Respond with error
+            }
+
+            break;
+
+        default:
+            error_with_message("Unhandled interprocessor message");
+            break;
+        }
+    }
 }
 
 static void frame_setup_application_core(void)
