@@ -455,7 +455,7 @@ static void hardware_setup()
         }
 
         // Put the camera to sleep
-        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+        // nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
     }
 
     // Turn on the network core
