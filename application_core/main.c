@@ -433,6 +433,9 @@ static void hardware_setup()
         // Check the chip ID
         i2c_response_t camera_id = i2c_read(CAMERA, 0x300A, 0xFF);
 
+        LOG("Camera ID value = 0x%x", camera_id.value);
+        LOG("Camera ID fail = %u", camera_id.fail);
+
         if (not_real_hardware == false)
         {
             if (camera_id.value != 0x97)

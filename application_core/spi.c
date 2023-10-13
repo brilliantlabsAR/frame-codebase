@@ -56,8 +56,6 @@ void spi_configure(void)
         FPGA_SPI_IO1_PIN,
         NRF_SPIM_PIN_NOT_CONNECTED);
 
-    fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(1);
-
     check_error(nrfx_spim_init(&display_spi,
                                &display_spi_config,
                                NULL,
@@ -111,7 +109,7 @@ void spi_write(spi_device_t device,
                bool hold_down_cs)
 {
     nrfx_spim_t instance;
-    uint32_t cs_pin;
+    uint32_t cs_pin = 0xFF;
 
     switch (device)
     {
