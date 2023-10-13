@@ -56,7 +56,7 @@ void spi_configure(void)
         FPGA_SPI_IO1_PIN,
         NRF_SPIM_PIN_NOT_CONNECTED);
 
-    fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(8);
+    fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(1);
 
     check_error(nrfx_spim_init(&display_spi,
                                &display_spi_config,
@@ -72,19 +72,21 @@ void spi_configure(void)
 void spi_read(spi_device_t device,
               uint8_t *data,
               size_t length,
-              uint32_t cs_pin,
               bool hold_down_cs)
 {
     nrfx_spim_t instance;
+    uint32_t cs_pin;
 
     switch (device)
     {
     case DISPLAY:
         instance = display_spi;
+        cs_pin = DISPLAY_SPI_SELECT_PIN;
         break;
 
     case FPGA:
         instance = fpga_spi;
+        cs_pin = FPGA_SPI_SELECT_PIN;
         break;
 
     default:
@@ -106,19 +108,21 @@ void spi_read(spi_device_t device,
 void spi_write(spi_device_t device,
                uint8_t *data,
                size_t length,
-               uint32_t cs_pin,
                bool hold_down_cs)
 {
     nrfx_spim_t instance;
+    uint32_t cs_pin;
 
     switch (device)
     {
     case DISPLAY:
         instance = display_spi;
+        cs_pin = DISPLAY_SPI_SELECT_PIN;
         break;
 
     case FPGA:
         instance = fpga_spi;
+        cs_pin = FPGA_SPI_SELECT_PIN;
         break;
 
     default:

@@ -14,27 +14,27 @@
 `include "modules/spi/spi.sv"
 
 module top (
-    input logic button,
-    output logic led_1,
-    output logic led_2
+    input logic sck,
+    output logic cipo,
+    input logic copi,
+    input logic cs
 );
-    logic clk;
 
-	OSC_CORE #(
-		.HF_CLK_DIV("2") // 150MHz clock
-	) hf_osc (
-		.HFOUTEN(1'b1),
-		.HFCLKOUT(clk)
-	);
+logic clk;
+logic reset = 1;
+logic [3:0] reset_counter = 0;
 
-    logic [31:0] sub_clk_counter;
+// 450 / 45 = 10Mhz
+OSCA #(
+    .HF_CLK_DIV("44"),
+    .HF_OSC_EN("ENABLED")
+    ) osc (
+    .HFOUTEN(1'b1),
+    .HFCLKOUT(clk)
+);
 
-    always_ff @(posedge clk) begin
-        sub_clk_counter <= sub_clk_counter + 1;
-    end
-
-    always_ff @(posedge sub_clk_counter[21]) begin
-        led_1 <= ~led_1;
-    end   
+spi spi (
+    .*
+);
 
 endmodule

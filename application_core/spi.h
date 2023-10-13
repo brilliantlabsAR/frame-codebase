@@ -38,11 +38,9 @@ void spi_configure(void);
 void spi_read(spi_device_t device,
               uint8_t *data,
               size_t length,
-              uint32_t cs_pin,
               bool hold_down_cs);
 
 void spi_write(spi_device_t device,
                uint8_t *data,
                size_t length,
-               uint32_t cs_pin,
                bool hold_down_cs);

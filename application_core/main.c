@@ -23,6 +23,7 @@
  */
 
 #include <stdbool.h>
+#include <math.h>
 #include <stdint.h>
 #include "camera_configuration.h"
 #include "display_configuration.h"
@@ -342,68 +343,71 @@ static void hardware_setup()
         nrf_gpio_pin_clear(FPGA_PROGRAM_PIN);
 
         set_power_rails(true);
-
         nrfx_systick_delay_ms(5);
 
-        uint8_t fpga_magic_word[5] = {0xFF, 0xA4, 0xC6, 0xF4, 0x8A};
-        spi_write(FPGA, fpga_magic_word, 5, FPGA_SPI_SELECT_PIN, false);
-
+        uint8_t fpga_activation_key[5] = {0xFF, 0xA4, 0xC6, 0xF4, 0x8A};
+        spi_write(FPGA, fpga_activation_key, 5, false);
         nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
-
         nrfx_systick_delay_ms(1);
 
-        uint8_t fpga_id_code[4] = {0xE0, 0x00, 0x00, 0x00};
-        uint8_t fpga_response[8];
-        spi_write(FPGA, fpga_id_code, 4, FPGA_SPI_SELECT_PIN, true);
-        spi_read(FPGA, fpga_response, 4, FPGA_SPI_SELECT_PIN, false);
-        LOG("FPGA ID: 0x%02hhX%02hhX%02hhX%02hhX", fpga_response[0], fpga_response[1], fpga_response[2], fpga_response[3]);
-
-        uint8_t fpga_prog_enable[4] = {0xC6, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_prog_enable, 4, FPGA_SPI_SELECT_PIN, false);
-
+        uint8_t fpga_enable_programming_mode[4] = {0xC6, 0x00, 0x00, 0x00};
+        spi_write(FPGA, fpga_enable_programming_mode, 4, false);
         nrfx_systick_delay_ms(1);
 
-        uint8_t fpga_erase[4] = {0x0E, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_erase, 4, FPGA_SPI_SELECT_PIN, false);
-
+        uint8_t fpga_erase_device[4] = {0x0E, 0x00, 0x00, 0x00};
+        spi_write(FPGA, fpga_erase_device, 4, false);
         nrfx_systick_delay_ms(200);
 
-        uint8_t fpga_init[4] = {0x46, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_init, 4, FPGA_SPI_SELECT_PIN, false);
+        uint8_t fpga_initialise_address[4] = {0x46, 0x00, 0x00, 0x00};
+        spi_write(FPGA, fpga_initialise_address, 4, false);
 
-        uint8_t fpga_bitstream_start[4] = {0x7A, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_bitstream_start, 4, FPGA_SPI_SELECT_PIN, true);
+        uint8_t fpga_bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
+        spi_write(FPGA, fpga_bitstream_burst, 4, true);
 
-        LOG("Writing FPGA binary");
-        for (uint32_t i = 0; i < build_fpga_rtl_bit_len; i++)
+        size_t chunk_size = 16384;
+        size_t chunks = (size_t)ceilf((float)sizeof(build_fpga_rtl_bit) /
+                                      (float)chunk_size);
+
+        uint8_t *fpga_bitstream_buffer = malloc(chunk_size);
+        if (fpga_bitstream_buffer == NULL)
         {
-            spi_write(FPGA, (uint8_t *)&build_fpga_rtl_bit[i], 1, FPGA_SPI_SELECT_PIN, true);
+            error_with_message("Couldn't allocate FPGA SPI buffer");
         }
+
+        for (size_t chunk = 0; chunk < chunks; chunk++)
+        {
+            size_t buffer_size = chunk_size;
+
+            // Buffer size will be smaller for the last payload
+            if (chunk == chunks - 1)
+            {
+                buffer_size = sizeof(build_fpga_rtl_bit) % chunk_size;
+            }
+
+            memcpy(fpga_bitstream_buffer,
+                   build_fpga_rtl_bit + (chunk * chunk_size),
+                   buffer_size);
+            spi_write(FPGA, fpga_bitstream_buffer, buffer_size, true);
+        }
+
+        free(fpga_bitstream_buffer);
+
         nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
+        nrfx_systick_delay_ms(10);
 
-        nrfx_systick_delay_ms(20);
-
-        uint8_t fpga_read_status[4] = {0x3C, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_read_status, 4, FPGA_SPI_SELECT_PIN, true);
-        spi_read(FPGA, fpga_response, 4, FPGA_SPI_SELECT_PIN, false);
-        LOG("FPGA status: 0x%02hhX%02hhX%02hhX%02hhX", fpga_response[0], fpga_response[1], fpga_response[2], fpga_response[3]);
-
-        uint8_t fpga_prog_exit[4] = {0x26, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_prog_exit, 4, FPGA_SPI_SELECT_PIN, false);
-
+        uint8_t fpga_exit_programming_mode[4] = {0x26, 0x00, 0x00, 0x00};
+        spi_write(FPGA, fpga_exit_programming_mode, 4, false);
         nrfx_systick_delay_ms(200);
 
-        uint8_t fpga_no_op[4] = {0xFF, 0xFF, 0xFF, 0xFF};
-        spi_write(FPGA, fpga_no_op, 4, FPGA_SPI_SELECT_PIN, false);
+        uint8_t fpga_chip_id[1] = {0x00};
+        spi_write(FPGA, fpga_chip_id, 1, true);
+        spi_read(FPGA, fpga_chip_id, 1, false);
 
-        LOG("Done");
-
-        // Attempt to read FPGA ID from the running application
         if (not_real_hardware == false)
         {
-            // if (id_value[0] != 0x0A)
+            if (fpga_chip_id[0] != 0xAA)
             {
-                // error_with_message("FPGA not found");
+                error_with_message("FPGA not found");
             }
         }
     }
@@ -417,7 +421,7 @@ static void hardware_setup()
             uint8_t command[2] = {display_config[i].address,
                                   display_config[i].value};
 
-            spi_write(DISPLAY, command, sizeof(command), DISPLAY_SPI_SELECT_PIN, false);
+            spi_write(DISPLAY, command, sizeof(command), false);
         }
     }
 

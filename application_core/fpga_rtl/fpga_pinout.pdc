@@ -9,10 +9,22 @@
 # Copyright © 2023 Brilliant Labs Limited
 #
 
-ldc_set_location -site {F8} [get_ports button]
-ldc_set_location -site {E9} [get_ports {led_1}]
-ldc_set_location -site {G9} [get_ports {led_2}]
+# SPI to nRF
 
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports button]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_1}]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_2}]
+ldc_set_location -site {D2} [get_ports sck]
+ldc_set_location -site {B1} [get_ports cs]
+ldc_set_location -site {D3} [get_ports cipo]
+ldc_set_location -site {C3} [get_ports copi]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports sck]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports cs]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports copi]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports cipo]
+
+# Display interface
+
+
+
+# Camera interface
+
+ldc_set_location -site {B5} [get_ports cam_clk25]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports cam_clk25]
