@@ -92,7 +92,7 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
-    init_microphone_library(L);
+    microphone_open_library(L);
 
     char *version_string = LUA_RELEASE " on Brilliant Frame";
     lua_writestring((uint8_t *)version_string, strlen(version_string));
@@ -116,8 +116,22 @@ void run_lua(void)
             break;
         }
 
-        int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
-        // int status = luaL_dostring(L, (char *)repl.buffer);
+        /////////////////////// TESTING
+
+        // int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
+
+        int16_t samples[500];
+        microphone_read(samples, sizeof(samples));
+
+        for (size_t i = 0; i < 500; i++)
+        {
+            LOG("0x%d, ", samples[i]);
+            // fflush(stdout);
+        }
+
+        ///////////////////////
+
+        int status = luaL_dostring(L, (char *)repl.buffer);
 
         repl.new_data = false;
 

@@ -33,13 +33,15 @@ static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 {
 }
 
-void init_microphone_library(lua_State *L)
+void microphone_open_library(lua_State *L)
 {
     nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
                                                        MICROPHONE_DATA_PIN);
     config.edge = NRF_PDM_EDGE_LEFTRISING;
 
-    if (nrfx_pdm_enable_check)
+    // TODO do we need to change the clock?
+
+    if (nrfx_pdm_enable_check())
     {
         return;
     }
@@ -47,7 +49,7 @@ void init_microphone_library(lua_State *L)
     check_error(nrfx_pdm_init(&config, pdm_event_handler));
 }
 
-void read_microphone_data(int16_t *buffer, uint32_t samples)
+void microphone_read(int16_t *buffer, uint32_t samples)
 {
     // TODO read multiple samples
 

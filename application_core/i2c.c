@@ -185,7 +185,7 @@ i2c_response_t i2c_write(i2c_device_t device,
 
     if (register_mask != 0xFF)
     {
-        resp = i2c_read(device_address, register_address, 0xFF);
+        resp = i2c_read(device, register_address, 0xFF);
 
         if (resp.fail)
         {

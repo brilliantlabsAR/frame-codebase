@@ -27,6 +27,6 @@
 #include <stdint.h>
 #include "lua.h"
 
-void init_microphone_library(lua_State *L);
+void microphone_open_library(lua_State *L);
 
-void read_microphone_data(int16_t *buffer, uint32_t samples);
+void microphone_read(int16_t *buffer, uint32_t samples);
