@@ -428,19 +428,18 @@ static void hardware_setup()
     // Configure the camera
     {
         // Wake up the camera
-        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+        nrf_gpio_cfg_output(CAMERA_SLEEP_PIN);
+        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+        nrfx_systick_delay_ms(1);
 
         // Check the chip ID
         i2c_response_t camera_id = i2c_read(CAMERA, 0x300A, 0xFF);
-
-        LOG("Camera ID value = 0x%x", camera_id.value);
-        LOG("Camera ID fail = %u", camera_id.fail);
 
         if (not_real_hardware == false)
         {
             if (camera_id.value != 0x97)
             {
-                // error_with_message("Camera not found");
+                error_with_message("Camera not found");
             }
         }
 
@@ -456,7 +455,7 @@ static void hardware_setup()
         }
 
         // Put the camera to sleep
-        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+        nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
     }
 
     // Turn on the network core

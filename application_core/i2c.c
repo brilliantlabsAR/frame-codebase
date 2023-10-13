@@ -33,7 +33,7 @@ extern bool not_real_hardware;
 static const nrfx_twim_t i2c = NRFX_TWIM_INSTANCE(2);
 
 static const uint8_t ACCELEROMETER_I2C_ADDRESS = 0x4C;
-static const uint8_t CAMERA_I2C_ADDRESS = 0x6C;
+static const uint8_t CAMERA_I2C_ADDRESS = 0x36;
 static const uint8_t MAGNETOMETER_I2C_ADDRESS = 0x0C;
 static const uint8_t PMIC_I2C_ADDRESS = 0x48;
 
