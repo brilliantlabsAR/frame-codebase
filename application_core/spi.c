@@ -73,7 +73,7 @@ void spi_read(spi_device_t device,
               bool hold_down_cs)
 {
     nrfx_spim_t instance;
-    uint32_t cs_pin;
+    uint32_t cs_pin = 0xFF;
 
     switch (device)
     {

@@ -30,6 +30,8 @@
 #include "microphone.h"
 #include "nrfx_log.h"
 
+#include "i2c.h"
+
 // static lua_State *globalL = NULL;
 
 static volatile struct repl_t
@@ -120,14 +122,8 @@ void run_lua(void)
 
         // int status = luaL_dostring(L, "function fib(x) if x<=1 then return x end return fib(x-1)+fib(x-2) end print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20)) print(fib(20))");
 
-        int16_t samples[500];
-        microphone_read(samples, sizeof(samples));
-
-        for (size_t i = 0; i < 500; i++)
-        {
-            LOG("0x%d, ", samples[i]);
-            // fflush(stdout);
-        }
+        i2c_response_t frame_count = i2c_read(CAMERA, 0x4A00, 0xFF);
+        LOG("Frame count: %u", frame_count.value);
 
         ///////////////////////
 
