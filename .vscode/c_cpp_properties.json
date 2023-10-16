@@ -5,16 +5,18 @@
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "includePath": [
-                ".",
-                "cmsis/CMSIS/Core/Include",
-                "lua",
-                "nrfx",
-                "nrfx/drivers/include",
-                "nrfx/hal",
-                "nrfx/mdk",
-                "nrfx/soc",
-                "picolibc",
-                "segger"
+                "fpga",
+                "libraries/cmsis/CMSIS/Core/Include",
+                "libraries/lua",
+                "libraries/nrfx",
+                "libraries/nrfx/drivers/include",
+                "libraries/nrfx/hal",
+                "libraries/nrfx/mdk",
+                "libraries/nrfx/soc",
+                "libraries/picolibc",
+                "libraries/segger",
+                "source",
+                "source/lua_libraries"
             ],
             "defines": [
                 "NRF52840_XXAA",

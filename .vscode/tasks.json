@@ -26,7 +26,7 @@
         {
             "label": "Build RTL",
             "type": "shell",
-            "command": "make application_core/fpga_application.h",
+            "command": "make fpga/fpga_application.h",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,

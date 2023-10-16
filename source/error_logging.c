@@ -22,7 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "error_helpers.h"
+#include "error_logging.h"
 #include "nrfx_log.h"
 
 static const char *lookup_error_code(uint32_t error_code)

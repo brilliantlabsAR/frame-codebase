@@ -1,6 +1,6 @@
-[submodule "cmsis"]
-	path = cmsis
+[submodule "libraries/cmsis"]
+	path = libraries/cmsis
 	url = https://github.com/ARM-software/CMSIS_5.git
-[submodule "nrfx"]
-	path = nrfx
+[submodule "libraries/nrfx"]
+	path = libraries/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git

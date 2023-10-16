@@ -27,68 +27,74 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Source files
 C_FILES += \
-	error_helpers.c \
-	lua/lapi.c \
-	lua/lauxlib.c \
-	lua/lbaselib.c \
-	lua/lcode.c \
-	lua/lcorolib.c \
-	lua/lctype.c \
-	lua/ldblib.c \
-	lua/ldebug.c \
-	lua/ldo.c \
-	lua/ldump.c \
-	lua/lfunc.c \
-	lua/lgc.c \
-	lua/linit.c \
-	lua/liolib.c \
-	lua/llex.c \
-	lua/lmathlib.c \
-	lua/lmem.c \
-	lua/loadlib.c \
-	lua/lobject.c \
-	lua/lopcodes.c \
-	lua/loslib.c \
-	lua/lparser.c \
-	lua/lstate.c \
-	lua/lstring.c \
-	lua/lstrlib.c \
-	lua/ltable.c \
-	lua/ltablib.c \
-	lua/ltm.c \
-	lua/lundump.c \
-	lua/lutf8lib.c \
-	lua/lvm.c \
-	lua/lzio.c \
-	luaport.c \
-	main.c \
-	startup.c \
-	stubs.c \
-	nrfx/drivers/src/nrfx_gpiote.c \
-	nrfx/drivers/src/nrfx_ipc.c \
-	nrfx/drivers/src/nrfx_qspi.c \
-	nrfx/drivers/src/nrfx_rtc.c \
-	nrfx/drivers/src/nrfx_spim.c \
-	nrfx/drivers/src/nrfx_systick.c \
-	nrfx/drivers/src/nrfx_twim.c \
-	nrfx/helpers/nrfx_flag32_allocator.c \
-	nrfx/mdk/system_nrf52840.c \
-	segger/SEGGER_RTT.c \
+	libraries/lua/lapi.c \
+	libraries/lua/lauxlib.c \
+	libraries/lua/lbaselib.c \
+	libraries/lua/lcode.c \
+	libraries/lua/lcorolib.c \
+	libraries/lua/lctype.c \
+	libraries/lua/ldblib.c \
+	libraries/lua/ldebug.c \
+	libraries/lua/ldo.c \
+	libraries/lua/ldump.c \
+	libraries/lua/lfunc.c \
+	libraries/lua/lgc.c \
+	libraries/lua/linit.c \
+	libraries/lua/liolib.c \
+	libraries/lua/llex.c \
+	libraries/lua/lmathlib.c \
+	libraries/lua/lmem.c \
+	libraries/lua/loadlib.c \
+	libraries/lua/lobject.c \
+	libraries/lua/lopcodes.c \
+	libraries/lua/loslib.c \
+	libraries/lua/lparser.c \
+	libraries/lua/lstate.c \
+	libraries/lua/lstring.c \
+	libraries/lua/lstrlib.c \
+	libraries/lua/ltable.c \
+	libraries/lua/ltablib.c \
+	libraries/lua/ltm.c \
+	libraries/lua/lundump.c \
+	libraries/lua/lutf8lib.c \
+	libraries/lua/lvm.c \
+	libraries/lua/lzio.c \
+	libraries/nrfx/drivers/src/nrfx_gpiote.c \
+	libraries/nrfx/drivers/src/nrfx_ipc.c \
+	libraries/nrfx/drivers/src/nrfx_pdm.c \
+	libraries/nrfx/drivers/src/nrfx_qspi.c \
+	libraries/nrfx/drivers/src/nrfx_rtc.c \
+	libraries/nrfx/drivers/src/nrfx_spim.c \
+	libraries/nrfx/drivers/src/nrfx_systick.c \
+	libraries/nrfx/drivers/src/nrfx_twim.c \
+	libraries/nrfx/helpers/nrfx_flag32_allocator.c \
+	libraries/nrfx/mdk/system_nrf52840.c \
+	libraries/segger/SEGGER_RTT.c \
+	source/error_logging.c \
+	source/i2c.c \
+	source/lua_libraries/microphone.c \
+	source/luaport.c \
+	source/main.c \
+	source/spi.c \
+	source/startup.c \
+	source/syscalls.c \
 
 FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
 
 # Header file paths
 FLAGS += \
-	-I. \
-	-Icmsis/CMSIS/Core/Include \
-	-Ilua \
-	-Inrfx \
-	-Inrfx/drivers/include \
-	-Inrfx/hal \
-	-Inrfx/mdk \
-	-Inrfx/soc \
-	-Ipicolibc \
-	-Isegger \
+	-Ifpga \
+	-Ilibraries/cmsis/CMSIS/Core/Include \
+	-Ilibraries/lua \
+	-Ilibraries/nrfx \
+	-Ilibraries/nrfx/drivers/include \
+	-Ilibraries/nrfx/hal \
+	-Ilibraries/nrfx/mdk \
+	-Ilibraries/nrfx/soc \
+	-Ilibraries/picolibc \
+	-Ilibraries/segger \
+	-Isource \
+	-Isource/lua_libraries \
 
 # Warnings
 FLAGS += \
@@ -128,14 +134,14 @@ FLAGS += \
 # Linker script paths
 FLAGS += \
 	-T linker.ld \
-	-Lpicolibc \
+	-Llibraries/picolibc \
 
 # Link required libraries
 LIBS += \
 	-lc \
 	-lgcc \
 
-build/frame.hex: $(C_FILES) | fpga_application.h
+build/frame.hex: $(C_FILES) | fpga/fpga_application.h
 
 	@mkdir -p build
 	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $^ $(LIBS)
@@ -143,29 +149,32 @@ build/frame.hex: $(C_FILES) | fpga_application.h
 	@arm-none-eabi-size build/frame.elf
 
 
-fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 	
 	@mkdir -p build
 
-	@cd fpga_rtl && \
-	    iverilog -Wall \
-	             -g2012 \
-	             -o /dev/null \
-	             -i top.sv
+	@cd fpga && \
+	 iverilog -Wall \
+	          -g2012 \
+	          -o /dev/null \
+	          -i top.sv
 
 	@yosys -p "synth_nexus \
-	       -json build/fpga_rtl.json" \
-	       fpga_rtl/top.sv
+	       -json build/fpga_application.json" \
+	       fpga/top.sv
 
 	@nextpnr-nexus --device LIFCL-17-7UWG72 \
-	               --pdc fpga_rtl/fpga_pinout.pdc \
-	               --json build/fpga_rtl.json \
-	               --fasm build/fpga_rtl.fasm
+	               --pdc fpga/fpga_pinout.pdc \
+	               --json build/fpga_application.json \
+	               --fasm build/fpga_application.fasm
 
-	@prjoxide pack build/fpga_rtl.fasm build/fpga_rtl.bit
+	@prjoxide pack build/fpga_application.fasm build/fpga_application.bit
 	
-	@xxd -i build/fpga_rtl.bit build/fpga_binfile_ram.h
-	@sed '1s/^/const /' build/fpga_binfile_ram.h > $@
+	@xxd -name fpga_application \
+	     -include build/fpga_application.bit \
+		 build/fpga_application_temp.h
+
+	@sed '1s/^/const /' build/fpga_application_temp.h > $@
 
 
 release:

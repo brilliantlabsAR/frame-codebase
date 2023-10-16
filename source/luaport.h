@@ -24,22 +24,29 @@
 
 #pragma once
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 #include <stdio.h>
-#include "SEGGER_RTT.h"
+#include "nrfx_log.h"
 
-/**
- * @brief Logging macros.
- */
+#define lua_writestring(s, l) \
+    {                         \
+        printf("%.*s", l, s); \
+        fflush(stdout);       \
+    }
 
-#define LOG(format, ...) printf("\x1B[92m" format "\r\n", ##__VA_ARGS__)
+#define lua_writeline() printf("\n")
 
-#define NRFX_LOG_ERROR(format, ...)
-#define NRFX_LOG_WARNING(format, ...)
-#define NRFX_LOG_INFO(format, ...)
-#define NRFX_LOG_DEBUG(format, ...)
+#define lua_writestringerror(s, p)                  \
+    {                                               \
+        char writestringerror_buffer[250];          \
+        sprintf(writestringerror_buffer, s, p);     \
+        printf("%.*s",                              \
+               strlen(writestringerror_buffer),     \
+               (uint8_t *)writestringerror_buffer); \
+    }
 
-#define NRFX_LOG_HEXDUMP_ERROR(p_memory, length)
-#define NRFX_LOG_HEXDUMP_WARNING(p_memory, length)
-#define NRFX_LOG_HEXDUMP_INFO(p_memory, length)
-#define NRFX_LOG_HEXDUMP_DEBUG(p_memory, length)
-#define NRFX_LOG_ERROR_STRING_GET(error_code)
+bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
+
+void run_lua(void);

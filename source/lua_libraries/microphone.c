@@ -22,31 +22,38 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
-
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "nrfx_log.h"
+#include "error_logging.h"
+#include "lua.h"
+#include "nrfx_config.h"
+#include "nrfx_pdm.h"
+#include "pinout.h"
 
-#define lua_writestring(s, l)         \
-    {                                 \
-        printf("\x1B[95m%.*s", l, s); \
-        fflush(stdout);               \
+static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
+{
+}
+
+void microphone_open_library(lua_State *L)
+{
+    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
+                                                       MICROPHONE_DATA_PIN);
+    config.edge = NRF_PDM_EDGE_LEFTRISING;
+
+    // TODO do we need to change the clock?
+
+    if (nrfx_pdm_enable_check())
+    {
+        return;
     }
 
-#define lua_writeline() printf("\n")
+    check_error(nrfx_pdm_init(&config, pdm_event_handler));
+}
 
-#define lua_writestringerror(s, p)                  \
-    {                                               \
-        char writestringerror_buffer[250];          \
-        sprintf(writestringerror_buffer, s, p);     \
-        printf("\x1B[95m%.*s",                      \
-               strlen(writestringerror_buffer),     \
-               (uint8_t *)writestringerror_buffer); \
-    }
+void microphone_read(int16_t *buffer, uint32_t samples)
+{
+    // TODO read multiple samples
 
-bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
+    check_error(nrfx_pdm_buffer_set(buffer, samples));
 
-void run_lua(void);
+    check_error(nrfx_pdm_start());
+}

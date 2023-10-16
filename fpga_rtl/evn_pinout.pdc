@@ -1,9 +1,0 @@
-# TODO: Delete this file once it's no longer possible to use the devkit
-
-ldc_set_location -site {G14} [get_ports button]
-ldc_set_location -site {E17} [get_ports {led_1}]
-ldc_set_location -site {F13} [get_ports {led_2}]
-
-ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports button]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports {led_1}]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports {led_2}]

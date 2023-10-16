@@ -24,13 +24,14 @@
 
 #pragma once
 
-#include "error_helpers.h"
+#include "error_logging.h"
 #include "nrfx.h"
 #include <soc/nrfx_atomic.h>
 #include <soc/nrfx_coredep.h>
 
 #define nrfx_gpiote_irq_handler GPIOTE_IRQHandler
 #define nrfx_ipc_irq_handler IPC_IRQHandler
+#define nrfx_pdm_irq_handler PDM0_IRQHandler
 #define nrfx_rtc_0_irq_handler RTC0_IRQHandler
 
 #define NRFX_ASSERT(expression)                \

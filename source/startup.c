@@ -23,7 +23,7 @@
  */
 
 #include <stdint.h>
-#include "error_helpers.h"
+#include "error_logging.h"
 
 extern uint32_t _stack_top;
 extern uint32_t _sidata;

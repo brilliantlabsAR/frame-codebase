@@ -23,14 +23,28 @@
  */
 
 #pragma once
-#include <stdint.h>
 
-typedef struct camera_config_t
-{
-    uint16_t address;
-    uint8_t value;
-} camera_config_t;
+#define NRFX_CONFIG_H__
+#include "templates/nrfx_config_common.h"
 
-static const camera_config_t camera_config[] = {
-    {0x0000, 0x00},
-};
+#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
+#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define NRFX_GPIOTE_ENABLED 1
+
+#define NRFX_PDM_ENABLED 1
+
+#define NRFX_RTC_ENABLED 1
+#define NRFX_RTC0_ENABLED 1
+
+#define NRFX_SAADC_ENABLED 1
+
+#define NRFX_SPIM_ENABLED 1
+#define NRFX_SPIM1_ENABLED 1
+#define NRFX_SPIM2_ENABLED 1
+
+#define NRFX_SYSTICK_ENABLED 1
+
+#define NRFX_TWIM_ENABLED 1
+#define NRFX_TWIM0_ENABLED 1
+
+#include "templates/nrfx_config_nrf52840.h"
