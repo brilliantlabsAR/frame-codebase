@@ -414,6 +414,8 @@ static void hardware_setup()
 
     // Initialize the SPI and configure the display
     {
+        nrfx_systick_delay_ms(250); // TODO do we need this?
+
         for (size_t i = 0;
              i < sizeof(display_config) / sizeof(display_config_t);
              i++)
