@@ -1,5 +1,5 @@
 #
-# This file is a part https://github.com/brilliantlabsAR/frame-micropython
+# This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
 #
 # Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
 #              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
@@ -25,369 +25,156 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M) # := forces evaluation once
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
-# Micropython related paths for later use
-MP_GEN_FOLDER = network_core/micropython_generated/genhdr
-MP_PY_FOLDER = network_core/micropython/py
-
 # Source files
-SHARED_C_FILES += \
-	error_helpers.c \
-	interprocessor_messaging.c \
-	nrfx/drivers/src/nrfx_ipc.c \
-	nrfx/helpers/nrfx_flag32_allocator.c \
-
-APPLICATION_CORE_C_FILES += \
-	application_core/main.c \
-	nrfx/drivers/src/nrfx_gpiote.c \
-	nrfx/drivers/src/nrfx_qspi.c \
-	nrfx/drivers/src/nrfx_systick.c \
-	nrfx/mdk/gcc_startup_nrf5340_application.S \
-	nrfx/mdk/system_nrf5340_application.c \
-
-NETWORK_CORE_C_FILES += \
-	network_core/main.c \
-	network_core/micropython_modules/device.c \
-	network_core/micropython/py/argcheck.c \
-	network_core/micropython/py/asmarm.c \
-	network_core/micropython/py/asmbase.c \
-	network_core/micropython/py/asmthumb.c \
-	network_core/micropython/py/asmx64.c \
-	network_core/micropython/py/asmx86.c \
-	network_core/micropython/py/asmxtensa.c \
-	network_core/micropython/py/bc.c \
-	network_core/micropython/py/binary.c \
-	network_core/micropython/py/builtinevex.c \
-	network_core/micropython/py/builtinhelp.c \
-	network_core/micropython/py/builtinimport.c \
-	network_core/micropython/py/compile.c \
-	network_core/micropython/py/emitbc.c \
-	network_core/micropython/py/emitcommon.c \
-	network_core/micropython/py/emitglue.c \
-	network_core/micropython/py/emitinlinethumb.c \
-	network_core/micropython/py/emitinlinextensa.c \
-	network_core/micropython/py/emitnarm.c \
-	network_core/micropython/py/emitnthumb.c \
-	network_core/micropython/py/emitnx64.c \
-	network_core/micropython/py/emitnx86.c \
-	network_core/micropython/py/emitnxtensa.c \
-	network_core/micropython/py/emitnxtensawin.c \
-	network_core/micropython/py/formatfloat.c \
-	network_core/micropython/py/frozenmod.c \
-	network_core/micropython/py/lexer.c \
-	network_core/micropython/py/malloc.c \
-	network_core/micropython/py/map.c \
-	network_core/micropython/py/modarray.c \
-	network_core/micropython/py/modbuiltins.c \
-	network_core/micropython/py/modcmath.c \
-	network_core/micropython/py/modcollections.c \
-	network_core/micropython/py/moderrno.c \
-	network_core/micropython/py/modgc.c \
-	network_core/micropython/py/modio.c \
-	network_core/micropython/py/modmath.c \
-	network_core/micropython/py/modmicropython.c \
-	network_core/micropython/py/modstruct.c \
-	network_core/micropython/py/modsys.c \
-	network_core/micropython/py/modthread.c \
-	network_core/micropython/py/mpprint.c \
-	network_core/micropython/py/mpstate.c \
-	network_core/micropython/py/mpz.c \
-	network_core/micropython/py/nativeglue.c \
-	network_core/micropython/py/nlr.c \
-	network_core/micropython/py/nlraarch64.c \
-	network_core/micropython/py/nlrmips.c \
-	network_core/micropython/py/nlrpowerpc.c \
-	network_core/micropython/py/nlrsetjmp.c \
-	network_core/micropython/py/nlrthumb.c \
-	network_core/micropython/py/nlrx64.c \
-	network_core/micropython/py/nlrx86.c \
-	network_core/micropython/py/nlrxtensa.c \
-	network_core/micropython/py/obj.c \
-	network_core/micropython/py/objarray.c \
-	network_core/micropython/py/objattrtuple.c \
-	network_core/micropython/py/objbool.c \
-	network_core/micropython/py/objboundmeth.c \
-	network_core/micropython/py/objcell.c \
-	network_core/micropython/py/objclosure.c \
-	network_core/micropython/py/objcomplex.c \
-	network_core/micropython/py/objdeque.c \
-	network_core/micropython/py/objdict.c \
-	network_core/micropython/py/objenumerate.c \
-	network_core/micropython/py/objexcept.c \
-	network_core/micropython/py/objfilter.c \
-	network_core/micropython/py/objfloat.c \
-	network_core/micropython/py/objfun.c \
-	network_core/micropython/py/objgenerator.c \
-	network_core/micropython/py/objgetitemiter.c \
-	network_core/micropython/py/objint_longlong.c \
-	network_core/micropython/py/objint_mpz.c \
-	network_core/micropython/py/objint.c \
-	network_core/micropython/py/objlist.c \
-	network_core/micropython/py/objmap.c \
-	network_core/micropython/py/objmodule.c \
-	network_core/micropython/py/objnamedtuple.c \
-	network_core/micropython/py/objnone.c \
-	network_core/micropython/py/objobject.c \
-	network_core/micropython/py/objpolyiter.c \
-	network_core/micropython/py/objproperty.c \
-	network_core/micropython/py/objrange.c \
-	network_core/micropython/py/objreversed.c \
-	network_core/micropython/py/objset.c \
-	network_core/micropython/py/objsingleton.c \
-	network_core/micropython/py/objslice.c \
-	network_core/micropython/py/objstr.c \
-	network_core/micropython/py/objstringio.c \
-	network_core/micropython/py/objstrunicode.c \
-	network_core/micropython/py/objtuple.c \
-	network_core/micropython/py/objtype.c \
-	network_core/micropython/py/objzip.c \
-	network_core/micropython/py/opmethods.c \
-	network_core/micropython/py/pairheap.c \
-	network_core/micropython/py/parse.c \
-	network_core/micropython/py/parsenum.c \
-	network_core/micropython/py/parsenumbase.c \
-	network_core/micropython/py/persistentcode.c \
-	network_core/micropython/py/profile.c \
-	network_core/micropython/py/pystack.c \
-	network_core/micropython/py/qstr.c \
-	network_core/micropython/py/reader.c \
-	network_core/micropython/py/repl.c \
-	network_core/micropython/py/ringbuf.c \
-	network_core/micropython/py/runtime_utils.c \
-	network_core/micropython/py/runtime.c \
-	network_core/micropython/py/scheduler.c \
-	network_core/micropython/py/scope.c \
-	network_core/micropython/py/sequence.c \
-	network_core/micropython/py/showbc.c \
-	network_core/micropython/py/smallint.c \
-	network_core/micropython/py/stackctrl.c \
-	network_core/micropython/py/stream.c \
-	network_core/micropython/py/unicode.c \
-	network_core/micropython/py/vstr.c \
-	network_core/micropython/py/warning.c \
-	network_core/micropython/shared/readline/readline.c \
-	network_core/micropython/shared/runtime/gchelper_generic.c \
-	network_core/micropython/shared/runtime/interrupt_char.c \
-	network_core/micropython/shared/runtime/pyexec.c \
-	network_core/micropython/shared/runtime/stdout_helpers.c \
-	network_core/mphalport.c \
-	nrfx/drivers/src/nrfx_rtc.c \
-	nrfx/drivers/src/nrfx_spim.c \
-	nrfx/drivers/src/nrfx_twim.c \
-	nrfx/mdk/gcc_startup_nrf5340_network.S \
-	nrfx/mdk/system_nrf5340_network.c \
-	segger/SEGGER_RTT_printf.c \
-	segger/SEGGER_RTT.c \
-	
-FROZEN_PYTHON_FILES += \
-	network_core/micropython_modules/test.py \
+C_FILES += \
+	libraries/lua/lapi.c \
+	libraries/lua/lauxlib.c \
+	libraries/lua/lbaselib.c \
+	libraries/lua/lcode.c \
+	libraries/lua/lcorolib.c \
+	libraries/lua/lctype.c \
+	libraries/lua/ldblib.c \
+	libraries/lua/ldebug.c \
+	libraries/lua/ldo.c \
+	libraries/lua/ldump.c \
+	libraries/lua/lfunc.c \
+	libraries/lua/lgc.c \
+	libraries/lua/linit.c \
+	libraries/lua/liolib.c \
+	libraries/lua/llex.c \
+	libraries/lua/lmathlib.c \
+	libraries/lua/lmem.c \
+	libraries/lua/loadlib.c \
+	libraries/lua/lobject.c \
+	libraries/lua/lopcodes.c \
+	libraries/lua/loslib.c \
+	libraries/lua/lparser.c \
+	libraries/lua/lstate.c \
+	libraries/lua/lstring.c \
+	libraries/lua/lstrlib.c \
+	libraries/lua/ltable.c \
+	libraries/lua/ltablib.c \
+	libraries/lua/ltm.c \
+	libraries/lua/lundump.c \
+	libraries/lua/lutf8lib.c \
+	libraries/lua/lvm.c \
+	libraries/lua/lzio.c \
+	libraries/nrfx/drivers/src/nrfx_gpiote.c \
+	libraries/nrfx/drivers/src/nrfx_ipc.c \
+	libraries/nrfx/drivers/src/nrfx_pdm.c \
+	libraries/nrfx/drivers/src/nrfx_qspi.c \
+	libraries/nrfx/drivers/src/nrfx_rtc.c \
+	libraries/nrfx/drivers/src/nrfx_spim.c \
+	libraries/nrfx/drivers/src/nrfx_systick.c \
+	libraries/nrfx/drivers/src/nrfx_twim.c \
+	libraries/nrfx/helpers/nrfx_flag32_allocator.c \
+	libraries/nrfx/mdk/system_nrf52840.c \
+	libraries/segger/SEGGER_RTT.c \
+	source/error_logging.c \
+	source/i2c.c \
+	source/lua_libraries/microphone.c \
+	source/luaport.c \
+	source/main.c \
+	source/spi.c \
+	source/startup.c \
+	source/syscalls.c \
 
 FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
 
 # Header file paths
-SHARED_FLAGS += \
-	-I. \
-	-Icmsis/CMSIS/Core/Include \
-	-Inrfx \
-	-Inrfx/drivers/include \
-	-Inrfx/hal \
-	-Inrfx/mdk \
-	-Inrfx/soc \
-	-Isegger \
-
-APPLICATION_CORE_FLAGS += \
-	-Iapplication_core \
-
-NETWORK_CORE_FLAGS += \
-	-Inetwork_core \
-	-Inetwork_core/micropython \
-	-Inetwork_core/micropython_generated \
-	-Inetwork_core/micropython_modules \
+FLAGS += \
+	-Ifpga \
+	-Ilibraries/cmsis/CMSIS/Core/Include \
+	-Ilibraries/lua \
+	-Ilibraries/nrfx \
+	-Ilibraries/nrfx/drivers/include \
+	-Ilibraries/nrfx/hal \
+	-Ilibraries/nrfx/mdk \
+	-Ilibraries/nrfx/soc \
+	-Ilibraries/picolibc \
+	-Ilibraries/segger \
+	-Isource \
+	-Isource/lua_libraries \
 
 # Warnings
-SHARED_FLAGS += \
+FLAGS += \
 	-Wall \
-	-Werror \
 	-Wdouble-promotion  \
 	-Wfloat-conversion \
 
 # Build options and optimizations
-SHARED_FLAGS += \
+FLAGS += \
 	-falign-functions=16 \
 	-fdata-sections  \
 	-ffunction-sections  \
-	-flto \
 	-fmax-errors=1 \
-	-fno-common \
 	-fno-delete-null-pointer-checks \
 	-fno-strict-aliasing \
 	-fshort-enums \
-	-g3 \
+	-g \
 	-mabi=aapcs \
-	-mcmse \
+	-mcpu=cortex-m4 \
+	-mfloat-abi=hard \
 	-mthumb \
-	-Os \
+	-nostdlib \
+	-O2 \
 	-std=gnu17 \
 
-APPLICATION_CORE_FLAGS += \
-	-mcpu=cortex-m33 \
-	-mfloat-abi=hard \
-	-mfpu=fpv4-sp-d16 \
-
-NETWORK_CORE_FLAGS += \
-	-mcpu=cortex-m33+nodsp \
-	-mfloat-abi=soft \
-
 # Preprocessor defines
-SHARED_FLAGS += \
+FLAGS += \
+	-DNRF52840_XXAA \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
 	-DNDEBUG \
 
-APPLICATION_CORE_FLAGS += \
-	-DNRF5340_XXAA_APPLICATION \
-
-NETWORK_CORE_FLAGS += \
-	-DNRF5340_XXAA_NETWORK \
-	-D__STACK_SIZE=8192 \
-
 # Linker options
-SHARED_FLAGS += \
-	--specs=nano.specs \
+FLAGS += \
 	-Wl,--gc-sections \
 
 # Linker script paths
-APPLICATION_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_application.ld
-
-NETWORK_CORE_FLAGS += -Lnrfx/mdk -T nrfx/mdk/nrf5340_xxaa_network.ld
+FLAGS += \
+	-T linker.ld \
+	-Llibraries/picolibc \
 
 # Link required libraries
-SHARED_LIBS += \
-	-lm \
+LIBS += \
 	-lc \
-	-lnosys \
-	-lgcc
+	-lgcc \
 
-
-all: build/application_core.elf \
-     build/network_core.elf
-
-	@arm-none-eabi-objcopy -O ihex build/application_core.elf build/application_core.hex
-	@arm-none-eabi-objcopy -O ihex build/network_core.elf build/network_core.hex
-	@arm-none-eabi-size $^
-
-
-build/application_core.elf: $(SHARED_C_FILES) \
-                            $(APPLICATION_CORE_C_FILES) \
-                            | application_core/fpga_application.h
+build/frame.hex: $(C_FILES) | fpga/fpga_application.h
 
 	@mkdir -p build
-	@arm-none-eabi-gcc $(SHARED_FLAGS) $(APPLICATION_CORE_FLAGS) -o $@ $^ $(SHARED_LIBS)
+	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $^ $(LIBS)
+	@arm-none-eabi-objcopy -O ihex build/frame.elf $@
+	@arm-none-eabi-size build/frame.elf
 
 
-build/network_core.elf: $(SHARED_C_FILES) \
-                        $(NETWORK_CORE_C_FILES) \
-                        $(MP_GEN_FOLDER)/frozen_content.c
-
-	@mkdir -p build
-	@mkdir -p build/network_core_objects
-
-	@arm-none-eabi-gcc \
-	    $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) -O3 \
-	    -c network_core/micropython/py/gc.c \
-	       network_core/micropython/py/vm.c \
-
-	@mv gc.o vm.o build/network_core_objects
-
-	@arm-none-eabi-gcc \
-	    $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
-	    -o $@ \
-	    build/network_core_objects/gc.o \
-	    build/network_core_objects/vm.o \
-	    $^ $(SHARED_LIBS)
-
-
-$(MP_GEN_FOLDER)/frozen_content.c: $(FROZEN_PYTHON_FILES) \
-                                   | micropython_generated_headers
-
-	@python3 network_core/micropython/tools/makemanifest.py \
-		-o "$@" \
-		-b "$(MP_GEN_FOLDER)/.." \
-		-v "MPY_DIR=network_core/micropython" \
-		-v "PORT_DIR=network_core" \
-		network_core/micropython_modules/frozen_manifest.py
-		
-
-micropython_generated_headers: $(SHARED_C_FILES) \
-                               $(NETWORK_CORE_C_FILES)
-
-	@mkdir -p $(MP_GEN_FOLDER)
-	
-	@python3 $(MP_PY_FOLDER)/makeversionhdr.py $(MP_GEN_FOLDER)/mpversion.h
-
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    pp arm-none-eabi-gcc -E \
-	    output $(MP_GEN_FOLDER)/qstr.i.last \
-	    cflags -DNO_QSTR $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) \
-	    sources $(NETWORK_CORE_C_FILES) \
-	    dependencies $(MP_PY_FOLDER)/mpconfig.h network_core/mpconfigport.h \
-	    changed_sources $(NETWORK_CORE_C_FILES)
-
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    split root_pointer $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/root_pointer _
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    cat root_pointer _ $(MP_GEN_FOLDER)/root_pointer $(MP_GEN_FOLDER)/root_pointers.collected
-	@python3 $(MP_PY_FOLDER)/make_root_pointers.py \
-	    $(MP_GEN_FOLDER)/root_pointers.collected > $(MP_GEN_FOLDER)/root_pointers.h
-
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    split module $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/module _
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    cat module _ $(MP_GEN_FOLDER)/module $(MP_GEN_FOLDER)/moduledefs.collected
-	@python3 $(MP_PY_FOLDER)/makemoduledefs.py \
-	    $(MP_GEN_FOLDER)/moduledefs.collected > $(MP_GEN_FOLDER)/moduledefs.h
-
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    split compress $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/compress _
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    cat compress _ $(MP_GEN_FOLDER)/compress $(MP_GEN_FOLDER)/compressed.collected
-	@python3 $(MP_PY_FOLDER)/makecompresseddata.py \
-	    $(MP_GEN_FOLDER)/compressed.collected > $(MP_GEN_FOLDER)/compressed.data.h
-
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    split qstr $(MP_GEN_FOLDER)/qstr.i.last $(MP_GEN_FOLDER)/qstr _
-	@python3 $(MP_PY_FOLDER)/makeqstrdefs.py \
-	    cat qstr _ $(MP_GEN_FOLDER)/qstr $(MP_GEN_FOLDER)/qstrdefs.collected.h
-
-	@cat $(MP_PY_FOLDER)/qstrdefs.h $(MP_GEN_FOLDER)/qstrdefs.collected.h \
-	    | sed 's/^Q(.*)/"&"/' | arm-none-eabi-gcc -E $(SHARED_FLAGS) $(NETWORK_CORE_FLAGS) - \
-	    | sed 's/^\"\(Q(.*)\)\"/\1/' > $(MP_GEN_FOLDER)/qstrdefs.preprocessed.h
-	@python3 $(MP_PY_FOLDER)/makeqstrdata.py \
-	    $(MP_GEN_FOLDER)/qstrdefs.preprocessed.h > $(MP_GEN_FOLDER)/qstrdefs.generated.h
-
-
-application_core/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 	
 	@mkdir -p build
 
-	@cd application_core/fpga_rtl && \
-	    iverilog -Wall \
-	             -g2012 \
-	             -o /dev/null \
-	             -i top.sv
+	@cd fpga && \
+	 iverilog -Wall \
+	          -g2012 \
+	          -o /dev/null \
+	          -i top.sv
 
 	@yosys -p "synth_nexus \
-	       -json build/fpga_rtl.json" \
-	       application_core/fpga_rtl/top.sv
+	       -json build/fpga_application.json" \
+	       fpga/top.sv
 
 	@nextpnr-nexus --device LIFCL-17-7UWG72 \
-	               --pdc application_core/fpga_rtl/fpga_pinout.pdc \
-	               --json build/fpga_rtl.json \
-	               --fasm build/fpga_rtl.fasm
+	               --pdc fpga/fpga_pinout.pdc \
+	               --json build/fpga_application.json \
+	               --fasm build/fpga_application.fasm
 
-	@prjoxide pack build/fpga_rtl.fasm build/fpga_rtl.bit
+	@prjoxide pack build/fpga_application.fasm build/fpga_application.bit
 	
-	@xxd -i build/fpga_rtl.bit build/fpga_binfile_ram.h
-	@sed '1s/^/const /' build/fpga_binfile_ram.h > $@
+	@xxd -name fpga_application \
+	     -include build/fpga_application.bit \
+		 build/fpga_application_temp.h
+
+	@sed '1s/^/const /' build/fpga_application_temp.h > $@
 
 
 release:
@@ -395,11 +182,9 @@ release:
 
 clean:
 	rm -rf build/
-	rm -rf network_core/micropython_generated/
 
 flash: all
-	nrfjprog -q --coprocessor CP_APPLICATION --program build/application_core.hex --sectorerase
-	nrfjprog -q --coprocessor CP_NETWORK --program build/network_core.hex --sectorerase
+	nrfjprog -q --program build/frame.hex --sectorerase
 	nrfjprog --reset
 
 recover:

@@ -4,49 +4,16 @@
     "configurations": [
         {
             "cwd": "${workspaceFolder}",
-            "executable": "build/application_core.elf",
-            "name": "Application Core L-Link",
-            "request": "launch",
-            "type": "cortex-debug",
-            "device": "nRF5340_XXAA_application",
-            "showDevDebugOutput": "none",
-            "servertype": "jlink",
-            "svdFile": "nrfx/mdk/nrf5340_application.svd",
-            "preLaunchTask": "Pre-launch Delay",
-            "presentation": {
-                "hidden": true,
-                "group": "",
-                "order": 1
-            },
-            "internalConsoleOptions": "neverOpen"
-        },
-        {
-            "cwd": "${workspaceFolder}",
-            "executable": "build/network_core.elf",
-            "name": "Network Core L-Link",
-            "request": "launch",
-            "type": "cortex-debug",
-            "device": "nRF5340_XXAA_network",
-            "showDevDebugOutput": "none",
-            "servertype": "jlink",
-            "svdFile": "nrfx/mdk/nrf5340_network.svd",
-            "presentation": {
-                "hidden": true,
-                "group": "",
-                "order": 1
-            },
-            "internalConsoleOptions": "neverOpen"
-        }
-    ],
-    "compounds": [
-        {
+            "executable": "build/frame.elf",
             "name": "J-Link",
-            "configurations": [
-                "Application Core L-Link",
-                "Network Core L-Link"
-            ],
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "nRF52840_XXAA",
+            "showDevDebugOutput": "none",
+            "servertype": "jlink",
+            "svdFile": "nrfx/mdk/nrf52840.svd",
             "preLaunchTask": "Build Firmware",
-            "stopAll": true
+            "internalConsoleOptions": "neverOpen"
         }
     ]
 }

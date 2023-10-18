@@ -1,0 +1,18 @@
+#
+# This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+#
+# Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+#              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright © 2023 Brilliant Labs Limited
+#
+
+ldc_set_location -site {F8} [get_ports button]
+ldc_set_location -site {E9} [get_ports {led_1}]
+ldc_set_location -site {G9} [get_ports {led_2}]
+
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports button]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_1}]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_2}]

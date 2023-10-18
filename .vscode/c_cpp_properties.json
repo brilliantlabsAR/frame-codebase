@@ -1,27 +1,25 @@
 {
     "configurations": [
         {
-            "name": "monocle-micropython",
+            "name": "frame-codebase",
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "includePath": [
-                ".",
-                "application_core",
-                "cmsis/CMSIS/Core/Include",
-                "network_core",
-                "network_core/micropython_generated",
-                "network_core/micropython_modules",
-                "network_core/micropython",
-                "nrfx",
-                "nrfx/drivers/include",
-                "nrfx/hal",
-                "nrfx/mdk",
-                "nrfx/soc",
-                "segger",
+                "fpga",
+                "libraries/cmsis/CMSIS/Core/Include",
+                "libraries/lua",
+                "libraries/nrfx",
+                "libraries/nrfx/drivers/include",
+                "libraries/nrfx/hal",
+                "libraries/nrfx/mdk",
+                "libraries/nrfx/soc",
+                "libraries/picolibc",
+                "libraries/segger",
+                "source",
+                "source/lua_libraries"
             ],
             "defines": [
-                // "NRF5340_XXAA_APPLICATION",
-                "NRF5340_XXAA_NETWORK",
+                "NRF52840_XXAA",
                 "GIT_COMMIT=\"abcdefg\"",
                 "BUILD_VERSION=\"vYY.DDD.HHMM\""
             ]
