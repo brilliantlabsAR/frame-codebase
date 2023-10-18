@@ -1,6 +1,10 @@
 # Ignore build files
 build/
 
+# Ignore simulation files
+sim/
+abc.history
+
 # Ignore VSCode user settings
 .vscode/settings.json
 

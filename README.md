@@ -4,13 +4,13 @@ Welcome to the complete codebase of the Frame hardware. For regular usage, check
 
 ## System architecture
 
-The codebase is split into two sections. The **nRF53 Firmware**, and the **FPGA RTL**. 
+The codebase is split into two sections. The **nRF52 Firmware**, and the **FPGA RTL**. 
 
-The nRF53 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
+The nRF52 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
 
 ![Frame system architecture diagram](docs/frame-system-architecture.drawio.png)
 
-## Getting started with nRF53 firmware development
+## Getting started with nRF52 firmware development
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
 
@@ -32,7 +32,7 @@ The nRF53 is designed to handle the overall system operation. It runs Lua, as we
     make
     ```
 
-1. Before flashing an nRF5340, you may need to unlock the chip first.
+1. Before flashing an nRF52840, you may need to unlock the chip first.
 
     ```sh
     nrfjprog --recover
@@ -52,7 +52,7 @@ The nRF53 is designed to handle the overall system operation. It runs Lua, as we
 
     Try running the `Build Firmware` task. The project should build normally.
 
-    You many need to unlock the device by using the `Erase & Unlock nRF53` task before programming or debugging.
+    You many need to unlock the device by using the `Erase & Unlock nRF52` task before programming or debugging.
 
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
 
@@ -81,5 +81,5 @@ For quickly getting up and running, the accelerators which run on the FPGA are a
 1. You should now be able to rebuild the project by calling `make`:
 
     ```sh
-    make application_core/fpga_application.h
+    make fpga/fpga_application.h
     ```

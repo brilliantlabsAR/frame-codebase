@@ -9,16 +9,11 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-`include "modules/camera/camera.sv"
+`timescale 10ns / 10ns
+
 `include "modules/graphics/display.sv"
-`include "modules/spi/spi.sv"
 
-module top (
-    input logic spi_clk,
-    output logic spi_data_out,
-    input logic spi_data_in,
-    input logic spi_select,
-
+module display_tb (
     output logic display_clock,
     output logic display_hsync,
     output logic display_vsync,
@@ -31,28 +26,23 @@ module top (
     output logic display_cr2,
     output logic display_cb0,
     output logic display_cb1,
-    output logic display_cb2,
-
-    output logic camera_clock
+    output logic display_cb2
 );
 
-logic clock;
+logic clock = 0;
+initial begin : clock_25MHz
+    forever #2 clock <= ~clock;
+end
 
-OSCA #(
-    .HF_CLK_DIV("8"), // 50 MHz
-    .HF_OSC_EN("ENABLED")
-    ) osc (
-    .HFOUTEN(1'b1),
-    .HFCLKOUT(clock)
-);
+initial begin
+    $dumpfile("sim/display_tb.fst");
+    $dumpvars(0, display_tb);
+end
 
-spi spi (
-    .clk(clock),
-    .sck(spi_clk),
-    .cs(spi_select),
-    .cipo(spi_data_out),
-    .copi(spi_data_in)
-);
+initial begin
+    #10000000
+    $finish;
+end
 
 display display (
     .clock_in(clock),
@@ -70,9 +60,5 @@ display display (
     .cb1(display_cb1),
     .cb2(display_cb2)
 );
-
-always_ff @(posedge clock) begin
-    camera_clock <= ~camera_clock; // 25MHz
-end
 
 endmodule

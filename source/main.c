@@ -310,8 +310,7 @@ static void hardware_setup()
         uint8_t fpga_bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
         spi_write(FPGA, fpga_bitstream_burst, 4, true);
 
-        size_t chunk_size = 1152;
-        // size_t chunk_size = 16384;
+        size_t chunk_size = 16384;
         size_t chunks = (size_t)ceilf((float)sizeof(fpga_application) /
                                       (float)chunk_size);
 
@@ -320,8 +319,6 @@ static void hardware_setup()
         {
             error_with_message("Couldn't allocate FPGA SPI buffer");
         }
-
-        uint32_t rtc_start = nrfx_rtc_counter_get(&rtc);
 
         for (size_t chunk = 0; chunk < chunks; chunk++)
         {
@@ -338,11 +335,6 @@ static void hardware_setup()
                    buffer_size);
             spi_write(FPGA, fpga_bitstream_buffer, buffer_size, true);
         }
-
-        uint32_t rtc_end = nrfx_rtc_counter_get(&rtc);
-        uint32_t rtc_diff = rtc_end - rtc_start;
-        uint32_t speed = sizeof(fpga_application) * 8 / rtc_diff;
-        LOG("FPGA download took: %lums (%lukbps)", rtc_diff, speed);
 
         free(fpga_bitstream_buffer);
 

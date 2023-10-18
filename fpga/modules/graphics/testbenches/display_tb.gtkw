@@ -1,0 +1,74 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Wed Oct 18 19:38:28 2023
+[*]
+[dumpfile] "sim/display_tb.fst"
+[dumpfile_mtime] "Wed Oct 18 19:38:21 2023"
+[dumpfile_size] 37766
+[savefile] "fpga/modules/graphics/testbenches/display_tb.gtkw"
+[timestart] 14222000
+[size] 1424 852
+[pos] 10 38
+*-18.000000 15032180 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] display_tb.
+[sst_width] 253
+[signals_width] 312
+[sst_expanded] 1
+[sst_vpaned_height] 301
+@28
+display_tb.clock
+@200
+-
+@28
+display_tb.display_clock
+@29
+display_tb.display_hsync
+@28
+display_tb.display_vsync
+@200
+-
+@28
+display_tb.display_y0
+display_tb.display_y1
+display_tb.display_y2
+display_tb.display_y3
+display_tb.display_cb0
+display_tb.display_cb1
+display_tb.display_cb2
+display_tb.display_cr0
+display_tb.display_cr1
+display_tb.display_cr2
+@200
+-
+@24
+display_tb.display.hsync_counter[15:0]
+[color] 4
+display_tb.display.vsync_counter[15:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -79,7 +79,7 @@ C_FILES += \
 	source/startup.c \
 	source/syscalls.c \
 
-FPGA_RTL_SOURCE_FILES := $(shell find . -name '*.sv')
+FPGA_RTL_SOURCE_FILES := $(shell find fpga | egrep '.sv|.pdc')
 
 # Header file paths
 FLAGS += \
@@ -141,11 +141,11 @@ LIBS += \
 	-lc \
 	-lgcc \
 
-build/frame.hex: $(C_FILES) | fpga/fpga_application.h
+build/frame.hex: $(C_FILES) fpga/fpga_application.h
 
 	@mkdir -p build
-	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $^ $(LIBS)
-	@arm-none-eabi-objcopy -O ihex build/frame.elf $@
+	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $(C_FILES) $(LIBS)
+	@arm-none-eabi-objcopy -O ihex build/frame.elf build/frame.hex
 	@arm-none-eabi-size build/frame.elf
 
 
@@ -174,7 +174,7 @@ fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
 	     -include build/fpga_application.bit \
 		 build/fpga_application_temp.h
 
-	@sed '1s/^/const /' build/fpga_application_temp.h > $@
+	@sed '1s/^/const /' build/fpga_application_temp.h > fpga/fpga_application.h
 
 
 release:
@@ -183,7 +183,7 @@ release:
 clean:
 	rm -rf build/
 
-flash: all
+flash: build/frame.hex
 	nrfjprog -q --program build/frame.hex --sectorerase
 	nrfjprog --reset
 

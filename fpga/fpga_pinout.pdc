@@ -9,10 +9,47 @@
 # Copyright © 2023 Brilliant Labs Limited
 #
 
-ldc_set_location -site {F8} [get_ports button]
-ldc_set_location -site {E9} [get_ports {led_1}]
-ldc_set_location -site {G9} [get_ports {led_2}]
+# SPI to nRF
 
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports button]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_1}]
-ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports {led_2}]
+ldc_set_location -site {D2} [get_ports spi_clk]
+ldc_set_location -site {B1} [get_ports spi_select]
+ldc_set_location -site {D3} [get_ports spi_data_out]
+ldc_set_location -site {C3} [get_ports spi_data_in]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_clk]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_select]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_data_out]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_data_in]
+
+# Display interface
+
+ldc_set_location -site {G5} [get_ports display_clock]
+ldc_set_location -site {G6} [get_ports display_hsync]
+ldc_set_location -site {G4} [get_ports display_vsync]
+ldc_set_location -site {F2} [get_ports display_y0]
+ldc_set_location -site {G8} [get_ports display_y1]
+ldc_set_location -site {E5} [get_ports display_y2]
+ldc_set_location -site {G7} [get_ports display_y3]
+ldc_set_location -site {H2} [get_ports display_cr0]
+ldc_set_location -site {F3} [get_ports display_cr1]
+ldc_set_location -site {G9} [get_ports display_cr2]
+ldc_set_location -site {G1} [get_ports display_cb0]
+ldc_set_location -site {E4} [get_ports display_cb1]
+ldc_set_location -site {H1} [get_ports display_cb2]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_clock]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_hsync]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_vsync]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_y0]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_y1]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_y2]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_y3]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cr0]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cr1]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cr2]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb0]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb1]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb2]
+
+# Camera interface
+
+ldc_set_location -site {B5} [get_ports camera_clock]
+ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports camera_clock]
