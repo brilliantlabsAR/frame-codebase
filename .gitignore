@@ -10,3 +10,4 @@ abc.history
 
 # Ignore draw.io backup files
 *.png.bkp
+*.dtmp
