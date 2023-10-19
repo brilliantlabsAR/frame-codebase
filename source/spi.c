@@ -52,8 +52,8 @@ void spi_configure(void)
 
     nrfx_spim_config_t fpga_spi_config = NRFX_SPIM_DEFAULT_CONFIG(
         FPGA_SPI_CLOCK_PIN,
-        FPGA_SPI_IO0_PIN,
-        FPGA_SPI_IO1_PIN,
+        FPGA_SPI_COPI_PIN,
+        FPGA_SPI_CIPO_PIN,
         NRF_SPIM_PIN_NOT_CONNECTED);
 
     fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(8);
