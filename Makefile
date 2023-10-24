@@ -70,6 +70,7 @@ C_FILES += \
 	libraries/nrfx/helpers/nrfx_flag32_allocator.c \
 	libraries/nrfx/mdk/system_nrf52840.c \
 	libraries/segger/SEGGER_RTT.c \
+	source/bluetooth.c \
 	source/error_logging.c \
 	source/i2c.c \
 	source/lua_libraries/microphone.c \
@@ -93,6 +94,7 @@ FLAGS += \
 	-Ilibraries/nrfx/soc \
 	-Ilibraries/picolibc \
 	-Ilibraries/segger \
+	-Ilibraries/softdevice/include \
 	-Isource \
 	-Isource/lua_libraries \
 

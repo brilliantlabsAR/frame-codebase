@@ -15,6 +15,7 @@
                 "libraries/nrfx/soc",
                 "libraries/picolibc",
                 "libraries/segger",
+                "libraries/softdevice/include",
                 "source",
                 "source/lua_libraries"
             ],

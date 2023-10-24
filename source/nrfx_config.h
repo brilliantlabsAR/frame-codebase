@@ -34,7 +34,7 @@
 #define NRFX_PDM_ENABLED 1
 
 #define NRFX_RTC_ENABLED 1
-#define NRFX_RTC0_ENABLED 1
+#define NRFX_RTC1_ENABLED 1 // RTC0 is used by the softdevice
 
 #define NRFX_SAADC_ENABLED 1
 

@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include <stdint.h>
+#include "bluetooth.h"
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_logging.h"
@@ -45,7 +46,7 @@ bool not_real_hardware = false;
 bool prevent_sleep = false;
 bool unpair = false;
 
-static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(0);
+static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
 
 static void set_power_rails(bool enable)
 {
@@ -129,18 +130,12 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
 
 static void hardware_setup()
 {
-    // Configure the clock sources
-    {
-        nrf_clock_lf_src_set(NRF_CLOCK, NRF_CLOCK_LFCLK_SYNTH);
-        nrf_clock_task_trigger(NRF_CLOCK, NRF_CLOCK_TASK_LFCLKSTART);
-    }
-
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
     }
 
-    // Configure the RTC
+    // Configure the real time clock
     {
         nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
 
@@ -151,10 +146,6 @@ static void hardware_setup()
                                   &config,
                                   unused_rtc_event_handler));
         nrfx_rtc_enable(&rtc);
-
-        // Call tick interrupt every ms to wake up the core when in light sleep
-        // TODO we can remove this if using nRF52 with Softdevice S140
-        // nrfx_rtc_tick_enable(&rtc, true);
     }
 
     // Configure the I2C and SPI drivers
@@ -410,6 +401,8 @@ int main(void)
     LOG(RTT_CTRL_CLEAR);
 
     hardware_setup();
+
+    bluetooth_setup();
 
     while (1)
     {

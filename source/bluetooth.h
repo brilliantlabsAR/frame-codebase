@@ -24,26 +24,9 @@
 
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdio.h>
-#include "nrfx_log.h"
-#include "bluetooth.h"
 
-#define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
+void bluetooth_setup(void);
 
-#define lua_writeline() lua_writestring("\n", 1)
-
-#define lua_writestringerror(s, p)                  \
-    {                                               \
-        char writestringerror_buffer[250];          \
-        sprintf(writestringerror_buffer, s, p);     \
-        printf("%.*s",                              \
-               strlen(writestringerror_buffer),     \
-               (uint8_t *)writestringerror_buffer); \
-    }
-
-bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
-
-void run_lua(void);
+bool bluetooth_send_data(const uint8_t *data, size_t length);
