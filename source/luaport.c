@@ -92,7 +92,7 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
-    microphone_open_library(L);
+    // microphone_open_library(L);
 
     char *version_string =
         LUA_RELEASE " on Brilliant Frame " BUILD_VERSION "(" GIT_COMMIT ")";
