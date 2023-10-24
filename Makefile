@@ -184,7 +184,8 @@ clean:
 	rm -rf build/
 
 flash: build/frame.hex
-	nrfjprog -q --program build/frame.hex --sectorerase
+	nrfjprog -q --program libraries/softdevice/*.hex --chiperase
+	nrfjprog -q --program build/frame.hex
 	nrfjprog --reset
 
 recover:

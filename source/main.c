@@ -154,7 +154,7 @@ static void hardware_setup()
 
         // Call tick interrupt every ms to wake up the core when in light sleep
         // TODO we can remove this if using nRF52 with Softdevice S140
-        nrfx_rtc_tick_enable(&rtc, true);
+        // nrfx_rtc_tick_enable(&rtc, true);
     }
 
     // Configure the I2C and SPI drivers

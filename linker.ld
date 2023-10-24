@@ -31,7 +31,7 @@
  */
 
 /*  Must be updated whenever the softdevice is upgraded */
-sd_flash_size = 0; /*0x27000; Softdevice sits at the start of the flash */
+sd_flash_size = 0x27000; /* Softdevice sits at the start of the flash */
 
 /* Must be updated whenever the bootloader size changes */
 bl_flash_size = 0x8000; /* Bootloader is at the end of the flash */

@@ -13,7 +13,15 @@
             "servertype": "jlink",
             "svdFile": "nrfx/mdk/nrf52840.svd",
             "preLaunchTask": "Build Firmware",
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "loadFiles": [
+                "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
+            ],
+            "preLaunchCommands": [
+                "monitor halt",
+                "monitor speed 2000",
+                "load"
+            ]
         }
     ]
 }
