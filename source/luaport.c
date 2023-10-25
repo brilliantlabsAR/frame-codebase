@@ -103,8 +103,6 @@ void run_lua(void)
 
     while (true)
     {
-        lua_writestring(">>> ", 5);
-
         // Wait for input
         while (repl.new_data == false)
         {
