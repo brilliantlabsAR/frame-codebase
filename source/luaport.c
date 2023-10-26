@@ -92,12 +92,7 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
-    // microphone_open_library(L);
-
-    char *version_string =
-        LUA_RELEASE " on Brilliant Frame " BUILD_VERSION "(" GIT_COMMIT ")";
-    lua_writestring((uint8_t *)version_string, strlen(version_string));
-    lua_writeline();
+    microphone_open_library(L);
 
     // TODO attempt to run main.lua
 
@@ -106,6 +101,7 @@ void run_lua(void)
         // Wait for input
         while (repl.new_data == false)
         {
+            // TODO sleep
         }
 
         // If we get a reset command

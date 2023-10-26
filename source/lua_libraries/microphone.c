@@ -39,9 +39,7 @@ void microphone_open_library(lua_State *L)
                                                        MICROPHONE_DATA_PIN);
     config.edge = NRF_PDM_EDGE_LEFTRISING;
 
-    // TODO do we need to change the clock?
-
-    if (nrfx_pdm_enable_check())
+    if (nrfx_pdm_init_check())
     {
         return;
     }
