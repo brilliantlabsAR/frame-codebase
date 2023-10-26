@@ -25,9 +25,37 @@
 #include <stdint.h>
 #include "error_logging.h"
 #include "lua.h"
+#include "ble_gap.h"
+
+static int device_mac_address(lua_State *L)
+{
+    ble_gap_addr_t addr;
+    check_error(sd_ble_gap_addr_get(&addr));
+
+    char mac_addr_string[18];
+    sprintf(mac_addr_string, "%02x:%02x:%02x:%02x:%02x:%02x",
+            addr.addr[0], addr.addr[1], addr.addr[2],
+            addr.addr[3], addr.addr[4], addr.addr[5]);
+
+    lua_pushstring(L, mac_addr_string);
+    return 1;
+}
 
 void device_open_library(lua_State *L)
 {
     lua_newtable(L);
+
+    lua_pushstring(L, "frame");
+    lua_setfield(L, -2, "NAME");
+
+    lua_pushstring(L, BUILD_VERSION);
+    lua_setfield(L, -2, "FIRMWARE_VERSION");
+
+    lua_pushstring(L, GIT_COMMIT);
+    lua_setfield(L, -2, "GIT_TAG");
+
+    lua_pushcfunction(L, device_mac_address);
+    lua_setfield(L, -2, "mac_address");
+
     lua_setglobal(L, "device");
 }
