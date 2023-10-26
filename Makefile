@@ -73,6 +73,7 @@ C_FILES += \
 	source/bluetooth.c \
 	source/error_logging.c \
 	source/i2c.c \
+	source/lua_libraries/device.c \
 	source/lua_libraries/microphone.c \
 	source/luaport.c \
 	source/main.c \

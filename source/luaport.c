@@ -23,6 +23,7 @@
  */
 
 #include <string.h>
+#include "device.h"
 #include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
@@ -92,6 +93,7 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
+    device_open_library(L);
     microphone_open_library(L);
 
     // TODO attempt to run main.lua
