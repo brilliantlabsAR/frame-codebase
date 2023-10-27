@@ -43,7 +43,8 @@
 #include "spi.h"
 
 bool not_real_hardware = false;
-bool prevent_sleep = false;
+bool stay_awake = false;
+bool force_sleep = false;
 bool unpair = false;
 
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
@@ -85,9 +86,9 @@ static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
     LOG("Going to sleep");
 
     // Ignore high to low interrupt. It's only used to wake up the device
-    if (prevent_sleep)
+    if (stay_awake)
     {
-        LOG("Sleep prevented");
+        LOG("Staying awake");
 
         // Short delay to prevent too many messages clogging things up
         nrfx_systick_delay_ms(100);

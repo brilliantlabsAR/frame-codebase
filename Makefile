@@ -64,6 +64,7 @@ C_FILES += \
 	libraries/nrfx/drivers/src/nrfx_pdm.c \
 	libraries/nrfx/drivers/src/nrfx_qspi.c \
 	libraries/nrfx/drivers/src/nrfx_rtc.c \
+	libraries/nrfx/drivers/src/nrfx_saadc.c \
 	libraries/nrfx/drivers/src/nrfx_spim.c \
 	libraries/nrfx/drivers/src/nrfx_systick.c \
 	libraries/nrfx/drivers/src/nrfx_twim.c \
