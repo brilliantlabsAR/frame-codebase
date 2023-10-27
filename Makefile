@@ -22,7 +22,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M) # := forces evaluation once
+BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Source files
@@ -146,7 +146,7 @@ LIBS += \
 	-lgcc \
 
 build/frame.hex: $(C_FILES) fpga/fpga_application.h
-
+	@echo ".$(BUILD_VERSION)."
 	@mkdir -p build
 	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $(C_FILES) $(LIBS)
 	@arm-none-eabi-objcopy -O ihex build/frame.elf build/frame.hex
