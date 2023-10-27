@@ -93,6 +93,12 @@ void run_lua(void)
     }
 
     luaL_openlibs(L);
+
+    // Create a global frame table where the libraries will be placed
+    lua_newtable(L);
+    lua_setglobal(L, "frame");
+
+    // Open the frame specific libraries
     device_open_library(L);
     microphone_open_library(L);
 

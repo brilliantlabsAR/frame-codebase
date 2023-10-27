@@ -126,6 +126,8 @@ void device_open_library(lua_State *L)
     }
 
     // Add device table to frame library
+    lua_getglobal(L, "frame");
+
     lua_newtable(L);
 
     lua_pushstring(L, "frame");
@@ -149,5 +151,5 @@ void device_open_library(lua_State *L)
     lua_pushcfunction(L, device_sleep);
     lua_setfield(L, -2, "sleep");
 
-    lua_setglobal(L, "device");
+    lua_setfield(L, -2, "device");
 }

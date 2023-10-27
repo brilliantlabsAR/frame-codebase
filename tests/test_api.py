@@ -49,11 +49,11 @@ async def main():
     await test.initialize()
 
     # Test device module
-    await test.lua_equals("device.NAME", "frame")
-    await test.lua_has_length("device.FIRMWARE_VERSION", 12)
-    await test.lua_has_length("device.GIT_TAG", 7)
-    await test.lua_has_length("device.mac_address()", 17)
-    await test.lua_equals("device.battery_level()", "100.0")
+    await test.lua_equals("frame.device.NAME", "frame")
+    await test.lua_has_length("frame.device.FIRMWARE_VERSION", 12)
+    await test.lua_has_length("frame.device.GIT_TAG", 7)
+    await test.lua_has_length("frame.device.mac_address()", 17)
+    await test.lua_equals("frame.device.battery_level()", "100.0")
 
     await test.end()
 
