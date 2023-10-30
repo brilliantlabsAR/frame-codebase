@@ -143,37 +143,14 @@ void run_lua(void)
 
         int status = luaL_dostring(L, (char *)repl.buffer);
 
-        repl.new_data = false;
-
-        if (status == LUA_OK)
+        if (status != LUA_OK)
         {
-            int printables = lua_gettop(L);
-
-            if (printables > 0)
-            {
-                luaL_checkstack(L, LUA_MINSTACK, "too many results to print");
-
-                lua_getglobal(L, "print");
-                lua_insert(L, 1);
-
-                if (lua_pcall(L, printables, 0, 0) != LUA_OK)
-                {
-                    const char *msg = lua_pushfstring(
-                        L,
-                        "error calling 'print' (%s)",
-                        lua_tostring(L, -1));
-
-                    lua_writestringerror("%s\n", msg);
-                }
-            }
-        }
-
-        else
-        {
-            const char *msg = lua_tostring(L, -1);
-            lua_writestringerror("%s\n", msg);
+            const char *lua_error = lua_tostring(L, -1);
+            lua_writestring(lua_error, strlen(lua_error));
             lua_pop(L, 1);
         }
+
+        repl.new_data = false;
     }
 
     lua_close(L);

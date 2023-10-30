@@ -40,14 +40,12 @@ C_FILES += \
 	libraries/lua/lfunc.c \
 	libraries/lua/lgc.c \
 	libraries/lua/linit.c \
-	libraries/lua/liolib.c \
 	libraries/lua/llex.c \
 	libraries/lua/lmathlib.c \
 	libraries/lua/lmem.c \
 	libraries/lua/loadlib.c \
 	libraries/lua/lobject.c \
 	libraries/lua/lopcodes.c \
-	libraries/lua/loslib.c \
 	libraries/lua/lparser.c \
 	libraries/lua/lstate.c \
 	libraries/lua/lstring.c \

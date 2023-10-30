@@ -14,11 +14,17 @@ class TestBluetooth(Bluetooth):
 
     def _log_passed(self, lua_string, response):
         self._passed_tests += 1
-        print(f"\033[92mPassed: {lua_string} => {response}")
+        if response == None:
+            print(f"\033[92mPassed: {lua_string}")
+        else:
+            print(f"\033[92mPassed: {lua_string} => {response}")
 
     def _log_failed(self, lua_string, response, expected):
         self._failed_tests += 1
-        print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
+        if expected == None:
+            print(f"\033[91mFAILED: {lua_string} => {response}")
+        else:
+            print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
 
     async def initialize(self):
         await self.connect(lua_response_handler=lambda str: None)
@@ -45,8 +51,11 @@ class TestBluetooth(Bluetooth):
             self._log_failed(lua_string, f"len({len(response)})", f"len({length})")
 
     async def lua_send(self, lua_string: str):
-        await self.send_lua(lua_string)
-        await asyncio.sleep(0.1)
+        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        if response == "nil":
+            self._log_passed(lua_string, None)
+        else:
+            self._log_failed(lua_string, response, None)
 
 
 async def main():
@@ -104,7 +113,7 @@ async def main():
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
     await test.lua_equals("frame.stay_awake()", "true")
-    await test.lua_send("frame.stay_awake(true)")
+    await test.lua_send("frame.stay_awake(false)")
     ## frame.fpga.read()
     ## frame.fpga.write()
 

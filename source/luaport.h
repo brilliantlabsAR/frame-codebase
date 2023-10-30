@@ -32,17 +32,8 @@
 #include "bluetooth.h"
 
 #define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
-
 #define lua_writeline()
-
-#define lua_writestringerror(s, p)                  \
-    {                                               \
-        char writestringerror_buffer[250];          \
-        sprintf(writestringerror_buffer, s, p);     \
-        printf("%.*s",                              \
-               strlen(writestringerror_buffer),     \
-               (uint8_t *)writestringerror_buffer); \
-    }
+#define lua_writestringerror(s, p) printf(s, p)
 
 bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
