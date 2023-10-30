@@ -3,7 +3,6 @@ Tests the Frame specific Lua libraries over Bluetooth.
 """
 
 import asyncio
-import sys
 from frameutils import Bluetooth
 
 
@@ -88,21 +87,21 @@ async def main():
     await test.lua_send(f"frame.bluetooth.data_send(string.rep('a',{max_length}))")
     await test.lua_error(f"frame.bluetooth.data_send(string.rep('a',{max_length + 1}))")
     ## TODO test multiple bluetooth sends which block
-    ## frame.bluetooth.data_receive_callback?()
+    ## TODO frame.bluetooth.data_receive_callback?()
 
     # Display
-    ## frame.display.text("string", x, y, {color, alignment})
-    ## frame.display.show()
+    ## TODO frame.display.text("string", x, y, {color, alignment})
+    ## TODO frame.display.show()
 
     # Camera
-    ## camera.output_format(xres, yres, colordepth)
-    ## pan and zoom?
-    ## camera.capture()
-    ## camera.read(bytes)
+    ## TODO camera.output_format(xres, yres, colordepth)
+    ## TODO pan and zoom?
+    ## TODO camera.capture()
+    ## TODO camera.read(bytes)
 
     # Microphone
-    ## frame.microphone.record(seconds, samplerate, bitdepth)
-    ## frame.microphone.read(bytes)
+    ## TODO frame.microphone.record(seconds, samplerate, bitdepth)
+    ## TODO frame.microphone.read(bytes)
 
     # IMU
     ## imu.heading().exactly                 => ±180 degrees
@@ -111,14 +110,14 @@ async def main():
     ## imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
     ## imu.pitch().exactly                   => ±180 degrees
     ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
-    ## Tap, double tap?
+    ## TODO Tap, double tap?
 
     # Sleep
-    ## frame.sleep(1.0)
-    ## frame.sleep() # Wakes up on a tap event
+    ## TODO frame.sleep(1.0)
+    ## TODO frame.sleep() # Wakes up on a tap event
 
     # Time
-    ## frame.time()                          => get epoch
+    ## TODO frame.time()                          => get epoch
     ## frame.time.set_utc(epoch)             => set epoch
     ## frame.time.zone()                     => get timezeone
     ## frame.time.zone(offset)               => set timeznone
@@ -136,11 +135,11 @@ async def main():
     ## frame.fpga.write()
 
     # File handling
-    ## frame.file.open()
+    ## TODO frame.file.open()
     ## frame.file.read()
-    ## frame.file.write()
-    ## frame.file.close()
-    ## frame.file.remove()
+    ## TODO frame.file.write()
+    ## TODO frame.file.close()
+    ## TODO frame.file.remove()
     ## frame.file.rename()
 
     # Math
