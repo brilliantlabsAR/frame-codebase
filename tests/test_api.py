@@ -116,6 +116,9 @@ async def main():
     ## frame.file.remove()
     ## frame.file.rename()
 
+    # Math
+    await test.lua_equals("math.sqrt(25)", "5.0")
+
     await test.end()
 
 

@@ -91,9 +91,18 @@ void run_lua(void)
         error_with_message("Cannot create lua state: not enough memory");
     }
 
-    luaL_openlibs(L);
+    // Open the standard libraries
+    luaL_requiref(L, LUA_GNAME, luaopen_base, 1);
+    luaL_requiref(L, LUA_LOADLIBNAME, luaopen_package, 1);
+    luaL_requiref(L, LUA_COLIBNAME, luaopen_coroutine, 1);
+    luaL_requiref(L, LUA_TABLIBNAME, luaopen_table, 1);
+    luaL_requiref(L, LUA_STRLIBNAME, luaopen_string, 1);
+    luaL_requiref(L, LUA_MATHLIBNAME, luaopen_math, 1);
+    luaL_requiref(L, LUA_UTF8LIBNAME, luaopen_utf8, 1);
+    luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
+    lua_pop(L, 8);
 
-    // Create a global frame table where the libraries will be placed
+    // Create a global frame table where the frame libraries will be placed
     lua_newtable(L);
     lua_setglobal(L, "frame");
 
