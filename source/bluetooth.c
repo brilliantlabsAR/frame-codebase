@@ -57,7 +57,7 @@ static struct advertising_data_t
 };
 
 static const uint16_t ble_preferred_max_mtu = 256;
-static uint16_t ble_negotiated_mtu;
+uint16_t ble_negotiated_mtu;
 
 static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
@@ -436,12 +436,6 @@ bool bluetooth_send_data(const uint8_t *data, size_t length)
     {
         return true;
     }
-
-    // TODO check if notifications are enabled
-    // if (!ble_are_tx_notifications_enabled(DATA_TX))
-    // {
-    //     return true;
-    // }
 
     // Initialise the handle value parameters
     ble_gatts_hvx_params_t hvx_params = {0};

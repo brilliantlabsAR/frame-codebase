@@ -27,7 +27,10 @@ class TestBluetooth(Bluetooth):
             print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
 
     async def initialize(self):
-        await self.connect(lua_response_handler=lambda str: None)
+        await self.connect(
+            lua_response_handler=lambda str: None,
+            data_response_handler=lambda str: None,
+        )
 
     async def end(self):
         passed_tests = self._passed_tests
@@ -36,9 +39,9 @@ class TestBluetooth(Bluetooth):
         print(f"Done! Passed {passed_tests} of {total_tests} tests")
         await self.disconnect()
 
-    async def lua_equals(self, lua_string: str, expect: str):
+    async def lua_equals(self, lua_string: str, expect):
         response = await self.send_lua(f"print({lua_string})", wait=True)
-        if response == expect:
+        if response == str(expect):
             self._log_passed(lua_string, response)
         else:
             self._log_failed(lua_string, response, expect)
@@ -57,6 +60,16 @@ class TestBluetooth(Bluetooth):
         else:
             self._log_failed(lua_string, response, None)
 
+    async def lua_error(self, lua_string: str):
+        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        if response != "nil":
+            self._log_passed(lua_string, response)
+        else:
+            self._log_failed(lua_string, response, None)
+
+    async def data_equal(self, lua_string: str, reponse: bytearray):
+        pass
+
 
 async def main():
     test = TestBluetooth()
@@ -68,9 +81,14 @@ async def main():
 
     # Bluetooth
     await test.lua_has_length("frame.bluetooth.address()", 17)
-    ## frame.bluetooth.max_length()
-    ## frame.bluetooth.send_data("")
-    ## frame.bluetooth.receive_callback?()
+    max_length = test.max_data_payload()
+    await test.lua_equals("frame.bluetooth.data_max_length()", max_length)
+    await test.lua_send("frame.bluetooth.data_send('123')")
+    await test.lua_send("frame.bluetooth.data_send('12\\0003')")
+    await test.lua_send(f"frame.bluetooth.data_send(string.rep('a',{max_length}))")
+    await test.lua_error(f"frame.bluetooth.data_send(string.rep('a',{max_length + 1}))")
+    ## TODO test multiple bluetooth sends which block
+    ## frame.bluetooth.data_receive_callback?()
 
     # Display
     ## frame.display.text("string", x, y, {color, alignment})

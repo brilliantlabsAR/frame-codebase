@@ -22,9 +22,13 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <stdint.h>
 #include "ble_gap.h"
 #include "error_logging.h"
 #include "lua.h"
+#include "lauxlib.h"
+
+extern uint16_t ble_negotiated_mtu;
 
 static int frame_bluetooth_address(lua_State *L)
 {
@@ -40,6 +44,39 @@ static int frame_bluetooth_address(lua_State *L)
     return 1;
 }
 
+static int frame_bluetooth_data_max_length(lua_State *L)
+{
+    // -1 because we need to add the data flag at the start
+    lua_pushinteger(L, ble_negotiated_mtu - 1);
+    return 1;
+}
+
+static int frame_bluetooth_data_send(lua_State *L)
+{
+    luaL_checkstring(L, 1);
+
+    size_t length;
+    const char *string = lua_tolstring(L, 1, &length);
+
+    if (length + 1 > ble_negotiated_mtu)
+    {
+        return luaL_error(L, "string length is greater than max_length()");
+    }
+
+    uint8_t data[length + 1];
+    memset(data, 1, 0x01);
+    memcpy(data + 1, string, length);
+
+    bool fail = bluetooth_send_data(data, length + 1);
+
+    if (fail)
+    {
+        return luaL_error(L, "bluetooth is busy");
+    }
+
+    return 0;
+}
+
 void open_frame_bluetooth_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -48,6 +85,12 @@ void open_frame_bluetooth_library(lua_State *L)
 
     lua_pushcfunction(L, frame_bluetooth_address);
     lua_setfield(L, -2, "address");
+
+    lua_pushcfunction(L, frame_bluetooth_data_max_length);
+    lua_setfield(L, -2, "data_max_length");
+
+    lua_pushcfunction(L, frame_bluetooth_data_send);
+    lua_setfield(L, -2, "data_send");
 
     lua_setfield(L, -2, "bluetooth");
 
