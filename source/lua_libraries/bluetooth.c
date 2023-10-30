@@ -22,36 +22,34 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdint.h>
+#include "ble_gap.h"
 #include "error_logging.h"
 #include "lua.h"
-#include "nrfx_config.h"
-#include "nrfx_pdm.h"
-#include "pinout.h"
 
-static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
+static int frame_bluetooth_address(lua_State *L)
 {
+    ble_gap_addr_t addr;
+    check_error(sd_ble_gap_addr_get(&addr));
+
+    char mac_addr_string[18];
+    sprintf(mac_addr_string, "%02x:%02x:%02x:%02x:%02x:%02x",
+            addr.addr[0], addr.addr[1], addr.addr[2],
+            addr.addr[3], addr.addr[4], addr.addr[5]);
+
+    lua_pushstring(L, mac_addr_string);
+    return 1;
 }
 
-static void microphone_read(int16_t *buffer, uint32_t samples)
+void open_frame_bluetooth_library(lua_State *L)
 {
-    // TODO read multiple samples
+    lua_getglobal(L, "frame");
 
-    check_error(nrfx_pdm_buffer_set(buffer, samples));
+    lua_newtable(L);
 
-    check_error(nrfx_pdm_start());
-}
+    lua_pushcfunction(L, frame_bluetooth_address);
+    lua_setfield(L, -2, "address");
 
-void open_frame_microphone_library(lua_State *L)
-{
-    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
-                                                       MICROPHONE_DATA_PIN);
-    config.edge = NRF_PDM_EDGE_LEFTRISING;
+    lua_setfield(L, -2, "bluetooth");
 
-    if (nrfx_pdm_init_check())
-    {
-        return;
-    }
-
-    check_error(nrfx_pdm_init(&config, pdm_event_handler));
+    lua_pop(L, 1);
 }

@@ -3,6 +3,7 @@ Tests the Frame specific Lua libraries over Bluetooth.
 """
 
 import asyncio
+import sys
 from frameutils import Bluetooth
 
 
@@ -43,17 +44,77 @@ class TestBluetooth(Bluetooth):
         else:
             self._log_failed(lua_string, f"len({len(response)})", f"len({length})")
 
+    async def lua_send(self, lua_string: str):
+        await self.send_lua(lua_string)
+        await asyncio.sleep(0.1)
+
 
 async def main():
     test = TestBluetooth()
     await test.initialize()
 
-    # Test device module
-    await test.lua_equals("frame.device.NAME", "frame")
-    await test.lua_has_length("frame.device.FIRMWARE_VERSION", 12)
-    await test.lua_has_length("frame.device.GIT_TAG", 7)
-    await test.lua_has_length("frame.device.mac_address()", 17)
-    await test.lua_equals("frame.device.battery_level()", "100.0")
+    # Version
+    await test.lua_has_length("frame.FIRMWARE_VERSION", 12)
+    await test.lua_has_length("frame.GIT_TAG", 7)
+
+    # Bluetooth
+    await test.lua_has_length("frame.bluetooth.address()", 17)
+    ## frame.bluetooth.max_length()
+    ## frame.bluetooth.send_data("")
+    ## frame.bluetooth.receive_callback?()
+
+    # Display
+    ## frame.display.text("string", x, y, {color, alignment})
+    ## frame.display.show()
+
+    # Camera
+    ## camera.output_format(xres, yres, colordepth)
+    ## pan and zoom?
+    ## camera.capture()
+    ## camera.read(bytes)
+
+    # Microphone
+    ## frame.microphone.record(seconds, samplerate, bitdepth)
+    ## frame.microphone.read(bytes)
+
+    # IMU
+    ## imu.heading().exactly                 => ±180 degrees
+    ## imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
+    ## imu.yaw().exactly                     => ±180 degrees
+    ## imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
+    ## imu.pitch().exactly                   => ±180 degrees
+    ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
+    ## Tap, double tap?
+
+    # Sleep
+    ## frame.sleep(1.0)
+    ## frame.sleep() # Wakes up on a tap event
+
+    # Time
+    ## frame.time()                          => get epoch
+    ## frame.time.set_utc(epoch)             => set epoch
+    ## frame.time.zone()                     => get timezeone
+    ## frame.time.zone(offset)               => set timeznone
+    ## frame.time.date()                     => get current time as table
+    ## frame.time.date(epoch)                => get table from epoch
+    ## frame.time.date({day, month, ..})     => get epoch from table
+
+    # Misc
+    await test.lua_equals("frame.battery_level()", "100.0")
+    await test.lua_equals("frame.stay_awake()", "false")
+    await test.lua_send("frame.stay_awake(true)")
+    await test.lua_equals("frame.stay_awake()", "true")
+    await test.lua_send("frame.stay_awake(true)")
+    ## frame.fpga.read()
+    ## frame.fpga.write()
+
+    # File handling
+    ## frame.file.open()
+    ## frame.file.read()
+    ## frame.file.write()
+    ## frame.file.close()
+    ## frame.file.remove()
+    ## frame.file.rename()
 
     await test.end()
 

@@ -24,32 +24,15 @@
 
 #include <math.h>
 #include <stdbool.h>
-#include "ble_gap.h"
 #include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
-#include "nrfx_log.h"
 #include "nrfx_saadc.h"
 #include "pinout.h"
 
 extern bool stay_awake;
-extern bool force_sleep;
 
-static int device_mac_address(lua_State *L)
-{
-    ble_gap_addr_t addr;
-    check_error(sd_ble_gap_addr_get(&addr));
-
-    char mac_addr_string[18];
-    sprintf(mac_addr_string, "%02x:%02x:%02x:%02x:%02x:%02x",
-            addr.addr[0], addr.addr[1], addr.addr[2],
-            addr.addr[3], addr.addr[4], addr.addr[5]);
-
-    lua_pushstring(L, mac_addr_string);
-    return 1;
-}
-
-static int device_battery_level(lua_State *L)
+static int frame_battery_level(lua_State *L)
 {
     nrf_saadc_value_t result;
     check_error(nrfx_saadc_simple_mode_set(1,
@@ -83,7 +66,7 @@ static int device_battery_level(lua_State *L)
     return 1;
 }
 
-static int device_stay_awake(lua_State *L)
+static int frame_stay_awake(lua_State *L)
 {
     if (lua_gettop(L) > 1)
     {
@@ -101,14 +84,7 @@ static int device_stay_awake(lua_State *L)
     return 1;
 }
 
-static int device_sleep(lua_State *L)
-{
-    // TODO wait 3 seconds before actually sleeping
-    force_sleep = true;
-    return 0;
-}
-
-void device_open_library(lua_State *L)
+void open_frame_misc_library(lua_State *L)
 {
     // Configure ADC
     if (nrfx_saadc_init_check() == false)
@@ -125,31 +101,13 @@ void device_open_library(lua_State *L)
         check_error(nrfx_saadc_channel_config(&channel));
     }
 
-    // Add device table to frame library
     lua_getglobal(L, "frame");
 
-    lua_newtable(L);
-
-    lua_pushstring(L, "frame");
-    lua_setfield(L, -2, "NAME");
-
-    lua_pushstring(L, BUILD_VERSION);
-    lua_setfield(L, -2, "FIRMWARE_VERSION");
-
-    lua_pushstring(L, GIT_COMMIT);
-    lua_setfield(L, -2, "GIT_TAG");
-
-    lua_pushcfunction(L, device_mac_address);
-    lua_setfield(L, -2, "mac_address");
-
-    lua_pushcfunction(L, device_battery_level);
+    lua_pushcfunction(L, frame_battery_level);
     lua_setfield(L, -2, "battery_level");
 
-    lua_pushcfunction(L, device_stay_awake);
+    lua_pushcfunction(L, frame_stay_awake);
     lua_setfield(L, -2, "stay_awake");
 
-    lua_pushcfunction(L, device_sleep);
-    lua_setfield(L, -2, "sleep");
-
-    lua_setfield(L, -2, "device");
+    lua_pop(L, 1);
 }

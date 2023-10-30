@@ -74,8 +74,12 @@ C_FILES += \
 	source/bluetooth.c \
 	source/error_logging.c \
 	source/i2c.c \
-	source/lua_libraries/device.c \
+	source/lua_libraries/bluetooth.c \
 	source/lua_libraries/microphone.c \
+	source/lua_libraries/misc.c \
+	source/lua_libraries/sleep.c \
+	source/lua_libraries/time.c \
+	source/lua_libraries/version.c \
 	source/luaport.c \
 	source/main.c \
 	source/spi.c \
@@ -146,7 +150,6 @@ LIBS += \
 	-lgcc \
 
 build/frame.hex: $(C_FILES) fpga/fpga_application.h
-	@echo ".$(BUILD_VERSION)."
 	@mkdir -p build
 	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $(C_FILES) $(LIBS)
 	@arm-none-eabi-objcopy -O ihex build/frame.elf build/frame.hex

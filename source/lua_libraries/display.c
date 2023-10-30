@@ -22,11 +22,4 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
-
-#include <stdint.h>
 #include "lua.h"
-
-void microphone_open_library(lua_State *L);
-
-void microphone_read(int16_t *buffer, uint32_t samples);

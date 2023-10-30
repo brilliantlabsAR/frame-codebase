@@ -23,12 +23,11 @@
  */
 
 #include <string.h>
-#include "device.h"
 #include "error_logging.h"
+#include "frame_lua_libraries.h"
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
-#include "microphone.h"
 #include "nrfx_log.h"
 
 // static lua_State *globalL = NULL;
@@ -99,8 +98,22 @@ void run_lua(void)
     lua_setglobal(L, "frame");
 
     // Open the frame specific libraries
-    device_open_library(L);
-    microphone_open_library(L);
+    open_frame_version_library(L);
+    open_frame_bluetooth_library(L);
+    // open_frame_display_library(L);
+    // open_frame_camera_library(L);
+    open_frame_microphone_library(L);
+    // open_frame_imu_library(L);
+    open_frame_sleep_library(L);
+    open_frame_time_library(L);
+    open_frame_misc_library(L);
+    // open_frame_file_library(L);
+
+    // Make sure the above functions cleared up the stack correctly
+    if (lua_gettop(L) != 0)
+    {
+        error_with_message("Lua stack not cleared");
+    }
 
     // TODO attempt to run main.lua
 

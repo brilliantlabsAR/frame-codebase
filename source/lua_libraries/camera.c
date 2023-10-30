@@ -22,8 +22,4 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
-
 #include "lua.h"
-
-void device_open_library(lua_State *L);

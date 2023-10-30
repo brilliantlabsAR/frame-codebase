@@ -22,36 +22,14 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include <stdint.h>
+#include <math.h>
+#include <stdbool.h>
 #include "error_logging.h"
+#include "lauxlib.h"
 #include "lua.h"
-#include "nrfx_config.h"
-#include "nrfx_pdm.h"
+#include "nrfx_saadc.h"
 #include "pinout.h"
 
-static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
+void open_frame_time_library(lua_State *L)
 {
-}
-
-static void microphone_read(int16_t *buffer, uint32_t samples)
-{
-    // TODO read multiple samples
-
-    check_error(nrfx_pdm_buffer_set(buffer, samples));
-
-    check_error(nrfx_pdm_start());
-}
-
-void open_frame_microphone_library(lua_State *L)
-{
-    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
-                                                       MICROPHONE_DATA_PIN);
-    config.edge = NRF_PDM_EDGE_LEFTRISING;
-
-    if (nrfx_pdm_init_check())
-    {
-        return;
-    }
-
-    check_error(nrfx_pdm_init(&config, pdm_event_handler));
 }
