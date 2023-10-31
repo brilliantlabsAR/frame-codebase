@@ -47,8 +47,6 @@ bool stay_awake = false;
 bool force_sleep = false;
 bool unpair = false;
 
-static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
-
 static void set_power_rails(bool enable)
 {
     if (enable)
@@ -74,8 +72,6 @@ static void set_power_rails(bool enable)
     // Turn off SBB0 (1.0V rail) with active discharge resistor on
     check_error(i2c_write(PMIC, 0x2A, 0x0F, 0x0C).fail);
 }
-
-static void unused_rtc_event_handler(nrfx_rtc_int_type_t int_type) {}
 
 static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
                                               nrfx_gpiote_trigger_t trigger,
@@ -134,19 +130,6 @@ static void hardware_setup()
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
-    }
-
-    // Configure the real time clock
-    {
-        nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
-
-        // 1024Hz = >1ms resolution
-        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
-
-        check_error(nrfx_rtc_init(&rtc,
-                                  &config,
-                                  unused_rtc_event_handler));
-        nrfx_rtc_enable(&rtc);
     }
 
     // Configure the I2C and SPI drivers

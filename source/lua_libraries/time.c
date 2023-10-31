@@ -27,9 +27,75 @@
 #include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
-#include "nrfx_saadc.h"
-#include "pinout.h"
+#include "nrfx_rtc.h"
+
+static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
+
+static uint64_t utc_time_ms = 0;
+
+static void rtc_event_handler(nrfx_rtc_int_type_t int_type)
+{
+    utc_time_ms++;
+}
+
+static int frame_time_utc(lua_State *L)
+{
+    if (lua_gettop(L) == 0)
+    {
+        lua_pushnumber(L, (lua_Number)utc_time_ms / 1000);
+        return 1;
+    }
+
+    luaL_checkinteger(L, 1);
+
+    NRFX_IRQ_DISABLE(rtc.irq);
+    utc_time_ms = lua_tointeger(L, 1) * 1000;
+    NRFX_IRQ_ENABLE(rtc.irq);
+
+    return 0;
+}
+
+static int frame_time_zone(lua_State *L)
+{
+
+    return 1;
+}
+
+static int frame_time_date(lua_State *L)
+{
+
+    return 1;
+}
 
 void open_frame_time_library(lua_State *L)
 {
+    // Configure the real time clock
+    {
+        nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
+
+        // 1024Hz = >1ms resolution
+        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
+
+        check_error(nrfx_rtc_init(&rtc, &config, rtc_event_handler));
+
+        nrfx_rtc_tick_enable(&rtc, true);
+        nrfx_rtc_enable(&rtc);
+    }
+
+    lua_getglobal(L, "frame");
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, frame_time_utc);
+    lua_setfield(L, -2, "utc");
+
+    lua_pushcfunction(L, frame_time_zone);
+    lua_setfield(L, -2, "zone");
+
+    lua_pushcfunction(L, frame_time_date);
+    lua_setfield(L, -2, "date");
+
+    lua_setfield(L, -2, "time");
+
+    lua_pop(L, 1);
 }

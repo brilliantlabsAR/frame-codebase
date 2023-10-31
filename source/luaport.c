@@ -113,8 +113,8 @@ void run_lua(void)
     // open_frame_camera_library(L);
     open_frame_microphone_library(L);
     // open_frame_imu_library(L);
-    open_frame_sleep_library(L);
     open_frame_time_library(L);
+    open_frame_sleep_library(L);
     open_frame_misc_library(L);
     // open_frame_file_library(L);
 

@@ -112,18 +112,20 @@ async def main():
     ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
     ## TODO Tap, double tap?
 
-    # Sleep
-    ## TODO frame.sleep(1.0)
-    ## TODO frame.sleep() # Wakes up on a tap event
+    # Time & light sleep
+    await test.lua_send("frame.time.utc(1698756584)")
+    await test.lua_send("frame.sleep(2.0)")
+    await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
+    ## frame.time.zone()                     => get timezone
+    ## frame.time.zone(offset)               => set timezone
+    ## frame.time.date()                     => get local time as table
+    ## frame.time.date(epoch)                => get local time table from epoch
+    ## frame.time.date({day, month, ..})     => get epoch from local time table
 
-    # Time
-    ## TODO frame.time()                          => get epoch
-    ## frame.time.set_utc(epoch)             => set epoch
-    ## frame.time.zone()                     => get timezeone
-    ## frame.time.zone(offset)               => set timeznone
-    ## frame.time.date()                     => get current time as table
-    ## frame.time.date(epoch)                => get table from epoch
-    ## frame.time.date({day, month, ..})     => get epoch from table
+    # Cancelling deep sleep
+    ## TODO frame.sleep() # Wakes up on a tap event
+    await asyncio.sleep(2)
+    ## TODO await test.send_break_signal();
 
     # Misc
     await test.lua_equals("frame.battery_level()", "100.0")
@@ -142,7 +144,7 @@ async def main():
     ## TODO frame.file.remove()
     ## frame.file.rename()
 
-    # Math
+    # Standard libraries
     await test.lua_equals("math.sqrt(25)", "5.0")
 
     await test.end()

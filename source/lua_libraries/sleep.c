@@ -24,13 +24,57 @@
 
 #include <stdbool.h>
 #include "lua.h"
+#include "lauxlib.h"
+#include "error_logging.h"
+#include "nrf_soc.h"
+#include "nrf52840.h"
 
 extern bool force_sleep;
 
 static int frame_sleep(lua_State *L)
 {
-    // TODO wait 3 seconds before actually sleeping
-    force_sleep = true;
+    if (lua_gettop(L) == 0)
+    {
+        // TODO wait 3 seconds before actually sleeping
+
+        force_sleep = true;
+        return 0;
+    }
+
+    // Get the current time
+    if (luaL_dostring(L, "return frame.time.utc()") != LUA_OK)
+    {
+        error_with_message("lua error");
+    }
+
+    // Add the current time to the wait time
+    lua_Number wait_until = lua_tonumber(L, 1) + lua_tonumber(L, 2);
+
+    while (true)
+    {
+        // Keep getting the current time
+        if (luaL_dostring(L, "return frame.time.utc()") != LUA_OK)
+        {
+            error_with_message("lua error");
+        }
+
+        lua_Number current_time = lua_tonumber(L, 3);
+        lua_pop(L, 1);
+
+        if (current_time >= wait_until)
+        {
+            break;
+        }
+
+        // Clear exceptions
+        __set_FPSCR(__get_FPSCR() & ~(0x0000009F));
+        (void)__get_FPSCR();
+
+        NVIC_ClearPendingIRQ(FPU_IRQn);
+
+        check_error(sd_app_evt_wait());
+    }
+
     return 0;
 }
 
