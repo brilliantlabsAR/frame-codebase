@@ -123,9 +123,9 @@ async def main():
     ## frame.time.date({day, month, ..})     => get epoch from local time table
 
     # Cancelling deep sleep
-    ## TODO frame.sleep() # Wakes up on a tap event
+    await test.lua_send("frame.sleep()")
     await asyncio.sleep(2)
-    ## TODO await test.send_break_signal();
+    await test.send_break_signal()
 
     # Misc
     await test.lua_equals("frame.battery_level()", "100.0")

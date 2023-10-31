@@ -31,16 +31,8 @@
 
 extern bool force_sleep;
 
-static int frame_sleep(lua_State *L)
+static void wait_for(lua_State *L, lua_Number seconds)
 {
-    if (lua_gettop(L) == 0)
-    {
-        // TODO wait 3 seconds before actually sleeping
-
-        force_sleep = true;
-        return 0;
-    }
-
     // Get the current time
     if (luaL_dostring(L, "return frame.time.utc()") != LUA_OK)
     {
@@ -48,7 +40,7 @@ static int frame_sleep(lua_State *L)
     }
 
     // Add the current time to the wait time
-    lua_Number wait_until = lua_tonumber(L, 1) + lua_tonumber(L, 2);
+    lua_Number wait_until = lua_tonumber(L, 1) + seconds;
 
     while (true)
     {
@@ -58,7 +50,7 @@ static int frame_sleep(lua_State *L)
             error_with_message("lua error");
         }
 
-        lua_Number current_time = lua_tonumber(L, 3);
+        lua_Number current_time = lua_tonumber(L, 2);
         lua_pop(L, 1);
 
         if (current_time >= wait_until)
@@ -74,7 +66,21 @@ static int frame_sleep(lua_State *L)
 
         check_error(sd_app_evt_wait());
     }
+}
 
+static int frame_sleep(lua_State *L)
+{
+    if (lua_gettop(L) == 0)
+    {
+        wait_for(L, 3);
+        force_sleep = true;
+        return 0;
+    }
+
+    lua_Number seconds = lua_tonumber(L, 1);
+    lua_pop(L, 1);
+
+    wait_for(L, seconds);
     return 0;
 }
 
