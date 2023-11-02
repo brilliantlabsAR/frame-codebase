@@ -74,10 +74,20 @@ static void set_power_rails(bool enable)
     check_error(i2c_write(PMIC, 0x2A, 0x0F, 0x0C).fail);
 }
 
-__attribute__((noreturn)) void shutdown(void)
+void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
+              nrfx_gpiote_trigger_t unused_gptiote_trigger,
+              void *unused_gptiote_context_pointer)
 {
-    // TODO can we simplify this
+    // This helps to debounce and stops the interrupt being called too often
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
+    nrfx_systick_delay_ms(100);
+
+    if (stay_awake)
+    {
+        LOG("Staying awake");
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+        return;
+    }
 
     check_error(sd_softdevice_disable());
 
@@ -117,26 +127,6 @@ __attribute__((noreturn)) void shutdown(void)
     while (1)
     {
     }
-}
-
-static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
-                                              nrfx_gpiote_trigger_t trigger,
-                                              void *p_context)
-{
-    // Disable interrupts to prevent re-triggering from pin bounces
-    nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
-    nrfx_systick_delay_ms(100);
-
-    if (stay_awake)
-    {
-        LOG("Staying awake");
-
-        // Re-enable interrupts before exiting
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
-        return;
-    }
-
-    shutdown();
 }
 
 static void hardware_setup()
@@ -225,7 +215,7 @@ static void hardware_setup()
         check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
         nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_NOPULL,
+            .pull = NRF_GPIO_PIN_PULLDOWN, // TODO make this no pull once we get real hardware
         };
 
         nrfx_gpiote_trigger_config_t trigger_config = {
@@ -234,7 +224,7 @@ static void hardware_setup()
         };
 
         nrfx_gpiote_handler_config_t handler_config = {
-            .handler = case_detect_pin_interrupt_handler,
+            .handler = shutdown,
             .p_context = NULL,
         };
 
@@ -250,12 +240,12 @@ static void hardware_setup()
         check_error(charger_status.fail);
         bool charging = charger_status.value;
 
-        if (charging)
+        // if (charging)
         {
             // Just go to sleep if the case detect pin is high
             if (case_detect_pin == true)
             {
-                shutdown();
+                shutdown(0, 0, NULL);
             }
 
             // Otherwise it means the button was pressed. Un-pair

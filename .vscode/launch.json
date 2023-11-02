@@ -11,7 +11,7 @@
             "device": "nRF52840_XXAA",
             "showDevDebugOutput": "none",
             "servertype": "jlink",
-            "svdFile": "nrfx/mdk/nrf52840.svd",
+            "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
             "preLaunchTask": "Build Firmware",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [

@@ -2,7 +2,7 @@
 Tests the Frame specific Lua libraries over Bluetooth.
 """
 
-import asyncio
+import asyncio, sys
 from frameutils import Bluetooth
 
 

@@ -31,4 +31,6 @@ extern bool stay_awake;
 extern bool force_sleep;
 extern bool unpair;
 
-__attribute__((noreturn)) void shutdown(void);
+void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
+              nrfx_gpiote_trigger_t unused_gptiote_trigger,
+              void *unused_gptiote_context_pointer);

@@ -72,7 +72,7 @@ static int frame_sleep(lua_State *L)
     if (lua_gettop(L) == 0)
     {
         wait_for(L, 3);
-        shutdown();
+        shutdown(0, 0, NULL);
         return 0;
     }
 
