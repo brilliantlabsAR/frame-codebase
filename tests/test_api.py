@@ -165,6 +165,10 @@ async def main():
     await test.lua_equals("frame.time.date(1698943733)['is daylight saving']", "false")
 
     ## UTC timestamp from date
+    await test.lua_equals(
+        "frame.time.date({bob=6, second='a', minute='a', hour=14})", ""
+    )
+
     ## frame.time.date({day, month, ..})     => get epoch from local time table
 
     # Misc

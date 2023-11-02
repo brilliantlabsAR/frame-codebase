@@ -169,6 +169,31 @@ static int frame_time_date(lua_State *L)
 
     if (lua_istable(L, 1))
     {
+        struct tm time_table;
+
+        lua_pushnil(L);
+
+        while (lua_next(L, 1) != 0)
+        {
+            const char *key = lua_tostring(L, -2);
+
+            if (strcmp(key, "second") == 0)
+            {
+                if (lua_isnumber(L, -1))
+                {
+                    luaL_error(L, "expected second to be a number");
+                }
+                time_table.tm_sec = lua_tointeger(L, -1);
+            }
+
+            /* removes 'value'; keeps 'key' for next iteration */
+            lua_pop(L, 1);
+        }
+
+        time_t utc_timestamp_s = mktime(&time_table);
+
+        lua_pushinteger(L, utc_timestamp_s);
+
         return 1;
     }
 
