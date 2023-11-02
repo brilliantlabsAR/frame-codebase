@@ -124,7 +124,7 @@ async def main():
     await asyncio.sleep(2)
     await test.send_break_signal()
 
-    ## Date and timezones
+    ## Date now under different timezones
     await test.lua_send("frame.time.zone('0:00')")
     await test.lua_equals("frame.time.zone()", "+00:00")
 
@@ -152,7 +152,7 @@ async def main():
     await test.lua_error("frame.time.zone('15:00')")
     await test.lua_error("frame.time.zone('-13:00')")
 
-    ## Date from UTC timestamp
+    ## Date table from UTC timestamp
     await test.lua_send("frame.time.zone('+01:00')")
     await test.lua_equals("frame.time.date(1698943733)['second']", "53")
     await test.lua_equals("frame.time.date(1698943733)['minute']", "48")
@@ -164,12 +164,14 @@ async def main():
     await test.lua_equals("frame.time.date(1698943733)['day of year']", "305")
     await test.lua_equals("frame.time.date(1698943733)['is daylight saving']", "false")
 
-    ## UTC timestamp from date
+    ## UTC timestamp from date table
     await test.lua_equals(
-        "frame.time.date({bob=6, second='a', minute='a', hour=14})", ""
+        "frame.time.date({second=7, minute=31, hour=16, day=5, month=7, year=2023})",
+        "1688567467",
     )
-
-    ## frame.time.date({day, month, ..})     => get epoch from local time table
+    await test.lua_error(
+        "frame.time.date({second=7, minute='31', hour=16, day=5, month=7, year=2023})",
+    )
 
     # Misc
     await test.lua_equals("frame.battery_level()", "100.0")
