@@ -23,13 +23,12 @@
  */
 
 #include <stdbool.h>
-#include "lua.h"
-#include "lauxlib.h"
 #include "error_logging.h"
+#include "lauxlib.h"
+#include "lua.h"
+#include "main.h"
 #include "nrf_soc.h"
 #include "nrf52840.h"
-
-extern bool force_sleep;
 
 static void wait_for(lua_State *L, lua_Number seconds)
 {
@@ -73,7 +72,7 @@ static int frame_sleep(lua_State *L)
     if (lua_gettop(L) == 0)
     {
         wait_for(L, 3);
-        force_sleep = true;
+        shutdown();
         return 0;
     }
 

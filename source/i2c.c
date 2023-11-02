@@ -25,10 +25,9 @@
 #include <stdint.h>
 #include "error_logging.h"
 #include "i2c.h"
+#include "main.h"
 #include "nrfx_twim.h"
 #include "pinout.h"
-
-extern bool not_real_hardware;
 
 static const nrfx_twim_t i2c = NRFX_TWIM_INSTANCE(0);
 

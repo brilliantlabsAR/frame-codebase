@@ -35,6 +35,7 @@
 #include "nrf_clock.h"
 #include "nrf_gpio.h"
 #include "nrf.h"
+#include "nrf_sdm.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
@@ -73,56 +74,69 @@ static void set_power_rails(bool enable)
     check_error(i2c_write(PMIC, 0x2A, 0x0F, 0x0C).fail);
 }
 
-static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
-                                              nrfx_gpiote_trigger_t trigger,
-                                              void *p_context)
+__attribute__((noreturn)) void shutdown(void)
 {
-    // Disable interrupts to prevent too many triggers from pin bounces
+    // TODO can we simplify this
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
-    LOG("Going to sleep");
 
-    // Ignore high to low interrupt. It's only used to wake up the device
-    if (stay_awake)
-    {
-        LOG("Staying awake");
+    check_error(sd_softdevice_disable());
 
-        // Short delay to prevent too many messages clogging things up
-        nrfx_systick_delay_ms(100);
-
-        // Re-enable interrupts before exiting
-        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
-        return;
-    }
-
-    // Shutdown devices
     set_power_rails(false);
-    // TODO, do we need a decay time like we had for Monocle?
 
-    // Disable busses
-    // nrfx_spim_uninit(&display_spi);
-    // nrfx_spim_uninit(FPGA);
-    // nrfx_twim_uninit(&i2c);
+    // Disconnect AMUX
+    check_error(i2c_write(PMIC, 0x28, 0x0F, 0x00).fail);
 
-    // Deinitialize all the pins
+    // Put PMIC main bias into low power mode
+    check_error(i2c_write(PMIC, 0x10, 0x20, 0x20).fail);
+
+    // TODO deinit IMU interrupt
+
     for (uint8_t pin = 0; pin < 32; pin++)
     {
         nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
-        // nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
     }
 
-    // Set the wakeup pin to be the touch input
+    for (uint8_t pin = 0; pin < 16; pin++)
+    {
+        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
+    }
+
     nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
                              NRF_GPIO_PIN_PULLDOWN,
                              NRF_GPIO_PIN_SENSE_LOW);
 
-    // Power off until the next pin interrupt
-    // NRF_REGULATORS->SYSTEMOFF = 1;
+    // Clear the reset reasons
+    NRF_POWER->RESETREAS = 0xF000F;
+
+    LOG("Going to sleep");
+
+    NRF_POWER->SYSTEMOFF = 1;
     __DSB();
 
     // Only required for debug mode where core doesn't actually sleep
     while (1)
     {
     }
+}
+
+static void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t pin,
+                                              nrfx_gpiote_trigger_t trigger,
+                                              void *p_context)
+{
+    // Disable interrupts to prevent re-triggering from pin bounces
+    nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
+    nrfx_systick_delay_ms(100);
+
+    if (stay_awake)
+    {
+        LOG("Staying awake");
+
+        // Re-enable interrupts before exiting
+        nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+        return;
+    }
+
+    shutdown();
 }
 
 static void hardware_setup()
@@ -211,7 +225,7 @@ static void hardware_setup()
         check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
         nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLDOWN,
+            .pull = NRF_GPIO_PIN_NOPULL,
         };
 
         nrfx_gpiote_trigger_config_t trigger_config = {
@@ -241,9 +255,7 @@ static void hardware_setup()
             // Just go to sleep if the case detect pin is high
             if (case_detect_pin == true)
             {
-                case_detect_pin_interrupt_handler(CASE_DETECT_PIN,
-                                                  NRFX_GPIOTE_TRIGGER_HIGH,
-                                                  NULL);
+                shutdown();
             }
 
             // Otherwise it means the button was pressed. Un-pair

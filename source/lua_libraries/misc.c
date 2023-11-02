@@ -27,10 +27,9 @@
 #include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
+#include "main.h"
 #include "nrfx_saadc.h"
 #include "pinout.h"
-
-extern bool stay_awake;
 
 static int frame_battery_level(lua_State *L)
 {
