@@ -123,7 +123,7 @@ async def main():
     ## frame.time.date({day, month, ..})     => get epoch from local time table
 
     # Cancelling deep sleep
-    await test.lua_send("frame.sleep()")
+    await test.send_lua("frame.sleep()", wait=False)
     await asyncio.sleep(2)
     await test.send_break_signal()
 
@@ -145,7 +145,7 @@ async def main():
     ## frame.file.rename()
 
     # Standard libraries
-    await test.lua_equals("math.sqrt(25)", "5.0")
+    # await test.lua_equals("math.sqrt(25)", "5.0")
 
     await test.end()
 

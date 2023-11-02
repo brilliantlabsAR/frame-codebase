@@ -30,12 +30,23 @@
 #include "nrf_soc.h"
 #include "nrf52840.h"
 
-static void wait_for(lua_State *L, lua_Number seconds)
+static int wait_for(lua_State *L, lua_Number seconds)
 {
     // Get the current time
-    if (luaL_dostring(L, "return frame.time.utc()") != LUA_OK)
+    int status = luaL_dostring(L, "return frame.time.utc()");
+
+    switch (status)
     {
+    case LUA_OK:
+        break;
+
+    case LUA_YIELD:
+        return LUA_YIELD;
+        break;
+
+    default:
         error_with_message("lua error");
+        break;
     }
 
     // Add the current time to the wait time
@@ -44,9 +55,20 @@ static void wait_for(lua_State *L, lua_Number seconds)
     while (true)
     {
         // Keep getting the current time
-        if (luaL_dostring(L, "return frame.time.utc()") != LUA_OK)
+        status = luaL_dostring(L, "return frame.time.utc()");
+
+        switch (status)
         {
+        case LUA_OK:
+            break;
+
+        case LUA_YIELD:
+            return LUA_YIELD;
+            break;
+
+        default:
             error_with_message("lua error");
+            break;
         }
 
         lua_Number current_time = lua_tonumber(L, 2);
@@ -65,14 +87,19 @@ static void wait_for(lua_State *L, lua_Number seconds)
 
         check_error(sd_app_evt_wait());
     }
+
+    return LUA_OK;
 }
 
 static int frame_sleep(lua_State *L)
 {
     if (lua_gettop(L) == 0)
     {
-        wait_for(L, 3);
-        shutdown(0, 0, NULL);
+        if (wait_for(L, 3) == LUA_OK)
+        {
+            shutdown(0, 0, NULL);
+        }
+
         return 0;
     }
 

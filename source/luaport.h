@@ -37,4 +37,6 @@
 
 bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
+void lua_interrupt(void);
+
 void run_lua(void);

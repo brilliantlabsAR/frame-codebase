@@ -30,7 +30,7 @@
 #include "lualib.h"
 #include "nrfx_log.h"
 
-// static lua_State *globalL = NULL;
+static lua_State *globalL = NULL;
 
 static volatile struct repl_t
 {
@@ -66,21 +66,17 @@ bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
     return true;
 }
 
-/*
-** Hook set by signal function to stop the interpreter.
-*/
-// static void lstop(lua_State *L, lua_Debug *ar)
-// {
-//     (void)ar;                   /* unused arg. */
-//     lua_sethook(L, NULL, 0, 0); /* reset hook */
-//     luaL_error(L, "interrupted!");
-// }
+static void lua_interrupt_hook(lua_State *L, lua_Debug *ar)
+{
+    lua_sethook(L, NULL, 0, 0);
+    luaL_error(L, "interrupted!");
+}
 
-// void lua_interrupt(void)
-// {
-//     int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
-//     lua_sethook(globalL, lstop, flag, 1);
-// }
+void lua_interrupt(void)
+{
+    int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
+    lua_sethook(globalL, lua_interrupt_hook, flag, 1);
+}
 
 void run_lua(void)
 {
@@ -102,11 +98,10 @@ void run_lua(void)
     luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
     lua_pop(L, 8);
 
-    // Create a global frame table where the frame libraries will be placed
+    // Create a global frame table and load the libraries
     lua_newtable(L);
     lua_setglobal(L, "frame");
 
-    // Open the frame specific libraries
     open_frame_version_library(L);
     open_frame_bluetooth_library(L);
     // open_frame_display_library(L);
@@ -141,6 +136,7 @@ void run_lua(void)
             break;
         }
 
+        globalL = L;
         int status = luaL_dostring(L, (char *)repl.buffer);
 
         if (status != LUA_OK)

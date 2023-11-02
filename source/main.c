@@ -99,17 +99,14 @@ void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
     // Put PMIC main bias into low power mode
     check_error(i2c_write(PMIC, 0x10, 0x20, 0x20).fail);
 
-    // TODO deinit IMU interrupt
-
-    for (uint8_t pin = 0; pin < 32; pin++)
-    {
-        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
-    }
-
     for (uint8_t pin = 0; pin < 16; pin++)
     {
+        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
+        nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin + 16));
         nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
     }
+
+    // TODO IMU interrupt?
 
     nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
                              NRF_GPIO_PIN_PULLDOWN,
@@ -215,7 +212,7 @@ static void hardware_setup()
         check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
         nrfx_gpiote_input_config_t input_config = {
-            .pull = NRF_GPIO_PIN_PULLDOWN, // TODO make this no pull once we get real hardware
+            .pull = NRF_GPIO_PIN_NOPULL,
         };
 
         nrfx_gpiote_trigger_config_t trigger_config = {
@@ -240,7 +237,7 @@ static void hardware_setup()
         check_error(charger_status.fail);
         bool charging = charger_status.value;
 
-        // if (charging)
+        if (charging)
         {
             // Just go to sleep if the case detect pin is high
             if (case_detect_pin == true)
