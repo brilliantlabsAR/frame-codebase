@@ -62,7 +62,7 @@ class TestBluetooth(Bluetooth):
     async def lua_error(self, lua_string: str):
         response = await self.send_lua(lua_string + ";print(nil)", wait=True)
         if response != "nil":
-            self._log_passed(lua_string, response)
+            self._log_passed(lua_string, response.partition(":1: ")[2])
         else:
             self._log_failed(lua_string, response, None)
 

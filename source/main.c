@@ -74,9 +74,7 @@ static void set_power_rails(bool enable)
     check_error(i2c_write(PMIC, 0x2A, 0x0F, 0x0C).fail);
 }
 
-void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
-              nrfx_gpiote_trigger_t unused_gptiote_trigger,
-              void *unused_gptiote_context_pointer)
+void shutdown(bool enable_imu_wakeup)
 {
     // This helps to debounce and stops the interrupt being called too often
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
@@ -106,11 +104,16 @@ void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
         nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(1, pin));
     }
 
-    // TODO IMU interrupt?
-
     nrf_gpio_cfg_sense_input(CASE_DETECT_PIN,
-                             NRF_GPIO_PIN_PULLDOWN,
+                             NRF_GPIO_PIN_NOPULL,
                              NRF_GPIO_PIN_SENSE_LOW);
+
+    if (enable_imu_wakeup)
+    {
+        nrf_gpio_cfg_sense_input(IMU_INTERRUPT_PIN,
+                                 NRF_GPIO_PIN_NOPULL,
+                                 NRF_GPIO_PIN_SENSE_LOW);
+    }
 
     // Clear the reset reasons
     NRF_POWER->RESETREAS = 0xF000F;
@@ -124,6 +127,13 @@ void shutdown(nrfx_gpiote_pin_t unused_gptiote_pin,
     while (1)
     {
     }
+}
+
+void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
+                                       nrfx_gpiote_trigger_t unused_gptiote_trigger,
+                                       void *unused_gptiote_context_pointer)
+{
+    shutdown(false);
 }
 
 static void hardware_setup()
@@ -221,7 +231,7 @@ static void hardware_setup()
         };
 
         nrfx_gpiote_handler_config_t handler_config = {
-            .handler = shutdown,
+            .handler = case_detect_pin_interrupt_handler,
             .p_context = NULL,
         };
 
@@ -242,7 +252,7 @@ static void hardware_setup()
             // Just go to sleep if the case detect pin is high
             if (case_detect_pin == true)
             {
-                shutdown(0, 0, NULL);
+                shutdown(false);
             }
 
             // Otherwise it means the button was pressed. Un-pair
