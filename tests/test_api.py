@@ -112,20 +112,60 @@ async def main():
     ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
     ## TODO Tap, double tap?
 
-    # Time & light sleep
+    # Time & sleep functions
+
+    ## Delays
     await test.lua_send("frame.time.utc(1698756584)")
     await test.lua_send("frame.sleep(2.0)")
     await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
-    ## frame.time.zone()                     => get timezone
-    ## frame.time.zone(offset)               => set timezone
-    ## frame.time.date()                     => get local time as table
-    ## frame.time.date(epoch)                => get local time table from epoch
-    ## frame.time.date({day, month, ..})     => get epoch from local time table
 
-    # Cancelling deep sleep
+    ## Cancelling deep sleep
     await test.send_lua("frame.sleep()", wait=False)
     await asyncio.sleep(2)
     await test.send_break_signal()
+
+    ## Date and timezones
+    await test.lua_send("frame.time.zone('0:00')")
+    await test.lua_equals("frame.time.zone()", "+00:00")
+
+    await test.lua_equals("frame.time.date()['second']", "48")
+    await test.lua_equals("frame.time.date()['minute']", "49")
+    await test.lua_equals("frame.time.date()['hour']", "12")
+    await test.lua_equals("frame.time.date()['day']", "31")
+    await test.lua_equals("frame.time.date()['month']", "10")
+    await test.lua_equals("frame.time.date()['year']", "2023")
+    await test.lua_equals("frame.time.date()['weekday']", "2")
+    await test.lua_equals("frame.time.date()['day of year']", "303")
+    await test.lua_equals("frame.time.date()['is daylight saving']", "false")
+
+    await test.lua_send("frame.time.zone('2:30')")
+    await test.lua_equals("frame.time.zone()", "+02:30")
+
+    await test.lua_equals("frame.time.date()['minute']", "19")
+    await test.lua_equals("frame.time.date()['hour']", "15")
+
+    await test.lua_send("frame.time.zone('-3:45')")
+    await test.lua_equals("frame.time.zone()", "-03:45")
+
+    ## Invalid timezones
+    await test.lua_error("frame.time.zone('0:25')")
+    await test.lua_error("frame.time.zone('15:00')")
+    await test.lua_error("frame.time.zone('-13:00')")
+
+    ## Date from UTC timestamp
+    await test.lua_send("frame.time.zone('+01:00')")
+    await test.lua_equals("frame.time.date(1698943733)['second']", "53")
+    await test.lua_equals("frame.time.date(1698943733)['minute']", "48")
+    await test.lua_equals("frame.time.date(1698943733)['hour']", "17")
+    await test.lua_equals("frame.time.date(1698943733)['day']", "2")
+    await test.lua_equals("frame.time.date(1698943733)['month']", "11")
+    await test.lua_equals("frame.time.date(1698943733)['year']", "2023")
+    await test.lua_equals("frame.time.date(1698943733)['weekday']", "4")
+    await test.lua_equals("frame.time.date(1698943733)['day of year']", "305")
+    await test.lua_equals("frame.time.date(1698943733)['is daylight saving']", "false")
+
+    ## UTC timestamp from date
+    ## frame.time.date({day, month, ..})     => get epoch from local time table
 
     # Misc
     await test.lua_equals("frame.battery_level()", "100.0")
