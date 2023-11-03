@@ -100,8 +100,8 @@ async def main():
     ## TODO camera.read(bytes)
 
     # Microphone
-    ## TODO frame.microphone.record(seconds, samplerate, bitdepth)
-    ## TODO frame.microphone.read(bytes)
+    await test.lua_send("frame.microphone.record(20, 4000, 16)")
+    # await test.lua_equals("frame.microphone.read()[0]", "0")
 
     # IMU
     ## imu.heading().exactly                 => ±180 degrees
