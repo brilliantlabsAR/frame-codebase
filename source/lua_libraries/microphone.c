@@ -71,80 +71,43 @@ void PDM_IRQHandler(void)
 {
     uint32_t evt_mask = nrfy_pdm_events_process(
         NRF_PDM0,
-        NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED) |
-            NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STOPPED),
+        NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED),
         NULL);
-
-    LOG("Interrupt is %d", evt_mask);
 
     if (evt_mask & NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED))
     {
-        nrfy_pdm_abort(NRF_PDM0, NULL);
-    }
-}
+        fifo.head += fifo.chunk_size;
 
-static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
-{
-    bool stopping = false;
-
-    if (p_evt->error)
-    {
-        error_with_message("overflow");
-    }
-
-    if (p_evt->buffer_requested)
-    {
-        // After a buffer is written
-        if (p_evt->buffer_released != NULL)
+        if (fifo.head > 100000)
         {
-            fifo.head += fifo.chunk_size;
-
-            if (fifo.head > 100000)
-            {
-                fifo.head = 0;
-            }
-
-            if (fifo.head == fifo.tail)
-            {
-                LOG("FIFO write overflow");
-                check_error(nrfx_pdm_stop());
-                // Move the target head back to match head
-                return;
-            }
-
-            if (fifo.head == fifo.target_head - fifo.chunk_size) //  TODO roll this over properly
-            {
-                LOG("FIFO done after this frame");
-                stopping = true;
-            }
-
-            if (fifo.head == fifo.target_head)
-            {
-                LOG("Done!");
-                return;
-            }
+            fifo.head = 0;
         }
 
-        else
-        {
-            LOG("New buffer");
-        }
+        nrfy_pdm_buffer_t buffer = {
+            .length = fifo.chunk_size,
+            .p_buff = fifo.buffer + fifo.head};
 
         if (fifo.head % 1000 == 0)
             LOG("Setting buffer to: fifo.buffer[%u]", fifo.head);
 
-        check_error(nrfx_pdm_buffer_set(fifo.buffer + fifo.head,
-                                        fifo.chunk_size));
+        nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
 
-        if (stopping)
+        // TODO figure out if this is the last buffer
+
+        if (fifo.head == fifo.tail - fifo.chunk_size) // TODO roll this over properly
         {
-            check_error(nrfx_pdm_stop());
+            LOG("FIFO write overflow");
+            nrfy_pdm_abort(NRF_PDM0, NULL);
+            // Move the target head back to match head
+            return;
         }
-    }
 
-    else
-    {
-        LOG("Buffer not requested");
+        if (fifo.head == fifo.target_head) //  TODO roll this over properly
+        {
+            // LOG("FIFO done after the next frame");
+            LOG("Head is now at: %u", fifo.head);
+            nrfy_pdm_abort(NRF_PDM0, NULL);
+        }
     }
 }
 
