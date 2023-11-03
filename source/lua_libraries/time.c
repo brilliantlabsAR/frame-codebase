@@ -30,6 +30,8 @@
 #include "lua.h"
 #include "nrfx_rtc.h"
 
+#include "nrfx_log.h"
+
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
 
 static uint64_t utc_time_ms = 0;
@@ -168,94 +170,7 @@ static int frame_time_date(lua_State *L)
         return 1;
     }
 
-    // Return epoch from table
-    if (lua_istable(L, 1))
-    {
-        struct tm time_table;
-
-        lua_pushnil(L);
-
-        while (lua_next(L, 1) != 0)
-        {
-            const char *key = lua_tostring(L, -2);
-
-            if (strcmp(key, "second") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_sec = lua_tointeger(L, -1);
-            }
-
-            if (strcmp(key, "minute") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_min = lua_tointeger(L, -1) +
-                                    time_zone_offset_minutes;
-            }
-
-            if (strcmp(key, "hour") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_hour = lua_tointeger(L, -1) +
-                                     time_zone_offset_hours;
-            }
-
-            if (strcmp(key, "day") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_mday = lua_tointeger(L, -1);
-            }
-
-            if (strcmp(key, "month") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_mon = lua_tointeger(L, -1) - 1;
-            }
-
-            if (strcmp(key, "year") == 0)
-            {
-                if (lua_isnumber(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a number", key);
-                }
-                time_table.tm_year = lua_tointeger(L, -1) - 1900;
-            }
-
-            if (strcmp(key, "is daylight saving") == 0)
-            {
-                if (lua_isboolean(L, -1))
-                {
-                    luaL_error(L, "expected %s to be a boolean", key);
-                }
-                time_table.tm_isdst = lua_tointeger(L, -1);
-            }
-
-            lua_pop(L, 1);
-        }
-
-        time_t utc_timestamp_s = mktime(&time_table);
-
-        lua_pop(L, 1);
-        lua_pushinteger(L, utc_timestamp_s);
-
-        return 1;
-    }
-
-    luaL_error(L, "expected a utc timestamp or a table");
+    luaL_error(L, "expected a utc timestamp");
 
     return 0;
 }

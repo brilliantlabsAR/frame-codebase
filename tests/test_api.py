@@ -164,15 +164,6 @@ async def main():
     await test.lua_equals("frame.time.date(1698943733)['day of year']", "305")
     await test.lua_equals("frame.time.date(1698943733)['is daylight saving']", "false")
 
-    ## UTC timestamp from date table
-    await test.lua_equals(
-        "frame.time.date({second=7, minute=31, hour=16, day=5, month=7, year=2023})",
-        "1688567467",
-    )
-    await test.lua_error(
-        "frame.time.date({second=7, minute='31', hour=16, day=5, month=7, year=2023})",
-    )
-
     # Misc
     await test.lua_equals("frame.battery_level()", "100.0")
     await test.lua_equals("frame.stay_awake()", "false")
@@ -191,7 +182,7 @@ async def main():
     ## frame.file.rename()
 
     # Standard libraries
-    # await test.lua_equals("math.sqrt(25)", "5.0")
+    await test.lua_equals("math.sqrt(25)", "5.0")
 
     await test.end()
 
