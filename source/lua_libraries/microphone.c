@@ -31,6 +31,8 @@
 #include "nrfx_log.h"
 #include "nrfx_pdm.h"
 #include "pinout.h"
+#include <haly/nrfy_pdm.h>
+#include <haly/nrfy_gpio.h>
 
 static lua_Number seconds;
 static lua_Integer sample_rate;
@@ -50,8 +52,36 @@ static struct fifo
     .tail = 0,
 };
 
-static nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
-                                                          MICROPHONE_DATA_PIN);
+static nrfy_pdm_config_t config = {
+    .mode = NRF_PDM_MODE_MONO,
+    .edge = NRF_PDM_EDGE_LEFTRISING,
+    .pins =
+        {
+            .clk_pin = MICROPHONE_CLOCK_PIN,
+            .din_pin = MICROPHONE_DATA_PIN,
+        },
+    .clock_freq = NRF_PDM_FREQ_1032K,
+    .gain_l = NRF_PDM_GAIN_DEFAULT,
+    .gain_r = NRF_PDM_GAIN_DEFAULT,
+    .ratio = NRF_PDM_RATIO_64X,
+    .skip_psel_cfg = false,
+};
+
+void PDM_IRQHandler(void)
+{
+    uint32_t evt_mask = nrfy_pdm_events_process(
+        NRF_PDM0,
+        NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED) |
+            NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STOPPED),
+        NULL);
+
+    LOG("Interrupt is %d", evt_mask);
+
+    if (evt_mask & NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED))
+    {
+        nrfy_pdm_abort(NRF_PDM0, NULL);
+    }
+}
 
 static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 {
@@ -120,8 +150,6 @@ static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 
 static int frame_microphone_record(lua_State *L)
 {
-    check_error(nrfx_pdm_stop());
-
     luaL_checknumber(L, 1);
     seconds = lua_tonumber(L, 1);
 
@@ -179,8 +207,22 @@ static int frame_microphone_record(lua_State *L)
 
     LOG("New target head at: %d", fifo.target_head);
 
-    check_error(nrfx_pdm_reconfigure(&config));
-    check_error(nrfx_pdm_start());
+    nrfy_pdm_disable(NRF_PDM0);
+    nrfy_pdm_periph_configure(NRF_PDM0, &config);
+
+    nrfy_pdm_int_init(NRF_PDM0,
+                      NRF_PDM_INT_STARTED | NRF_PDM_INT_STOPPED,
+                      NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
+                      true);
+
+    nrfy_pdm_buffer_t buffer = {
+        .length = fifo.chunk_size,
+        .p_buff = fifo.buffer + fifo.head};
+
+    nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
+
+    nrfy_pdm_enable(NRF_PDM0);
+    nrfy_pdm_start(NRF_PDM0, NULL);
 
     return 0;
 }
@@ -200,14 +242,9 @@ static int frame_microphone_read(lua_State *L)
 
 void open_frame_microphone_library(lua_State *L)
 {
-    config.edge = NRF_PDM_EDGE_LEFTRISING;
-
-    if (nrfx_pdm_init_check())
-    {
-        return;
-    }
-
-    check_error(nrfx_pdm_init(&config, pdm_event_handler));
+    nrfy_gpio_pin_clear(config.pins.clk_pin);
+    nrfy_gpio_cfg_output(config.pins.clk_pin);
+    nrfy_gpio_cfg_input(config.pins.din_pin, NRF_GPIO_PIN_NOPULL);
 
     lua_getglobal(L, "frame");
 
