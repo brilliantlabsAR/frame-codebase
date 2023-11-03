@@ -174,7 +174,7 @@ static int frame_microphone_record(lua_State *L)
     nrfy_pdm_periph_configure(NRF_PDM0, &config);
 
     nrfy_pdm_int_init(NRF_PDM0,
-                      NRF_PDM_INT_STARTED | NRF_PDM_INT_STOPPED,
+                      NRF_PDM_INT_STARTED,
                       NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
                       true);
 
