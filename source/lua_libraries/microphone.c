@@ -36,6 +36,7 @@
 
 static lua_Integer bit_depth = 16;
 
+// Main FIFO where PDM data is written to
 #define FIFO_TOTAL_SIZE 80000
 static struct fifo
 {
@@ -49,6 +50,16 @@ static struct fifo
     .head = 0,
     .tail = 0,
     .remaining_samples = 0,
+};
+
+// Averaging FIFO that's used to down convert samples during microphone.read()
+static struct moving_average
+{
+    int16_t buffer[4];
+    size_t head;
+    size_t window_size;
+} moving_average = {
+    .head = 0,
 };
 
 static nrfy_pdm_config_t config = {
@@ -89,15 +100,16 @@ void PDM_IRQHandler(void)
 
         nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
 
-        // If the next cycle will cause an overflow, abort now
+        // If the next cycle will cause an overflow, abort early to avoid
+        // corrupting the existing data at the tail
         if ((fifo.head == fifo.tail - fifo.chunk_size) ||
             (fifo.tail == 0 && fifo.head + fifo.chunk_size == FIFO_TOTAL_SIZE))
         {
             nrfy_pdm_abort(NRF_PDM0, NULL);
         }
 
-        // The PDM module takes one extra cycle to stop so abort one chunk early
-        if (fifo.remaining_samples == fifo.chunk_size)
+        // Stop after the last sample is taken
+        if (fifo.remaining_samples == 0)
         {
             nrfy_pdm_abort(NRF_PDM0, NULL);
         }
@@ -110,9 +122,15 @@ static int frame_microphone_record(lua_State *L)
 
     luaL_checknumber(L, 1);
     lua_Number seconds = lua_tonumber(L, 1);
+    if (seconds <= 0)
+    {
+        luaL_error(L, "seconds must be greater than 0");
+    }
 
     luaL_checkinteger(L, 2);
     lua_Integer sample_rate = lua_tointeger(L, 2);
+
+    // Set the PDM clock and ratio
     switch (sample_rate)
     {
     case 20000:
@@ -139,6 +157,26 @@ static int frame_microphone_record(lua_State *L)
         break;
     }
 
+    // Set the moving average window
+    switch (sample_rate)
+    {
+    case 20000:
+    case 16000:
+    case 12500:
+        moving_average.window_size = 1;
+        break;
+
+    case 10000:
+    case 8000:
+        moving_average.window_size = 2;
+        break;
+
+    case 5000:
+    case 4000:
+        moving_average.window_size = 4;
+        break;
+    }
+
     if (lua_gettop(L) > 2)
     {
         luaL_checkinteger(L, 3);
@@ -153,9 +191,11 @@ static int frame_microphone_record(lua_State *L)
 
     // Figure out total samples, and round up to nearest chunksize
     fifo.remaining_samples =
-        (size_t)ceil(seconds * sample_rate / fifo.chunk_size) * fifo.chunk_size;
+        (size_t)ceil(seconds * sample_rate / fifo.chunk_size) *
+        fifo.chunk_size *
+        moving_average.window_size;
 
-    // Reset heads and tails
+    // Reset head and tail
     fifo.head = 0;
     fifo.tail = 0;
 
@@ -172,21 +212,102 @@ static int frame_microphone_record(lua_State *L)
     return 0;
 }
 
+static int16_t averaged_sample()
+{
+    for (size_t i = 0; i < moving_average.window_size; i++)
+    {
+        // Pop from main fifo
+        int16_t raw_sample = fifo.buffer[fifo.tail];
+
+        fifo.tail++;
+
+        if (fifo.tail == FIFO_TOTAL_SIZE)
+        {
+            fifo.tail = 0;
+        }
+
+        // Push into averaging fifo
+        moving_average.buffer[moving_average.head] = raw_sample;
+
+        moving_average.head++;
+
+        if (moving_average.head == moving_average.window_size)
+        {
+            moving_average.head = 0;
+        }
+    }
+
+    int32_t sum = 0.0f;
+    for (size_t i = 0; i < moving_average.window_size; i++)
+    {
+        sum += moving_average.buffer[i];
+    }
+
+    float average = roundf((float)sum / moving_average.window_size);
+
+    return (int16_t)average;
+}
+
 static int frame_microphone_read(lua_State *L)
 {
-    // TODO get requested number of samples
-
-    // TODO limit max number of samples which can be read out
-
-    // TODO figure out number of samples available, return nil if none available
-    // TODO adjust for byte packing
-    lua_createtable(L, 10, 0);
-
-    // TODO populate table with samples from tail
-    for (int i = 0; i < 10; i++)
+    luaL_checkinteger(L, 1);
+    lua_Integer bytes = lua_tointeger(L, 1);
+    if (bytes > 512)
     {
-        lua_pushinteger(L, i);
-        lua_seti(L, -2, i);
+        luaL_error(L, "too many bytes requested");
+    }
+
+    if (bytes % 4 != 0)
+    {
+        luaL_error(L, "bytes must be a multiple of 4");
+    }
+
+    // Return nil if the fifo is empty
+    if (fifo.tail == fifo.head)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    lua_newtable(L);
+    lua_Integer i = 1;
+
+    while (true)
+    {
+        if (fifo.tail == fifo.head)
+        {
+            break;
+        }
+
+        switch (bit_depth)
+        {
+        case 16:
+            int16_t sample16 = averaged_sample();
+            lua_pushinteger(L, sample16 >> 8);
+            lua_seti(L, -2, i++);
+            lua_pushinteger(L, sample16 & 0xFF);
+            lua_seti(L, -2, i++);
+            break;
+
+        case 8:
+            int16_t sample8 = averaged_sample() >> 8;
+            lua_pushinteger(L, sample8);
+            lua_seti(L, -2, i++);
+            break;
+
+        case 4:
+            int16_t sample4_top = (averaged_sample() >> 12) & 0x0F;
+            int16_t sample4_bot = (averaged_sample() >> 12) & 0x0F;
+            int8_t combined_sample = (sample4_top << 4) | sample4_bot;
+            lua_pushinteger(L, combined_sample);
+            lua_seti(L, -2, i++);
+            break;
+        }
+
+        if (i == bytes)
+        {
+            break;
+        }
     }
 
     return 1;
