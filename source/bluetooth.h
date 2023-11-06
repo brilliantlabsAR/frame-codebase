@@ -27,6 +27,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void bluetooth_setup(void);
+void bluetooth_setup(bool unpair);
 
 bool bluetooth_send_data(const uint8_t *data, size_t length);

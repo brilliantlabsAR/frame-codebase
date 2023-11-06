@@ -30,7 +30,6 @@
 #include "nrf_nvic.h"
 #include "nrf_sdm.h"
 #include "nrfx_log.h"
-
 nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 
 extern uint32_t _ram_start;
@@ -63,7 +62,6 @@ static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
     error_with_message("Softdevice crashed");
 }
-
 void SD_EVT_IRQHandler(void)
 {
     uint32_t evt_id;
@@ -217,22 +215,37 @@ void SD_EVT_IRQHandler(void)
                                                       NULL));
             break;
         }
-
+        case BLE_GAP_EVT_AUTH_KEY_REQUEST:
+        {
+            // reply with none as no I/O to see key
+            check_error(sd_ble_gap_auth_key_reply(ble_handles.connection, BLE_GAP_AUTH_KEY_TYPE_NONE, NULL));
+        }
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
         {
-            // TODO enabling pairing later
-            check_error(sd_ble_gap_sec_params_reply(
-                ble_handles.connection,
-                BLE_GAP_SEC_STATUS_PAIRING_NOT_SUPP,
-                NULL,
-                NULL));
+            static ble_gap_sec_params_t m_sec_params;
+            m_sec_params.bond = 1U;
+            m_sec_params.mitm = 0;
+            m_sec_params.io_caps = BLE_GAP_IO_CAPS_NONE;
+            m_sec_params.oob = 0;
+            m_sec_params.min_key_size = 7;
+            m_sec_params.max_key_size = 16;
+            check_error(sd_ble_gap_sec_params_reply(ble_handles.connection,
+                                                    BLE_GAP_SEC_STATUS_SUCCESS,
+                                                    &m_sec_params, NULL));
             break;
         }
+        case BLE_GAP_EVT_AUTH_STATUS:
+        {
+            // TODO  after successful pair store peer bond info and after boot allow only that peer to connect
 
+            break;
+        }
+        case BLE_GAP_EVT_CONN_SEC_UPDATE:
         case BLE_GAP_EVT_CONN_PARAM_UPDATE:
         case BLE_GAP_EVT_PHY_UPDATE:
         case BLE_GAP_EVT_DATA_LENGTH_UPDATE:
         case BLE_GATTS_EVT_HVN_TX_COMPLETE:
+
         {
             // Unused events
             break;
@@ -247,8 +260,9 @@ void SD_EVT_IRQHandler(void)
     }
 }
 
-void bluetooth_setup(void)
+void bluetooth_setup(bool unpair)
 {
+    //  TODO if unpair delete bond info
     // Enable the softdevice using internal RC oscillator
     check_error(sd_softdevice_enable(NULL, softdevice_assert_handler));
 
@@ -301,8 +315,7 @@ void bluetooth_setup(void)
 
     // Set security to open // TODO make this paired
     ble_gap_conn_sec_mode_t sec_mode;
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
-
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&sec_mode);
     // Set device name
     const char device_name[] = "frame";
     check_error(sd_ble_gap_device_name_set(&sec_mode,
@@ -316,7 +329,6 @@ void bluetooth_setup(void)
     gap_conn_params.slave_latency = 0;
     gap_conn_params.conn_sup_timeout = (2000 * 1000) / 10000;
     check_error(sd_ble_gap_ppcp_set(&gap_conn_params));
-
     // Create the service UUIDs
     ble_uuid128_t repl_service_uuid128 = {.uuid128 = {0xC4, 0x49, 0xAD, 0xF6,
                                                       0x31, 0x84, 0x4C, 0x65,
@@ -339,8 +351,8 @@ void bluetooth_setup(void)
     rx_char_md.char_props.write_wo_resp = 1;
 
     ble_gatts_attr_md_t rx_attr_md = {0};
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&rx_attr_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&rx_attr_md.write_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&rx_attr_md.read_perm);
+    BLE_GAP_CONN_SEC_MODE_SET_ENC_NO_MITM(&rx_attr_md.write_perm);
     rx_attr_md.vloc = BLE_GATTS_VLOC_STACK;
     rx_attr_md.vlen = 1;
 

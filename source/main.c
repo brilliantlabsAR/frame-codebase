@@ -386,7 +386,7 @@ int main(void)
 
     hardware_setup();
 
-    bluetooth_setup();
+    bluetooth_setup(unpair);
 
     while (1)
     {
