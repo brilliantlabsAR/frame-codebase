@@ -100,6 +100,8 @@ async def main():
     ## TODO camera.read(bytes)
 
     # Microphone
+    await test.lua_send("frame.microphone.record(10.0001, 4000, 16)")
+    await asyncio.sleep(1)
     await test.lua_send("frame.microphone.record(20, 4000, 16)")
     # await test.lua_equals("frame.microphone.read()[0]", "0")
 

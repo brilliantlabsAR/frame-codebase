@@ -34,23 +34,21 @@
 #include <haly/nrfy_pdm.h>
 #include <haly/nrfy_gpio.h>
 
-static lua_Number seconds;
-static lua_Integer sample_rate;
 static lua_Integer bit_depth = 16;
 
-static const size_t fifo_total_size = 1000000;
+#define FIFO_TOTAL_SIZE 80000
 static struct fifo
 {
-    int16_t buffer[fifo_total_size];
+    int16_t buffer[FIFO_TOTAL_SIZE];
     size_t chunk_size;
     size_t head;
-    size_t target_head;
     size_t tail;
+    size_t remaining_samples;
 } fifo = {
-    .head = 0,
     .chunk_size = 100,
-    .target_head = 0,
+    .head = 0,
     .tail = 0,
+    .remaining_samples = 0,
 };
 
 static nrfy_pdm_config_t config = {
@@ -78,14 +76,12 @@ void PDM_IRQHandler(void)
     if (evt_mask & NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED))
     {
         fifo.head += fifo.chunk_size;
+        fifo.remaining_samples -= fifo.chunk_size;
 
-        if (fifo.head > fifo_total_size)
+        if (fifo.head == FIFO_TOTAL_SIZE)
         {
             fifo.head = 0;
         }
-
-        if (fifo.head % 1000 == 0)
-            LOG("Setting buffer to: fifo.buffer[%u]", fifo.head);
 
         nrfy_pdm_buffer_t buffer = {
             .length = fifo.chunk_size,
@@ -93,17 +89,16 @@ void PDM_IRQHandler(void)
 
         nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
 
-        // If overflow, force completion on this sample
-        // TODO this corrupts the one chunk at the tail
-        if (fifo.head == fifo.tail)
+        // If the next cycle will cause an overflow, abort now
+        if ((fifo.head == fifo.tail - fifo.chunk_size) ||
+            (fifo.tail == 0 && fifo.head + fifo.chunk_size == FIFO_TOTAL_SIZE))
         {
-            LOG("FIFO write overflow");
-            fifo.target_head = fifo.head;
+            nrfy_pdm_abort(NRF_PDM0, NULL);
         }
 
-        if (fifo.head == fifo.target_head)
+        // The PDM module takes one extra cycle to stop so abort one chunk early
+        if (fifo.remaining_samples == fifo.chunk_size)
         {
-            LOG("Head is now at: %u", fifo.head);
             nrfy_pdm_abort(NRF_PDM0, NULL);
         }
     }
@@ -111,11 +106,13 @@ void PDM_IRQHandler(void)
 
 static int frame_microphone_record(lua_State *L)
 {
+    nrfy_pdm_disable(NRF_PDM0);
+
     luaL_checknumber(L, 1);
-    seconds = lua_tonumber(L, 1);
+    lua_Number seconds = lua_tonumber(L, 1);
 
     luaL_checkinteger(L, 2);
-    sample_rate = lua_tointeger(L, 2);
+    lua_Integer sample_rate = lua_tointeger(L, 2);
     switch (sample_rate)
     {
     case 20000:
@@ -152,41 +149,24 @@ static int frame_microphone_record(lua_State *L)
         }
     }
 
-    size_t requested_samples = (size_t)ceil(seconds * sample_rate);
+    // TODO do we want to add a gain control?
 
-    // TODO round up to nearest chunksize
+    // Figure out total samples, and round up to nearest chunksize
+    fifo.remaining_samples =
+        (size_t)ceil(seconds * sample_rate / fifo.chunk_size) * fifo.chunk_size;
 
-    if (requested_samples > fifo_total_size)
-    {
-        luaL_error(L, "exceeded maximum buffer size of %d", fifo_total_size);
-    }
+    // Reset heads and tails
+    fifo.head = 0;
+    fifo.tail = 0;
 
-    fifo.target_head += requested_samples;
-
-    if (fifo.target_head > fifo_total_size)
-    {
-        fifo.target_head -= fifo_total_size;
-    }
-
-    LOG("New target head at: %d", fifo.target_head);
-
-    // TODO do we want to add gain controls?
-
-    // nrfy_pdm_disable(NRF_PDM0);
     nrfy_pdm_periph_configure(NRF_PDM0, &config);
-
-    // nrfy_pdm_int_init(NRF_PDM0,
-    //                   NRF_PDM_INT_STARTED,
-    //                   NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
-    //                   true);
 
     nrfy_pdm_buffer_t buffer = {
         .length = fifo.chunk_size,
         .p_buff = fifo.buffer + fifo.head};
 
     nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
-
-    // nrfy_pdm_enable(NRF_PDM0);
+    nrfy_pdm_enable(NRF_PDM0);
     nrfy_pdm_start(NRF_PDM0, NULL);
 
     return 0;
@@ -214,7 +194,7 @@ static int frame_microphone_read(lua_State *L)
 
 void open_frame_microphone_library(lua_State *L)
 {
-    if (fifo_total_size % fifo.chunk_size)
+    if (FIFO_TOTAL_SIZE % fifo.chunk_size)
     {
         error_with_message("chunks don't fit evenly into fifo");
     }
@@ -227,8 +207,6 @@ void open_frame_microphone_library(lua_State *L)
                       NRF_PDM_INT_STARTED,
                       NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
                       true);
-
-    nrfy_pdm_enable(NRF_PDM0);
 
     lua_getglobal(L, "frame");
 
