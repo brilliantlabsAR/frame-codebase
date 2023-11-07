@@ -100,8 +100,38 @@ async def main():
     ## TODO camera.read(bytes)
 
     # Microphone
-    ## TODO frame.microphone.record(seconds, samplerate, bitdepth)
-    ## TODO frame.microphone.read(bytes)
+
+    ## Expected sizes for different record options
+    await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
+    await asyncio.sleep(0.1)
+    await test.lua_equals("#frame.microphone.read(512)", "400")
+
+    await test.lua_send("frame.microphone.record(0.05, 8000, 8)")
+    await asyncio.sleep(0.1)
+    await test.lua_equals("#frame.microphone.read(512)", "400")
+
+    await test.lua_send("frame.microphone.record(0.05, 4000, 4)")
+    await asyncio.sleep(0.1)
+    await test.lua_equals("#frame.microphone.read(512)", "100")
+
+    ## Unexpected parameters
+    await test.lua_error("frame.microphone.record(0, 16000, 8)")
+    await test.lua_error("frame.microphone.record(-3, 16000, 8)")
+    await test.lua_error("frame.microphone.record(5, 12000, 8)")
+    await test.lua_error("frame.microphone.record(5, 16000, 12)")
+
+    ## Restarted recording
+    await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
+    await asyncio.sleep(1)
+    await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
+    await asyncio.sleep(0.1)
+    await test.lua_equals("#frame.microphone.read(512)", "400")
+
+    ## Continuous readout
+    # TODO
+
+    ## FIFO overflow
+    # TODO
 
     # IMU
     ## imu.heading().exactly                 => ±180 degrees
