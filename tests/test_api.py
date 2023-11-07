@@ -128,8 +128,10 @@ async def main():
     await test.lua_equals("#frame.microphone.read(512)", "400")
 
     ## Continuous readout
+    # TODO
 
     ## FIFO overflow
+    # TODO
 
     # IMU
     ## imu.heading().exactly                 => ±180 degrees
