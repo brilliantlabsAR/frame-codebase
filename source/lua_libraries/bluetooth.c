@@ -30,7 +30,7 @@
 
 extern uint16_t ble_negotiated_mtu;
 
-static int frame_bluetooth_address(lua_State *L)
+static int lua_bluetooth_address(lua_State *L)
 {
     ble_gap_addr_t addr;
     check_error(sd_ble_gap_addr_get(&addr));
@@ -44,14 +44,14 @@ static int frame_bluetooth_address(lua_State *L)
     return 1;
 }
 
-static int frame_bluetooth_data_max_length(lua_State *L)
+static int lua_bluetooth_data_max_length(lua_State *L)
 {
     // -1 because we need to add the data flag at the start
     lua_pushinteger(L, ble_negotiated_mtu - 1);
     return 1;
 }
 
-static int frame_bluetooth_data_send(lua_State *L)
+static int lua_bluetooth_data_send(lua_State *L)
 {
     luaL_checkstring(L, 1);
 
@@ -77,20 +77,33 @@ static int frame_bluetooth_data_send(lua_State *L)
     return 0;
 }
 
-void open_frame_bluetooth_library(lua_State *L)
+void lua_bluetooth_data_handler(uint8_t *data, size_t length)
+{
+}
+
+static int lua_bluetooth_receive_callback(lua_State *L)
+{
+
+    return 0;
+}
+
+void lua_open_bluetooth_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
 
-    lua_pushcfunction(L, frame_bluetooth_address);
+    lua_pushcfunction(L, lua_bluetooth_address);
     lua_setfield(L, -2, "address");
 
-    lua_pushcfunction(L, frame_bluetooth_data_max_length);
+    lua_pushcfunction(L, lua_bluetooth_data_max_length);
     lua_setfield(L, -2, "data_max_length");
 
-    lua_pushcfunction(L, frame_bluetooth_data_send);
+    lua_pushcfunction(L, lua_bluetooth_data_send);
     lua_setfield(L, -2, "data_send");
+
+    lua_pushcfunction(L, lua_bluetooth_receive_callback);
+    lua_setfield(L, -2, "receive_callback");
 
     lua_setfield(L, -2, "bluetooth");
 

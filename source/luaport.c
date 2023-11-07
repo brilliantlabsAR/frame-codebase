@@ -102,16 +102,15 @@ void run_lua(void)
     lua_newtable(L);
     lua_setglobal(L, "frame");
 
-    open_frame_version_library(L);
-    open_frame_bluetooth_library(L);
-    // open_frame_display_library(L);
-    // open_frame_camera_library(L);
-    open_frame_microphone_library(L);
-    // open_frame_imu_library(L);
-    open_frame_time_library(L);
-    open_frame_sleep_library(L);
-    open_frame_misc_library(L);
-    // open_frame_file_library(L);
+    lua_open_version_library(L);
+    lua_open_power_library(L);
+    lua_open_bluetooth_library(L);
+    // lua_open_display_library(L);
+    // lua_open_camera_library(L);
+    lua_open_microphone_library(L);
+    // lua_open_imu_library(L);
+    lua_open_time_library(L);
+    // lua_open_file_library(L);
 
     // Make sure the above functions cleared up the stack correctly
     if (lua_gettop(L) != 0)

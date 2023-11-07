@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include "ble.h"
 #include "error_logging.h"
+#include "frame_lua_libraries.h"
 #include "luaport.h"
 #include "nrf_nvic.h"
 #include "nrf_sdm.h"
@@ -170,7 +171,9 @@ void SD_EVT_IRQHandler(void)
                 // Handle raw data
                 if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x01)
                 {
-                    // TODO
+                    lua_bluetooth_data_handler(
+                        ble_evt->evt.gatts_evt.params.write.data + 1,
+                        ble_evt->evt.gatts_evt.params.write.len - 1);
                 }
 
                 // Catch keyboard interrupts

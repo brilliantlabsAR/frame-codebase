@@ -28,10 +28,110 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "main.h"
+#include "nrf_soc.h"
+#include "nrf52840.h"
 #include "nrfx_saadc.h"
 #include "pinout.h"
 
-static int frame_battery_level(lua_State *L)
+static int wait_for(lua_State *L, lua_Number seconds)
+{
+    // Get the current time
+    int status = luaL_dostring(L, "return frame.time.utc()");
+
+    switch (status)
+    {
+    case LUA_OK:
+        break;
+
+    case LUA_YIELD:
+        return LUA_YIELD;
+        break;
+
+    default:
+        error_with_message("lua error");
+        break;
+    }
+
+    // Add the current time to the wait time
+    lua_Number wait_until = lua_tonumber(L, 1) + seconds;
+
+    while (true)
+    {
+        // Keep getting the current time
+        status = luaL_dostring(L, "return frame.time.utc()");
+
+        switch (status)
+        {
+        case LUA_OK:
+            break;
+
+        case LUA_YIELD:
+            return LUA_YIELD;
+            break;
+
+        default:
+            error_with_message("lua error");
+            break;
+        }
+
+        lua_Number current_time = lua_tonumber(L, 2);
+        lua_pop(L, 1);
+
+        if (current_time >= wait_until)
+        {
+            break;
+        }
+
+        // Clear exceptions
+        __set_FPSCR(__get_FPSCR() & ~(0x0000009F));
+        (void)__get_FPSCR();
+
+        NVIC_ClearPendingIRQ(FPU_IRQn);
+
+        check_error(sd_app_evt_wait());
+    }
+
+    return LUA_OK;
+}
+
+static int lua_sleep(lua_State *L)
+{
+    if (lua_gettop(L) == 0)
+    {
+        if (wait_for(L, 3) == LUA_OK)
+        {
+            shutdown(true);
+        }
+
+        return 0;
+    }
+
+    lua_Number seconds = lua_tonumber(L, 1);
+    lua_pop(L, 1);
+
+    wait_for(L, seconds);
+    return 0;
+}
+
+static int lua_stay_awake(lua_State *L)
+{
+    if (lua_gettop(L) > 1)
+    {
+        return luaL_error(L, "expected 0 or 1 arguments");
+    }
+
+    if (lua_gettop(L) == 1)
+    {
+        luaL_checktype(L, 1, LUA_TBOOLEAN);
+        stay_awake = lua_toboolean(L, 1);
+        return 0;
+    }
+
+    lua_pushboolean(L, stay_awake);
+    return 1;
+}
+
+static int lua_battery_level(lua_State *L)
 {
     nrf_saadc_value_t result;
     check_error(nrfx_saadc_simple_mode_set(1,
@@ -65,25 +165,7 @@ static int frame_battery_level(lua_State *L)
     return 1;
 }
 
-static int frame_stay_awake(lua_State *L)
-{
-    if (lua_gettop(L) > 1)
-    {
-        return luaL_error(L, "expected 0 or 1 arguments");
-    }
-
-    if (lua_gettop(L) == 1)
-    {
-        luaL_checktype(L, 1, LUA_TBOOLEAN);
-        stay_awake = lua_toboolean(L, 1);
-        return 0;
-    }
-
-    lua_pushboolean(L, stay_awake);
-    return 1;
-}
-
-void open_frame_misc_library(lua_State *L)
+void lua_open_power_library(lua_State *L)
 {
     // Configure ADC
     if (nrfx_saadc_init_check() == false)
@@ -102,11 +184,14 @@ void open_frame_misc_library(lua_State *L)
 
     lua_getglobal(L, "frame");
 
-    lua_pushcfunction(L, frame_battery_level);
-    lua_setfield(L, -2, "battery_level");
+    lua_pushcfunction(L, lua_sleep);
+    lua_setfield(L, -2, "sleep");
 
-    lua_pushcfunction(L, frame_stay_awake);
+    lua_pushcfunction(L, lua_stay_awake);
     lua_setfield(L, -2, "stay_awake");
+
+    lua_pushcfunction(L, lua_battery_level);
+    lua_setfield(L, -2, "battery_level");
 
     lua_pop(L, 1);
 }

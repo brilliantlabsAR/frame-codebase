@@ -116,7 +116,7 @@ void PDM_IRQHandler(void)
     }
 }
 
-static int frame_microphone_record(lua_State *L)
+static int lua_microphone_record(lua_State *L)
 {
     nrfy_pdm_disable(NRF_PDM0);
 
@@ -248,7 +248,7 @@ static int16_t averaged_sample()
     return (int16_t)average;
 }
 
-static int frame_microphone_read(lua_State *L)
+static int lua_microphone_read(lua_State *L)
 {
     luaL_checkinteger(L, 1);
     lua_Integer bytes = lua_tointeger(L, 1);
@@ -313,7 +313,7 @@ static int frame_microphone_read(lua_State *L)
     return 1;
 }
 
-void open_frame_microphone_library(lua_State *L)
+void lua_open_microphone_library(lua_State *L)
 {
     if (FIFO_TOTAL_SIZE % fifo.chunk_size)
     {
@@ -333,10 +333,10 @@ void open_frame_microphone_library(lua_State *L)
 
     lua_newtable(L);
 
-    lua_pushcfunction(L, frame_microphone_record);
+    lua_pushcfunction(L, lua_microphone_record);
     lua_setfield(L, -2, "record");
 
-    lua_pushcfunction(L, frame_microphone_read);
+    lua_pushcfunction(L, lua_microphone_read);
     lua_setfield(L, -2, "read");
 
     lua_setfield(L, -2, "microphone");

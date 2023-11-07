@@ -24,7 +24,7 @@
 
 #include "lua.h"
 
-void open_frame_version_library(lua_State *L)
+void lua_open_version_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
 

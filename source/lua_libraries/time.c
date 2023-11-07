@@ -43,7 +43,7 @@ static void rtc_event_handler(nrfx_rtc_int_type_t int_type)
     utc_time_ms++;
 }
 
-static int frame_time_utc(lua_State *L)
+static int lua_time_utc(lua_State *L)
 {
     if (lua_gettop(L) == 0)
     {
@@ -60,7 +60,7 @@ static int frame_time_utc(lua_State *L)
     return 0;
 }
 
-static int frame_time_zone(lua_State *L)
+static int lua_time_zone(lua_State *L)
 {
     if (lua_gettop(L) == 0)
     {
@@ -143,7 +143,7 @@ static void table_from_time(lua_State *L, time_t time)
     lua_setfield(L, -2, "is daylight saving");
 }
 
-static int frame_time_date(lua_State *L)
+static int lua_time_date(lua_State *L)
 {
     // Get local time as table
     if (lua_gettop(L) == 0)
@@ -175,7 +175,7 @@ static int frame_time_date(lua_State *L)
     return 0;
 }
 
-void open_frame_time_library(lua_State *L)
+void lua_open_time_library(lua_State *L)
 {
     // Configure the real time clock
     {
@@ -194,13 +194,13 @@ void open_frame_time_library(lua_State *L)
 
     lua_newtable(L);
 
-    lua_pushcfunction(L, frame_time_utc);
+    lua_pushcfunction(L, lua_time_utc);
     lua_setfield(L, -2, "utc");
 
-    lua_pushcfunction(L, frame_time_zone);
+    lua_pushcfunction(L, lua_time_zone);
     lua_setfield(L, -2, "zone");
 
-    lua_pushcfunction(L, frame_time_date);
+    lua_pushcfunction(L, lua_time_date);
     lua_setfield(L, -2, "date");
 
     lua_setfield(L, -2, "time");
