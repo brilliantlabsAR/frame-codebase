@@ -24,11 +24,12 @@
 
 #include <stdint.h>
 #include "ble_gap.h"
+#include "bluetooth.h"
 #include "error_logging.h"
-#include "lua.h"
+#include "frame_lua_libraries.h"
 #include "lauxlib.h"
-
-extern uint16_t ble_negotiated_mtu;
+#include "lua.h"
+#include "luaport.h"
 
 static int lua_bluetooth_address(lua_State *L)
 {
@@ -44,14 +45,14 @@ static int lua_bluetooth_address(lua_State *L)
     return 1;
 }
 
-static int lua_bluetooth_data_max_length(lua_State *L)
+static int lua_bluetooth_max_length(lua_State *L)
 {
     // -1 because we need to add the data flag at the start
     lua_pushinteger(L, ble_negotiated_mtu - 1);
     return 1;
 }
 
-static int lua_bluetooth_data_send(lua_State *L)
+static int lua_bluetooth_send(lua_State *L)
 {
     luaL_checkstring(L, 1);
 
@@ -77,12 +78,60 @@ static int lua_bluetooth_data_send(lua_State *L)
     return 0;
 }
 
-void lua_bluetooth_data_handler(uint8_t *data, size_t length)
+static struct lua_bluetooth_callback
 {
+    int function;
+    uint8_t data[BLE_PREFERRED_MAX_MTU];
+    size_t length;
+} lua_bluetooth_callback = {
+    .function = 0,
+};
+
+static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
+{
+    lua_sethook(L, NULL, 0, 0);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_callback.function);
+
+    lua_createtable(L, lua_bluetooth_callback.length, 0);
+    for (size_t i = 0; i < lua_bluetooth_callback.length; i++)
+    {
+        lua_pushinteger(L, lua_bluetooth_callback.data[i]);
+        lua_seti(L, -2, i + 1);
+    }
+
+    lua_pcall(L, 1, 0, 0);
+}
+
+void lua_bluetooth_data_interrupt(uint8_t *data, size_t length)
+{
+    if (lua_bluetooth_callback.function == 0)
+    {
+        return;
+    }
+
+    memcpy(lua_bluetooth_callback.data, data, length);
+    lua_bluetooth_callback.length = length;
+
+    int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
+    lua_sethook(globalL, lua_bluetooth_receive_callback_handler, flag, 1);
 }
 
 static int lua_bluetooth_receive_callback(lua_State *L)
 {
+    if (lua_isnil(L, 1))
+    {
+        lua_bluetooth_callback.function = 0;
+        return 0;
+    }
+
+    if (lua_isfunction(L, 1))
+    {
+        lua_bluetooth_callback.function = luaL_ref(L, LUA_REGISTRYINDEX);
+        return 0;
+    }
+
+    luaL_error(L, "expected nil or function");
 
     return 0;
 }
@@ -96,11 +145,11 @@ void lua_open_bluetooth_library(lua_State *L)
     lua_pushcfunction(L, lua_bluetooth_address);
     lua_setfield(L, -2, "address");
 
-    lua_pushcfunction(L, lua_bluetooth_data_max_length);
-    lua_setfield(L, -2, "data_max_length");
+    lua_pushcfunction(L, lua_bluetooth_max_length);
+    lua_setfield(L, -2, "max_length");
 
-    lua_pushcfunction(L, lua_bluetooth_data_send);
-    lua_setfield(L, -2, "data_send");
+    lua_pushcfunction(L, lua_bluetooth_send);
+    lua_setfield(L, -2, "send");
 
     lua_pushcfunction(L, lua_bluetooth_receive_callback);
     lua_setfield(L, -2, "receive_callback");

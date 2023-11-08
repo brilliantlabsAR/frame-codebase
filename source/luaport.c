@@ -30,7 +30,7 @@
 #include "lualib.h"
 #include "nrfx_log.h"
 
-static lua_State *globalL = NULL;
+lua_State *globalL = NULL;
 
 static volatile struct repl_t
 {

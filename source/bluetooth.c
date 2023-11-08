@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "ble.h"
+#include "bluetooth.h"
 #include "error_logging.h"
 #include "frame_lua_libraries.h"
 #include "luaport.h"
@@ -57,7 +58,6 @@ static struct advertising_data_t
     .payload = {0},
 };
 
-static const uint16_t ble_preferred_max_mtu = 256;
 uint16_t ble_negotiated_mtu;
 
 static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
@@ -68,7 +68,7 @@ static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
 void SD_EVT_IRQHandler(void)
 {
     uint32_t evt_id;
-    uint8_t ble_evt_buffer[sizeof(ble_evt_t) + ble_preferred_max_mtu];
+    uint8_t ble_evt_buffer[sizeof(ble_evt_t) + BLE_PREFERRED_MAX_MTU];
 
     // While any softdevice events are pending, service flash operations
     while (sd_evt_get(&evt_id) != NRF_ERROR_NOT_FOUND)
@@ -152,12 +152,12 @@ void SD_EVT_IRQHandler(void)
 
             // Respond with our max MTU size
             sd_ble_gatts_exchange_mtu_reply(ble_handles.connection,
-                                            ble_preferred_max_mtu);
+                                            BLE_PREFERRED_MAX_MTU);
 
             // Choose the smaller MTU as the final length we'll use
             // -3 data to accommodate for Op-code and attribute service
-            ble_negotiated_mtu = ble_preferred_max_mtu < client_mtu
-                                     ? ble_preferred_max_mtu - 3
+            ble_negotiated_mtu = BLE_PREFERRED_MAX_MTU < client_mtu
+                                     ? BLE_PREFERRED_MAX_MTU - 3
                                      : client_mtu - 3;
             break;
         }
@@ -171,7 +171,7 @@ void SD_EVT_IRQHandler(void)
                 // Handle raw data
                 if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x01)
                 {
-                    lua_bluetooth_data_handler(
+                    lua_bluetooth_data_interrupt(
                         ble_evt->evt.gatts_evt.params.write.data + 1,
                         ble_evt->evt.gatts_evt.params.write.len - 1);
                 }
@@ -273,7 +273,7 @@ void bluetooth_setup(void)
     // Set max MTU size
     memset(&cfg, 0, sizeof(cfg));
     cfg.conn_cfg.conn_cfg_tag = 1;
-    cfg.conn_cfg.params.gatt_conn_cfg.att_mtu = ble_preferred_max_mtu;
+    cfg.conn_cfg.params.gatt_conn_cfg.att_mtu = BLE_PREFERRED_MAX_MTU;
     check_error(sd_ble_cfg_set(BLE_CONN_CFG_GATT, &cfg, ram_start));
 
     // Configure two queued transfers
@@ -351,7 +351,7 @@ void bluetooth_setup(void)
     rx_attr.p_uuid = &rx_uuid;
     rx_attr.p_attr_md = &rx_attr_md;
     rx_attr.init_len = sizeof(uint8_t);
-    rx_attr.max_len = ble_preferred_max_mtu - 3;
+    rx_attr.max_len = BLE_PREFERRED_MAX_MTU - 3;
 
     // Configure both TX characteristic
     ble_uuid_t tx_uuid = {.uuid = 0x0003};
@@ -370,7 +370,7 @@ void bluetooth_setup(void)
     tx_attr.p_uuid = &tx_uuid;
     tx_attr.p_attr_md = &tx_attr_md;
     tx_attr.init_len = sizeof(uint8_t);
-    tx_attr.max_len = ble_preferred_max_mtu - 3;
+    tx_attr.max_len = BLE_PREFERRED_MAX_MTU - 3;
 
     // Characteristics must be added sequentially after each service
     check_error(sd_ble_gatts_service_add(BLE_GATTS_SRVC_TYPE_PRIMARY,

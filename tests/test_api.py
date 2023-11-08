@@ -81,13 +81,17 @@ async def main():
     # Bluetooth
     await test.lua_has_length("frame.bluetooth.address()", 17)
     max_length = test.max_data_payload()
-    await test.lua_equals("frame.bluetooth.data_max_length()", max_length)
-    await test.lua_send("frame.bluetooth.data_send('123')")
-    await test.lua_send("frame.bluetooth.data_send('12\\0003')")
-    await test.lua_send(f"frame.bluetooth.data_send(string.rep('a',{max_length}))")
-    await test.lua_error(f"frame.bluetooth.data_send(string.rep('a',{max_length + 1}))")
+    await test.lua_equals("frame.bluetooth.max_length()", max_length)
+    await test.lua_send("frame.bluetooth.send('123')")
+    await test.lua_send("frame.bluetooth.send('12\\0003')")
+    await test.lua_send(f"frame.bluetooth.send(string.rep('a',{max_length}))")
+    await test.lua_error(f"frame.bluetooth.send(string.rep('a',{max_length + 1}))")
     ## TODO test multiple bluetooth sends which block
-    ## TODO frame.bluetooth.data_receive_callback?()
+    await test.lua_send("frame.bluetooth.receive_callback((function(d)print(#d)end))")
+    await asyncio.sleep(1)
+    await test.send_data(b"hello there")
+    await asyncio.sleep(1)
+    await test.lua_send("frame.bluetooth.receive_callback(nil)")
 
     # Display
     ## TODO frame.display.text("string", x, y, {color, alignment})

@@ -28,8 +28,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include "nrfx_log.h"
 #include "bluetooth.h"
+#include "nrfx_log.h"
 
 #define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
 #define lua_writeline()

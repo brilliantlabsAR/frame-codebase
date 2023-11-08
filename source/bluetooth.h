@@ -24,8 +24,12 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+
+#define BLE_PREFERRED_MAX_MTU 256
+extern uint16_t ble_negotiated_mtu;
 
 void bluetooth_setup(void);
 
