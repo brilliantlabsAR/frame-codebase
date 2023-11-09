@@ -26,10 +26,7 @@ class TestBluetooth(Bluetooth):
             print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
 
     async def initialize(self):
-        await self.connect(
-            lua_response_handler=lambda str: None,
-            data_response_handler=lambda str: None,
-        )
+        await self.connect()
 
     async def end(self):
         passed_tests = self._passed_tests
@@ -39,35 +36,39 @@ class TestBluetooth(Bluetooth):
         await self.disconnect()
 
     async def lua_equals(self, lua_string: str, expect):
-        response = await self.send_lua(f"print({lua_string})", wait=True)
+        response = await self.send_lua(f"print({lua_string})", await_print=True)
         if response == str(expect):
             self._log_passed(lua_string, response)
         else:
             self._log_failed(lua_string, response, expect)
 
     async def lua_has_length(self, lua_string: str, length: int):
-        response = await self.send_lua(f"print({lua_string})", wait=True)
+        response = await self.send_lua(f"print({lua_string})", await_print=True)
         if len(response) == length:
             self._log_passed(lua_string, response)
         else:
             self._log_failed(lua_string, f"len({len(response)})", f"len({length})")
 
     async def lua_send(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
         if response == "nil":
             self._log_passed(lua_string, None)
         else:
             self._log_failed(lua_string, response, None)
 
     async def lua_error(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
         if response != "nil":
             self._log_passed(lua_string, response.partition(":1: ")[2])
         else:
             self._log_failed(lua_string, response, None)
 
-    async def data_equal(self, lua_string: str, reponse: bytearray):
-        pass
+    async def data_equal(self, send: bytearray, expect: bytearray):
+        response = await self.send_data(send, await_data=True)
+        if response == expect:
+            self._log_passed(send, response)
+        else:
+            self._log_failed(send, response, expect)
 
 
 async def main():
@@ -80,14 +81,21 @@ async def main():
 
     # Bluetooth
     await test.lua_has_length("frame.bluetooth.address()", 17)
+
+    ## Send and callback
+    await test.lua_send(
+        "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
+    )
+    await test.data_equal(b"test", b"test")
+    await test.lua_send("frame.bluetooth.receive_callback(nil)")
+
+    ## MTU size
     max_length = test.max_data_payload()
-    await test.lua_equals("frame.bluetooth.data_max_length()", max_length)
-    await test.lua_send("frame.bluetooth.data_send('123')")
-    await test.lua_send("frame.bluetooth.data_send('12\\0003')")
-    await test.lua_send(f"frame.bluetooth.data_send(string.rep('a',{max_length}))")
-    await test.lua_error(f"frame.bluetooth.data_send(string.rep('a',{max_length + 1}))")
-    ## TODO test multiple bluetooth sends which block
-    ## TODO frame.bluetooth.data_receive_callback?()
+    await test.lua_equals("frame.bluetooth.max_length()", max_length)
+    await test.lua_send("frame.bluetooth.send('123')")
+    await test.lua_send("frame.bluetooth.send('12\\0003')")
+    await test.lua_send(f"frame.bluetooth.send(string.rep('a',{max_length}))")
+    await test.lua_error(f"frame.bluetooth.send(string.rep('a',{max_length + 1}))")
 
     # Display
     ## TODO frame.display.text("string", x, y, {color, alignment})
@@ -150,7 +158,7 @@ async def main():
     await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
 
     ## Cancelling deep sleep
-    await test.send_lua("frame.sleep()", wait=False)
+    await test.send_lua("frame.sleep()", await_print=False)
     await asyncio.sleep(2)
     await test.send_break_signal()
 

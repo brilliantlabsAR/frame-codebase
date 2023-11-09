@@ -73,9 +73,11 @@ C_FILES += \
 	source/error_logging.c \
 	source/i2c.c \
 	source/lua_libraries/bluetooth.c \
+	source/lua_libraries/camera.c \
+	source/lua_libraries/display.c \
+	source/lua_libraries/file.c \
 	source/lua_libraries/microphone.c \
-	source/lua_libraries/misc.c \
-	source/lua_libraries/sleep.c \
+	source/lua_libraries/power.c \
 	source/lua_libraries/time.c \
 	source/lua_libraries/version.c \
 	source/luaport.c \
