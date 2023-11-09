@@ -178,6 +178,7 @@ static int lua_time_date(lua_State *L)
 void lua_open_time_library(lua_State *L)
 {
     // Configure the real time clock
+    if (nrfx_rtc_init_check(&rtc) == false)
     {
         nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
 

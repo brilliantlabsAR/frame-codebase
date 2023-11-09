@@ -23,47 +23,29 @@
  */
 
 #include <string.h>
+#include "bluetooth.h"
 #include "error_logging.h"
 #include "frame_lua_libraries.h"
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
+#include "nrf_soc.h"
 #include "nrfx_log.h"
 
 lua_State *globalL = NULL;
 
-static volatile struct repl_t
+static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
+
+void lua_write_to_repl(uint8_t *buffer, uint8_t length)
 {
-    char buffer[253];
-    bool new_data;
-} repl = {
-    .new_data = false,
-};
-
-bool lua_write_to_repl(uint8_t *buffer, uint8_t length)
-{
-    if (length >= sizeof(repl.buffer))
-    {
-        return false;
-    }
-
-    if (repl.new_data)
-    {
-        return false;
-    }
-
-    // Naive copy because memcpy isn't compatible with volatile
+    // Loop copy because memcpy isn't compatible with volatile
     for (size_t buffer_index = 0; buffer_index < length; buffer_index++)
     {
-        repl.buffer[buffer_index] = buffer[buffer_index];
+        repl_buffer[buffer_index] = buffer[buffer_index];
     }
 
     // Null terminate the string
-    repl.buffer[length] = 0;
-
-    repl.new_data = true;
-
-    return true;
+    repl_buffer[length] = 0;
 }
 
 static void lua_interrupt_hook(lua_State *L, lua_Debug *ar)
@@ -122,21 +104,29 @@ void run_lua(void)
 
     while (true)
     {
-        // Wait for input
-        while (repl.new_data == false)
-        {
-            // TODO sleep
-        }
-
         // If we get a reset command
-        if (repl.buffer[0] == 0x04)
+        if (repl_buffer[0] == 0x04)
         {
-            repl.new_data = false;
             break;
         }
 
-        globalL = L;
-        int status = luaL_dostring(L, (char *)repl.buffer);
+        globalL = L; // TODO can we move this?
+        int status;
+
+        if (repl_buffer[0] != 0)
+        {
+            NRFX_IRQ_DISABLE(SD_EVT_IRQn);
+            char local_repl_buffer[BLE_PREFERRED_MAX_MTU];
+            strcpy(local_repl_buffer, (char *)repl_buffer);
+            repl_buffer[0] = 0;
+            NRFX_IRQ_ENABLE(SD_EVT_IRQn);
+
+            status = luaL_dostring(L, (char *)local_repl_buffer);
+        }
+        else
+        {
+            status = luaL_dostring(L, "frame.sleep(0.1)");
+        }
 
         if (status != LUA_OK)
         {
@@ -144,8 +134,6 @@ void run_lua(void)
             lua_writestring(lua_error, strlen(lua_error));
             lua_pop(L, 1);
         }
-
-        repl.new_data = false;
     }
 
     lua_close(L);

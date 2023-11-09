@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "bluetooth.h"
@@ -35,7 +33,7 @@
 #define lua_writeline()
 #define lua_writestringerror(s, p) printf(s, p)
 
-bool lua_write_to_repl(uint8_t *buffer, uint8_t length);
+void lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
 void lua_interrupt(void);
 
