@@ -125,7 +125,7 @@ void run_lua(void)
         }
         else
         {
-            status = luaL_dostring(L, "frame.sleep(0.1)");
+            status = luaL_dostring(L, "frame.sleep(0.01)");
         }
 
         if (status != LUA_OK)
