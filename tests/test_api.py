@@ -26,10 +26,7 @@ class TestBluetooth(Bluetooth):
             print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
 
     async def initialize(self):
-        await self.connect(
-            lua_response_handler=lambda str: None,
-            data_response_handler=lambda str: None,
-        )
+        await self.connect()
 
     async def end(self):
         passed_tests = self._passed_tests
@@ -39,28 +36,28 @@ class TestBluetooth(Bluetooth):
         await self.disconnect()
 
     async def lua_equals(self, lua_string: str, expect):
-        response = await self.send_lua(f"print({lua_string})", wait=True)
+        response = await self.send_lua(f"print({lua_string})", await_print=True)
         if response == str(expect):
             self._log_passed(lua_string, response)
         else:
             self._log_failed(lua_string, response, expect)
 
     async def lua_has_length(self, lua_string: str, length: int):
-        response = await self.send_lua(f"print({lua_string})", wait=True)
+        response = await self.send_lua(f"print({lua_string})", await_print=True)
         if len(response) == length:
             self._log_passed(lua_string, response)
         else:
             self._log_failed(lua_string, f"len({len(response)})", f"len({length})")
 
     async def lua_send(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
         if response == "nil":
             self._log_passed(lua_string, None)
         else:
             self._log_failed(lua_string, response, None)
 
     async def lua_error(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", wait=True)
+        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
         if response != "nil":
             self._log_passed(lua_string, response.partition(":1: ")[2])
         else:
@@ -154,7 +151,7 @@ async def main():
     await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
 
     ## Cancelling deep sleep
-    await test.send_lua("frame.sleep()", wait=False)
+    await test.send_lua("frame.sleep()", await_print=False)
     await asyncio.sleep(2)
     await test.send_break_signal()
 
