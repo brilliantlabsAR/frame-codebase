@@ -63,8 +63,12 @@ class TestBluetooth(Bluetooth):
         else:
             self._log_failed(lua_string, response, None)
 
-    async def data_equal(self, lua_string: str, reponse: bytearray):
-        pass
+    async def data_equal(self, send: bytearray, expect: bytearray):
+        response = await self.send_data(send, await_data=True)
+        if response == expect:
+            self._log_passed(send, response)
+        else:
+            self._log_failed(send, response, expect)
 
 
 async def main():
@@ -77,18 +81,21 @@ async def main():
 
     # Bluetooth
     await test.lua_has_length("frame.bluetooth.address()", 17)
+
+    ## Send and callback
+    await test.lua_send(
+        "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
+    )
+    await test.data_equal(b"test", b"test")
+    await test.lua_send("frame.bluetooth.receive_callback(nil)")
+
+    ## MTU size
     max_length = test.max_data_payload()
     await test.lua_equals("frame.bluetooth.max_length()", max_length)
     await test.lua_send("frame.bluetooth.send('123')")
     await test.lua_send("frame.bluetooth.send('12\\0003')")
     await test.lua_send(f"frame.bluetooth.send(string.rep('a',{max_length}))")
     await test.lua_error(f"frame.bluetooth.send(string.rep('a',{max_length + 1}))")
-    ## TODO test multiple bluetooth sends which block
-    await test.lua_send("frame.bluetooth.receive_callback((function(d)print(#d)end))")
-    await asyncio.sleep(1)
-    await test.send_data(b"hello there")
-    await asyncio.sleep(1)
-    await test.lua_send("frame.bluetooth.receive_callback(nil)")
 
     # Display
     ## TODO frame.display.text("string", x, y, {color, alignment})
