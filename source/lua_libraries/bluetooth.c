@@ -93,12 +93,9 @@ static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_callback.function);
 
-    lua_createtable(L, lua_bluetooth_callback.length, 0);
-    for (size_t i = 0; i < lua_bluetooth_callback.length; i++)
-    {
-        lua_pushinteger(L, lua_bluetooth_callback.data[i]);
-        lua_seti(L, -2, i + 1);
-    }
+    lua_pushlstring(L,
+                    (char *)lua_bluetooth_callback.data,
+                    lua_bluetooth_callback.length);
 
     lua_pcall(L, 1, 0, 0);
 }
