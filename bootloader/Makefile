@@ -27,6 +27,7 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Source files
 C_FILES += \
+	../libraries/nrf5sdk/atomic_fifo/nrf_atfifo.c \
 	../libraries/nrf5sdk/atomic/nrf_atomic.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_flash.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_mbr.c \
@@ -42,10 +43,22 @@ C_FILES += \
 	../libraries/nrf5sdk/bootloader/nrf_bootloader.c \
 	../libraries/nrf5sdk/crc32/crc32.c \
 	../libraries/nrf5sdk/crypto/backend/micro_ecc/micro_ecc_backend_ecc.c \
+	../libraries/nrf5sdk/crypto/backend/micro_ecc/micro_ecc_backend_ecdsa.c \
 	../libraries/nrf5sdk/crypto/backend/nrf_sw/nrf_sw_backend_hash.c \
+	../libraries/nrf5sdk/crypto/nrf_crypto_ecc.c \
+	../libraries/nrf5sdk/crypto/nrf_crypto_ecdsa.c \
+	../libraries/nrf5sdk/crypto/nrf_crypto_hash.c \
+	../libraries/nrf5sdk/crypto/nrf_crypto_init.c \
+	../libraries/nrf5sdk/crypto/nrf_crypto_shared.c \
+	../libraries/nrf5sdk/experimental_section_vars/nrf_section_iter.c \
 	../libraries/nrf5sdk/fstorage/nrf_fstorage_nvmc.c \
+	../libraries/nrf5sdk/fstorage/nrf_fstorage_sd.c \
+	../libraries/nrf5sdk/fstorage/nrf_fstorage.c \
 	../libraries/nrf5sdk/hal/nrf_nvmc.c \
 	../libraries/nrf5sdk/scheduler/app_scheduler.c \
+	../libraries/nrf5sdk/sha256/sha256.c \
+	../libraries/nrf5sdk/softdevice/common/nrf_sdh.c \
+	../libraries/nrf5sdk/util/app_util_platform.c \
 	../libraries/nrfx/drivers/src/nrfx_nvmc.c \
 	../libraries/nrfx/drivers/src/nrfx_systick.c \
 	../libraries/nrfx/helpers/nrfx_flag32_allocator.c \
@@ -56,25 +69,18 @@ C_FILES += \
 	../source/syscalls.c \
 	dfu_public_key.c \
 	main.c \
-	../libraries/nrf5sdk/sha256/sha256.c \
-	../libraries/nrf5sdk/crypto/nrf_crypto_shared.c \
-	../libraries/nrf5sdk/crypto/nrf_crypto_ecc.c \
-	../libraries/nrf5sdk/crypto/nrf_crypto_init.c \
-	../libraries/nrf5sdk/crypto/nrf_crypto_hash.c \
-	../libraries/nrf5sdk/crypto/nrf_crypto_ecdsa.c \
-	../libraries/nrf5sdk/fstorage/nrf_fstorage.c \
-	../libraries/nrf5sdk/crypto/backend/micro_ecc/micro_ecc_backend_ecdsa.c \
 
 # Header file paths
 FLAGS += \
 	-I. \
 	-I../libraries/cmsis/CMSIS/Core/Include \
+	-I../libraries/nrf5sdk/atomic \
+	-I../libraries/nrf5sdk/atomic_fifo \
 	-I../libraries/nrf5sdk/boards \
 	-I../libraries/nrf5sdk/bootloader \
 	-I../libraries/nrf5sdk/bootloader/dfu \
 	-I../libraries/nrf5sdk/crc32 \
 	-I../libraries/nrf5sdk/crypto \
-	-I../libraries/nrf5sdk/atomic \
 	-I../libraries/nrf5sdk/crypto/backend/cc310 \
 	-I../libraries/nrf5sdk/crypto/backend/cc310_bl \
 	-I../libraries/nrf5sdk/crypto/backend/cifra \
@@ -94,6 +100,7 @@ FLAGS += \
 	-I../libraries/nrf5sdk/nano-pb \
 	-I../libraries/nrf5sdk/scheduler \
 	-I../libraries/nrf5sdk/sha256 \
+	-I../libraries/nrf5sdk/softdevice/common \
 	-I../libraries/nrf5sdk/strerror \
 	-I../libraries/nrf5sdk/util \
 	-I../libraries/nrfx \
@@ -133,12 +140,14 @@ FLAGS += \
 
 # Preprocessor defines
 FLAGS += \
-	-DNRF52840_XXAA \
+	-DBLE_STACK_SUPPORT_REQD \
+	-DBOARD_PCA10056 \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
 	-DNDEBUG \
-	-DBOARD_PCA10056 \
 	-DNRF_DFU_SETTINGS_VERSION=2 \
+	-DNRF52840_XXAA \
+	-DSOFTDEVICE_PRESENT \
 
 # Linker options
 FLAGS += \
