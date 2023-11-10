@@ -39,11 +39,15 @@ bl_flash_size = 0x8000; /* Bootloader is at the end of the flash */
 /* Must be updated whenever softdevice settings are changed */
 sd_ram_end = 0x2a08;
 
+/* Stores bond info */
+bond_info_size = 0x1000;
+
 ENTRY(Reset_Handler)
 
 MEMORY
 {
-    FLASH (rx) : ORIGIN = sd_flash_size, LENGTH = 1M - sd_flash_size - bl_flash_size
+    BOND_INFO (rw) : ORIGIN = 1M - bond_info_size, LENGTH = bond_info_size
+    FLASH (rx) : ORIGIN = sd_flash_size, LENGTH = 1M - sd_flash_size - bl_flash_size - bond_info_size
     RAM (rwx) :  ORIGIN = 0x20000000 + sd_ram_end, LENGTH = 256K - sd_ram_end
 }
 

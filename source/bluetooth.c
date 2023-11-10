@@ -30,11 +30,22 @@
 #include "nrf_nvic.h"
 #include "nrf_sdm.h"
 #include "nrfx_log.h"
+static ble_gap_sec_params_t sec_param;
+ble_gap_sec_keyset_t keyset;
+static ble_gap_enc_key_t own_ltk;
+static ble_gap_enc_key_t peer_ltk;
+static ble_gap_lesc_p256_pk_t peer_pk;
+static ble_gap_id_key_t peer_id_key;
+static ble_gap_lesc_p256_pk_t own_pk = {
+    .pk = {0x20, 0xb0, 0x03, 0xd2, 0xf2, 0x97, 0xbe, 0x2c, 0x5e, 0x2c, 0x83, 0xa7, 0xe9, 0xf9, 0xa5, 0xb9, 0xef, 0xf4, 0x91, 0x11, 0xac, 0xf4, 0xfd, 0xdb, 0xcc, 0x03, 0x01, 0x48, 0x0e, 0x35, 0x9d, 0xe6}};
 nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 
 extern uint32_t _ram_start;
 static uint32_t ram_start = (uint32_t)&_ram_start;
-
+uint32_t bond_info_address_start = 0xFF000;
+// TODO set a different address for storing address and enable bonded advertise only
+// uint32_t bond_info_mac_address_start = 0xFF000;
+bool flash_write_in_progress = false;
 static struct ble_handles_t
 {
     uint16_t connection;
@@ -79,7 +90,6 @@ void SD_EVT_IRQHandler(void)
         case NRF_EVT_FLASH_OPERATION_ERROR:
             // TODO In case we add a filesystem in the future
             break;
-
         default:
             break;
         }
@@ -91,7 +101,6 @@ void SD_EVT_IRQHandler(void)
         // Pull an event from the queue
         uint16_t buffer_len = sizeof(ble_evt_buffer);
         uint32_t status = sd_ble_evt_get(ble_evt_buffer, &buffer_len);
-
         // If we get the done status, we can exit the handler
         if (status == NRF_ERROR_NOT_FOUND)
         {
@@ -109,10 +118,9 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_CONNECTED:
         {
+            LOG("connected");
             ble_handles.connection = ble_evt->evt.gap_evt.conn_handle;
-
             ble_gap_conn_params_t conn_params;
-
             check_error(sd_ble_gap_ppcp_get(&conn_params));
             check_error(sd_ble_gap_conn_param_update(ble_handles.connection,
                                                      &conn_params));
@@ -120,12 +128,14 @@ void SD_EVT_IRQHandler(void)
                                                   NULL,
                                                   0,
                                                   0));
+            sd_ble_gap_authenticate(ble_handles.connection, &sec_param);
             break;
         }
 
         case BLE_GAP_EVT_DISCONNECTED:
         {
             ble_handles.connection = BLE_CONN_HANDLE_INVALID;
+            LOG("disconnect reason %02x", ble_evt->evt.gap_evt.params.disconnected.reason);
             check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
             break;
         }
@@ -217,26 +227,70 @@ void SD_EVT_IRQHandler(void)
         }
         case BLE_GAP_EVT_AUTH_KEY_REQUEST:
         {
-            // reply with none as no I/O to see key
             check_error(sd_ble_gap_auth_key_reply(ble_handles.connection, BLE_GAP_AUTH_KEY_TYPE_NONE, NULL));
         }
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
         {
-            static ble_gap_sec_params_t m_sec_params;
-            m_sec_params.bond = 1U;
-            m_sec_params.mitm = 0;
-            m_sec_params.io_caps = BLE_GAP_IO_CAPS_NONE;
-            m_sec_params.oob = 0;
-            m_sec_params.min_key_size = 7;
-            m_sec_params.max_key_size = 16;
-            check_error(sd_ble_gap_sec_params_reply(ble_handles.connection,
-                                                    BLE_GAP_SEC_STATUS_SUCCESS,
-                                                    &m_sec_params, NULL));
+            int bonded = 0;
+            for (size_t i = 0; i < sizeof(keyset.keys_own.p_enc_key->enc_info.ltk); i++)
+            {
+                if (keyset.keys_own.p_enc_key->enc_info.ltk[i] == 0xff)
+                {
+                    bonded++;
+                }
+            }
+            if (bonded == sizeof(keyset.keys_own.p_enc_key->enc_info.ltk))
+            {
+                check_error(sd_ble_gap_sec_params_reply(ble_handles.connection,
+                                                        BLE_GAP_SEC_STATUS_SUCCESS,
+                                                        &sec_param, &keyset));
+            }
+            else
+            {
+                check_error(sd_ble_gap_sec_params_reply(ble_handles.connection,
+                                                        BLE_GAP_SEC_STATUS_AUTH_REQ,
+                                                        NULL, NULL));
+            }
+
+            break;
+        }
+        case BLE_GAP_EVT_SEC_INFO_REQUEST:
+        {
+            check_error(sd_ble_gap_sec_info_reply(ble_handles.connection, &keyset.keys_own.p_enc_key->enc_info, NULL, NULL));
+            break;
+        }
+        case BLE_GAP_EVT_LESC_DHKEY_REQUEST:
+        {
+            //    TODO to enable LE secure use this key with nrf_crypto and generate dhkey
+            // ble_evt->evt.gap_evt.params.lesc_dhkey_request.p_pk_peer->pk;
+
+            // ble_gap_lesc_dhkey_t lesc_dhkey = {
+            //     .key = {
+            //         0x3f, 0x49, 0xf6, 0xd4, 0xa3, 0xc5, 0x5f,
+            //         0x38, 0x74, 0xc9, 0xb3, 0xe3, 0xd2, 0x10,
+            //         0x3f, 0x50, 0x4a, 0xff, 0x60, 0x7b, 0xeb,
+            //         0x40, 0xb7, 0x99, 0x58, 0x99, 0xb8, 0xa6,
+            //         0xcd, 0x3c, 0x1a, 0xbd}};
+            // check_error(sd_ble_gap_lesc_dhkey_reply(ble_handles.connection, &lesc_dhkey));
+
             break;
         }
         case BLE_GAP_EVT_AUTH_STATUS:
         {
-            // TODO  after successful pair store peer bond info and after boot allow only that peer to connect
+
+            if (ble_evt->evt.gap_evt.params.auth_status.auth_status == BLE_GAP_SEC_STATUS_SUCCESS)
+            {
+
+                uint32_t err_code;
+                err_code = sd_flash_write((uint32_t *)bond_info_address_start, (uint32_t *)&keyset.keys_own.p_enc_key->enc_info, sizeof(keyset.keys_own.p_enc_key->enc_info));
+                // TODO enable saving peer address to advertise only bonded device
+                // do
+                // {
+                //     // Giving busy error
+                //     err_code = sd_flash_write((uint32_t *)bond_info_mac_address_start, (uint32_t *)&keyset.keys_peer.p_id_key->id_addr_info, sizeof(&keyset.keys_peer.p_id_key->id_addr_info));
+                // } while (err_code == NRF_ERROR_BUSY);
+                // check_error(err_code);
+            }
 
             break;
         }
@@ -262,7 +316,6 @@ void SD_EVT_IRQHandler(void)
 
 void bluetooth_setup(bool unpair)
 {
-    //  TODO if unpair delete bond info
     // Enable the softdevice using internal RC oscillator
     check_error(sd_softdevice_enable(NULL, softdevice_assert_handler));
 
@@ -275,6 +328,39 @@ void bluetooth_setup(bool unpair)
     cfg.conn_cfg.params.gap_conn_cfg.conn_count = 1;
     cfg.conn_cfg.params.gap_conn_cfg.event_length = 300;
     check_error(sd_ble_cfg_set(BLE_CONN_CFG_GAP, &cfg, ram_start));
+
+    // Security params for pairing
+    memset(&sec_param, 0, sizeof(sec_param));
+    sec_param.bond = 1;
+    sec_param.mitm = 0;
+    sec_param.io_caps = BLE_GAP_IO_CAPS_NONE;
+    sec_param.oob = 0;
+    sec_param.min_key_size = 7;
+    sec_param.max_key_size = 16;
+    sec_param.kdist_own.enc = 1;
+    sec_param.kdist_peer.enc = 1;
+    sec_param.kdist_peer.id = 1;
+    // sec_param.lesc = 1;   //for LE secure
+    memset(&keyset, 0, sizeof(keyset));
+    memset(&peer_ltk, 0, sizeof(peer_ltk));
+    memset(&own_ltk, 0, sizeof(own_ltk));
+    memset(&peer_id_key, 0, sizeof(peer_id_key));
+    memset(&peer_ltk, 0, sizeof(peer_ltk));
+    //  read stored enc key
+    if (unpair)
+    {
+        memset(&own_ltk.enc_info.ltk, 0xff, sizeof(own_ltk.enc_info.ltk));
+    }
+    else
+    {
+        memcpy(&own_ltk.enc_info, (void *)bond_info_address_start, sizeof(ble_gap_enc_info_t));
+    }
+
+    keyset.keys_own.p_enc_key = &own_ltk;
+    keyset.keys_own.p_pk = &own_pk;
+    keyset.keys_peer.p_enc_key = &peer_ltk;
+    keyset.keys_peer.p_id_key = &peer_id_key;
+    keyset.keys_peer.p_pk = &peer_pk;
 
     // Set BLE role to peripheral only
     memset(&cfg, 0, sizeof(cfg));
@@ -425,6 +511,20 @@ void bluetooth_setup(bool unpair)
         .scan_rsp_data.p_data = NULL,
         .scan_rsp_data.len = 0};
 
+    // TODO advertise only  paired device
+
+    // ble_gap_addr_t stored_addr= {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    // ble_gap_addr_t const *addr_ptrs[1];
+    //  memcpy(&stored_addr, (void *)bond_info_mac_address_start, sizeof(ble_gap_addr_t));
+    // if (!(stored_addr.addr[0] == 0xff && stored_addr.addr[1] == 0xff &&
+    //       stored_addr.addr[2] == 0xff && stored_addr.addr[3] == 0xff &&
+    //       stored_addr.addr[4] == 0xff && stored_addr.addr[5] == 0xff))
+    // {
+    //     ble_gap_addr_t const *addr_ptrs[1];
+    //     addr_ptrs[0] = &stored_addr;
+    //     sd_ble_gap_whitelist_set(addr_ptrs, 1);
+    // }
+
     // Set up advertising parameters
     ble_gap_adv_params_t adv_params;
     memset(&adv_params, 0, sizeof(adv_params));
@@ -437,6 +537,15 @@ void bluetooth_setup(bool unpair)
     check_error(sd_ble_gap_adv_set_configure(&ble_handles.advertising,
                                              &adv_data,
                                              &adv_params));
+    // ble_gap_addr_t stored_addr;
+    // uint8_t blank_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+    // // ble_gap_addr_t const *addr_ptrs[1];
+    // read_address_info(&stored_addr);
+    // if (stored_addr.addr != blank_addr)
+    // {
+    //     // addr_ptrs[0] = &stored_addr;
+    //     // sd_ble_gap_whitelist_set(addr_ptrs, 1);
+    // }
 
     // Start advertising
     check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
