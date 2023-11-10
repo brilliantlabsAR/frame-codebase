@@ -94,6 +94,18 @@ static int wait_for(lua_State *L, lua_Number seconds)
     return LUA_OK;
 }
 
+static int lua_update(lua_State *L)
+{
+    if (wait_for(L, 3) == LUA_OK)
+    {
+        check_error(sd_power_gpregret_set(0, 0xB1));
+
+        NVIC_SystemReset();
+    }
+
+    return 0;
+}
+
 static int lua_sleep(lua_State *L)
 {
     if (lua_gettop(L) == 0)
@@ -165,7 +177,7 @@ static int lua_battery_level(lua_State *L)
     return 1;
 }
 
-void lua_open_power_library(lua_State *L)
+void lua_open_system_library(lua_State *L)
 {
     // Configure ADC
     if (nrfx_saadc_init_check() == false)
@@ -183,6 +195,9 @@ void lua_open_power_library(lua_State *L)
     }
 
     lua_getglobal(L, "frame");
+
+    lua_pushcfunction(L, lua_update);
+    lua_setfield(L, -2, "update");
 
     lua_pushcfunction(L, lua_sleep);
     lua_setfield(L, -2, "sleep");

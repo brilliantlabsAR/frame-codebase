@@ -36,6 +36,6 @@ void lua_open_display_library(lua_State *L);
 void lua_open_file_library(lua_State *L);
 void lua_open_imu_library(lua_State *L);
 void lua_open_microphone_library(lua_State *L);
-void lua_open_power_library(lua_State *L);
+void lua_open_system_library(lua_State *L);
 void lua_open_time_library(lua_State *L);
 void lua_open_version_library(lua_State *L);

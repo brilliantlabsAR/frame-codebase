@@ -85,7 +85,7 @@ void run_lua(void)
     lua_setglobal(L, "frame");
 
     lua_open_version_library(L);
-    lua_open_power_library(L);
+    lua_open_system_library(L);
     lua_open_bluetooth_library(L);
     // lua_open_display_library(L);
     // lua_open_camera_library(L);

@@ -11,19 +11,19 @@ class TestBluetooth(Bluetooth):
         self._passed_tests = 0
         self._failed_tests = 0
 
-    def _log_passed(self, lua_string, response):
+    def _log_passed(self, sent, responded):
         self._passed_tests += 1
-        if response == None:
-            print(f"\033[92mPassed: {lua_string}")
+        if responded == None:
+            print(f"\033[92mPassed: {sent}")
         else:
-            print(f"\033[92mPassed: {lua_string} => {response}")
+            print(f"\033[92mPassed: {sent} => {responded}")
 
-    def _log_failed(self, lua_string, response, expected):
+    def _log_failed(self, sent, responded, expected):
         self._failed_tests += 1
         if expected == None:
-            print(f"\033[91mFAILED: {lua_string} => {response}")
+            print(f"\033[91mFAILED: {sent} => {responded}")
         else:
-            print(f"\033[91mFAILED: {lua_string} => {response} != {expected}")
+            print(f"\033[91mFAILED: {sent} => {responded} != {expected}")
 
     async def initialize(self):
         await self.connect()
@@ -35,33 +35,40 @@ class TestBluetooth(Bluetooth):
         print(f"Done! Passed {passed_tests} of {total_tests} tests")
         await self.disconnect()
 
-    async def lua_equals(self, lua_string: str, expect):
-        response = await self.send_lua(f"print({lua_string})", await_print=True)
+    async def lua_equals(self, send: str, expect):
+        response = await self.send_lua(f"print({send})", await_print=True)
         if response == str(expect):
-            self._log_passed(lua_string, response)
+            self._log_passed(send, response)
         else:
-            self._log_failed(lua_string, response, expect)
+            self._log_failed(send, response, expect)
 
-    async def lua_has_length(self, lua_string: str, length: int):
-        response = await self.send_lua(f"print({lua_string})", await_print=True)
+    async def lua_is_type(self, send: str, expect):
+        response = await self.send_lua(f"print(type({send}))", await_print=True)
+        if response == str(expect):
+            self._log_passed(send, response)
+        else:
+            self._log_failed(send, response, expect)
+
+    async def lua_has_length(self, send: str, length: int):
+        response = await self.send_lua(f"print({send})", await_print=True)
         if len(response) == length:
-            self._log_passed(lua_string, response)
+            self._log_passed(send, response)
         else:
-            self._log_failed(lua_string, f"len({len(response)})", f"len({length})")
+            self._log_failed(send, f"len({len(response)})", f"len({length})")
 
-    async def lua_send(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
+    async def lua_send(self, send: str):
+        response = await self.send_lua(send + ";print(nil)", await_print=True)
         if response == "nil":
-            self._log_passed(lua_string, None)
+            self._log_passed(send, None)
         else:
-            self._log_failed(lua_string, response, None)
+            self._log_failed(send, response, None)
 
-    async def lua_error(self, lua_string: str):
-        response = await self.send_lua(lua_string + ";print(nil)", await_print=True)
+    async def lua_error(self, send: str):
+        response = await self.send_lua(send + ";print(nil)", await_print=True)
         if response != "nil":
-            self._log_passed(lua_string, response.partition(":1: ")[2])
+            self._log_passed(send, response.partition(":1: ")[2])
         else:
-            self._log_failed(lua_string, response, None)
+            self._log_failed(send, response, None)
 
     async def data_equal(self, send: bytearray, expect: bytearray):
         response = await self.send_data(send, await_data=True)
@@ -150,23 +157,18 @@ async def main():
     ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
     ## TODO Tap, double tap?
 
-    # Time & sleep functions
+    # Time functions
 
     ## Delays
     await test.lua_send("frame.time.utc(1698756584)")
     await test.lua_send("frame.sleep(2.0)")
     await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
 
-    ## Cancelling deep sleep
-    await test.send_lua("frame.sleep()", await_print=False)
-    await asyncio.sleep(2)
-    await test.send_break_signal()
-
     ## Date now under different timezones
     await test.lua_send("frame.time.zone('0:00')")
     await test.lua_equals("frame.time.zone()", "+00:00")
 
-    await test.lua_equals("frame.time.date()['second']", "48")
+    await test.lua_equals("frame.time.date()['second']", "46")
     await test.lua_equals("frame.time.date()['minute']", "49")
     await test.lua_equals("frame.time.date()['hour']", "12")
     await test.lua_equals("frame.time.date()['day']", "31")
@@ -202,12 +204,37 @@ async def main():
     await test.lua_equals("frame.time.date(1698943733)['day of year']", "305")
     await test.lua_equals("frame.time.date(1698943733)['is daylight saving']", "false")
 
-    # Misc
+    # System functions
+
+    ## Resets
+    await test.send_reset_signal()
+    await asyncio.sleep(1)
+    await test.send_reset_signal()
+
+    ## Battery level
     await test.lua_equals("frame.battery_level()", "100.0")
+
+    ## Cancelling sleep
+    await test.lua_is_type("frame.sleep", "function")
+    await test.send_lua("frame.sleep()")
+    await asyncio.sleep(1)
+    await test.send_break_signal()
+
+    ## Preventing sleep
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
+    await test.send_lua("frame.sleep()")
+    await asyncio.sleep(4)
     await test.lua_equals("frame.stay_awake()", "true")
     await test.lua_send("frame.stay_awake(false)")
+
+    ## Cancelling update
+    await test.lua_is_type("frame.update", "function")
+    await test.send_lua("frame.update()")
+    await asyncio.sleep(1)
+    await test.send_break_signal()
+
+    ## FPGA io
     ## frame.fpga.read()
     ## frame.fpga.write()
 

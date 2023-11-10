@@ -77,7 +77,7 @@ C_FILES += \
 	source/lua_libraries/display.c \
 	source/lua_libraries/file.c \
 	source/lua_libraries/microphone.c \
-	source/lua_libraries/power.c \
+	source/lua_libraries/system.c \
 	source/lua_libraries/time.c \
 	source/lua_libraries/version.c \
 	source/luaport.c \
