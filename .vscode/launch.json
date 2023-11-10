@@ -4,8 +4,8 @@
     "configurations": [
         {
             "cwd": "${workspaceFolder}",
-            "executable": "build/frame.elf",
-            "name": "J-Link",
+            "executable": "build/application.elf",
+            "name": "J-Link Application",
             "request": "launch",
             "type": "cortex-debug",
             "device": "nRF52840_XXAA",
@@ -13,6 +13,27 @@
             "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
             "preLaunchTask": "Build Firmware",
+            "internalConsoleOptions": "neverOpen",
+            "loadFiles": [
+                "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
+            ],
+            "preLaunchCommands": [
+                "monitor halt",
+                "monitor speed 2000",
+                "load"
+            ]
+        },
+        {
+            "cwd": "${workspaceFolder}",
+            "executable": "build/bootloader.elf",
+            "name": "J-Link Bootloader",
+            "request": "launch",
+            "type": "cortex-debug",
+            "device": "nRF52840_XXAA",
+            "showDevDebugOutput": "none",
+            "servertype": "jlink",
+            "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
+            "preLaunchTask": "Build Bootloader",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",

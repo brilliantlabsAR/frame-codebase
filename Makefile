@@ -58,9 +58,7 @@ C_FILES += \
 	libraries/lua/lvm.c \
 	libraries/lua/lzio.c \
 	libraries/nrfx/drivers/src/nrfx_gpiote.c \
-	libraries/nrfx/drivers/src/nrfx_ipc.c \
 	libraries/nrfx/drivers/src/nrfx_pdm.c \
-	libraries/nrfx/drivers/src/nrfx_qspi.c \
 	libraries/nrfx/drivers/src/nrfx_rtc.c \
 	libraries/nrfx/drivers/src/nrfx_saadc.c \
 	libraries/nrfx/drivers/src/nrfx_spim.c \
@@ -149,11 +147,11 @@ LIBS += \
 	-lc \
 	-lgcc \
 
-build/frame.hex: $(C_FILES) fpga/fpga_application.h
+build/application.hex: $(C_FILES) fpga/fpga_application.h
 	@mkdir -p build
-	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $(C_FILES) $(LIBS)
-	@arm-none-eabi-objcopy -O ihex build/frame.elf build/frame.hex
-	@arm-none-eabi-size build/frame.elf
+	@arm-none-eabi-gcc $(FLAGS) -o build/application.elf $(C_FILES) $(LIBS)
+	@arm-none-eabi-objcopy -O ihex build/application.elf build/application.hex
+	@arm-none-eabi-size build/application.elf
 
 
 fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
@@ -190,9 +188,10 @@ release:
 clean:
 	rm -rf build/
 
-flash: build/frame.hex
+flash: build/application.hex
+	@echo "TODO: This doesn't flash the bootloader yet"
 	nrfjprog -q --program libraries/softdevice/*.hex --chiperase
-	nrfjprog -q --program build/frame.hex
+	nrfjprog -q --program build/application.hex
 	nrfjprog --reset
 
 recover:

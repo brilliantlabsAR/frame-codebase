@@ -5,9 +5,11 @@
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "includePath": [
+                "bootloader",
                 "fpga",
                 "libraries/cmsis/CMSIS/Core/Include",
                 "libraries/lua",
+                "libraries/nrf5sdk/**",
                 "libraries/nrfx",
                 "libraries/nrfx/drivers/include",
                 "libraries/nrfx/hal",
@@ -16,6 +18,7 @@
                 "libraries/picolibc",
                 "libraries/segger",
                 "libraries/softdevice/include",
+                "libraries/softdevice/include/nrf52",
                 "source",
                 "source/lua_libraries"
             ],

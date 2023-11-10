@@ -58,9 +58,9 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. Install the [Cortex-Debug](https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug) extension for VSCode in order to enable debugging.
 
-1. A debugging launch is already configured within `.vscode/launch.json`. Run the `J-Link` launch configuration from the `Run and Debug` panel, or press `F5`. The project will automatically build and flash before launching.
+1. A debugging launch is already configured within `.vscode/launch.json`. Run the `J-Link Application` launch configuration from the `Run and Debug` panel, or press `F5`. The project will automatically build and flash before launching.
 
-1. To monitor the logs, run the task `RTT Console` and ensure the `J-Link` launch configuration is running.
+1. To monitor the logs, run the task `RTT Console` and ensure the `J-Link Application` launch configuration is running.
 
 ## Getting started with FPGA development
 
