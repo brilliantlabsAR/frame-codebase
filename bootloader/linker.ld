@@ -26,7 +26,7 @@ ENTRY(Reset_Handler)
 
 MEMORY
 {
-    FLASH (rx) : 						ORIGIN = 0xF7000, 			LENGTH = 0x7000
+    FLASH (rx) : 						ORIGIN = 0xF5000, 			LENGTH = 0x9000
     bootloader_settings_page (r) : 		ORIGIN = 0x000FF000, 		LENGTH = 0x1000
     mbr_params_page (r) :				ORIGIN = 0x000FE000, 		LENGTH = 0x1000
 
@@ -73,6 +73,7 @@ SECTIONS
     {
         . = ALIGN(4);
         _sdata = .;        /* create a global symbol at data start; used by startup code in order to initialize the .data section in RAM */
+        __data_start__ = .;
         _ram_start = .;    /* create a global symbol at ram start for garbage collector */
         *(.data)           /* .data sections */
         *(.data*)          /* .data* sections */
@@ -80,6 +81,13 @@ SECTIONS
         . = ALIGN(4);
         _edata = .;        /* define a global symbol at data end; used by startup code in order to initialize the .data section in RAM */
     } > RAM AT> FLASH
+
+    .fs_data :
+    {
+        PROVIDE(__start_fs_data = .);
+        KEEP(*(.fs_data))
+        PROVIDE(__stop_fs_data = .);
+    } > RAM
 
     /* Uninitialized data section */
 

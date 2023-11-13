@@ -29,11 +29,23 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 C_FILES += \
 	../libraries/nrf5sdk/atomic_fifo/nrf_atfifo.c \
 	../libraries/nrf5sdk/atomic/nrf_atomic.c \
+	../libraries/nrf5sdk/balloc/nrf_balloc.c \
+	../libraries/nrf5sdk/ble/common/ble_srv_common.c \
+	../libraries/nrf5sdk/bootloader/ble_dfu/nrf_dfu_ble.c \
+	../libraries/nrf5sdk/bootloader/dfu/dfu-cc.pb.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_flash.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_handling_error.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_mbr.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_req_handler.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_settings_svci.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_settings.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_svci_handler.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_svci.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_transport.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_utils.c \
 	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_validation.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu_ver_validation.c \
+	../libraries/nrf5sdk/bootloader/dfu/nrf_dfu.c \
 	../libraries/nrf5sdk/bootloader/nrf_bootloader_app_start_final.c \
 	../libraries/nrf5sdk/bootloader/nrf_bootloader_app_start.c \
 	../libraries/nrf5sdk/bootloader/nrf_bootloader_dfu_timers.c \
@@ -55,14 +67,24 @@ C_FILES += \
 	../libraries/nrf5sdk/fstorage/nrf_fstorage_sd.c \
 	../libraries/nrf5sdk/fstorage/nrf_fstorage.c \
 	../libraries/nrf5sdk/hal/nrf_nvmc.c \
+	../libraries/nrf5sdk/mem_manager/mem_manager.c \
+	../libraries/nrf5sdk/memobj/nrf_memobj.c \
+	../libraries/nrf5sdk/nano-pb/pb_common.c \
+	../libraries/nrf5sdk/nano-pb/pb_decode.c \
+	../libraries/nrf5sdk/queue/nrf_queue.c \
+	../libraries/nrf5sdk/ringbuf/nrf_ringbuf.c \
 	../libraries/nrf5sdk/scheduler/app_scheduler.c \
 	../libraries/nrf5sdk/sha256/sha256.c \
+	../libraries/nrf5sdk/softdevice/common/nrf_sdh_ble.c \
+	../libraries/nrf5sdk/softdevice/common/nrf_sdh_soc.c \
 	../libraries/nrf5sdk/softdevice/common/nrf_sdh.c \
+	../libraries/nrf5sdk/strerror/nrf_strerror.c \
+	../libraries/nrf5sdk/svc/nrf_svc_handler.c \
+	../libraries/nrf5sdk/util/app_error_weak.c \
 	../libraries/nrf5sdk/util/app_util_platform.c \
-	../libraries/nrfx/drivers/src/nrfx_nvmc.c \
-	../libraries/nrfx/drivers/src/nrfx_systick.c \
-	../libraries/nrfx/helpers/nrfx_flag32_allocator.c \
+	../libraries/nrf5sdk/util/nrf_assert.c \
 	../libraries/nrfx/mdk/system_nrf52840.c \
+	../libraries/nrfx/soc/nrfx_atomic.c \
 	../libraries/segger/SEGGER_RTT.c \
 	../source/error_logging.c \
 	../source/startup.c \
@@ -76,8 +98,11 @@ FLAGS += \
 	-I../libraries/cmsis/CMSIS/Core/Include \
 	-I../libraries/nrf5sdk/atomic \
 	-I../libraries/nrf5sdk/atomic_fifo \
+	-I../libraries/nrf5sdk/balloc \
+	-I../libraries/nrf5sdk/ble/common \
 	-I../libraries/nrf5sdk/boards \
 	-I../libraries/nrf5sdk/bootloader \
+	-I../libraries/nrf5sdk/bootloader/ble_dfu \
 	-I../libraries/nrf5sdk/bootloader/dfu \
 	-I../libraries/nrf5sdk/crc32 \
 	-I../libraries/nrf5sdk/crypto \
@@ -97,11 +122,18 @@ FLAGS += \
 	-I../libraries/nrf5sdk/log \
 	-I../libraries/nrf5sdk/log/src \
 	-I../libraries/nrf5sdk/micro-ecc/micro-ecc \
+	-I../libraries/nrf5sdk/mem_manager \
+	-I../libraries/nrf5sdk/memobj \
+	-I../libraries/nrf5sdk/mutex \
 	-I../libraries/nrf5sdk/nano-pb \
+	-I../libraries/nrf5sdk/queue \
+	-I../libraries/nrf5sdk/ringbuf \
 	-I../libraries/nrf5sdk/scheduler \
 	-I../libraries/nrf5sdk/sha256 \
 	-I../libraries/nrf5sdk/softdevice/common \
+	-I../libraries/nrf5sdk/stack_info \
 	-I../libraries/nrf5sdk/strerror \
+	-I../libraries/nrf5sdk/svc \
 	-I../libraries/nrf5sdk/util \
 	-I../libraries/nrfx \
 	-I../libraries/nrfx/drivers/include \
