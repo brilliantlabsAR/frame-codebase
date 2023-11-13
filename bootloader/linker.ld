@@ -37,37 +37,71 @@ MEMORY
 
 SECTIONS
 {
-    . = ALIGN(4);
-    .uicr_bootloader_start_address :
-    {
-        PROVIDE(__start_uicr_bootloader_start_address = .);
-        KEEP(*(SORT(.uicr_bootloader_start_address*)))
-        PROVIDE(__stop_uicr_bootloader_start_address = .);
-    } > uicr_bootloader_start_address
+    /* Program code and other data goes into FLASH */
 
-    . = ALIGN(4);
-    .bootloader_settings_page(NOLOAD) :
+    .text :
     {
-        PROVIDE(__start_bootloader_settings_page = .);
-        KEEP(*(SORT(.bootloader_settings_page*)))
-        PROVIDE(__stop_bootloader_settings_page = .);
-    } > bootloader_settings_page
+        . = ALIGN(4);
+        __isr_vector = .;
+        KEEP(*(.isr_vector)) /* Startup code */
+        *(.text)             /* .text sections (code) */
+        *(.text*)            /* .text* sections (code) */
+        *(.rodata)           /* .rodata sections (constants, strings, etc.) */
+        *(.rodata*)          /* .rodata* sections (constants, strings, etc.) */
+        
+        . = ALIGN(4);
+        _etext = .;          /* define a global symbol at end of code */
+    } > FLASH
 
-    . = ALIGN(4);
-    .uicr_mbr_params_page :
+    .ARM.exidx :
     {
-        PROVIDE(__start_uicr_mbr_params_page = .);
-        KEEP(*(SORT(.uicr_mbr_params_page*)))
-        PROVIDE(__stop_uicr_mbr_params_page = .);
-    } > uicr_mbr_params_page
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > FLASH
 
-    . = ALIGN(4);
-    .mbr_params_page(NOLOAD) :
+    /* This is used by the startup to initialize data */
+    
+    _sidata = LOADADDR(.data);
+
+    /* This is the initialized data section. The program executes knowing that 
+       the data is in the RAM but the loader puts the initial values in the 
+       FLASH (inidata). It is one task of the startup to copy the initial values 
+       from FLASH to RAM. */
+    
+    .data :
     {
-        PROVIDE(__start_mbr_params_page = .);
-        KEEP(*(SORT(.mbr_params_page*)))
-        PROVIDE(__stop_mbr_params_page = .);
-    } > mbr_params_page
+        . = ALIGN(4);
+        _sdata = .;        /* create a global symbol at data start; used by startup code in order to initialize the .data section in RAM */
+        _ram_start = .;    /* create a global symbol at ram start for garbage collector */
+        *(.data)           /* .data sections */
+        *(.data*)          /* .data* sections */
+
+        . = ALIGN(4);
+        _edata = .;        /* define a global symbol at data end; used by startup code in order to initialize the .data section in RAM */
+    } > RAM AT> FLASH
+
+    /* Uninitialized data section */
+
+    .bss :
+    {
+        . = ALIGN(4);
+        _sbss = .;         /* define a global symbol at bss start; used by startup code */
+        *(.bss)
+        *(.bss*)
+        *(COMMON)
+
+        . = ALIGN(4);
+        _ebss = .;         /* define a global symbol at bss end; used by startup code and GC */
+
+        PROVIDE(end = .);
+
+    } > RAM
+
+    .ARM.attributes 0 : 
+    { 
+        *(.ARM.attributes) 
+    }
 }
 
 SECTIONS
@@ -159,76 +193,41 @@ SECTIONS
         KEEP(*(SORT(.sdh_soc_observers*)))
         PROVIDE(__stop_sdh_soc_observers = .);
     } > FLASH
-
-} INSERT AFTER .text
+}
 
 SECTIONS
 {
-    /* Program code and other data goes into FLASH */
-
-    .text :
+    . = ALIGN(4);
+    .uicr_bootloader_start_address :
     {
-        . = ALIGN(4);
-        __isr_vector = .;
-        KEEP(*(.isr_vector)) /* Startup code */
-        *(.text)             /* .text sections (code) */
-        *(.text*)            /* .text* sections (code) */
-        *(.rodata)           /* .rodata sections (constants, strings, etc.) */
-        *(.rodata*)          /* .rodata* sections (constants, strings, etc.) */
-        
-        . = ALIGN(4);
-        _etext = .;          /* define a global symbol at end of code */
-    } > FLASH
+        PROVIDE(__start_uicr_bootloader_start_address = .);
+        KEEP(*(SORT(.uicr_bootloader_start_address*)))
+        PROVIDE(__stop_uicr_bootloader_start_address = .);
+    } > uicr_bootloader_start_address
 
-    .ARM.exidx :
+    . = ALIGN(4);
+    .bootloader_settings_page(NOLOAD) :
     {
-        __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > FLASH
+        PROVIDE(__start_bootloader_settings_page = .);
+        KEEP(*(SORT(.bootloader_settings_page*)))
+        PROVIDE(__stop_bootloader_settings_page = .);
+    } > bootloader_settings_page
 
-    /* This is used by the startup to initialize data */
-    
-    _sidata = LOADADDR(.data);
-
-    /* This is the initialized data section. The program executes knowing that 
-       the data is in the RAM but the loader puts the initial values in the 
-       FLASH (inidata). It is one task of the startup to copy the initial values 
-       from FLASH to RAM. */
-    
-    .data :
+    . = ALIGN(4);
+    .uicr_mbr_params_page :
     {
-        . = ALIGN(4);
-        _sdata = .;        /* create a global symbol at data start; used by startup code in order to initialize the .data section in RAM */
-        _ram_start = .;    /* create a global symbol at ram start for garbage collector */
-        *(.data)           /* .data sections */
-        *(.data*)          /* .data* sections */
+        PROVIDE(__start_uicr_mbr_params_page = .);
+        KEEP(*(SORT(.uicr_mbr_params_page*)))
+        PROVIDE(__stop_uicr_mbr_params_page = .);
+    } > uicr_mbr_params_page
 
-        . = ALIGN(4);
-        _edata = .;        /* define a global symbol at data end; used by startup code in order to initialize the .data section in RAM */
-    } > RAM AT> FLASH
-
-    /* Uninitialized data section */
-
-    .bss :
+    . = ALIGN(4);
+    .mbr_params_page(NOLOAD) :
     {
-        . = ALIGN(4);
-        _sbss = .;         /* define a global symbol at bss start; used by startup code */
-        *(.bss)
-        *(.bss*)
-        *(COMMON)
-
-        . = ALIGN(4);
-        _ebss = .;         /* define a global symbol at bss end; used by startup code and GC */
-
-        PROVIDE(end = .);
-
-    } > RAM
-
-    .ARM.attributes 0 : 
-    { 
-        *(.ARM.attributes) 
-    }
+        PROVIDE(__start_mbr_params_page = .);
+        KEEP(*(SORT(.mbr_params_page*)))
+        PROVIDE(__stop_mbr_params_page = .);
+    } > mbr_params_page
 }
 
 _stack_top = ORIGIN(RAM) + LENGTH(RAM);
