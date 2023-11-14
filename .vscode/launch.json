@@ -12,7 +12,7 @@
             "showDevDebugOutput": "none",
             "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
-            "preLaunchTask": "Build Firmware",
+            "preLaunchTask": "Build",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
@@ -33,7 +33,7 @@
             "showDevDebugOutput": "none",
             "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
-            "preLaunchTask": "Build Bootloader",
+            "preLaunchTask": "Build",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",

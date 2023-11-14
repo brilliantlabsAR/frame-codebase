@@ -24,9 +24,7 @@
 
 BUILD := ../../build
 
-FPGA_RTL_SOURCE_FILES := $(shell find fpga | egrep '.sv|.pdc')
-
-fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
+fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
 
 	@iverilog \

@@ -14,9 +14,11 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
 
-1. Ensure you have the [nRF Util](https://www.nordicsemi.com/Products/Development-tools/nRF-Util) installed, along with the `device` and `nrf5sdk-tools` subcommands.
+1. Ensure you have the [nRF Command Line Tools](https://www.nordicsemi.com/Products/Development-tools/nRF-Command-Line-Tools) installed.
 
-1. Clone this repository along with its submodules:
+1. Ensure you have [nRF Util](https://www.nordicsemi.com/Products/Development-tools/nRF-Util) installed, along with the `device` and `nrf5sdk-tools` subcommands.
+
+1. Clone this repository and initialize any submodules:
 
     ```sh
     git clone https://github.com/brilliantlabsAR/frame-codebase.git
@@ -26,10 +28,10 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
     git submodule update --init
     ```
 
-1. You should now be able to build the project by calling `make` from the `frame-codebase` folder.
+1. You should now be able to build the project by calling `make release` from the `frame-codebase` folder.
 
     ```sh
-    make
+    make release
     ```
 
 1. Before flashing an nRF52840, you may need to unlock the chip first.

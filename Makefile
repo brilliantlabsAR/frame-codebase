@@ -27,18 +27,10 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 BUILD := build
 
-all: $(BUILD)/application.hex \
-	 $(BUILD)/bootloader.hex \
-	 source/fpga/fpga_application.h
-
-$(BUILD)/application.hex:
-	@make -C source/application
-
-$(BUILD)/bootloader.hex:
-	@make -C source/bootloader
-
-source/fpga/fpga_application.h:
+all: 
 	@make -C source/fpga
+	@make -C source/application
+	@make -C source/bootloader
 
 clean:
 	@rm -rf $(BUILD)
@@ -49,35 +41,34 @@ release:
 	@make
 
 	@nrfutil settings generate \
-		--family NRF52 \
-		--application build/application.hex \
+		--family NRF52840 \
+		--application $(BUILD)/application.hex \
 		--application-version 0 \
 		--bootloader-version 0 \
 		--bl-settings-version 2 \
-		build/settings.hex
+		$(BUILD)/settings.hex
 
 	@mergehex \
-		-m \
-		build/settings.hex \
-		build/application.hex \
-		libraries/softdevice/*.hex \
-		build/bootloader.hex \
-		-o build/frame-firmware-$(BUILD_VERSION).hex
+	    -m $(BUILD)/settings.hex \
+		   $(BUILD)/application.hex \
+		   $(BUILD)/bootloader.hex \
+		   libraries/softdevice/*.hex \
+		-o $(BUILD)/frame-firmware-$(BUILD_VERSION).hex
 
 	@nrfutil pkg generate \
 		--hw-version 52 \
 		--application-version 0 \
-		--application build/application.hex \
+		--application $(BUILD)/application.hex \
 		--sd-req 0x0123 \
-		--key-file bootloader/dfu_private_key.pem \
-		build/frame-firmware-$(BUILD_VERSION).zip
+		--key-file source/bootloader/dfu_private_key.pem \
+		$(BUILD)/frame-firmware-$(BUILD_VERSION).zip
 
 flash:
-	@make release
-	nrfjprog -q --program build/frame-firmware-*.hex --chiperase
-	nrfjprog --reset
+	@nrfutil device program \
+		--options reset=RESET_HARD \
+		--firmware $(BUILD)/frame-firmware-*.hex
 
 recover:
-	nrfjprog --recover
+	@nrfutil device recover
 
 .PHONY: all clean release flash recover

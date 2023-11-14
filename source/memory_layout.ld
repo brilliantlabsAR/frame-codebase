@@ -22,18 +22,57 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * Flash layout:
+ * |---------------------|   0x100000 
+ * | Bootloader Settings |
+ * |---------------------|    0xFF000 
+ * | MBR Parameters      |
+ * |---------------------|    0xFE000
+ * | Bootloader          |
+ * |---------------------|    0xF5000
+ * | File System         |
+ * |---------------------|   variable
+ * | Application         |
+ * |---------------------|    0x27000
+ * | Softdevice          |
+ * |---------------------|        0x0
+ * 
+ * Ram layout:
+ * |---------------------| 0x20040000
+ * | App or Bootloader   |
+ * |---------------------|   variable
+ * | Softdevice          |
+ * |---------------------| 0x20000000
+ */
+
 ENTRY(Reset_Handler)
 
 MEMORY
 {
-    APPLICATION_FLASH (rx) :      ORIGIN = 0x27000,             LENGTH = 1M - 0x27000 - 0x9000
-    APPLICATION_RAM (rwx) :       ORIGIN = 0x20000000 + 0x2a08, LENGTH = 256K - 0x2a08
+    APPLICATION_FLASH (rx) :      ORIGIN = 0x27000,    LENGTH = 0xCE000
+    APPLICATION_RAM (rwx) :       ORIGIN = 0x20002a08, LENGTH = 256K - 0x2a08
 
-    BOOTLOADER_FLASH (rx) :       ORIGIN = 0xF5000,             LENGTH = 0x9000
-    BOOTLOADER_RAM (rwx) :        ORIGIN = 0x20000000 + 128k,   LENGTH = 128k
+    BOOTLOADER_FLASH (rx) :       ORIGIN = 0xF5000,    LENGTH = 0x9000
+    BOOTLOADER_RAM (rwx) :        ORIGIN = 0x20020000, LENGTH = 128k
     
-    BOOTLOADER_SETTINGS (r) :     ORIGIN = 0x000FF000,          LENGTH = 0x1000
-    MBR_PARAMETERS (r) :          ORIGIN = 0x000FE000,          LENGTH = 0x1000
-    UICR_BOOTLOADER_ADDRESS (r) : ORIGIN = 0x10001014,          LENGTH = 0x4
-    UICR_MBR_PARAMETERS (r) :     ORIGIN = 0x10001018,          LENGTH = 0x4
+    MBR_PARAMETERS (r) :          ORIGIN = 0x000FE000, LENGTH = 0x1000
+    BOOTLOADER_SETTINGS (r) :     ORIGIN = 0x000FF000, LENGTH = 0x1000
+    UICR_BOOTLOADER_ADDRESS (r) : ORIGIN = 0x10001014, LENGTH = 0x4
+    UICR_MBR_PARAMETERS (r) :     ORIGIN = 0x10001018, LENGTH = 0x4
 }
+
+ASSERT(
+    ORIGIN(APPLICATION_FLASH) + 
+    LENGTH(APPLICATION_FLASH) + 
+    LENGTH(BOOTLOADER_FLASH) + 
+    LENGTH(MBR_PARAMETERS) + 
+    LENGTH(BOOTLOADER_SETTINGS) == 1M, "Invalid flash lengths")
+
+ASSERT(
+    ORIGIN(APPLICATION_RAM) + 
+    LENGTH(APPLICATION_RAM) == 0x20040000, "Invalid application ram length")
+
+ASSERT(
+    ORIGIN(BOOTLOADER_RAM) + 
+    LENGTH(BOOTLOADER_RAM) == 0x20040000, "Invalid bootloader ram length")
