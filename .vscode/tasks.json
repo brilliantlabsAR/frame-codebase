@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build Firmware",
+            "label": "Build",
             "type": "shell",
-            "command": "make -j`getconf _NPROCESSORS_ONLN`",
+            "command": "make",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -24,84 +24,6 @@
             },
         },
         {
-            "label": "Build RTL",
-            "type": "shell",
-            "command": "make fpga/fpga_application.h",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true
-            },
-        },
-        {
-            "label": "Build Bootloader",
-            "type": "shell",
-            "command": "make -C bootloader -j`getconf _NPROCESSORS_ONLN`",
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "presentation": {
-                "echo": false,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true
-            }
-        },
-        {
-            "label": "Build & Flash Firmware",
-            "type": "shell",
-            "command": "make -j`getconf _NPROCESSORS_ONLN` flash",
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-        },
-        {
-            "label": "Erase & Unlock nRF52",
-            "type": "shell",
-            "command": "make recover",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": false,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true
-            },
-        },
-        {
-            "label": "Clean",
-            "type": "shell",
-            "command": "make clean",
-            "problemMatcher": [],
-            "presentation": {
-                "echo": false,
-                "reveal": "silent",
-                "focus": false,
-                "panel": "shared",
-                "showReuseMessage": false,
-                "clear": true
-            },
-        },
-        {
             "label": "Release",
             "type": "shell",
             "command": "make release",
@@ -115,11 +37,51 @@
                 "panel": "shared",
                 "showReuseMessage": false,
                 "clear": true
-            },
-            "group": {
-                "kind": "build",
-                "isDefault": false
-            },
+            }
+        },
+        {
+            "label": "Flash",
+            "type": "shell",
+            "command": "make flash",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Erase",
+            "type": "shell",
+            "command": "make recover",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make clean",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
         },
         {
             "label": "RTT Debug Console",
@@ -133,7 +95,7 @@
                 "panel": "dedicated",
                 "showReuseMessage": false,
                 "clear": true
-            },
+            }
         }
     ]
 }

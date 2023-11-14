@@ -1,9 +1,9 @@
 /*
- * This file is part of the MicroPython for Monocle project:
- *      https://github.com/brilliantlabsAR/monocle-micropython
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
- * Authored by: Josuah Demangeon (me@josuah.net)
- *              Raj Nakarja / Brilliant Labs Ltd. (raj@itsbrilliant.co)
+ * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
+ *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
  *
  * ISC Licence
  *

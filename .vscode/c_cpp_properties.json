@@ -5,8 +5,6 @@
             "cStandard": "gnu17",
             "cppStandard": "gnu++14",
             "includePath": [
-                "bootloader",
-                "fpga",
                 "libraries/cmsis/CMSIS/Core/Include",
                 "libraries/lua",
                 "libraries/nrf5sdk/**",
@@ -20,12 +18,20 @@
                 "libraries/softdevice/include",
                 "libraries/softdevice/include/nrf52",
                 "source",
-                "source/lua_libraries"
+                "source/application",
+                "source/application/lua_libraries",
+                "source/bootloader",
+                "source/fpga"
             ],
             "defines": [
-                "NRF52840_XXAA",
+                "BLE_STACK_SUPPORT_REQD",
+                "BOARD_PCA10056",
+                "BUILD_VERSION=\"vYY.DDD.HHMM\"",
                 "GIT_COMMIT=\"abcdefg\"",
-                "BUILD_VERSION=\"vYY.DDD.HHMM\""
+                "NDEBUG",
+                "NRF_DFU_SETTINGS_VERSION=2",
+                "NRF52840_XXAA",
+                "SOFTDEVICE_PRESENT"
             ]
         }
     ],

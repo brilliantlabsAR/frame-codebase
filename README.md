@@ -4,7 +4,7 @@ Welcome to the complete codebase of the Frame hardware. For regular usage, check
 
 ## System architecture
 
-The codebase is split into two sections. The **nRF52 Firmware**, and the **FPGA RTL**. 
+The codebase is split into three sections. The **nRF52 Application**, the **nRF52 Bootloader**, and the **FPGA RTL**. 
 
 The nRF52 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
 
@@ -14,7 +14,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
 
-1. Ensure you have the [nRF Command Line Tools](https://www.nordicsemi.com/Products/Development-tools/nrf-command-line-tools) installed.
+1. Ensure you have the [nRF Util](https://www.nordicsemi.com/Products/Development-tools/nRF-Util) installed, along with the `device` and `nrf5sdk-tools` subcommands.
 
 1. Clone this repository along with its submodules:
 
@@ -35,7 +35,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 1. Before flashing an nRF52840, you may need to unlock the chip first.
 
     ```sh
-    nrfjprog --recover
+    make recover
     ```
 
 1. You should then be able to flash the device.
@@ -50,7 +50,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
     There are some build tasks already configured within `.vscode/tasks.json`. Access them by pressing `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `Tasks: Run Task`.
 
-    Try running the `Build Firmware` task. The project should build normally.
+    Try running the `Build` task. The project should build normally.
 
     You many need to unlock the device by using the `Erase & Unlock nRF52` task before programming or debugging.
 
