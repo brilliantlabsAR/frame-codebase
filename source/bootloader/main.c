@@ -32,53 +32,63 @@
 #include "nrf_bootloader_info.h"
 #include "nrf_bootloader_app_start.h"
 
-static void on_error(void)
+void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
-    // NRF_LOG_FINAL_FLUSH();
+    if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+    {
+        switch (id)
+        {
+        case NRF_FAULT_ID_SD_ASSERT:
+            LOG("Softdevice assertion failed");
+            break;
 
-    // #if NRF_MODULE_ENABLED(NRF_LOG_BACKEND_RTT)
-    //     // To allow the buffer to be flushed by the host.
-    //     nrf_delay_ms(100);
-    // #endif
-    // #ifdef NRF_DFU_DEBUG_VERSION
-    //     NRF_BREAKPOINT_COND;
-    // #endif
+        case NRF_FAULT_ID_APP_MEMACC:
+            LOG("Softdevice invalid memory address");
+            break;
+
+        case NRF_FAULT_ID_SDK_ASSERT:
+
+            assert_info_t *assert_info = (assert_info_t *)info;
+            LOG("Crashed at %s:%u",
+                assert_info->p_file_name,
+                assert_info->line_num);
+            break;
+
+        case NRF_FAULT_ID_SDK_ERROR:
+
+            error_info_t *error_info = (error_info_t *)info;
+            LOG("Crashed at %s:%u - Error code: %u",
+                error_info->p_file_name,
+                error_info->line_num,
+                error_info->err_code);
+            break;
+
+        default:
+            LOG("Unknown fault 0x%08X", pc);
+            break;
+        }
+
+        __BKPT();
+    }
+
     NVIC_SystemReset();
 }
 
-void app_error_handler(uint32_t error_code, uint32_t line_num, const uint8_t *p_file_name)
+void app_error_handler_bare(ret_code_t error_code)
 {
-    // NRF_LOG_ERROR("%s:%d", p_file_name, line_num);
-    on_error();
-}
+    error_info_t error_info =
+        {
+            .line_num = 0,
+            .p_file_name = NULL,
+            .err_code = error_code,
+        };
 
-void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
-{
-    // NRF_LOG_ERROR("Received a fault! id: 0x%08x, pc: 0x%08x, info: 0x%08x", id, pc, info);
-    on_error();
-}
-
-void app_error_handler_bare(uint32_t error_code)
-{
-    // NRF_LOG_ERROR("Received an error: 0x%08x!", error_code);
-    on_error();
+    app_error_fault_handler(NRF_FAULT_ID_SDK_ERROR, 0, (uint32_t)(&error_info));
 }
 
 static void dfu_observer(nrf_dfu_evt_type_t evt_type)
 {
-    switch (evt_type)
-    {
-    case NRF_DFU_EVT_DFU_FAILED:
-    case NRF_DFU_EVT_DFU_ABORTED:
-    case NRF_DFU_EVT_DFU_INITIALIZED:
-        break;
-    case NRF_DFU_EVT_TRANSPORT_ACTIVATED:
-        break;
-    case NRF_DFU_EVT_DFU_STARTED:
-        break;
-    default:
-        break;
-    }
+    LOG("DFU event: %u", evt_type);
 }
 
 int main(void)

@@ -307,7 +307,7 @@ void bluetooth_setup(void)
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&sec_mode);
 
     // Set device name
-    const char device_name[] = "frame";
+    const char device_name[] = "Frame";
     check_error(sd_ble_gap_device_name_set(&sec_mode,
                                            (const uint8_t *)device_name,
                                            strlen(device_name)));

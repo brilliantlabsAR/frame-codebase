@@ -88,7 +88,6 @@ C_FILES += \
 	$(LIBRARIES)/nrf5sdk/softdevice/common/nrf_sdh.c \
 	$(LIBRARIES)/nrf5sdk/strerror/nrf_strerror.c \
 	$(LIBRARIES)/nrf5sdk/svc/nrf_svc_handler.c \
-	$(LIBRARIES)/nrf5sdk/util/app_error_weak.c \
 	$(LIBRARIES)/nrf5sdk/util/app_util_platform.c \
 	$(LIBRARIES)/nrf5sdk/util/nrf_assert.c \
 	$(LIBRARIES)/nrfx/mdk/system_nrf52840.c \

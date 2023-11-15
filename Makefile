@@ -28,7 +28,6 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 BUILD := build
 
 all: 
-	@make -C source/fpga
 	@make -C source/application
 	@make -C source/bootloader
 
@@ -39,14 +38,6 @@ release:
 	@rm -rf $(BUILD)
 
 	@make
-
-	@nrfutil settings generate \
-		--family NRF52840 \
-		--application $(BUILD)/application.hex \
-		--application-version 0 \
-		--bootloader-version 0 \
-		--bl-settings-version 2 \
-		$(BUILD)/settings.hex
 
 	@mergehex \
 	    -m $(BUILD)/settings.hex \

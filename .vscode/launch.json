@@ -37,6 +37,8 @@
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
+                "build/application.hex",
+                "build/settings.hex"
             ],
             "preLaunchCommands": [
                 "monitor halt",
