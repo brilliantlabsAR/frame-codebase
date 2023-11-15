@@ -33,7 +33,7 @@
             "showDevDebugOutput": "none",
             "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
-            "preLaunchTask": "Build",
+            "preLaunchTask": "Release",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",

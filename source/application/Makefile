@@ -154,13 +154,4 @@ $(BUILD)/application.hex: $(C_FILES) ../fpga/fpga_application.h
 	@mkdir -p $(BUILD)
 	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/application.elf $(C_FILES) $(LINKED_LIBRARIES)
 	@arm-none-eabi-objcopy -O ihex $(BUILD)/application.elf $(BUILD)/application.hex
-
-	@nrfutil settings generate \
-		--family NRF52840 \
-		--application $(BUILD)/application.hex \
-		--application-version 0 \
-		--bootloader-version 0 \
-		--bl-settings-version 2 \
-		$(BUILD)/settings.hex
-	
 	@arm-none-eabi-size $(BUILD)/application.elf
