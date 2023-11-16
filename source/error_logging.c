@@ -151,7 +151,6 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
                 line,
                 lookup_error_code(error_code));
 
-            // Simply pause here if debugging
             __BKPT();
         }
         NVIC_SystemReset();
@@ -164,7 +163,6 @@ void _error_with_message(const char *message, const char *file, const int line)
     {
         LOG("Crashed at %s:%u - %s", file, line, message);
 
-        // Simply pause here if debugging
         __BKPT();
     }
     NVIC_SystemReset();
@@ -172,14 +170,14 @@ void _error_with_message(const char *message, const char *file, const int line)
 
 typedef struct HardFault_stack
 {
-    uint32_t r0;  ///< R0 register.
-    uint32_t r1;  ///< R1 register.
-    uint32_t r2;  ///< R2 register.
-    uint32_t r3;  ///< R3 register.
-    uint32_t r12; ///< R12 register.
-    uint32_t lr;  ///< Link register.
-    uint32_t pc;  ///< Program counter.
-    uint32_t psr; ///< Program status register.
+    uint32_t r0;
+    uint32_t r1;
+    uint32_t r2;
+    uint32_t r3;
+    uint32_t r12;
+    uint32_t lr;
+    uint32_t pc;
+    uint32_t psr;
 } HardFault_stack_t;
 
 void print_hardfault(uint32_t *p_stack_address)
@@ -218,39 +216,41 @@ void print_hardfault(uint32_t *p_stack_address)
 
     if (p_stack != NULL)
     {
-        // Print information about error.
-        LOG("HARD FAULT at 0x%08X", p_stack->pc);
-        LOG("  R0:  0x%08X  R1:  0x%08X  R2:  0x%08X  R3:  0x%08X",
-            p_stack->r0, p_stack->r1, p_stack->r2, p_stack->r3);
-        LOG("  R12: 0x%08X  LR:  0x%08X  PSR: 0x%08X",
-            p_stack->r12, p_stack->lr, p_stack->psr);
+        LOG("Hardfault at PC = 0x%08lX", p_stack->pc);
+        LOG("R0  = 0x%08lX", p_stack->r0);
+        LOG("R1  = 0x%08lX", p_stack->r1);
+        LOG("R2  = 0x%08lX", p_stack->r2);
+        LOG("R3  = 0x%08lX", p_stack->r3);
+        LOG("R12 = 0x%08lX", p_stack->r12);
+        LOG("LR  = 0x%08lX", p_stack->lr);
+        LOG("PSR = 0x%08lX", p_stack->psr);
     }
     else
     {
-        LOG("Stack violation: stack pointer outside stack area.");
+        LOG("Hardfault due to stack pointer outside of stack area");
     }
 
     if (SCB->HFSR & SCB_HFSR_VECTTBL_Msk)
     {
-        LOG("Cause: BusFault on a vector table read during exception processing.");
+        LOG("BusFault on a vector table read during exception processing");
     }
 
     for (uint32_t i = 0; i < sizeof(cfsr_msgs) / sizeof(cfsr_msgs[0]); i++)
     {
         if (((cfsr & (1 << i)) != 0) && (cfsr_msgs[i] != NULL))
         {
-            LOG("Cause: %s.", (uint32_t)cfsr_msgs[i]);
+            LOG("%s", cfsr_msgs[i]);
         }
     }
 
     if (cfsr & (1 << (0 + 7)))
     {
-        LOG("MemManage Fault Address: 0x%08X", SCB->MMFAR);
+        LOG("MemManage fault at address: 0x%08lX", SCB->MMFAR);
     }
 
     if (cfsr & (1 << (8 + 7)))
     {
-        LOG("Bus Fault Address: 0x%08X", SCB->BFAR);
+        LOG("Bus fault at address: 0x%08lX", SCB->BFAR);
     }
 
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
