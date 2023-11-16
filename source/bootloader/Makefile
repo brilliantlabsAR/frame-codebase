@@ -190,6 +190,8 @@ FLAGS += \
 
 # Linker options
 FLAGS += \
+	-Wl,--defsym=vfprintf=__l_vfprintf \
+	-Wl,--defsym=vfscanf=__l_vfscanf \
 	-Wl,--gc-sections \
 
 # Linker script paths
