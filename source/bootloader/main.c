@@ -49,7 +49,7 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
         case NRF_FAULT_ID_SDK_ASSERT:
 
             assert_info_t *assert_info = (assert_info_t *)info;
-            LOG("Crashed at %s:%u",
+            LOG("Crashed at %s:%lu",
                 assert_info->p_file_name,
                 assert_info->line_num);
             break;
@@ -57,14 +57,14 @@ void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
         case NRF_FAULT_ID_SDK_ERROR:
 
             error_info_t *error_info = (error_info_t *)info;
-            LOG("Crashed at %s:%u - Error code: %u",
+            LOG("Crashed at %s:%lu - Error code: %lu",
                 error_info->p_file_name,
                 error_info->line_num,
                 error_info->err_code);
             break;
 
         default:
-            LOG("Unknown fault 0x%08X", pc);
+            LOG("Unknown fault 0x%08lX", pc);
             break;
         }
 

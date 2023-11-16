@@ -108,6 +108,7 @@ extern "C" {
  *  @details This macro is compiled only if @ref NRF_LOG_LEVEL includes debug logs.
  */
 
+#include <stdio.h>
 #define NRF_LOG_ERROR(string, ...) printf(string "\r\n", ##__VA_ARGS__);
 #define NRF_LOG_WARNING(...)
 #define NRF_LOG_INFO(...)

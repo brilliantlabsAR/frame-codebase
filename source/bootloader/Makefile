@@ -153,6 +153,10 @@ FLAGS += \
 	-Wall \
 	-Wdouble-promotion  \
 	-Wfloat-conversion \
+	-Wno-array-bounds \
+	-Wno-format \
+	-Wno-unused-function \
+	-Wno-unused-variable \
 
 # Build options and optimizations
 FLAGS += \
