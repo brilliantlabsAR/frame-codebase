@@ -25,12 +25,12 @@
 #include <stdint.h>
 #include "error_logging.h"
 
-extern uint32_t _stack_top;
-extern uint32_t _sidata;
-extern uint32_t _sdata;
-extern uint32_t _edata;
-extern uint32_t _sbss;
-extern uint32_t _ebss;
+extern uint32_t __stack_top;
+extern uint32_t __init_data_start;
+extern uint32_t __data_start;
+extern uint32_t __data_end;
+extern uint32_t __bss_start;
+extern uint32_t __bss_end;
 
 typedef void (*func)(void);
 extern void main(void) __attribute__((noreturn));
@@ -41,24 +41,19 @@ void Default_Handler(void)
     error_with_message("Unhandled interrupt");
 }
 
-void HardFault_Handler(void)
-{
-    error_with_message("Hard fault");
-}
-
 void Reset_Handler(void)
 {
-    // Initialise the RAM
-    uint32_t *p_src = &_sidata;
-    uint32_t *p_dest = &_sdata;
+    // Initialise the RAM with initialized data
+    uint32_t *p_src = &__init_data_start;
+    uint32_t *p_dest = &__data_start;
 
-    while (p_dest < &_edata)
+    while (p_dest < &__data_end)
     {
         *p_dest++ = *p_src++;
     }
 
-    uint32_t *p_bss = &_sbss;
-    uint32_t *p_bss_end = &_ebss;
+    uint32_t *p_bss = &__bss_start;
+    uint32_t *p_bss_end = &__bss_end;
     while (p_bss < p_bss_end)
     {
         *p_bss++ = 0ul;
@@ -127,7 +122,7 @@ void PWM3_IRQHandler(void) __attribute__((weak, alias("Default_Handler")));
 void SPIM3_IRQHandler(void) __attribute__((weak, alias("Default_Handler")));
 
 const func __Vectors[] __attribute__((section(".isr_vector"), used)) = {
-    (func)&_stack_top,
+    (func)&__stack_top,
     Reset_Handler,
     NMI_Handler,
     HardFault_Handler,

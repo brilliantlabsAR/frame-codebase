@@ -35,8 +35,8 @@
 
 nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 
-extern uint32_t _ram_start;
-static uint32_t ram_start = (uint32_t)&_ram_start;
+extern uint32_t __ram_start;
+static uint32_t ram_start = (uint32_t)&__ram_start;
 
 static struct ble_handles_t
 {

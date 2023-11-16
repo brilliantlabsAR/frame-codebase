@@ -22,68 +22,68 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+__min_heap_size = 8K;
+__stack_size = 8K;
+
 SECTIONS
 {
-    .text :
-    {
+    .text : {
         . = ALIGN(4);
         KEEP(*(.isr_vector))
-        *(.text)
-        *(.text*)
-        *(.rodata)
-        *(.rodata*)
-        
+        *(.text .text* .gnu.linkonce.t.*)
+        *(.rodata .rodata* .gnu.linkonce.r.*)
         . = ALIGN(4);
-        _etext = .;
     } > APPLICATION_FLASH
 
-    .ARM.exidx :
-    {
+    .ARM.extab : {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > APPLICATION_FLASH
+
+    .ARM.exidx : {
         __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
         __exidx_end = .;
     } > APPLICATION_FLASH
-    
-    _sidata = LOADADDR(.data);
-    
-    .data :
-    {
-        . = ALIGN(4);
-        _sdata = .;
-        _ram_start = .;
-        *(.data)
-        *(.data*)
 
+    .data : {
         . = ALIGN(4);
-        _edata = .;
+        __data_start = .;
+        __data_start__ = .;
+        __ram_start = .;
+        *(.ramfunc .ramfunc.*);
+        *(.data .data.*);
+        . = ALIGN(4);
+        __data_end = .;
     } > APPLICATION_RAM AT> APPLICATION_FLASH
 
-    .bss :
-    {
-        . = ALIGN(4);
-        _sbss = .;
-        *(.bss)
-        *(.bss*)
-        *(COMMON)
+    __init_data_start = LOADADDR(.data);
 
-        . = ALIGN(4);
-        _ebss = .;
-
-        PROVIDE(end = .);
+    .fs_data : {
+        PROVIDE(__start_fs_data = .);
+        KEEP(*(.fs_data))
+        PROVIDE(__stop_fs_data = .);
     } > APPLICATION_RAM
 
-    .ARM.attributes 0 : 
-    { 
-        *(.ARM.attributes) 
-    }
+    .bss : {
+        . = ALIGN(4);
+        __bss_start = .;
+        *(.bss .bss*)
+        *(COMMON)
+        . = ALIGN(4);
+        __bss_end = .;
+    } > APPLICATION_RAM
+
+	.stack (NOLOAD) : {
+        . = ALIGN(8);
+        __stack_bottom = .;
+		. += __stack_size;
+        . = ALIGN(8);
+        __stack_top = .;
+	} > APPLICATION_RAM
+
+    . = ALIGN(4);
+    PROVIDE(__heap_start = .);
+    PROVIDE(__heap_end = ORIGIN(APPLICATION_RAM) + LENGTH(APPLICATION_RAM));
 }
 
-_stack_top = ORIGIN(APPLICATION_RAM) + LENGTH(APPLICATION_RAM);
-_stack_bot = _stack_top - 8K;
-
-_heap_start = _ebss;
-__heap_start = _ebss;
-_heap_end = _stack_bot;
-__heap_end = _stack_bot;
-
-ASSERT(_heap_end - _heap_start >= 4K, "Heap has become too small")
+ASSERT(__heap_end - __heap_start >= __min_heap_size, "heap has become too small")

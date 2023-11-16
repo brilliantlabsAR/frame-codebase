@@ -36,3 +36,5 @@ void _error_with_message(const char *message, const char *file, const int line);
 
 #define error_with_message(message) \
     _error_with_message(message, __FILE__, __LINE__)
+
+void HardFault_Handler(void) __attribute__((naked));
