@@ -58,12 +58,6 @@ SECTIONS
 
     __init_data_start = LOADADDR(.data);
 
-    .fs_data : {
-        PROVIDE(__start_fs_data = .);
-        KEEP(*(.fs_data))
-        PROVIDE(__stop_fs_data = .);
-    } > APPLICATION_RAM
-
     .bss : {
         . = ALIGN(4);
         __bss_start = .;

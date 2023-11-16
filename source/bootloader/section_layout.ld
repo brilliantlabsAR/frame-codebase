@@ -27,65 +27,59 @@ __stack_size = 4K;
 
 SECTIONS
 {
-    .text : {
+    .uicr_bootloader_start_address : {
         . = ALIGN(4);
-        __isr_vector = .;
-        KEEP(*(.isr_vector))
-        *(.text .text* .gnu.linkonce.t.*)
-        *(.rodata .rodata* .gnu.linkonce.r.*)
+        PROVIDE(__start_uicr_bootloader_start_address = .);
+        KEEP(*(SORT(.uicr_bootloader_start_address*)))
+        PROVIDE(__stop_uicr_bootloader_start_address = .);
+    } > UICR_BOOTLOADER_ADDRESS
+
+    .bootloader_settings_page (NOLOAD) : {
         . = ALIGN(4);
-    } > BOOTLOADER_FLASH
+        PROVIDE(__start_bootloader_settings_page = .);
+        KEEP(*(SORT(.bootloader_settings_page*)))
+        PROVIDE(__stop_bootloader_settings_page = .);
+    } > BOOTLOADER_SETTINGS
 
-    .ARM.extab : {
-        *(.ARM.extab* .gnu.linkonce.armextab.*)
-    } > BOOTLOADER_FLASH
-
-    .ARM.exidx : {
-        __exidx_start = .;
-        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
-        __exidx_end = .;
-    } > BOOTLOADER_FLASH
-
-    .data : {
+    .uicr_mbr_params_page : {
         . = ALIGN(4);
-        __data_start = .;
-        __data_start__ = .;
-        __ram_start = .;
-        *(.ramfunc .ramfunc.*);
-        *(.data .data.*);
-        . = ALIGN(4);
-        __data_end = .;
-    } > BOOTLOADER_RAM AT> BOOTLOADER_FLASH
+        PROVIDE(__start_uicr_mbr_params_page = .);
+        KEEP(*(SORT(.uicr_mbr_params_page*)))
+        PROVIDE(__stop_uicr_mbr_params_page = .);
+    } > UICR_MBR_PARAMETERS
 
-    __init_data_start = LOADADDR(.data);
+    .mbr_params_page (NOLOAD) : {
+        . = ALIGN(4);
+        PROVIDE(__start_mbr_params_page = .);
+        KEEP(*(SORT(.mbr_params_page*)))
+        PROVIDE(__stop_mbr_params_page = .);
+    } > MBR_PARAMETERS
+}
+
+SECTIONS
+{
+    .mem_section_dummy_ram : {
+        . = ALIGN(4);
+    }
+
+    .log_dynamic_data : {
+        PROVIDE(__start_log_dynamic_data = .);
+        KEEP(*(SORT(.log_dynamic_data*)))
+        PROVIDE(__stop_log_dynamic_data = .);
+    } > BOOTLOADER_RAM
+    
+    .log_filter_data : {
+        PROVIDE(__start_log_filter_data = .);
+        KEEP(*(SORT(.log_filter_data*)))
+        PROVIDE(__stop_log_filter_data = .);
+    } > BOOTLOADER_RAM
 
     .fs_data : {
         PROVIDE(__start_fs_data = .);
         KEEP(*(.fs_data))
         PROVIDE(__stop_fs_data = .);
     } > BOOTLOADER_RAM
-
-    .bss : {
-        . = ALIGN(4);
-        __bss_start = .;
-        *(.bss .bss*)
-        *(COMMON)
-        . = ALIGN(4);
-        __bss_end = .;
-    } > BOOTLOADER_RAM
-
-	.stack (NOLOAD) : {
-        . = ALIGN(8);
-        __stack_bottom = .;
-		. += __stack_size;
-        . = ALIGN(8);
-        __stack_top = .;
-	} > BOOTLOADER_RAM
-
-    . = ALIGN(4);
-    PROVIDE(__heap_start = .);
-    PROVIDE(__heap_end = ORIGIN(BOOTLOADER_RAM) + LENGTH(BOOTLOADER_RAM));
-}
+} INSERT AFTER .data;
 
 SECTIONS
 {
@@ -163,37 +157,62 @@ SECTIONS
         KEEP(*(SORT(.sdh_soc_observers*)))
         PROVIDE(__stop_sdh_soc_observers = .);
     } > BOOTLOADER_FLASH
-}
+} INSERT AFTER .text
 
 SECTIONS
 {
-    .uicr_bootloader_start_address : {
+    .text : {
         . = ALIGN(4);
-        PROVIDE(__start_uicr_bootloader_start_address = .);
-        KEEP(*(SORT(.uicr_bootloader_start_address*)))
-        PROVIDE(__stop_uicr_bootloader_start_address = .);
-    } > UICR_BOOTLOADER_ADDRESS
+        __isr_vector = .;
+        KEEP(*(.isr_vector))
+        *(.text .text* .gnu.linkonce.t.*)
+        *(.rodata .rodata* .gnu.linkonce.r.*)
+        . = ALIGN(4);
+    } > BOOTLOADER_FLASH
 
-    .bootloader_settings_page (NOLOAD) : {
-        . = ALIGN(4);
-        PROVIDE(__start_bootloader_settings_page = .);
-        KEEP(*(SORT(.bootloader_settings_page*)))
-        PROVIDE(__stop_bootloader_settings_page = .);
-    } > BOOTLOADER_SETTINGS
+    .ARM.extab : {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > BOOTLOADER_FLASH
 
-    .uicr_mbr_params_page : {
-        . = ALIGN(4);
-        PROVIDE(__start_uicr_mbr_params_page = .);
-        KEEP(*(SORT(.uicr_mbr_params_page*)))
-        PROVIDE(__stop_uicr_mbr_params_page = .);
-    } > UICR_MBR_PARAMETERS
+    .ARM.exidx : {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > BOOTLOADER_FLASH
 
-    .mbr_params_page(NOLOAD) : {
+    .data : {
         . = ALIGN(4);
-        PROVIDE(__start_mbr_params_page = .);
-        KEEP(*(SORT(.mbr_params_page*)))
-        PROVIDE(__stop_mbr_params_page = .);
-    } > MBR_PARAMETERS
+        __data_start = .;
+        __data_start__ = .;
+        __ram_start = .;
+        *(.ramfunc .ramfunc.*);
+        *(.data .data.*);
+        . = ALIGN(4);
+        __data_end = .;
+    } > BOOTLOADER_RAM AT> BOOTLOADER_FLASH
+
+    __init_data_start = LOADADDR(.data);
+
+    .bss : {
+        . = ALIGN(4);
+        __bss_start = .;
+        *(.bss .bss*)
+        *(COMMON)
+        . = ALIGN(4);
+        __bss_end = .;
+    } > BOOTLOADER_RAM
+
+	.stack (NOLOAD) : {
+        . = ALIGN(8);
+        __stack_bottom = .;
+		. += __stack_size;
+        . = ALIGN(8);
+        __stack_top = .;
+	} > BOOTLOADER_RAM
+
+    . = ALIGN(4);
+    PROVIDE(__heap_start = .);
+    PROVIDE(__heap_end = ORIGIN(BOOTLOADER_RAM) + LENGTH(BOOTLOADER_RAM));
 }
 
 ASSERT(__heap_end - __heap_start >= __min_heap_size, "heap has become too small")
