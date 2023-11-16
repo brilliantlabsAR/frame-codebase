@@ -32,6 +32,7 @@ BUILD := ../../build
 C_FILES += \
 	main.c \
 	bluetooth.c \
+	filesystem.c \
 	luaport.c \
 	i2c.c \
 	spi.c \

@@ -29,13 +29,14 @@
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_logging.h"
+#include "filesystem.h"
 #include "fpga_application.h"
 #include "i2c.h"
 #include "luaport.h"
 #include "nrf_clock.h"
 #include "nrf_gpio.h"
-#include "nrf.h"
 #include "nrf_sdm.h"
+#include "nrf.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
@@ -396,6 +397,8 @@ int main(void)
     hardware_setup();
 
     bluetooth_setup();
+
+    filesystem_setup();
 
     while (1)
     {

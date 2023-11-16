@@ -58,6 +58,9 @@ SECTIONS
 
     __init_data_start = LOADADDR(.data);
 
+    __empty_flash_start = .;
+    PROVIDE(__empty_flash_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH));
+
     .bss : {
         . = ALIGN(4);
         __bss_start = .;
