@@ -300,7 +300,7 @@ void bluetooth_setup(void)
     // Start the Softdevice
     check_error(sd_ble_enable(&ram_start));
 
-    LOG("Softdevice using 0x%lx data of RAM", ram_start - 0x20000000);
+    LOG("Softdevice using 0x%lx bytes of RAM", ram_start - 0x20000000);
 
     // Set security to open // TODO make this paired
     ble_gap_conn_sec_mode_t sec_mode;

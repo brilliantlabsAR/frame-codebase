@@ -30,7 +30,7 @@
  * | MBR Parameters      |
  * |---------------------|    0xFE000
  * | Bootloader          |
- * |---------------------|    0xF1000
+ * |---------------------|    0xF5000
  * | File System         |
  * |---------------------|   variable
  * | Application         |
@@ -50,10 +50,10 @@ ENTRY(Reset_Handler)
 
 MEMORY
 {
-    APPLICATION_FLASH (rx) :      ORIGIN = 0x27000,    LENGTH = 0xCA000
+    APPLICATION_FLASH (rx) :      ORIGIN = 0x27000,    LENGTH = 0xCE000
     APPLICATION_RAM (rwx) :       ORIGIN = 0x20002A08, LENGTH = 256K - 0x2A08
 
-    BOOTLOADER_FLASH (rx) :       ORIGIN = 0xF1000,    LENGTH = 0xD000
+    BOOTLOADER_FLASH (rx) :       ORIGIN = 0xF5000,    LENGTH = 0x9000
     BOOTLOADER_RAM (rwx) :        ORIGIN = 0x20002AE8, LENGTH = 256K - 0x2AE8
     
     MBR_PARAMETERS (r) :          ORIGIN = 0xFE000,    LENGTH = 0x1000

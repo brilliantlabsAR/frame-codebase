@@ -86,10 +86,7 @@ void app_error_handler_bare(ret_code_t error_code)
     app_error_fault_handler(NRF_FAULT_ID_SDK_ERROR, 0, (uint32_t)(&error_info));
 }
 
-static void dfu_observer(nrf_dfu_evt_type_t evt_type)
-{
-    LOG("DFU event: %u", evt_type);
-}
+static void dfu_observer(nrf_dfu_evt_type_t evt_type) {}
 
 int main(void)
 {

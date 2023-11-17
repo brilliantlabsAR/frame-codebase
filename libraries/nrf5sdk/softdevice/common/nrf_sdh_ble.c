@@ -227,7 +227,7 @@ ret_code_t nrf_sdh_ble_enable(uint32_t * const p_app_ram_start)
 
     ret_code_t ret_code = sd_ble_enable(p_app_ram_start);
 
-    NRF_LOG_ERROR("Softdevice using 0x%lx data of RAM", p_app_ram_start - 0x20000000);
+    NRF_LOG_ERROR("Softdevice using 0x%lx bytes of RAM", *p_app_ram_start - 0x20000000);
 
     if (*p_app_ram_start > app_ram_start_link)
     {

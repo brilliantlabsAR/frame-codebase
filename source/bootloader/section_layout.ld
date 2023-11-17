@@ -58,31 +58,6 @@ SECTIONS
 
 SECTIONS
 {
-    .mem_section_dummy_ram : {
-        . = ALIGN(4);
-    }
-
-    .log_dynamic_data : {
-        PROVIDE(__start_log_dynamic_data = .);
-        KEEP(*(SORT(.log_dynamic_data*)))
-        PROVIDE(__stop_log_dynamic_data = .);
-    } > BOOTLOADER_RAM
-    
-    .log_filter_data : {
-        PROVIDE(__start_log_filter_data = .);
-        KEEP(*(SORT(.log_filter_data*)))
-        PROVIDE(__stop_log_filter_data = .);
-    } > BOOTLOADER_RAM
-
-    .fs_data : {
-        PROVIDE(__start_fs_data = .);
-        KEEP(*(.fs_data))
-        PROVIDE(__stop_fs_data = .);
-    } > BOOTLOADER_RAM
-} INSERT AFTER .data;
-
-SECTIONS
-{
     .mem_section_dummy_rom : {
     }
 
@@ -187,6 +162,9 @@ SECTIONS
         __ram_start = .;
         *(.ramfunc .ramfunc.*);
         *(.data .data.*);
+        PROVIDE(__start_fs_data = .);
+        KEEP(*(.fs_data))
+        PROVIDE(__stop_fs_data = .);
         . = ALIGN(4);
         __data_end = .;
     } > BOOTLOADER_RAM AT> BOOTLOADER_FLASH
