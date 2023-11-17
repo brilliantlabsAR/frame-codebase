@@ -214,6 +214,8 @@ $(BUILD)/bootloader.hex: $(C_FILES)
 	@mkdir -p $(BUILD)
 	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/bootloader.elf $(C_FILES) $(LINKED_LIBRARIES)
 	@arm-none-eabi-objcopy -O ihex $(BUILD)/bootloader.elf $(BUILD)/bootloader.hex
+	@rm frame-bootloader-*.hex
+	@cp $(BUILD)/bootloader.hex frame-bootloader-$(BUILD_VERSION).hex
 	@arm-none-eabi-size $(BUILD)/bootloader.elf
 
 regenerate_keys:

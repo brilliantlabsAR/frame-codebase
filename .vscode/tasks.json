@@ -24,6 +24,22 @@
             },
         },
         {
+            "label": "Build Bootloader",
+            "type": "shell",
+            "command": "make bootloader",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": false,
+                "reveal": "silent",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
             "label": "Release",
             "type": "shell",
             "command": "make release",

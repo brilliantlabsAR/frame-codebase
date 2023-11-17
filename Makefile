@@ -27,18 +27,15 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 BUILD := build
 
-default: 
+application: 
 	@make -C source/application
 
-clean:
-	@rm -rf $(BUILD)
-
-release:
-	@rm -rf $(BUILD)
-
+bootloader:
 	@make -C source/application
 	@make -C source/bootloader
+	@make settings-hex-zip
 
+settings-hex-zip:
 	@nrfutil settings generate \
 		--family NRF52840 \
 		--application $(BUILD)/application.hex \
@@ -50,7 +47,7 @@ release:
 	@mergehex \
 	    -m $(BUILD)/settings.hex \
 		   $(BUILD)/application.hex \
-		   $(BUILD)/bootloader.hex \
+		   source/bootloader/*.hex \
 		   libraries/softdevice/*.hex \
 		-o $(BUILD)/frame-firmware-$(BUILD_VERSION).hex
 
@@ -61,6 +58,14 @@ release:
 		--sd-req 0x0123 \
 		--key-file source/bootloader/dfu_private_key.pem \
 		$(BUILD)/frame-firmware-$(BUILD_VERSION).zip
+
+release:
+	@make clean
+	@make application
+	@make settings-hex-zip
+
+clean:
+	@rm -rf $(BUILD)
 
 flash:
 	@nrfutil device program \
