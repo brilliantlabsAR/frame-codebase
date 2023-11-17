@@ -38,6 +38,11 @@ nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 extern uint32_t __ram_start;
 static uint32_t ram_start = (uint32_t)&__ram_start;
 
+extern uint32_t __bond_information_start;
+extern uint32_t __bond_information_end;
+static uint32_t bond_information_start = (uint32_t)&__bond_information_start;
+static uint32_t bond_information_end = (uint32_t)&__bond_information_end;
+
 static struct ble_handles_t
 {
     uint16_t connection;
@@ -252,6 +257,10 @@ void SD_EVT_IRQHandler(void)
 
 void bluetooth_setup(void)
 {
+    LOG("Bond information goes from: %08lx to %08lx",
+        bond_information_start,
+        bond_information_end);
+
     // Enable the softdevice using internal RC oscillator
     check_error(sd_softdevice_enable(NULL, softdevice_assert_handler));
 

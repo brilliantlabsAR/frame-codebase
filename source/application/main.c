@@ -47,7 +47,7 @@
 bool not_real_hardware = false;
 bool stay_awake = false;
 bool force_sleep = false;
-bool unpair = false;
+bool factory_reset = false;
 
 static void set_power_rails(bool enable)
 {
@@ -260,7 +260,7 @@ static void hardware_setup()
             else
             {
                 LOG("Un-pairing");
-                unpair = true;
+                factory_reset = true;
             }
         }
 

@@ -25,6 +25,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "error_logging.h"
+#include "main.h"
 #include "nrfx_log.h"
 
 extern uint32_t __empty_flash_start;
