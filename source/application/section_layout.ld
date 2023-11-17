@@ -58,11 +58,11 @@ SECTIONS
 
     __init_data_start = LOADADDR(.data);
 
-    .bond_information : {
+    .bond_storage : {
         . = ALIGN(4K);
-        __bond_information_start = .;
+        __bond_storage_start = .;
         . += 4K;
-        __bond_information_end = .;
+        __bond_storage_end = .;
     } > APPLICATION_FLASH
 
     .empty_flash : {

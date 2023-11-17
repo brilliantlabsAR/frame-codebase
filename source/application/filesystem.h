@@ -24,4 +24,4 @@
 
 #pragma once
 
-void filesystem_setup(void);
+void filesystem_setup(bool factory_reset);

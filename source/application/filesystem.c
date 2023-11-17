@@ -33,7 +33,7 @@ extern uint32_t __empty_flash_end;
 static uint32_t empty_flash_start = (uint32_t)&__empty_flash_start;
 static uint32_t empty_flash_end = (uint32_t)&__empty_flash_end;
 
-void filesystem_setup(void)
+void filesystem_setup(bool factory_reset)
 {
     LOG("Empty flash goes from: %08lx to %08lx",
         empty_flash_start,

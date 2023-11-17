@@ -47,7 +47,6 @@
 bool not_real_hardware = false;
 bool stay_awake = false;
 bool force_sleep = false;
-bool factory_reset = false;
 
 static void set_power_rails(bool enable)
 {
@@ -137,7 +136,7 @@ void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
     shutdown(false);
 }
 
-static void hardware_setup()
+static void hardware_setup(bool *factory_reset)
 {
     // Configure systick so we can use it for simple delays
     {
@@ -259,8 +258,8 @@ static void hardware_setup()
             // Otherwise it means the button was pressed. Un-pair
             else
             {
-                LOG("Un-pairing");
-                factory_reset = true;
+                LOG("Factory reset");
+                *factory_reset = true;
             }
         }
 
@@ -394,11 +393,13 @@ int main(void)
 {
     LOG(RTT_CTRL_CLEAR);
 
-    hardware_setup();
+    bool factory_reset = false;
 
-    bluetooth_setup();
+    hardware_setup(&factory_reset);
 
-    filesystem_setup();
+    bluetooth_setup(factory_reset);
+
+    filesystem_setup(factory_reset);
 
     while (1)
     {
