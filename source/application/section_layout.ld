@@ -58,8 +58,11 @@ SECTIONS
 
     __init_data_start = LOADADDR(.data);
 
-    __empty_flash_start = .;
-    PROVIDE(__empty_flash_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH));
+    .empty_flash : {
+        . = ALIGN(4K);
+        __empty_flash_start = .;
+        __empty_flash_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH);
+    } > APPLICATION_FLASH
 
     .bss : {
         . = ALIGN(4);
@@ -79,8 +82,8 @@ SECTIONS
 	} > APPLICATION_RAM
 
     . = ALIGN(4);
-    PROVIDE(__heap_start = .);
-    PROVIDE(__heap_end = ORIGIN(APPLICATION_RAM) + LENGTH(APPLICATION_RAM));
+    __heap_start = .;
+    __heap_end = ORIGIN(APPLICATION_RAM) + LENGTH(APPLICATION_RAM);
 }
 
 ASSERT(__heap_end - __heap_start >= __min_heap_size, "heap has become too small")

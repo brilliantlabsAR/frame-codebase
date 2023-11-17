@@ -245,7 +245,7 @@ void print_hardfault(uint32_t *p_stack_address)
 
     if (cfsr & (1 << (0 + 7)))
     {
-        LOG("MemManage fault at address: 0x%08lX", SCB->MMFAR);
+        LOG("Mem manage fault at address: 0x%08lX", SCB->MMFAR);
     }
 
     if (cfsr & (1 << (8 + 7)))
@@ -269,6 +269,7 @@ void HardFault_Handler(void)
         /* PSP is quite simple and does not require additional handler */
         "   itt ne                           \n"
         "   mrsne r0, psp                    \n"
+
         /* Jump to the handler, do not store LR - returning from handler just exits exception */
         "   bne  HardFault_Handler_Continue  \n"
 
@@ -276,7 +277,7 @@ void HardFault_Handler(void)
         "   mrs r0, msp                      \n"
 
         "   ldr   r1, =__stack_top           \n"
-        "   ldr   r2, =__stack_bottom           \n"
+        "   ldr   r2, =__stack_bottom        \n"
 
         /* MSP is in the range of the stack area */
         "   cmp   r0, r1                     \n"

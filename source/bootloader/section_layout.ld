@@ -211,8 +211,8 @@ SECTIONS
 	} > BOOTLOADER_RAM
 
     . = ALIGN(4);
-    PROVIDE(__heap_start = .);
-    PROVIDE(__heap_end = ORIGIN(BOOTLOADER_RAM) + LENGTH(BOOTLOADER_RAM));
+    __heap_start = .;
+    __heap_end = ORIGIN(BOOTLOADER_RAM) + LENGTH(BOOTLOADER_RAM);
 }
 
 ASSERT(__heap_end - __heap_start >= __min_heap_size, "heap has become too small")
