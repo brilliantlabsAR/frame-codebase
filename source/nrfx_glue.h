@@ -30,7 +30,6 @@
 #include <soc/nrfx_coredep.h>
 
 #define nrfx_gpiote_0_irq_handler GPIOTE_IRQHandler
-// #define nrfx_pdm_irq_handler PDM_IRQHandler
 #define nrfx_rtc_1_irq_handler RTC1_IRQHandler
 
 #define NRFX_ASSERT(expression)                \

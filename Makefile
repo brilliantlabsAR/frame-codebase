@@ -25,175 +25,56 @@
 BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
-# Source files
-C_FILES += \
-	libraries/lua/lapi.c \
-	libraries/lua/lauxlib.c \
-	libraries/lua/lbaselib.c \
-	libraries/lua/lcode.c \
-	libraries/lua/lcorolib.c \
-	libraries/lua/lctype.c \
-	libraries/lua/ldblib.c \
-	libraries/lua/ldebug.c \
-	libraries/lua/ldo.c \
-	libraries/lua/ldump.c \
-	libraries/lua/lfunc.c \
-	libraries/lua/lgc.c \
-	libraries/lua/linit.c \
-	libraries/lua/llex.c \
-	libraries/lua/lmathlib.c \
-	libraries/lua/lmem.c \
-	libraries/lua/loadlib.c \
-	libraries/lua/lobject.c \
-	libraries/lua/lopcodes.c \
-	libraries/lua/lparser.c \
-	libraries/lua/lstate.c \
-	libraries/lua/lstring.c \
-	libraries/lua/lstrlib.c \
-	libraries/lua/ltable.c \
-	libraries/lua/ltablib.c \
-	libraries/lua/ltm.c \
-	libraries/lua/lundump.c \
-	libraries/lua/lutf8lib.c \
-	libraries/lua/lvm.c \
-	libraries/lua/lzio.c \
-	libraries/nrfx/drivers/src/nrfx_gpiote.c \
-	libraries/nrfx/drivers/src/nrfx_ipc.c \
-	libraries/nrfx/drivers/src/nrfx_pdm.c \
-	libraries/nrfx/drivers/src/nrfx_qspi.c \
-	libraries/nrfx/drivers/src/nrfx_rtc.c \
-	libraries/nrfx/drivers/src/nrfx_saadc.c \
-	libraries/nrfx/drivers/src/nrfx_spim.c \
-	libraries/nrfx/drivers/src/nrfx_systick.c \
-	libraries/nrfx/drivers/src/nrfx_twim.c \
-	libraries/nrfx/helpers/nrfx_flag32_allocator.c \
-	libraries/nrfx/mdk/system_nrf52840.c \
-	libraries/segger/SEGGER_RTT.c \
-	source/bluetooth.c \
-	source/error_logging.c \
-	source/i2c.c \
-	source/lua_libraries/bluetooth.c \
-	source/lua_libraries/camera.c \
-	source/lua_libraries/display.c \
-	source/lua_libraries/file.c \
-	source/lua_libraries/microphone.c \
-	source/lua_libraries/power.c \
-	source/lua_libraries/time.c \
-	source/lua_libraries/version.c \
-	source/luaport.c \
-	source/main.c \
-	source/spi.c \
-	source/startup.c \
-	source/syscalls.c \
+BUILD := build
 
-FPGA_RTL_SOURCE_FILES := $(shell find fpga | egrep '.sv|.pdc')
+application: 
+	@make -C source/application
 
-# Header file paths
-FLAGS += \
-	-Ifpga \
-	-Ilibraries/cmsis/CMSIS/Core/Include \
-	-Ilibraries/lua \
-	-Ilibraries/nrfx \
-	-Ilibraries/nrfx/drivers/include \
-	-Ilibraries/nrfx/hal \
-	-Ilibraries/nrfx/mdk \
-	-Ilibraries/nrfx/soc \
-	-Ilibraries/picolibc \
-	-Ilibraries/segger \
-	-Ilibraries/softdevice/include \
-	-Isource \
-	-Isource/lua_libraries \
+bootloader:
+	@make -C source/application
+	@make -C source/bootloader
+	@make settings-hex-zip
 
-# Warnings
-FLAGS += \
-	-Wall \
-	-Wdouble-promotion  \
-	-Wfloat-conversion \
+settings-hex-zip:
+	@rm -f $(BUILD)/frame-firmware-*
 
-# Build options and optimizations
-FLAGS += \
-	-falign-functions=16 \
-	-fdata-sections  \
-	-ffunction-sections  \
-	-fmax-errors=1 \
-	-fno-delete-null-pointer-checks \
-	-fno-strict-aliasing \
-	-fshort-enums \
-	-g \
-	-mabi=aapcs \
-	-mcpu=cortex-m4 \
-	-mfloat-abi=hard \
-	-mthumb \
-	-nostdlib \
-	-O2 \
-	-std=gnu17 \
+	@nrfutil settings generate \
+		--family NRF52840 \
+		--application $(BUILD)/application.hex \
+		--application-version 0 \
+		--bootloader-version 0 \
+		--bl-settings-version 2 \
+		$(BUILD)/settings.hex
 
-# Preprocessor defines
-FLAGS += \
-	-DNRF52840_XXAA \
-	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
-	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
-	-DNDEBUG \
+	@mergehex \
+	    -m $(BUILD)/settings.hex \
+		   $(BUILD)/application.hex \
+		   source/bootloader/*.hex \
+		   libraries/softdevice/*.hex \
+		-o $(BUILD)/frame-firmware-$(BUILD_VERSION).hex
 
-# Linker options
-FLAGS += \
-	-Wl,--gc-sections \
-
-# Linker script paths
-FLAGS += \
-	-T linker.ld \
-	-Llibraries/picolibc \
-
-# Link required libraries
-LIBS += \
-	-lc \
-	-lgcc \
-
-build/frame.hex: $(C_FILES) fpga/fpga_application.h
-	@mkdir -p build
-	@arm-none-eabi-gcc $(FLAGS) -o build/frame.elf $(C_FILES) $(LIBS)
-	@arm-none-eabi-objcopy -O ihex build/frame.elf build/frame.hex
-	@arm-none-eabi-size build/frame.elf
-
-
-fpga/fpga_application.h: $(FPGA_RTL_SOURCE_FILES)
-	
-	@mkdir -p build
-
-	@cd fpga && \
-	 iverilog -Wall \
-	          -g2012 \
-	          -o /dev/null \
-	          -i top.sv
-
-	@yosys -p "synth_nexus \
-	       -json build/fpga_application.json" \
-	       fpga/top.sv
-
-	@nextpnr-nexus --device LIFCL-17-7UWG72 \
-	               --pdc fpga/fpga_pinout.pdc \
-	               --json build/fpga_application.json \
-	               --fasm build/fpga_application.fasm
-
-	@prjoxide pack build/fpga_application.fasm build/fpga_application.bit
-	
-	@xxd -name fpga_application \
-	     -include build/fpga_application.bit \
-		 build/fpga_application_temp.h
-
-	@sed '1s/^/const /' build/fpga_application_temp.h > fpga/fpga_application.h
-
+	@nrfutil pkg generate \
+		--hw-version 52 \
+		--application-version 0 \
+		--application $(BUILD)/application.hex \
+		--sd-req 0x0123 \
+		--key-file source/bootloader/dfu_private_key.pem \
+		$(BUILD)/frame-firmware-$(BUILD_VERSION).zip
 
 release:
-	@echo TODO
+	@make clean
+	@make application
+	@make settings-hex-zip
 
 clean:
-	rm -rf build/
+	@rm -rf $(BUILD)
 
-flash: build/frame.hex
-	nrfjprog -q --program libraries/softdevice/*.hex --chiperase
-	nrfjprog -q --program build/frame.hex
-	nrfjprog --reset
+flash:
+	@nrfutil device program \
+		--options reset=RESET_HARD \
+		--firmware $(BUILD)/frame-firmware-*.hex
 
 recover:
-	nrfjprog --recover
+	@nrfutil device recover
+
+.PHONY: all clean release flash recover
