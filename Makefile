@@ -36,6 +36,8 @@ bootloader:
 	@make settings-hex-zip
 
 settings-hex-zip:
+	@rm -f $(BUILD)/frame-firmware-*
+
 	@nrfutil settings generate \
 		--family NRF52840 \
 		--application $(BUILD)/application.hex \
