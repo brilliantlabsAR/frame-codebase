@@ -27,15 +27,50 @@
 #include "error_logging.h"
 #include "main.h"
 #include "nrfx_log.h"
+#include "nrf_soc.h"
 
 extern uint32_t __empty_flash_start;
 extern uint32_t __empty_flash_end;
 static uint32_t empty_flash_start = (uint32_t)&__empty_flash_start;
 static uint32_t empty_flash_end = (uint32_t)&__empty_flash_end;
 
+static volatile bool flash_is_busy = false;
+
+void filesystem_flash_event_handler(bool success)
+{
+    flash_is_busy = false;
+}
+
+void filesystem_flash_erase_page(uint32_t address)
+{
+    if (address % NRF_FICR->CODEPAGESIZE)
+    {
+        error_with_message("Address not aligned to page boundary");
+    }
+
+    check_error(sd_flash_page_erase(address / NRF_FICR->CODEPAGESIZE));
+    flash_is_busy = true;
+}
+
+void filesystem_flash_write(uint32_t address,
+                            const uint32_t *data,
+                            size_t length)
+{
+    check_error(sd_flash_write((uint32_t *)address, data, length));
+    flash_is_busy = true;
+}
+
+void filesystem_flash_wait_until_complete(void)
+{
+    // TODO add a timeout
+    while (flash_is_busy)
+    {
+    }
+}
+
 void filesystem_setup(bool factory_reset)
 {
-    LOG("Empty flash goes from: %08lx to %08lx",
+    LOG("Empty flash goes from: 0x%08lX to 0x%08lX",
         empty_flash_start,
         empty_flash_end);
 }

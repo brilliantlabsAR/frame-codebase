@@ -27,6 +27,7 @@
 #include "ble.h"
 #include "bluetooth.h"
 #include "error_logging.h"
+#include "filesystem.h"
 #include "frame_lua_libraries.h"
 #include "luaport.h"
 #include "nrf_nvic.h"
@@ -58,6 +59,7 @@ static struct advertising_data_t
     .payload = {0},
 };
 
+// TODO move bonds into filesystem.c
 extern uint32_t __bond_storage_start;
 static uint32_t bond_storage = (uint32_t)&__bond_storage_start;
 
@@ -93,17 +95,17 @@ void SD_EVT_IRQHandler(void)
     uint32_t evt_id;
     uint8_t ble_evt_buffer[sizeof(ble_evt_t) + BLE_PREFERRED_MAX_MTU];
 
-    // While any softdevice events are pending, service flash operations
+    // Service flash operations
     while (sd_evt_get(&evt_id) != NRF_ERROR_NOT_FOUND)
     {
         switch (evt_id)
         {
         case NRF_EVT_FLASH_OPERATION_SUCCESS:
-            // TODO In case we add a filesystem in the future
+            filesystem_flash_event_handler(true);
             break;
 
         case NRF_EVT_FLASH_OPERATION_ERROR:
-            // TODO In case we add a filesystem in the future
+            filesystem_flash_event_handler(false);
             break;
 
         default:
@@ -111,7 +113,7 @@ void SD_EVT_IRQHandler(void)
         }
     }
 
-    // While any BLE events are pending
+    // Service BLE events
     while (1)
     {
         // Pull an event from the queue
@@ -135,26 +137,35 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_CONNECTED:
         {
-            ble_handles.connection = ble_evt->evt.gap_evt.conn_handle;
+            ble_handles.connection = ble_evt
+                                         ->evt
+                                         .gap_evt
+                                         .conn_handle;
 
             ble_gap_conn_params_t conn_params;
 
             check_error(sd_ble_gap_ppcp_get(&conn_params));
+
             check_error(sd_ble_gap_conn_param_update(ble_handles.connection,
                                                      &conn_params));
+
             check_error(sd_ble_gatts_sys_attr_set(ble_handles.connection,
                                                   NULL,
                                                   0,
                                                   0));
+
             check_error(sd_ble_gap_authenticate(ble_handles.connection,
                                                 &bond.sec_param));
+
             break;
         }
 
         case BLE_GAP_EVT_DISCONNECTED:
         {
             ble_handles.connection = BLE_CONN_HANDLE_INVALID;
+
             check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+
             break;
         }
 
@@ -171,16 +182,22 @@ void SD_EVT_IRQHandler(void)
                 .rx_phys = BLE_GAP_PHY_2MBPS,
                 .tx_phys = BLE_GAP_PHY_2MBPS,
             };
+
             check_error(sd_ble_gap_phy_update(ble_evt->evt.gap_evt.conn_handle,
                                               &phys));
+
             break;
         }
 
         case BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST:
         {
             // The client's desired MTU size
-            uint16_t client_mtu =
-                ble_evt->evt.gatts_evt.params.exchange_mtu_request.client_rx_mtu;
+            uint16_t client_mtu = ble_evt
+                                      ->evt
+                                      .gatts_evt
+                                      .params
+                                      .exchange_mtu_request
+                                      .client_rx_mtu;
 
             // Respond with our max MTU size
             sd_ble_gatts_exchange_mtu_reply(ble_handles.connection,
@@ -191,6 +208,7 @@ void SD_EVT_IRQHandler(void)
             ble_negotiated_mtu = BLE_PREFERRED_MAX_MTU < client_mtu
                                      ? BLE_PREFERRED_MAX_MTU - 3
                                      : client_mtu - 3;
+
             break;
         }
 
@@ -233,6 +251,7 @@ void SD_EVT_IRQHandler(void)
             check_error(sd_ble_gap_disconnect(
                 ble_handles.connection,
                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
+
             break;
         }
 
@@ -242,6 +261,7 @@ void SD_EVT_IRQHandler(void)
                                                   NULL,
                                                   0,
                                                   0));
+
             break;
         }
 
@@ -250,6 +270,7 @@ void SD_EVT_IRQHandler(void)
             check_error(sd_ble_gap_data_length_update(ble_handles.connection,
                                                       NULL,
                                                       NULL));
+
             break;
         }
 
@@ -283,6 +304,10 @@ void SD_EVT_IRQHandler(void)
                     BLE_GAP_SEC_STATUS_AUTH_REQ,
                     NULL,
                     NULL));
+
+                check_error(sd_ble_gap_disconnect(
+                    ble_handles.connection,
+                    BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
             }
 
             break;
@@ -301,19 +326,20 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_AUTH_STATUS:
         {
-            if (ble_evt->evt.gap_evt.params.auth_status.auth_status == BLE_GAP_SEC_STATUS_SUCCESS)
+            if (ble_evt->evt.gap_evt.params.auth_status.auth_status ==
+                BLE_GAP_SEC_STATUS_SUCCESS)
             {
-                check_error(sd_flash_write(
-                    (uint32_t *)bond_storage,
+                filesystem_flash_write(
+                    bond_storage,
                     (uint32_t *)&bond.keyset.keys_own.p_enc_key->enc_info,
-                    sizeof(bond.keyset.keys_own.p_enc_key->enc_info)));
+                    sizeof(bond.keyset.keys_own.p_enc_key->enc_info));
             }
 
             break;
         }
 
-        case BLE_GAP_EVT_CONN_PARAM_UPDATE:
         case BLE_GAP_EVT_CONN_SEC_UPDATE:
+        case BLE_GAP_EVT_CONN_PARAM_UPDATE:
         case BLE_GAP_EVT_PHY_UPDATE:
         case BLE_GAP_EVT_DATA_LENGTH_UPDATE:
         case BLE_GATTS_EVT_HVN_TX_COMPLETE:
@@ -405,7 +431,8 @@ void bluetooth_setup(bool factory_reset)
 
     if (factory_reset)
     {
-        check_error(sd_flash_page_erase(bond_storage / NRF_FICR->CODEPAGESIZE));
+        filesystem_flash_erase_page(bond_storage);
+        filesystem_flash_wait_until_complete();
     }
 
     // Read stored encryption key from memory
