@@ -21,6 +21,7 @@
                 "source/application",
                 "source/application/lua_libraries",
                 "source/bootloader",
+                "source/radio_test",
                 "source/fpga"
             ],
             "defines": [
