@@ -26,7 +26,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
+#define FS_NAME_MAX (0x100)
+#define FS_FILE_MAX (0x10000)
 void filesystem_flash_event_handler(bool success);
 
 void filesystem_flash_erase_page(uint32_t address);
@@ -38,3 +39,5 @@ void filesystem_flash_write(uint32_t address,
 void filesystem_flash_wait_until_complete(void);
 
 void filesystem_setup(bool factory_reset);
+
+int fs_file_write(const char *filename);

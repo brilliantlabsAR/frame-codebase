@@ -23,3 +23,55 @@
  */
 
 #include "lua.h"
+#include "lfs.h"
+#include "lauxlib.h"
+#include "frame_lua_libraries.h"
+#include "filesystem.h"
+
+static int lua_file_read(lua_State *L)
+{
+
+    return 0;
+}
+static int lua_file_write(lua_State *L)
+{
+
+    return 0;
+}
+static int lua_file_open(lua_State *L)
+{
+    if (lua_gettop(L) > 2 || lua_gettop(L) == 0)
+    {
+        return luaL_error(L, "expected 1 or 2 arguments");
+    }
+    luaL_checkstring(L, 1);
+    if (lua_gettop(L) == 2)
+    {
+        luaL_checkstring(L, 2);
+    }
+    char file_name[FS_NAME_MAX];
+    sscanf(lua_tostring(L, 1), "%s", &file_name[0]);
+    fs_file_write(&file_name[0]);
+    lua_pushcfunction(L, lua_file_write);
+    return 1;
+}
+
+void lua_open_file_library(lua_State *L)
+{
+
+    lua_getglobal(L, "frame");
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, lua_file_open);
+    lua_setfield(L, -2, "open");
+
+    lua_pushcfunction(L, lua_file_read);
+    lua_setfield(L, -2, "read");
+
+    lua_pushcfunction(L, lua_file_write);
+    lua_setfield(L, -2, "write");
+
+    lua_setfield(L, -2, "file");
+    lua_pop(L, 1);
+}

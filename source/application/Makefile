@@ -77,6 +77,8 @@ C_FILES += \
 	$(LIBRARIES)/lua/lutf8lib.c \
 	$(LIBRARIES)/lua/lvm.c \
 	$(LIBRARIES)/lua/lzio.c \
+	$(LIBRARIES)/littlefs/lfs_util.c \
+	$(LIBRARIES)/littlefs/lfs.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_gpiote.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_pdm.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_rtc.c \
@@ -96,6 +98,7 @@ FLAGS += \
 	-Ilua_libraries \
 	-I$(LIBRARIES)/cmsis/CMSIS/Core/Include \
 	-I$(LIBRARIES)/lua \
+	-I$(LIBRARIES)/littlefs \
 	-I$(LIBRARIES)/nrfx \
 	-I$(LIBRARIES)/nrfx/drivers/include \
 	-I$(LIBRARIES)/nrfx/hal \

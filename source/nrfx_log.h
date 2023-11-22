@@ -40,6 +40,29 @@
 
 #define NRFX_LOG_HEXDUMP_ERROR(p_memory, length)
 #define NRFX_LOG_HEXDUMP_WARNING(p_memory, length)
-#define NRFX_LOG_HEXDUMP_INFO(p_memory, length)
+#define NRFX_LOG_HEXDUMP_INFO(p_memory, length)                                                 \
+    do                                                                                          \
+    {                                                                                           \
+        printf("Hexdump Info: Address=%p, Length=%zu\n", (void *)(p_memory), (size_t)(length)); \
+        size_t i, j;                                                                            \
+        for (i = 0; i < (length); i += 16)                                                      \
+        {                                                                                       \
+            printf("%04zx: ", i);                                                               \
+            for (j = 0; j < 16; ++j)                                                            \
+            {                                                                                   \
+                if (i + j < (length))                                                           \
+                    printf("%02x ", ((unsigned char *)(p_memory))[i + j]);                      \
+                else                                                                            \
+                    printf("   ");                                                              \
+            }                                                                                   \
+            printf(" | ");                                                                      \
+            for (j = 0; j < 16 && i + j < (length); ++j)                                        \
+            {                                                                                   \
+                char c = ((unsigned char *)(p_memory))[i + j];                                  \
+                printf("%c", (c >= 32 && c < 127) ? c : '.');                                   \
+            }                                                                                   \
+            printf("\n");                                                                       \
+        }                                                                                       \
+    } while (0)
 #define NRFX_LOG_HEXDUMP_DEBUG(p_memory, length)
 #define NRFX_LOG_ERROR_STRING_GET(error_code)
