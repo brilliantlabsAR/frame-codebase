@@ -1,33 +1,51 @@
 /*
- * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+ * Copyright (c) 2009-2020 - 2021, Nordic Semiconductor ASA
+ * Copyright (c) 2023, Brilliant Labs Ltd.
  *
- * Authored by: Raj Nakarja / Brilliant Labs Ltd. (raj@brilliant.xyz)
- *              Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
- *              Uma S. Gupta / Techno Exponent (umasankar@technoexponent.com)
+ * All rights reserved.
  *
- * ISC Licence
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
  *
- * Copyright © 2023 Brilliant Labs Ltd.
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
+ * 2. Redistributions in binary form, except as embedded into a Nordic
+ *    Semiconductor ASA integrated circuit in a product or a software update for
+ *    such product, must reproduce the above copyright notice, this list of
+ *    conditions and the following disclaimer in the documentation and/or other
+ *    materials provided with the distribution.
  *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
- * REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
- * AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
- * INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
- * LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
- * OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
- * PERFORMANCE OF THIS SOFTWARE.
+ * 3. Neither the name of Nordic Semiconductor ASA nor the names of its
+ *    contributors may be used to endorse or promote products derived from this
+ *    software without specific prior written permission.
+ *
+ * 4. This software, with or without modification, must only be used with a
+ *    Nordic Semiconductor ASA integrated circuit.
+ *
+ * 5. Any software provided in binary form under this license must not be reverse
+ *    engineered, decompiled, modified and/or disassembled.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT PARTIES "AS IS" AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY, NONINFRINGEMENT, AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT PARTIES OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+ * GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+ * OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <stdbool.h>
 #include "app_util_platform.h"
+#include "error_logging.h"
 #include "nrf_nvmc.h"
 #include "nrf_radio.h"
 #include "nrf_rng.h"
 #include "nrf.h"
+#include "nrfx_config.h"
 #include "nrfx_log.h"
 #include "nrfx_timer.h"
 #include "radio_test.h"
@@ -522,7 +540,7 @@ static void timer_handler(nrf_timer_event_t event_type, void *p_context)
         }
         else
         {
-            LOG("Unexpected test type: %d\n", p_config->type);
+            error_with_message("Unexpected test type");
             return;
         }
 
@@ -541,21 +559,16 @@ static void timer_handler(nrf_timer_event_t event_type, void *p_context)
 
 static void timer_init(const radio_test_config_t *p_config)
 {
-    nrfx_err_t err;
     nrfx_timer_config_t timer_cfg =
         {
-            .frequency = NRF_TIMER_FREQ_1MHz,
+            .frequency = 1000000,
             .mode = NRF_TIMER_MODE_TIMER,
             .bit_width = NRF_TIMER_BIT_WIDTH_24,
             .p_context = (void *)p_config,
             .interrupt_priority = NRFX_TIMER_DEFAULT_CONFIG_IRQ_PRIORITY,
         };
 
-    err = nrfx_timer_init(&m_timer, &timer_cfg, timer_handler);
-    if (err != NRFX_SUCCESS)
-    {
-        LOG("nrfx_timer_init failed with: %d\n", err);
-    }
+    check_error(nrfx_timer_init(&m_timer, &timer_cfg, timer_handler));
 }
 
 void RADIO_IRQHandler(void)

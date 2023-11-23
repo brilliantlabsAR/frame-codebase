@@ -35,6 +35,7 @@ C_FILES += \
 	../error_logging.c \
 	../startup.c \
 	../syscalls.c \
+	$(LIBRARIES)/nrf5sdk/util/app_util_platform.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_timer.c \
 	$(LIBRARIES)/nrfx/mdk/system_nrf52840.c \
 	$(LIBRARIES)/segger/SEGGER_RTT.c \
@@ -91,8 +92,7 @@ FLAGS += \
 
 # Linker script paths
 FLAGS += \
-	-T ../memory_layout.ld \
-	-T section_layout.ld \
+	-T memory_layout.ld \
 	-L$(LIBRARIES)/picolibc \
 
 # Link required libraries
@@ -105,3 +105,8 @@ $(BUILD)/radio_test.hex: $(C_FILES)
 	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/radio_test.elf $(C_FILES) $(LINKED_LIBRARIES)
 	@arm-none-eabi-objcopy -O ihex $(BUILD)/radio_test.elf $(BUILD)/radio_test.hex
 	@arm-none-eabi-size $(BUILD)/radio_test.elf
+
+flash: $(BUILD)/radio_test.hex
+	@nrfutil device program \
+	--options reset=RESET_HARD \
+	--firmware $(BUILD)/radio_test.hex

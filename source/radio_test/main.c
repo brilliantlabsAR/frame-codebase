@@ -43,10 +43,24 @@ int main(void)
     {
     }
 
+    // Configure test mode
     radio_test_config_t radio_test_config;
     memset(&radio_test_config, 0, sizeof(radio_test_config));
 
+    radio_test_config.type = MODULATED_TX;
+    radio_test_config.mode = NRF_RADIO_MODE_BLE_1MBIT;
+
+    radio_test_config.params.modulated_tx.txpower = NRF_RADIO_TXPOWER_0DBM;
+    radio_test_config.params.modulated_tx.pattern = TRANSMIT_PATTERN_RANDOM;
+    radio_test_config.params.modulated_tx.channel = 80;
+    radio_test_config.params.modulated_tx.packets_num = 0;
+    radio_test_config.params.modulated_tx.cb = NULL;
+
+    // Start test
     radio_test_init(&radio_test_config);
+    radio_test_start(&radio_test_config);
+
+    LOG("Running");
 
     while (1)
     {
