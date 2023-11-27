@@ -25,14 +25,6 @@
 __min_heap_size = 8K;
 __stack_size = 8K;
 
-ENTRY(Reset_Handler)
-
-MEMORY
-{
-    RADIO_TEST_FLASH (rx) : ORIGIN = 0x00000000, LENGTH =   1M
-    RADIO_TEST_RAM (rwx)  : ORIGIN = 0x20000000, LENGTH = 256K
-}
-
 SECTIONS
 {
     .text : {
@@ -41,17 +33,17 @@ SECTIONS
         *(.text .text* .gnu.linkonce.t.*)
         *(.rodata .rodata* .gnu.linkonce.r.*)
         . = ALIGN(4);
-    } > RADIO_TEST_FLASH
+    } > APPLICATION_FLASH
 
     .ARM.extab : {
         *(.ARM.extab* .gnu.linkonce.armextab.*)
-    } > RADIO_TEST_FLASH
+    } > APPLICATION_FLASH
 
     .ARM.exidx : {
         __exidx_start = .;
         *(.ARM.exidx* .gnu.linkonce.armexidx.*)
         __exidx_end = .;
-    } > RADIO_TEST_FLASH
+    } > APPLICATION_FLASH
 
     .data : {
         . = ALIGN(4);
@@ -62,7 +54,7 @@ SECTIONS
         *(.data .data.*);
         . = ALIGN(4);
         __data_end = .;
-    } > RADIO_TEST_RAM AT> RADIO_TEST_FLASH
+    } > APPLICATION_RAM AT> APPLICATION_FLASH
 
     __init_data_start = LOADADDR(.data);
 
@@ -71,13 +63,13 @@ SECTIONS
         __bond_storage_start = .;
         . += 4K;
         __bond_storage_end = .;
-    } > RADIO_TEST_FLASH
+    } > APPLICATION_FLASH
 
     .empty_flash : {
         . = ALIGN(4K);
         __empty_flash_start = .;
-        __empty_flash_end = ORIGIN(RADIO_TEST_FLASH) + LENGTH(RADIO_TEST_FLASH);
-    } > RADIO_TEST_FLASH
+        __empty_flash_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH);
+    } > APPLICATION_FLASH
 
     .bss : {
         . = ALIGN(4);
@@ -86,7 +78,7 @@ SECTIONS
         *(COMMON)
         . = ALIGN(4);
         __bss_end = .;
-    } > RADIO_TEST_RAM
+    } > APPLICATION_RAM
 
 	.stack (NOLOAD) : {
         . = ALIGN(8);
@@ -94,11 +86,11 @@ SECTIONS
 		. += __stack_size;
         . = ALIGN(8);
         __stack_top = .;
-	} > RADIO_TEST_RAM
+	} > APPLICATION_RAM
 
     . = ALIGN(4);
     __heap_start = .;
-    __heap_end = ORIGIN(RADIO_TEST_RAM) + LENGTH(RADIO_TEST_RAM);
+    __heap_end = ORIGIN(APPLICATION_RAM) + LENGTH(APPLICATION_RAM);
 }
 
 ASSERT(__heap_end - __heap_start >= __min_heap_size, "heap has become too small")

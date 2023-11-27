@@ -25,7 +25,3 @@
 #pragma once
 
 extern bool not_real_hardware;
-extern bool stay_awake;
-extern bool force_sleep;
-
-void shutdown(bool enable_imu_wakeup);

@@ -34,7 +34,6 @@ C_FILES += \
 	bluetooth.c \
 	filesystem.c \
 	luaport.c \
-	i2c.c \
 	spi.c \
 	lua_libraries/bluetooth.c \
 	lua_libraries/camera.c \
@@ -45,6 +44,7 @@ C_FILES += \
 	lua_libraries/time.c \
 	lua_libraries/version.c \
 	../error_logging.c \
+	../i2c.c \
 	../startup.c \
 	../syscalls.c \
 	$(LIBRARIES)/lua/lapi.c \

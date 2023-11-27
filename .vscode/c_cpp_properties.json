@@ -32,7 +32,9 @@
                 "NDEBUG",
                 "NRF_DFU_SETTINGS_VERSION=2",
                 "NRF52840_XXAA",
-                "SOFTDEVICE_PRESENT"
+                "SOFTDEVICE_PRESENT",
+                "TEST_FREQUENCY=80",
+                "TEST_POWER=8"
             ]
         }
     ],

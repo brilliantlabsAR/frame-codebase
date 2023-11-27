@@ -27,7 +27,16 @@
 #define NRFX_CONFIG_H__
 #include "templates/nrfx_config_common.h"
 
+#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
+#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define NRFX_GPIOTE_ENABLED 1
+
 #define NRFX_TIMER_ENABLED 1
 #define NRFX_TIMER0_ENABLED 1
+
+#define NRFX_SYSTICK_ENABLED 1
+
+#define NRFX_TWIM_ENABLED 1
+#define NRFX_TWIM0_ENABLED 1
 
 #include "templates/nrfx_config_nrf52840.h"
