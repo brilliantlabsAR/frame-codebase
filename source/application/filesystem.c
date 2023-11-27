@@ -31,15 +31,13 @@
 #include "lfs.h"
 #include "filesystem.h"
 
-lfs_t lfs;
-lfs_file_t file;
-#define FILE_OPEN_MAX (10)
 extern uint32_t __empty_flash_start;
 extern uint32_t __empty_flash_end;
+
 static uint32_t empty_flash_start = (uint32_t)&__empty_flash_start;
 static uint32_t empty_flash_end = (uint32_t)&__empty_flash_end;
-static int current_opened_file_index = 0;
-static lfs_file_t file_handlers[FILE_OPEN_MAX];
+
+lfs_t lfs;
 static volatile bool flash_is_busy = false;
 
 void filesystem_flash_event_handler(bool success)
@@ -53,7 +51,6 @@ void filesystem_flash_erase_page(uint32_t address)
     {
         error_with_message("Address not aligned to page boundary");
     }
-
     check_error(sd_flash_page_erase(address / NRF_FICR->CODEPAGESIZE));
     flash_is_busy = true;
 }
@@ -104,7 +101,6 @@ static int lfs_api_prog_blk(const struct lfs_config *c, lfs_block_t block,
     uint32_t addr = empty_flash_start + (block * c->block_size) + off;
     const uint8_t *src = buffer;
     const uint8_t *src_end = src + size;
-
     while (src != src_end && (addr & 0b11))
     {
 
@@ -127,7 +123,7 @@ static int lfs_api_prog_blk(const struct lfs_config *c, lfs_block_t block,
         addr += 4;
     }
 
-    // // Write remaining unaligned bytes.
+    //  Write remaining unaligned bytes.
     while (src != src_end)
     {
 
@@ -149,18 +145,14 @@ static int lfs_api_erase_blk(const struct lfs_config *c, lfs_block_t block)
     uint32_t addr = empty_flash_start + (block * c->block_size);
     filesystem_flash_erase_page(addr);
     filesystem_flash_wait_until_complete();
-    // LOG(" erase addr complete  %08lx", addr);
     return 0;
 }
-// configuration of the filesystem is provided by this struct
+
 static struct lfs_config cfg = {
-    // block device operations
     .read = lfs_api_read_blk,
     .prog = lfs_api_prog_blk,
     .erase = lfs_api_erase_blk,
     .sync = lfs_api_sync_blk,
-
-    // block device configuration
     .read_size = 8,
     .prog_size = 8,
     .cache_size = 32,
@@ -169,50 +161,51 @@ static struct lfs_config cfg = {
     .name_max = FS_NAME_MAX,
     .file_max = FS_FILE_MAX};
 
-int fs_file_write(const char *file_name)
+lfs_file_t *fs_file_open(const char *file_name)
 {
-    if (current_opened_file_index >= FILE_OPEN_MAX)
-    {
-        return 0;
-    }
-    lfs_file_t f;
+    static lfs_file_t f;
     lfs_file_open(&lfs, &f, file_name, LFS_O_RDWR | LFS_O_CREAT);
-
-    file_handlers[current_opened_file_index] = f;
-    current_opened_file_index++;
-    return current_opened_file_index;
+    return &f;
 }
+int fs_file_close(lfs_file_t *file)
+{
+    return lfs_file_close(&lfs, file);
+};
+int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l)
+{
+    return lfs_file_write(&lfs, file, content, l);
+};
+void testfile()
+{
+    lfs_file_t file;
+
+    uint32_t boot_count = 0;
+    lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
+    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+
+    boot_count += 1;
+    lfs_file_rewind(&lfs, &file);
+    lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
+
+    lfs_file_close(&lfs, &file);
+    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
+    lfs_unmount(&lfs);
+
+    LOG("boot_count: %02lx\n", boot_count);
+}
+
 // entry point
 void filesystem_setup(bool factory_reset)
 {
 
     cfg.block_size = NRF_FICR->CODEPAGESIZE;
     cfg.block_count = (empty_flash_end - empty_flash_start) / NRF_FICR->CODEPAGESIZE;
-    // mount the filesystem
     int file_mount_error = lfs_mount(&lfs, &cfg);
-    // reformat if we can't mount the filesystem
-    // this should only happen on the first boot
     if (factory_reset || file_mount_error != 0)
     {
         check_error(lfs_format(&lfs, &cfg));
         check_error(lfs_mount(&lfs, &cfg));
     }
-    // read current count
-    uint32_t boot_count = 0;
-    lfs_file_open(&lfs, &file, "boot_count", LFS_O_RDWR | LFS_O_CREAT);
-    lfs_file_read(&lfs, &file, &boot_count, sizeof(boot_count));
-
-    // update boot count
-    boot_count += 1;
-    lfs_file_rewind(&lfs, &file);
-    lfs_file_write(&lfs, &file, &boot_count, sizeof(boot_count));
-
-    // remember the storage is not updated until the file is closed successfully
-    lfs_file_close(&lfs, &file);
-
-    // release any resources we were using
-    lfs_unmount(&lfs);
-
-    // print the boot count
-    LOG("boot_count: %02lx\n", boot_count);
+    LOG("file systemsetp");
+    // testfile();
 }
