@@ -11,7 +11,7 @@
 
 `timescale 10ns / 10ns
 
-`include "modules/graphics/display.sv"
+`include "../display.sv"
 
 module display_tb (
     output logic display_clock,

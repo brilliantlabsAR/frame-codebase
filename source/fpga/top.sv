@@ -14,7 +14,7 @@
 `include "modules/spi/spi.sv"
 
 module top (
-    input logic spi_clk,
+    input logic spi_clock,
     output logic spi_data_out,
     input logic spi_data_in,
     input logic spi_select,
@@ -47,11 +47,10 @@ OSCA #(
 );
 
 spi spi (
-    .clk(clock),
-    .sck(spi_clk),
-    .cs(spi_select),
-    .cipo(spi_data_out),
-    .copi(spi_data_in)
+    .spi_clock(spi_clock),
+    .spi_select(spi_select),
+    .spi_data_out(spi_data_out),
+    .spi_data_in(spi_data_in)
 );
 
 display display (
