@@ -82,6 +82,9 @@ int main(void)
     // Always reboot into bootloader
     NRF_POWER->GPREGRET = 0xB1;
 
+    // Init systick so it can be used later
+    nrfx_systick_init();
+
     // Configure the shutdown pin
     check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
 
@@ -113,7 +116,9 @@ int main(void)
 
     nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
 
-    // Scan the PMIC for its chip ID
+    // Setup I2C and PMIC
+    i2c_configure();
+
     i2c_response_t pmic_id = i2c_read(PMIC, 0x14, 0x0F);
 
     if (pmic_id.fail)
@@ -220,7 +225,7 @@ int main(void)
     radio_test_init(&radio_test_config);
     radio_test_start(&radio_test_config);
 
-    LOG("Running modulated TX on frequency %uMHz at %ddBm",
+    LOG("Running modulated TX on %uMHz at %ddBm",
         TEST_FREQUENCY,
         TEST_POWER);
 
