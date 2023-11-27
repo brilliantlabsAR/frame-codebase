@@ -24,8 +24,6 @@
 
 #pragma once
 
-#include "nrfx_gpiote.h"
-
 extern bool not_real_hardware;
 extern bool stay_awake;
 extern bool force_sleep;

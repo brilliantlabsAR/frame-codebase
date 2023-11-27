@@ -28,61 +28,28 @@ GIT_COMMIT := $(shell git rev-parse --short HEAD)
 LIBRARIES := ../../libraries
 BUILD := ../../build
 
+PRINT_USAGE := Usage is `make FREQUENCY=2402|2404|...|2478|2480 POWER=8|7|6|5|4|3|2|0|-4|-8|-12|-16`
+
+$(if $(filter $(FREQUENCY), 2402 2404 2406 2408 2410 2412 2414 2416 2418 2420 2422 2424 2426 2428 2430 2432 2434 2436 2438 2440 2442 2444 2446 2448 2450 2452 2454 2456 2458 2460 2462 2464 2466 2468 2470 2472 2474 2476 2478 2480),,\
+	$(error invalid value for FREQUENCY.\
+	$(PRINT_USAGE)))
+
+$(if $(filter $(POWER), 8 7 6 5 4 3 2 0 -4 -8 -12 -16),,\
+	$(error invalid value for POWER.\
+	$(PRINT_USAGE)))
+
 # Source files
 C_FILES += \
 	main.c \
-	bluetooth.c \
-	filesystem.c \
-	luaport.c \
-	spi.c \
-	lua_libraries/bluetooth.c \
-	lua_libraries/camera.c \
-	lua_libraries/display.c \
-	lua_libraries/file.c \
-	lua_libraries/microphone.c \
-	lua_libraries/system.c \
-	lua_libraries/time.c \
-	lua_libraries/version.c \
+	radio_test.c \
 	../error_logging.c \
 	../i2c.c \
 	../startup.c \
 	../syscalls.c \
-	$(LIBRARIES)/lua/lapi.c \
-	$(LIBRARIES)/lua/lauxlib.c \
-	$(LIBRARIES)/lua/lbaselib.c \
-	$(LIBRARIES)/lua/lcode.c \
-	$(LIBRARIES)/lua/lcorolib.c \
-	$(LIBRARIES)/lua/lctype.c \
-	$(LIBRARIES)/lua/ldblib.c \
-	$(LIBRARIES)/lua/ldebug.c \
-	$(LIBRARIES)/lua/ldo.c \
-	$(LIBRARIES)/lua/ldump.c \
-	$(LIBRARIES)/lua/lfunc.c \
-	$(LIBRARIES)/lua/lgc.c \
-	$(LIBRARIES)/lua/linit.c \
-	$(LIBRARIES)/lua/llex.c \
-	$(LIBRARIES)/lua/lmathlib.c \
-	$(LIBRARIES)/lua/lmem.c \
-	$(LIBRARIES)/lua/loadlib.c \
-	$(LIBRARIES)/lua/lobject.c \
-	$(LIBRARIES)/lua/lopcodes.c \
-	$(LIBRARIES)/lua/lparser.c \
-	$(LIBRARIES)/lua/lstate.c \
-	$(LIBRARIES)/lua/lstring.c \
-	$(LIBRARIES)/lua/lstrlib.c \
-	$(LIBRARIES)/lua/ltable.c \
-	$(LIBRARIES)/lua/ltablib.c \
-	$(LIBRARIES)/lua/ltm.c \
-	$(LIBRARIES)/lua/lundump.c \
-	$(LIBRARIES)/lua/lutf8lib.c \
-	$(LIBRARIES)/lua/lvm.c \
-	$(LIBRARIES)/lua/lzio.c \
+	$(LIBRARIES)/nrf5sdk/util/app_util_platform.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_gpiote.c \
-	$(LIBRARIES)/nrfx/drivers/src/nrfx_pdm.c \
-	$(LIBRARIES)/nrfx/drivers/src/nrfx_rtc.c \
-	$(LIBRARIES)/nrfx/drivers/src/nrfx_saadc.c \
-	$(LIBRARIES)/nrfx/drivers/src/nrfx_spim.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_systick.c \
+	$(LIBRARIES)/nrfx/drivers/src/nrfx_timer.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_twim.c \
 	$(LIBRARIES)/nrfx/helpers/nrfx_flag32_allocator.c \
 	$(LIBRARIES)/nrfx/mdk/system_nrf52840.c \
@@ -92,10 +59,8 @@ C_FILES += \
 FLAGS += \
 	-I. \
 	-I.. \
-	-I../fpga \
-	-Ilua_libraries \
 	-I$(LIBRARIES)/cmsis/CMSIS/Core/Include \
-	-I$(LIBRARIES)/lua \
+	-I$(LIBRARIES)/nrf5sdk/util \
 	-I$(LIBRARIES)/nrfx \
 	-I$(LIBRARIES)/nrfx/drivers/include \
 	-I$(LIBRARIES)/nrfx/hal \
@@ -131,10 +96,12 @@ FLAGS += \
 
 # Preprocessor defines
 FLAGS += \
-	-DNRF52840_XXAA \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
 	-DNDEBUG \
+	-DNRF52840_XXAA \
+	-DTEST_FREQUENCY=$(FREQUENCY) \
+	-DTEST_POWER=$(POWER) \
 
 # Linker options
 FLAGS += \
@@ -151,8 +118,37 @@ LINKED_LIBRARIES += \
 	-lc \
 	-lgcc \
 
-$(BUILD)/application.hex: $(C_FILES) ../fpga/fpga_application.h
+default:
+	@rm -rf $(BUILD)
 	@mkdir -p $(BUILD)
-	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/application.elf $(C_FILES) $(LINKED_LIBRARIES)
-	@arm-none-eabi-objcopy -O ihex $(BUILD)/application.elf $(BUILD)/application.hex
-	@arm-none-eabi-size $(BUILD)/application.elf
+	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/radio_test.elf $(C_FILES) $(LINKED_LIBRARIES)
+	@arm-none-eabi-objcopy -O ihex $(BUILD)/radio_test.elf $(BUILD)/radio_test.hex
+	@arm-none-eabi-size $(BUILD)/radio_test.elf
+
+	@nrfutil settings generate \
+		--family NRF52840 \
+		--application $(BUILD)/radio_test.hex \
+		--application-version 0 \
+		--bootloader-version 0 \
+		--bl-settings-version 2 \
+		$(BUILD)/settings.hex
+
+	@mergehex \
+	    -m $(BUILD)/settings.hex \
+		   $(BUILD)/radio_test.hex \
+		   ../bootloader/*.hex \
+		   ../../libraries/softdevice/*.hex \
+		-o $(BUILD)/radio_test_$(FREQUENCY)Mhz_$(POWER)dBm.hex
+
+	@nrfutil pkg generate \
+		--hw-version 52 \
+		--application-version 0 \
+		--application $(BUILD)/radio_test.hex \
+		--sd-req 0x0123 \
+		--key-file ../bootloader/dfu_private_key.pem \
+		$(BUILD)/radio_test_$(FREQUENCY)Mhz_$(POWER)dBm.zip
+
+flash: default
+	@nrfutil device program \
+	--options reset=RESET_HARD \
+	--firmware $(BUILD)/radio_test_*.hex
