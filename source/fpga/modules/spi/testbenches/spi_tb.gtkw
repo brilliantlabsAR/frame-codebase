@@ -1,0 +1,91 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Tue Nov 28 14:27:15 2023
+[*]
+[dumpfile] "sim/spi_tb.fst"
+[dumpfile_mtime] "Tue Nov 28 14:18:57 2023"
+[dumpfile_size] 1055
+[savefile] "spi_tb.gtkw"
+[timestart] 0
+[size] 1288 1104
+[pos] 753 38
+*-6.961790 170 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] spi_tb.
+[sst_width] 253
+[signals_width] 283
+[sst_expanded] 1
+[sst_vpaned_height] 336
+@200
+-External SPI interface
+@28
+spi_tb.spi_select
+spi_tb.spi_clock
+spi_tb.spi_data_in
+spi_tb.spi_data_out
+@200
+-
+-External peripheral interface
+@22
+spi_tb.spi_controller.peripheral_address_out[7:0]
+@28
+spi_tb.spi_controller.peripheral_address_valid
+@22
+spi_tb.spi_controller.peripheral_data_out[7:0]
+@28
+spi_tb.spi_controller.peripheral_data_out_valid
+@22
+spi_tb.spi_controller.peripheral_data_in[7:0]
+@28
+spi_tb.spi_controller.peripheral_data_in_valid
+@200
+-
+-Internal signals
+@420
+spi_tb.spi_controller.spi_bit_index
+@22
+spi_tb.spi_controller.spi_address_buffer[7:0]
+@28
+spi_tb.spi_controller.spi_address_valid
+@22
+spi_tb.spi_controller.spi_data_in_buffer[7:0]
+@28
+spi_tb.spi_controller.spi_data_in_valid
+@200
+-
+-Chip ID register
+@22
+spi_tb.spi_register_chip_id.address_in[7:0]
+@28
+spi_tb.spi_register_chip_id.address_valid
+@22
+spi_tb.spi_register_chip_id.data_out[7:0]
+@28
+spi_tb.spi_register_chip_id.data_valid
+[pattern_trace] 1
+[pattern_trace] 0
