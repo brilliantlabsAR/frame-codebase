@@ -13,6 +13,7 @@
 `include "modules/graphics/display.sv"
 `include "modules/spi/spi_controller.sv"
 `include "modules/spi/registers/chip_id.sv"
+`include "modules/spi/registers/version_string.sv"
 
 module top (
     input logic spi_clock,
@@ -67,11 +68,19 @@ spi_controller spi_controller (
     .peripheral_data_in_valid(peripheral_bus_cipo_valid)
 );
 
-spi_register_chip_id spi_register_chip_id (
+// spi_register_chip_id spi_register_chip_id (
+//     .address_in(peripheral_bus_address),
+//     .address_valid(peripheral_bus_address_valid),
+//     .data_out(peripheral_bus_cipo),
+//     .data_out_valid(peripheral_bus_cipo_valid)
+// );
+
+spi_register_version_string spi_register_version_string (
     .address_in(peripheral_bus_address),
     .address_valid(peripheral_bus_address_valid),
+    .data_in_valid(peripheral_bus_copi_valid)
     .data_out(peripheral_bus_cipo),
-    .data_valid(peripheral_bus_cipo_valid)
+    .data_out_valid(peripheral_bus_cipo_valid)
 );
 
 display display (

@@ -13,8 +13,25 @@
 
 `include "../spi_controller.sv"
 `include "../registers/chip_id.sv"
+`include "../registers/version_string.sv"
 
 module spi_tb ();
+
+task send_byte(
+    input logic [7:0] data
+);
+    begin
+        for (integer i = 7; i >= 0; i--) begin
+            spi_data_in <= data[i];
+            #1;
+            spi_clock <= ~spi_clock;
+            #1;
+            spi_clock <= ~spi_clock;
+        end
+        
+        #1;
+    end
+endtask
 
 initial begin
     $dumpfile("sim/spi_tb.fst");
@@ -26,123 +43,30 @@ logic spi_clock = 0;
 logic spi_select = 1;
 logic spi_data_in = 0;
 
+logic clock = 0;
+
+
 initial begin
-    // Start
+
+    // Test chip ID
     #1
-    spi_select <= 0;
-    #1
-    spi_clock <= 1;
+    spi_select <= 0;    
+    send_byte('hA0);
+    send_byte('hA1);
+    spi_select <= 1;    
     #1
 
-    // Push address
-    spi_clock <= ~spi_clock;
+    // Test version string
     #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    spi_data_in <= 1;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    spi_data_in <= 0;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    spi_data_in <= 1;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    spi_data_in <= 0;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    spi_data_in <= 1;
-    
-    // Read byte
-    #2
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
+    // spi_select <= 0;    
+    // send_byte('hB5);
+    // send_byte('h00);
+    // send_byte('h00);
+    // send_byte('h00);
+    // send_byte('h00);
+    // spi_select <= 1;    
+    // #1
 
-    // Read byte
-    #2
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-    spi_clock <= ~spi_clock;
-    #1
-
-    // Done
-    spi_select <= 1;
-    spi_data_in <= 0;
-    #1
     $finish;
 end
 
@@ -168,11 +92,19 @@ spi_controller spi_controller (
     .peripheral_data_in_valid(peripheral_bus_cipo_valid)
 );
 
-spi_register_chip_id spi_register_chip_id (
+// spi_register_chip_id spi_register_chip_id (
+//     .address_in(peripheral_bus_address),
+//     .address_valid(peripheral_bus_address_valid),
+//     .data_out(peripheral_bus_cipo),
+//     .data_out_valid(peripheral_bus_cipo_valid)
+// );
+
+spi_register_version_string spi_register_version_string (
     .address_in(peripheral_bus_address),
     .address_valid(peripheral_bus_address_valid),
+    .data_in_valid(peripheral_bus_copi_valid),
     .data_out(peripheral_bus_cipo),
-    .data_valid(peripheral_bus_cipo_valid)
+    .data_out_valid(peripheral_bus_cipo_valid)
 );
 
 endmodule

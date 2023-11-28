@@ -9,23 +9,38 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module spi_register_chip_id (
+module spi_register_version_string (
     input logic [7:0] address_in,
     input logic address_valid,
+    input logic data_in_valid,
     output logic [7:0] data_out,
     output logic data_out_valid
 );
-    always_ff @(posedge address_valid) begin
+    integer byte_counter;
 
-        if (address_in == 'h0A) begin
-            data_out <= 'hF1;
-            data_out_valid <= 1;
+    always_ff @(posedge address_valid, posedge data_in_valid) begin
+
+        if (data_in_valid == 0) begin
+            byte_counter <= 0;
         end
 
         else begin
-            data_out <= 'h00;
-            data_out_valid <= 0;
+            byte_counter++;
         end
+
+    end
+
+    assign data_out_valid = address_in == 'hB5 ? 1 : 0;
+
+    always_comb begin
+        
+        case (byte_counter)
+            0: data_out = "T";
+            1: data_out = "e";
+            2: data_out = "s";
+            3: data_out = "t";
+        endcase
+
     end
 
 endmodule

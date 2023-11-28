@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Nov 28 14:27:15 2023
+[*] Tue Nov 28 16:38:54 2023
 [*]
 [dumpfile] "sim/spi_tb.fst"
-[dumpfile_mtime] "Tue Nov 28 14:18:57 2023"
-[dumpfile_size] 1055
+[dumpfile_mtime] "Tue Nov 28 16:36:58 2023"
+[dumpfile_size] 1244
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 1288 1104
-[pos] 753 38
-*-6.961790 170 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 1424 852
+[pos] 10 38
+*-7.648834 486 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,7 +40,7 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 336
+[sst_vpaned_height] 327
 @200
 -External SPI interface
 @28
@@ -80,12 +80,15 @@ spi_tb.spi_controller.spi_data_in_valid
 -
 -Chip ID register
 @22
-spi_tb.spi_register_chip_id.address_in[7:0]
+spi_tb.spi_register_version_string.address_in[7:0]
 @28
-spi_tb.spi_register_chip_id.address_valid
+spi_tb.spi_register_version_string.address_valid
+spi_tb.spi_register_version_string.data_in_valid
 @22
-spi_tb.spi_register_chip_id.data_out[7:0]
+spi_tb.spi_register_version_string.data_out[7:0]
 @28
-spi_tb.spi_register_chip_id.data_valid
+spi_tb.spi_register_version_string.data_out_valid
+@421
+spi_tb.spi_register_version_string.byte_counter
 [pattern_trace] 1
 [pattern_trace] 0
