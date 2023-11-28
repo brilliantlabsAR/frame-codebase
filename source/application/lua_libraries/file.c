@@ -66,7 +66,6 @@ static int g_write(lua_State *L, lfs_file_t *f, int arg)
     // {
     size_t l;
     const char *s = luaL_checklstring(L, arg, &l);
-    LOG("content %s", s);
     status = status && (fs_file_write(f, s, l) == l);
     // }
   }
@@ -75,63 +74,78 @@ static int g_write(lua_State *L, lfs_file_t *f, int arg)
   else
     return luaL_fileresult(L, status, NULL);
 }
-// static int g_read(lua_State *L, lfs_file_t *f, int first)
-// {
-//   int nargs = lua_gettop(L) - 1;
-//   int n, success;
-//   clearerr(f);
-//   if (nargs == 0)
-//   { /* no arguments? */
-//     // success = read_line(L, f, 1);
-//     // n = first + 1; /* to return 1 result */
-//   }
-//   else
-//   {
-//     /* ensure stack space for all results and for auxlib's buffer */
-//     luaL_checkstack(L, nargs + LUA_MINSTACK, "too many arguments");
-//     success = 1;
-//     for (n = first; nargs-- && success; n++)
-//     {
-//       if (lua_type(L, n) == LUA_TNUMBER)
-//       {
-//         size_t l = (size_t)luaL_checkinteger(L, n);
-//         success = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
-//       }
-//       else
-//       {
-//         const char *p = luaL_checkstring(L, n);
-//         if (*p == '*')
-//           p++; /* skip optional '*' (for compatibility) */
-//         switch (*p)
-//         {
-//         case 'n': /* number */
-//           success = read_number(L, f);
-//           break;
-//         case 'l': /* line */
-//           success = read_line(L, f, 1);
-//           break;
-//         case 'L': /* line with end-of-line */
-//           success = read_line(L, f, 0);
-//           break;
-//         case 'a':         /* file */
-//           read_all(L, f); /* read entire file */
-//           success = 1;    /* always success */
-//           break;
-//         default:
-//           return luaL_argerror(L, n, "invalid format");
-//         }
-//       }
-//     }
-//   }
-//   if (ferror(f))
-//     return luaL_fileresult(L, 0, NULL);
-//   if (!success)
-//   {
-//     lua_pop(L, 1);    /* remove last result */
-//     luaL_pushfail(L); /* push nil instead */
-//   }
-//   return n - first;
-// }
+static void read_all(lua_State *L, lfs_file_t *f)
+{
+  size_t nr;
+  luaL_Buffer b;
+  luaL_buffinit(L, &b);
+  do
+  { /* read file in chunks of LUAL_BUFFERSIZE bytes */
+    char *p = luaL_prepbuffer(&b);
+    nr = fs_file_read(f, p, LUAL_BUFFERSIZE);
+    luaL_addsize(&b, nr);
+  } while (nr == LUAL_BUFFERSIZE);
+  luaL_pushresult(&b); /* close buffer */
+}
+static int g_read(lua_State *L, lfs_file_t *f, int first)
+{
+  int nargs = lua_gettop(L) - 1;
+  int n, success;
+  // clearerr(f);
+  if (nargs == 0)
+  { /* no arguments? */
+    // success = read_line(L, f, 1);
+    read_all(L, f);
+    success = 1;
+    n = first + 1;
+  }
+  else
+  {
+    /* ensure stack space for all results and for auxlib's buffer */
+    luaL_checkstack(L, nargs + LUA_MINSTACK, "too many arguments");
+    success = 1;
+    for (n = first; nargs-- && success; n++)
+    {
+      if (lua_type(L, n) == LUA_TNUMBER)
+      {
+        // size_t l = (size_t)luaL_checkinteger(L, n);
+        // success = (l == 0) ? test_eof(L, f) : read_chars(L, f, l);
+      }
+      else
+      {
+        const char *p = luaL_checkstring(L, n);
+        if (*p == '*')
+          p++; /* skip optional '*' (for compatibility) */
+        switch (*p)
+        {
+        case 'n': /* number */
+          // success = read_number(L, f);
+          break;
+        case 'l': /* line */
+          // success = read_line(L, f, 1);
+          break;
+        case 'L': /* line with end-of-line */
+          // success = read_line(L, f, 0);
+          break;
+        case 'a':         /* file */
+          read_all(L, f); /* read entire file */
+          success = 1;    /* always success */
+          break;
+        default:
+          return luaL_argerror(L, n, "invalid format");
+        }
+      }
+    }
+  }
+  // if (ferror(f))
+  //   return luaL_fileresult(L, 0, NULL);
+  if (!success)
+  {
+    lua_pop(L, 1);    /* remove last result */
+    luaL_pushfail(L); /* push nil instead */
+  }
+  return n - first;
+}
 
 static int file_handler_write(lua_State *L)
 {
@@ -177,10 +191,17 @@ static lua_file_Stream *newfile(lua_State *L)
   luaL_setmetatable(L, LUA_FILEHANDLE);
   return p;
 }
-// static int file_handler_read(lua_State *L)
-// {
-//   return g_read(L, tofile(L), 2);
-// }
+static int file_handler_read(lua_State *L)
+{
+  lua_file_Stream *p = tolstream(L);
+  if (p->closef == NULL)
+  {
+
+    luaL_error(L, "attempt to use a closed file");
+  }
+  lua_assert(p->f);
+  return g_read(L, p->f, 2);
+}
 static int lua_file_open(lua_State *L)
 {
   const char *filename = luaL_checkstring(L, 1);
@@ -204,7 +225,7 @@ static const luaL_Reg metameth[] = {
 ** methods for file handles
 */
 static const luaL_Reg meth[] = {
-    // {"read", file_handler_read},
+    {"read", file_handler_read},
     {"write", file_handler_write},
     // {"lines", f_lines},
     // {"flush", f_flush},

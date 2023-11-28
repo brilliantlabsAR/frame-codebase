@@ -173,7 +173,16 @@ int fs_file_close(lfs_file_t *file)
 };
 int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l)
 {
-    return lfs_file_write(&lfs, file, content, l);
+    int32_t err = lfs_file_write(&lfs, file, content, l);
+    if (err >= 0)
+    {
+        check_error(lfs_file_sync(&lfs, file));
+    }
+    return err;
+};
+int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l)
+{
+    return lfs_file_read(&lfs, file, buff, l);
 };
 void testfile()
 {
@@ -193,7 +202,19 @@ void testfile()
 
     LOG("boot_count: %02lx\n", boot_count);
 }
-
+void testapi()
+{
+    const char *p = "the quick brown fox jumps over the lazy dog. _ complete";
+    const char *filename = "main.lua";
+    lfs_file_t *f = fs_file_open(filename);
+    LOG(" write  %08lx", fs_file_write(f, p, 56));
+    LOG(" close  %08lx", fs_file_close(f));
+    char *rd[56];
+    lfs_file_t *fr = fs_file_open("main.lua");
+    LOG(" read %08lx", fs_file_read(fr, rd, 56));
+    LOG(" close  %08lx", fs_file_close(fr));
+    LOG(" main.lua \nexpected =  %s\nread =  %s", p, rd);
+}
 // entry point
 void filesystem_setup(bool factory_reset)
 {
@@ -206,6 +227,8 @@ void filesystem_setup(bool factory_reset)
         check_error(lfs_format(&lfs, &cfg));
         check_error(lfs_mount(&lfs, &cfg));
     }
-    LOG("file systemsetp");
+    LOG("file system set");
+
     // testfile();
+    // testapi();
 }
