@@ -43,7 +43,12 @@ void filesystem_flash_wait_until_complete(void);
 
 void filesystem_setup(bool factory_reset);
 
-lfs_file_t *fs_file_open(const char *filename);
+lfs_file_t *fs_file_open(const char *filename, int mode);
+
 int fs_file_close(lfs_file_t *file);
+
 int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l);
+
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l);
+
+int32_t fs_file_seek(lfs_file_t *file, long off, int whence);

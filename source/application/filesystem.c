@@ -161,10 +161,10 @@ static struct lfs_config cfg = {
     .name_max = FS_NAME_MAX,
     .file_max = FS_FILE_MAX};
 
-lfs_file_t *fs_file_open(const char *file_name)
+lfs_file_t *fs_file_open(const char *file_name, int mode)
 {
     static lfs_file_t f;
-    lfs_file_open(&lfs, &f, file_name, LFS_O_RDWR | LFS_O_CREAT);
+    lfs_file_open(&lfs, &f, file_name, mode);
     return &f;
 }
 int fs_file_close(lfs_file_t *file)
@@ -183,6 +183,10 @@ int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l)
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l)
 {
     return lfs_file_read(&lfs, file, buff, l);
+};
+int32_t fs_file_seek(lfs_file_t *file, long off, int whence)
+{
+    return lfs_file_seek(&lfs, file, off, whence);
 };
 void testfile()
 {
@@ -206,14 +210,15 @@ void testapi()
 {
     const char *p = "the quick brown fox jumps over the lazy dog. _ complete";
     const char *filename = "main.lua";
-    lfs_file_t *f = fs_file_open(filename);
-    LOG(" write  %08lx", fs_file_write(f, p, 56));
-    LOG(" close  %08lx", fs_file_close(f));
-    char *rd[56];
-    lfs_file_t *fr = fs_file_open("main.lua");
-    LOG(" read %08lx", fs_file_read(fr, rd, 56));
-    LOG(" close  %08lx", fs_file_close(fr));
-    LOG(" main.lua \nexpected =  %s\nread =  %s", p, rd);
+    lfs_file_t *f = fs_file_open(filename, LFS_O_RDWR | LFS_O_CREAT);
+    LOG(" write  %ld", fs_file_write(f, p, 56));
+    LOG(" close  %d", fs_file_close(f));
+    char ch[1000] = {0};
+    lfs_file_t *fr = fs_file_open("main.lua", LFS_O_RDWR | LFS_O_CREAT);
+    LOG(" read %ld", fs_file_read(fr, &ch[0], 1000));
+    LOG(" close  %d", fs_file_close(fr));
+    // LOG(" main.lua \nexpected =  %s\nread =  %s", p, &rd[0]);
+    LOG(" main.lua \nread =  %s", &ch[0]);
 }
 // entry point
 void filesystem_setup(bool factory_reset)
