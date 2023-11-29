@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Nov 28 16:38:54 2023
+[*] Wed Nov 29 14:47:09 2023
 [*]
 [dumpfile] "sim/spi_tb.fst"
-[dumpfile_mtime] "Tue Nov 28 16:36:58 2023"
-[dumpfile_size] 1244
+[dumpfile_mtime] "Wed Nov 29 14:44:42 2023"
+[dumpfile_size] 1512
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 1424 852
-[pos] 10 38
-*-7.648834 486 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 1288 1104
+[pos] 809 38
+*-8.393771 370 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,55 +40,102 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 327
+[sst_vpaned_height] 444
 @200
--External SPI interface
+-SPI peripheral
 @28
 spi_tb.spi_select
+[color] 4
 spi_tb.spi_clock
 spi_tb.spi_data_in
 spi_tb.spi_data_out
 @200
 -
--External peripheral interface
 @22
-spi_tb.spi_controller.peripheral_address_out[7:0]
+spi_tb.spi_peripheral.subperipheral_address_out[7:0]
 @28
-spi_tb.spi_controller.peripheral_address_valid
+spi_tb.spi_peripheral.subperipheral_address_valid
 @22
-spi_tb.spi_controller.peripheral_data_out[7:0]
+spi_tb.spi_peripheral.subperipheral_data_out[7:0]
 @28
-spi_tb.spi_controller.peripheral_data_out_valid
+spi_tb.spi_peripheral.subperipheral_data_out_valid
 @22
-spi_tb.spi_controller.peripheral_data_in[7:0]
+spi_tb.spi_peripheral.subperipheral_data_in[7:0]
 @28
-spi_tb.spi_controller.peripheral_data_in_valid
+spi_tb.spi_peripheral.subperipheral_data_in_valid
 @200
 -
--Internal signals
 @420
-spi_tb.spi_controller.spi_bit_index
+spi_tb.spi_peripheral.spi_bit_index
 @22
-spi_tb.spi_controller.spi_address_buffer[7:0]
-@28
-spi_tb.spi_controller.spi_address_valid
+spi_tb.spi_peripheral.spi_address_buffer[7:0]
+@29
+spi_tb.spi_peripheral.spi_address_valid
 @22
-spi_tb.spi_controller.spi_data_in_buffer[7:0]
+spi_tb.spi_peripheral.spi_data_in_buffer[7:0]
 @28
-spi_tb.spi_controller.spi_data_in_valid
+spi_tb.spi_peripheral.spi_data_in_valid
+@200
+-
+-Subperipheral interface
+@22
+spi_tb.spi_subperipheral_selector.address_in[7:0]
+@28
+spi_tb.spi_subperipheral_selector.address_valid
+@22
+spi_tb.spi_subperipheral_selector.peripheral_data_out[7:0]
+@28
+spi_tb.spi_subperipheral_selector.peripheral_data_out_valid
+@22
+spi_tb.spi_subperipheral_selector.peripheral_data_in[7:0]
+@28
+spi_tb.spi_subperipheral_selector.peripheral_data_in_valid
+@200
+-
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_1_enable
+@22
+spi_tb.spi_subperipheral_selector.subperipheral_1_data_in[7:0]
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_1_data_in_valid
+@22
+spi_tb.spi_subperipheral_selector.subperipheral_1_data_out[7:0]
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_1_data_out_valid
+@200
+-
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_2_enable
+@22
+spi_tb.spi_subperipheral_selector.subperipheral_2_data_in[7:0]
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_2_data_in_valid
+@22
+spi_tb.spi_subperipheral_selector.subperipheral_2_data_out[7:0]
+@28
+spi_tb.spi_subperipheral_selector.subperipheral_2_data_out_valid
 @200
 -
 -Chip ID register
-@22
-spi_tb.spi_register_version_string.address_in[7:0]
 @28
-spi_tb.spi_register_version_string.address_valid
+spi_tb.spi_register_chip_id.enable
+@22
+spi_tb.spi_register_chip_id.data_out[7:0]
+@28
+spi_tb.spi_register_chip_id.data_out_valid
+@200
+-
+-Version string register
+@28
+spi_tb.spi_register_version_string.enable
 spi_tb.spi_register_version_string.data_in_valid
 @22
 spi_tb.spi_register_version_string.data_out[7:0]
 @28
 spi_tb.spi_register_version_string.data_out_valid
-@421
+@200
+-
+@420
 spi_tb.spi_register_version_string.byte_counter
 [pattern_trace] 1
 [pattern_trace] 0

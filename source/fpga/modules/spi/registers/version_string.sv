@@ -10,15 +10,14 @@
  */
 
 module spi_register_version_string (
-    input logic [7:0] address_in,
-    input logic address_valid,
+    input logic enable,
     input logic data_in_valid,
     output logic [7:0] data_out,
     output logic data_out_valid
 );
     integer byte_counter;
 
-    always_ff @(posedge address_valid, posedge data_in_valid) begin
+    always_ff @(posedge enable, posedge data_in_valid) begin
 
         if (data_in_valid == 0) begin
             byte_counter <= 0;
@@ -30,7 +29,7 @@ module spi_register_version_string (
 
     end
 
-    assign data_out_valid = address_in == 'hB5 ? 1 : 0;
+    assign data_out_valid = enable;
 
     always_comb begin
         
