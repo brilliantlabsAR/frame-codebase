@@ -11,7 +11,6 @@
 
 module spi_register_version_string (
     input logic system_clock,
-
     input logic enable,
     input logic data_in_valid,
     
@@ -27,7 +26,6 @@ module spi_register_version_string (
         last_data_in_valid <= data_in_valid;
 
         if (enable == 0) begin
-            data_out <= 0;
             data_out_valid <= 0;
             byte_counter <= 0;
         end

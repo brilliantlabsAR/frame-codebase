@@ -57,14 +57,10 @@ logic [7:0] subperipheral_cipo;
 logic subperipheral_cipo_valid;
 
 logic subperipheral_1_enable;
-logic [7:0] subperipheral_1_copi;
-logic subperipheral_1_copi_valid;
 logic [7:0] subperipheral_1_cipo;
 logic subperipheral_1_cipo_valid;
 
 logic subperipheral_2_enable;
-logic [7:0] subperipheral_2_copi;
-logic subperipheral_2_copi_valid;
 logic [7:0] subperipheral_2_cipo;
 logic subperipheral_2_cipo_valid;
 
@@ -87,25 +83,20 @@ spi_peripheral spi_peripheral (
 spi_subperipheral_selector spi_subperipheral_selector (
     .address_in(subperipheral_address),
     .address_in_valid(subperipheral_address_valid),
-    .peripheral_data_in(subperipheral_copi),
-    .peripheral_data_in_valid(subperipheral_copi_valid),
     .peripheral_data_out(subperipheral_cipo),
     .peripheral_data_out_valid(subperipheral_cipo_valid),
 
     .subperipheral_1_enable_out(subperipheral_1_enable),
     .subperipheral_1_data_in(subperipheral_1_cipo),
     .subperipheral_1_data_in_valid(subperipheral_1_cipo_valid),
-    .subperipheral_1_data_out(),
-    .subperipheral_1_data_out_valid(),
 
     .subperipheral_2_enable_out(subperipheral_2_enable),
     .subperipheral_2_data_in(subperipheral_2_cipo),
-    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid),
-    .subperipheral_2_data_out(),
-    .subperipheral_2_data_out_valid(subperipheral_2_copi_valid)
+    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid)
 );
 
 spi_register_chip_id spi_register_chip_id (
+    .system_clock(system_clock),
     .enable(subperipheral_1_enable),
 
     .data_out(subperipheral_1_cipo),
@@ -114,9 +105,8 @@ spi_register_chip_id spi_register_chip_id (
 
 spi_register_version_string spi_register_version_string (
     .system_clock(system_clock),
-
     .enable(subperipheral_2_enable),
-    .data_in_valid(subperipheral_2_copi_valid),
+    .data_in_valid(subperipheral_copi_valid),
 
     .data_out(subperipheral_2_cipo),
     .data_out_valid(subperipheral_2_cipo_valid)

@@ -53,10 +53,7 @@ always_ff @(posedge system_clock) begin
     // Reset
     if (stable_spi_select_in == 1) begin
         spi_bit_index <= 15;
-        spi_data_out <= 0;
-        subperipheral_address_out <= 0;
         subperipheral_address_out_valid <= 0;
-        subperipheral_data_out <= 0;
         subperipheral_data_out_valid <= 0;
     end
 
@@ -109,69 +106,5 @@ always_ff @(posedge system_clock) begin
         end
     end
 end
-
-/*
-// Internal signals
-integer spi_bit_index;
-bit spi_initial_data_read;
-
-// This is only needed for Radiant to not complain about a clock pin
-logic spi_gated_clock;
-assign spi_gated_clock = spi_select_in == 0 ? spi_clock_in : 0;
-
-// Sample incoming SPI bits on rising clock
-always_ff @(posedge spi_gated_clock) begin
-
-    // If address
-    if (spi_bit_index > 7) begin
-        subperipheral_address_out[spi_bit_index - 8] <= spi_data_in;
-    end 
-    
-    // Otherwise data
-    else begin
-        subperipheral_data_out[spi_bit_index] <= spi_data_in;
-    end
-
-end
-
-// On falling SPI clock, decrement inbound counter and push out SPI data
-always_ff @(negedge spi_gated_clock, posedge spi_select_in) begin
-
-    // Reset on a rising SPI select
-    if (spi_select_in == 1) begin
-        spi_bit_index <= 15; // Starts at 15 in order to give MSB first
-        spi_initial_data_read <= 0;
-    end
-
-    // Otherwise decrement the bit counter
-    else begin
-        spi_bit_index--;
-
-        // Roll underflows back over to read multiple bytes continiously
-        if (spi_bit_index == -1) begin 
-            spi_bit_index <= 7;
-            spi_initial_data_read <= 1;
-        end
-    end
-end
-
-// Set the ready flags based on index and SPI select status
-assign subperipheral_data_out_valid = spi_bit_index == 7 & 
-                                      spi_select_in == 0 & 
-                                      spi_initial_data_read 
-                                    ? 1 
-                                    : 0;
-
-assign subperipheral_address_out_valid = spi_bit_index < 8 & 
-                                     spi_select_in == 0
-                                   ? 1 
-                                   : 0;
-
-// Directly assign the output data received from the periphiral
-assign spi_data_out = subperipheral_data_in_valid & 
-                      spi_bit_index < 8 
-                    ? subperipheral_data_in[spi_bit_index] 
-                    : 0;
-*/
 
 endmodule
