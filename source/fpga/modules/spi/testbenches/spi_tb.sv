@@ -31,7 +31,6 @@ logic spi_data_in = 0;
 // Stimulated and interface signals
 logic spi_data_out;
 
-logic subperipheral_byte_clock;
 logic [7:0] subperipheral_address;
 logic subperipheral_address_valid;
 logic [7:0] subperipheral_copi;
@@ -39,14 +38,12 @@ logic subperipheral_copi_valid;
 logic [7:0] subperipheral_cipo;
 logic subperipheral_cipo_valid;
 
-logic subperipheral_1_byte_clock;
 logic subperipheral_1_enable;
 logic [7:0] subperipheral_1_copi;
 logic subperipheral_1_copi_valid;
 logic [7:0] subperipheral_1_cipo;
 logic subperipheral_1_cipo_valid;
 
-logic subperipheral_2_byte_clock;
 logic subperipheral_2_enable;
 logic [7:0] subperipheral_2_copi;
 logic subperipheral_2_copi_valid;
@@ -61,7 +58,6 @@ spi_peripheral spi_peripheral (
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
-    // .subperipheral_byte_clock_out(subperipheral_byte_clock),
     .subperipheral_address_out(subperipheral_address),
     .subperipheral_address_out_valid(subperipheral_address_valid),
     .subperipheral_data_out(subperipheral_copi),
@@ -71,7 +67,6 @@ spi_peripheral spi_peripheral (
 );
 
 spi_subperipheral_selector spi_subperipheral_selector (
-    .byte_clock_in(subperipheral_byte_clock),
     .address_in(subperipheral_address),
     .address_in_valid(subperipheral_address_valid),
     .peripheral_data_in(subperipheral_copi),
@@ -79,14 +74,12 @@ spi_subperipheral_selector spi_subperipheral_selector (
     .peripheral_data_out(subperipheral_cipo),
     .peripheral_data_out_valid(subperipheral_cipo_valid),
 
-    .subperipheral_1_byte_clock_out(),
     .subperipheral_1_enable_out(subperipheral_1_enable),
     .subperipheral_1_data_in(subperipheral_1_cipo),
     .subperipheral_1_data_in_valid(subperipheral_1_cipo_valid),
     .subperipheral_1_data_out(),
     .subperipheral_1_data_out_valid(),
 
-    .subperipheral_2_byte_clock_out(subperipheral_2_byte_clock),
     .subperipheral_2_enable_out(subperipheral_2_enable),
     .subperipheral_2_data_in(subperipheral_2_cipo),
     .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid),

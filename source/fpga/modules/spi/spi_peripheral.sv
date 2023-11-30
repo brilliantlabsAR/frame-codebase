@@ -19,7 +19,6 @@ module spi_peripheral (
     output logic spi_data_out,
 
     // External subperipheral interface signals
-    // output logic subperipheral_byte_clock_out,
     output logic [7:0] subperipheral_address_out,
     output logic subperipheral_address_out_valid,
     output logic [7:0] subperipheral_data_out,
@@ -27,63 +26,6 @@ module spi_peripheral (
     input logic [7:0] subperipheral_data_in,
     input logic subperipheral_data_in_valid
 );
-
-/*
-integer spi_bit_index;
-
-logic spi_event;
-assign spi_event = spi_clock_in | spi_select_in;
-
-always_ff @(posedge spi_event) begin
-
-    // Reset
-    if (spi_clock_in == 0) begin
-        spi_bit_index <= 15;
-        subperipheral_address_out_valid <= 0;
-        subperipheral_data_out_valid <= 0;
-    end
-
-    else begin
-        
-        // If address
-        if (spi_bit_index > 7) begin
-            subperipheral_address_out[spi_bit_index - 8] <= spi_data_in;
-
-            if (spi_bit_index == 8) begin
-                subperipheral_address_out_valid <= 1;
-            end
-        end 
-        
-        // Otherwise data
-        else begin
-            subperipheral_data_out[spi_bit_index] <= spi_data_in;
-
-            if (spi_bit_index == 0) begin
-                subperipheral_data_out_valid <= 1;
-            end
-
-            else begin
-                subperipheral_data_out_valid <= 0;
-            end
-        end
-
-        // Roll underflows back over to read multiple bytes continiously
-        if (spi_bit_index == 0) begin 
-            spi_bit_index <= 7;
-        end
-
-        else begin
-            spi_bit_index--;
-        end
-
-    end
-end
-
-assign spi_data_out = subperipheral_data_in_valid & 
-                      spi_bit_index < 7 
-                    ? subperipheral_data_in[spi_bit_index] 
-                    : 0;
-*/                    
 
 logic metastable_spi_select_in;
 logic metastable_spi_clock_in;
@@ -97,6 +39,7 @@ integer spi_bit_index;
 
 always_ff @(posedge system_clock) begin
 
+    // Synchronizer
     metastable_spi_select_in <= spi_select_in;
     metastable_spi_clock_in <= spi_clock_in;
     metastable_spi_data_in <= spi_data_in;
@@ -104,6 +47,7 @@ always_ff @(posedge system_clock) begin
     stable_spi_clock_in <= metastable_spi_clock_in;
     stable_spi_data_in <= metastable_spi_data_in;
 
+    // Edge detection
     last_stable_spi_clock_in <= stable_spi_clock_in;
 
     // Reset
@@ -116,8 +60,10 @@ always_ff @(posedge system_clock) begin
         subperipheral_data_out_valid <= 0;
     end
 
+    // Normal operation
     else begin
 
+        // Set output whenever it's ready
         if (subperipheral_data_in_valid) begin
             spi_data_out <= subperipheral_data_in[spi_bit_index];
         end
@@ -126,6 +72,7 @@ always_ff @(posedge system_clock) begin
             spi_data_out <= 0;
         end
         
+        // On rising SPI clock, buffer in data
         if (last_stable_spi_clock_in == 0 & stable_spi_clock_in == 1) begin
 
             // If address
@@ -220,15 +167,11 @@ assign subperipheral_address_out_valid = spi_bit_index < 8 &
                                    ? 1 
                                    : 0;
 
-assign subperipheral_byte_clock_out = spi_bit_index == 7 & 
-                                  spi_select_in == 0
-                                ? 1
-                                : 0;
-
 // Directly assign the output data received from the periphiral
 assign spi_data_out = subperipheral_data_in_valid & 
-                      spi_bit_index < 7 
+                      spi_bit_index < 8 
                     ? subperipheral_data_in[spi_bit_index] 
                     : 0;
 */
+
 endmodule

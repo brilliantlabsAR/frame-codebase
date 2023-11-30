@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Nov 30 18:44:51 2023
+[*] Thu Nov 30 19:22:07 2023
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Thu Nov 30 18:43:28 2023"
-[dumpfile_size] 1759
+[dumpfile_mtime] "Thu Nov 30 19:20:29 2023"
+[dumpfile_size] 1795
 [savefile] "spi_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
-*-10.237931 910 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-10.237931 2480 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -72,8 +72,6 @@ spi_tb.spi_peripheral.spi_bit_index
 @200
 -
 -Subperipheral interface
-@28
-spi_tb.spi_subperipheral_selector.byte_clock_in
 @22
 spi_tb.spi_subperipheral_selector.address_in[7:0]
 @28
@@ -89,7 +87,6 @@ spi_tb.spi_subperipheral_selector.peripheral_data_in_valid
 @200
 -
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_1_byte_clock_out
 spi_tb.spi_subperipheral_selector.subperipheral_1_enable_out
 @22
 spi_tb.spi_subperipheral_selector.subperipheral_1_data_in[7:0]
@@ -102,7 +99,6 @@ spi_tb.spi_subperipheral_selector.subperipheral_1_data_out_valid
 @200
 -
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_2_byte_clock_out
 spi_tb.spi_subperipheral_selector.subperipheral_2_enable_out
 @22
 spi_tb.spi_subperipheral_selector.subperipheral_2_data_in[7:0]
@@ -128,7 +124,6 @@ spi_tb.spi_register_chip_id.data_out_valid
 -Version string register
 @28
 spi_tb.spi_register_version_string.enable
-spi_tb.spi_register_version_string.byte_clock
 spi_tb.spi_register_version_string.data_in_valid
 @200
 -
