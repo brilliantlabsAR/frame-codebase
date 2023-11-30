@@ -458,7 +458,9 @@ async def testfile():
     print(await test.send_lua("a=frame.file.open('main.lua','a');"))
     print(await test.send_lua("print(a:write('the quick brown fox jumps over the lazy dog. \\n 1234567890 !@#$%^&()[]+=-_ complete'));", await_print=True))
     print(await test.send_lua("print(a:close());", await_print=True))
-    print(await test.send_lua("a=frame.file.open('main.lua','r');a:seek('set',5);b= a:read('a');frame.file.close(a);print(string.sub(b,0,10));", await_print=True))
+    print(await test.send_lua("print(frame.file.remove('test.lua'));", await_print=True))
+    print(await test.send_lua("print(frame.file.rename('main.lua','test.lua'));", await_print=True))
+    print(await test.send_lua("a=frame.file.open('test.lua','r');a:seek('set',5);b= a:read('a');frame.file.close(a);print(string.sub(b,0,10));", await_print=True))
 
     # print(await test.send_lua("""a=frame.file.open('main.lua','r'); a:seek("end",-10);for line in a:lines() do \n print(line) \n end; a:close();""", await_print=True))
     await test.end()

@@ -52,3 +52,7 @@ int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l);
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l);
 
 int32_t fs_file_seek(lfs_file_t *file, long off, int whence);
+
+int fs_file_remove(const char *path);
+
+int fs_file_raname(const char *oldpath, const char *newpath);

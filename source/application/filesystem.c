@@ -188,6 +188,15 @@ int32_t fs_file_seek(lfs_file_t *file, long off, int whence)
 {
     return lfs_file_seek(&lfs, file, off, whence);
 };
+int fs_file_remove(const char *path)
+{
+    return lfs_remove(&lfs, path);
+}
+int fs_file_raname(const char *oldpath, const char *newpath)
+{
+    return lfs_rename(&lfs, oldpath, newpath);
+}
+
 void testfile()
 {
     lfs_file_t file;

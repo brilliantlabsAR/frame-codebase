@@ -376,6 +376,17 @@ static int lua_file_close(lua_State *L)
   tofile(L);
   return file_handler_close(L);
 }
+static int lua_file_remove(lua_State *L)
+{
+  const char *filename = luaL_checkstring(L, 1);
+  return luaL_fileresult(L, fs_file_remove(filename) == 0, filename);
+}
+static int lua_file_rename(lua_State *L)
+{
+  const char *fromname = luaL_checkstring(L, 1);
+  const char *toname = luaL_checkstring(L, 2);
+  return luaL_fileresult(L, fs_file_raname(fromname, toname) == 0, NULL);
+}
 /*
 ** metamethods for file handles
 */
@@ -418,6 +429,12 @@ void lua_open_file_library(lua_State *L)
 
   lua_pushcfunction(L, lua_file_close);
   lua_setfield(L, -2, "close");
+
+  lua_pushcfunction(L, lua_file_remove);
+  lua_setfield(L, -2, "remove");
+
+  lua_pushcfunction(L, lua_file_rename);
+  lua_setfield(L, -2, "rename");
   // lua_pushcfunction(L, lua_file_input);
   // lua_setfield(L, -2, "input");
 
