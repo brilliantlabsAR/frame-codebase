@@ -28,6 +28,63 @@ module spi_peripheral (
     input logic subperipheral_data_in_valid
 );
 
+/*
+integer spi_bit_index;
+
+logic spi_event;
+assign spi_event = spi_clock_in | spi_select_in;
+
+always_ff @(posedge spi_event) begin
+
+    // Reset
+    if (spi_clock_in == 0) begin
+        spi_bit_index <= 15;
+        subperipheral_address_out_valid <= 0;
+        subperipheral_data_out_valid <= 0;
+    end
+
+    else begin
+        
+        // If address
+        if (spi_bit_index > 7) begin
+            subperipheral_address_out[spi_bit_index - 8] <= spi_data_in;
+
+            if (spi_bit_index == 8) begin
+                subperipheral_address_out_valid <= 1;
+            end
+        end 
+        
+        // Otherwise data
+        else begin
+            subperipheral_data_out[spi_bit_index] <= spi_data_in;
+
+            if (spi_bit_index == 0) begin
+                subperipheral_data_out_valid <= 1;
+            end
+
+            else begin
+                subperipheral_data_out_valid <= 0;
+            end
+        end
+
+        // Roll underflows back over to read multiple bytes continiously
+        if (spi_bit_index == 0) begin 
+            spi_bit_index <= 7;
+        end
+
+        else begin
+            spi_bit_index--;
+        end
+
+    end
+end
+
+assign spi_data_out = subperipheral_data_in_valid & 
+                      spi_bit_index < 7 
+                    ? subperipheral_data_in[spi_bit_index] 
+                    : 0;
+*/                    
+
 logic metastable_spi_select_in;
 logic metastable_spi_clock_in;
 logic metastable_spi_data_in;
@@ -52,11 +109,22 @@ always_ff @(posedge system_clock) begin
     // Reset
     if (stable_spi_select_in == 1) begin
         spi_bit_index <= 15;
+        spi_data_out <= 0;
+        subperipheral_address_out <= 0;
         subperipheral_address_out_valid <= 0;
+        subperipheral_data_out <= 0;
         subperipheral_data_out_valid <= 0;
     end
 
     else begin
+
+        if (subperipheral_data_in_valid) begin
+            spi_data_out <= subperipheral_data_in[spi_bit_index];
+        end
+
+        else begin
+            spi_data_out <= 0;
+        end
         
         if (last_stable_spi_clock_in == 0 & stable_spi_clock_in == 1) begin
 
@@ -72,7 +140,7 @@ always_ff @(posedge system_clock) begin
             // Otherwise data
             else begin
                 subperipheral_data_out[spi_bit_index] <= stable_spi_data_in;
-
+                
                 if (spi_bit_index == 0) begin
                     subperipheral_data_out_valid <= 1;
                 end

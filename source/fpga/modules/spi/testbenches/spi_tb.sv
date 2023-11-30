@@ -102,8 +102,9 @@ spi_register_chip_id spi_register_chip_id (
 );
 
 spi_register_version_string spi_register_version_string (
+    .system_clock(system_clock),
+
     .enable(subperipheral_2_enable),
-    .byte_clock(subperipheral_2_byte_clock),
     .data_in_valid(subperipheral_2_copi_valid),
 
     .data_out(subperipheral_2_cipo),
@@ -133,32 +134,28 @@ end
 
 initial begin
 
-    #4
+    #8
     spi_select_in <= 1;    
-    #4
+    #8
 
     // Test chip ID
-    #4
+    #8
     spi_select_in <= 0;    
     send_byte('hA0);
     send_byte('hFF);
     spi_select_in <= 1;    
-    #4
+    #8
 
     // Test version string
-    #4
+    #8
     spi_select_in <= 0;    
     send_byte('hB5);
     send_byte('hFF);
     send_byte('h00);
     send_byte('h00);
     send_byte('h00);
-    send_byte('h00);
-    send_byte('h00);
-    send_byte('h00);
-    send_byte('h00);
     spi_select_in <= 1;    
-    #4
+    #8
 
     $finish;
 end

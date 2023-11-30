@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Nov 30 15:27:15 2023
+[*] Thu Nov 30 18:44:51 2023
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Thu Nov 30 15:25:15 2023"
-[dumpfile_size] 1343
+[dumpfile_mtime] "Thu Nov 30 18:43:28 2023"
+[dumpfile_size] 1759
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 1288 1104
-[pos] 1029 38
-*-8.393771 180 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 1424 852
+[pos] 10 38
+*-10.237931 910 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,7 +40,7 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 444
+[sst_vpaned_height] 432
 @28
 spi_tb.system_clock
 @200
@@ -67,12 +67,6 @@ spi_tb.spi_peripheral.subperipheral_data_in[7:0]
 spi_tb.spi_peripheral.subperipheral_data_in_valid
 @200
 -
-@28
-spi_tb.spi_peripheral.spi_select_edge_monitor[1:0]
-@29
-spi_tb.spi_peripheral.spi_clock_edge_monitor[1:0]
-@28
-spi_tb.spi_peripheral.spi_initial_data_read
 @420
 spi_tb.spi_peripheral.spi_bit_index
 @200

@@ -39,14 +39,14 @@ module top (
     output logic camera_clock
 );
 
-logic clock;
+logic system_clock;
 
 OSCA #(
     .HF_CLK_DIV("8"), // 50 MHz
     .HF_OSC_EN("ENABLED")
     ) osc (
     .HFOUTEN(1'b1),
-    .HFCLKOUT(clock)
+    .HFCLKOUT(system_clock)
 );
 
 logic subperipheral_byte_clock;
@@ -72,12 +72,14 @@ logic [7:0] subperipheral_2_cipo;
 logic subperipheral_2_cipo_valid;
 
 spi_peripheral spi_peripheral (
-    .spi_clock_in(spi_clock_in),
+    .system_clock(system_clock),
+
     .spi_select_in(spi_select_in),
+    .spi_clock_in(spi_clock_in),
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
-    .subperipheral_byte_clock_out(subperipheral_byte_clock),
+    // .subperipheral_byte_clock_out(subperipheral_byte_clock),
     .subperipheral_address_out(subperipheral_address),
     .subperipheral_address_out_valid(subperipheral_address_valid),
     .subperipheral_data_out(subperipheral_copi),
@@ -118,8 +120,9 @@ spi_register_chip_id spi_register_chip_id (
 );
 
 spi_register_version_string spi_register_version_string (
+    .system_clock(system_clock),
+
     .enable(subperipheral_2_enable),
-    .byte_clock(subperipheral_2_byte_clock),
     .data_in_valid(subperipheral_2_copi_valid),
 
     .data_out(subperipheral_2_cipo),
@@ -143,7 +146,7 @@ spi_register_version_string spi_register_version_string (
 //     .cb2(display_cb2)
 // );
 
-always_ff @(posedge clock) begin
+always_ff @(posedge system_clock) begin
     camera_clock <= ~camera_clock; // 25MHz
 end
 
