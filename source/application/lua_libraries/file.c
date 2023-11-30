@@ -266,6 +266,11 @@ static int lua_file_open(lua_State *L)
     break;
   }
   p->f = fs_file_open(filename, md);
+  if (p->f == NULL)
+  {
+    luaL_error(L, "can not open file %s", filename);
+    return 1;
+  }
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
 }
 static int g_iofile(lua_State *L, const char *f, const char *mode)
