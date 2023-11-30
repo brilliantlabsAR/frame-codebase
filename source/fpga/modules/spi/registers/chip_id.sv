@@ -11,6 +11,7 @@
 
 module spi_register_chip_id (
     input logic enable,
+    
     output logic [7:0] data_out,
     output logic data_out_valid
 );

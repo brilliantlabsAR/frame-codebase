@@ -35,7 +35,7 @@ initial begin : clock_25MHz
 end
 
 initial begin
-    $dumpfile("sim/display_tb.fst");
+    $dumpfile("simulation/display_tb.fst");
     $dumpvars(0, display_tb);
 end
 

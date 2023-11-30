@@ -52,3 +52,7 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 		$(BUILD)/fpga_application_temp.h
 
 	@sed '1s/^/const /' $(BUILD)/fpga_application_temp.h > fpga_application.h
+
+clean:
+	@rm fpga_application.h
+	@echo Cleaned

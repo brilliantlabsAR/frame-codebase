@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Wed Nov 29 14:47:09 2023
+[*] Thu Nov 30 15:27:15 2023
 [*]
-[dumpfile] "sim/spi_tb.fst"
-[dumpfile_mtime] "Wed Nov 29 14:44:42 2023"
-[dumpfile_size] 1512
+[dumpfile] "simulation/spi_tb.fst"
+[dumpfile_mtime] "Thu Nov 30 15:25:15 2023"
+[dumpfile_size] 1343
 [savefile] "spi_tb.gtkw"
 [timestart] 0
 [size] 1288 1104
-[pos] 809 38
-*-8.393771 370 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[pos] 1029 38
+*-8.393771 180 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -41,12 +41,14 @@
 [signals_width] 283
 [sst_expanded] 1
 [sst_vpaned_height] 444
+@28
+spi_tb.system_clock
 @200
+-
 -SPI peripheral
 @28
-spi_tb.spi_select
-[color] 4
-spi_tb.spi_clock
+spi_tb.spi_peripheral.spi_select_in
+spi_tb.spi_peripheral.spi_clock_in
 spi_tb.spi_data_in
 spi_tb.spi_data_out
 @200
@@ -54,7 +56,7 @@ spi_tb.spi_data_out
 @22
 spi_tb.spi_peripheral.subperipheral_address_out[7:0]
 @28
-spi_tb.spi_peripheral.subperipheral_address_valid
+spi_tb.spi_peripheral.subperipheral_address_out_valid
 @22
 spi_tb.spi_peripheral.subperipheral_data_out[7:0]
 @28
@@ -65,23 +67,23 @@ spi_tb.spi_peripheral.subperipheral_data_in[7:0]
 spi_tb.spi_peripheral.subperipheral_data_in_valid
 @200
 -
+@28
+spi_tb.spi_peripheral.spi_select_edge_monitor[1:0]
+@29
+spi_tb.spi_peripheral.spi_clock_edge_monitor[1:0]
+@28
+spi_tb.spi_peripheral.spi_initial_data_read
 @420
 spi_tb.spi_peripheral.spi_bit_index
-@22
-spi_tb.spi_peripheral.spi_address_buffer[7:0]
-@29
-spi_tb.spi_peripheral.spi_address_valid
-@22
-spi_tb.spi_peripheral.spi_data_in_buffer[7:0]
-@28
-spi_tb.spi_peripheral.spi_data_in_valid
 @200
 -
 -Subperipheral interface
+@28
+spi_tb.spi_subperipheral_selector.byte_clock_in
 @22
 spi_tb.spi_subperipheral_selector.address_in[7:0]
 @28
-spi_tb.spi_subperipheral_selector.address_valid
+spi_tb.spi_subperipheral_selector.address_in_valid
 @22
 spi_tb.spi_subperipheral_selector.peripheral_data_out[7:0]
 @28
@@ -93,7 +95,8 @@ spi_tb.spi_subperipheral_selector.peripheral_data_in_valid
 @200
 -
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_1_enable
+spi_tb.spi_subperipheral_selector.subperipheral_1_byte_clock_out
+spi_tb.spi_subperipheral_selector.subperipheral_1_enable_out
 @22
 spi_tb.spi_subperipheral_selector.subperipheral_1_data_in[7:0]
 @28
@@ -105,7 +108,8 @@ spi_tb.spi_subperipheral_selector.subperipheral_1_data_out_valid
 @200
 -
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_2_enable
+spi_tb.spi_subperipheral_selector.subperipheral_2_byte_clock_out
+spi_tb.spi_subperipheral_selector.subperipheral_2_enable_out
 @22
 spi_tb.spi_subperipheral_selector.subperipheral_2_data_in[7:0]
 @28
@@ -119,6 +123,8 @@ spi_tb.spi_subperipheral_selector.subperipheral_2_data_out_valid
 -Chip ID register
 @28
 spi_tb.spi_register_chip_id.enable
+@200
+-
 @22
 spi_tb.spi_register_chip_id.data_out[7:0]
 @28
@@ -128,14 +134,15 @@ spi_tb.spi_register_chip_id.data_out_valid
 -Version string register
 @28
 spi_tb.spi_register_version_string.enable
+spi_tb.spi_register_version_string.byte_clock
 spi_tb.spi_register_version_string.data_in_valid
+@200
+-
 @22
 spi_tb.spi_register_version_string.data_out[7:0]
 @28
 spi_tb.spi_register_version_string.data_out_valid
 @200
 -
-@420
-spi_tb.spi_register_version_string.byte_counter
 [pattern_trace] 1
 [pattern_trace] 0

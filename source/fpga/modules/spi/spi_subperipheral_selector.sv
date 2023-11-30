@@ -10,21 +10,23 @@
  */
 
 module spi_subperipheral_selector (
+    input logic byte_clock_in,
     input logic [7:0] address_in,
-    input logic address_valid,
-
+    input logic address_in_valid,
     input logic [7:0] peripheral_data_in,
     input logic peripheral_data_in_valid,
     output logic [7:0] peripheral_data_out,
     output logic peripheral_data_out_valid,
 
-    output logic subperipheral_1_enable,
+    output logic subperipheral_1_byte_clock_out,
+    output logic subperipheral_1_enable_out,
     input logic [7:0] subperipheral_1_data_in,
     input logic subperipheral_1_data_in_valid,
     output logic [7:0] subperipheral_1_data_out,
     output logic subperipheral_1_data_out_valid,
 
-    output logic subperipheral_2_enable,
+    output logic subperipheral_2_byte_clock_out,
+    output logic subperipheral_2_enable_out,
     input logic [7:0] subperipheral_2_data_in,
     input logic subperipheral_2_data_in_valid,
     output logic [7:0] subperipheral_2_data_out,
@@ -33,17 +35,19 @@ module spi_subperipheral_selector (
     
     always_comb begin
         
-        if (address_valid) begin
+        if (address_in_valid) begin
             case (address_in)
             'hA0: begin
                 peripheral_data_out = subperipheral_1_data_in;
                 peripheral_data_out_valid = subperipheral_1_data_in_valid;
 
-                subperipheral_1_enable = 1;
+                subperipheral_1_byte_clock_out = byte_clock_in;
+                subperipheral_1_enable_out = 1;
                 subperipheral_1_data_out = peripheral_data_in;
                 subperipheral_1_data_out_valid = peripheral_data_in_valid;
 
-                subperipheral_2_enable = 0;
+                subperipheral_2_byte_clock_out = 0;
+                subperipheral_2_enable_out = 0;
                 subperipheral_2_data_out = 0;
                 subperipheral_2_data_out_valid = 0;
             end 
@@ -52,11 +56,13 @@ module spi_subperipheral_selector (
                 peripheral_data_out = subperipheral_2_data_in;
                 peripheral_data_out_valid = subperipheral_2_data_in_valid;
 
-                subperipheral_1_enable = 0;
+                subperipheral_1_byte_clock_out = 0;
+                subperipheral_1_enable_out = 0;
                 subperipheral_1_data_out = 0;
                 subperipheral_1_data_out_valid = 0;
 
-                subperipheral_2_enable = 1;
+                subperipheral_2_byte_clock_out = byte_clock_in;
+                subperipheral_2_enable_out = 1;
                 subperipheral_2_data_out = peripheral_data_in;
                 subperipheral_2_data_out_valid = peripheral_data_in_valid;
             end 
@@ -65,11 +71,13 @@ module spi_subperipheral_selector (
                 peripheral_data_out = 0;
                 peripheral_data_out_valid = 0;
 
-                subperipheral_1_enable = 0;
+                subperipheral_1_byte_clock_out = 0;
+                subperipheral_1_enable_out = 0;
                 subperipheral_1_data_out = 0;
                 subperipheral_1_data_out_valid = 0;
 
-                subperipheral_2_enable = 0;
+                subperipheral_2_byte_clock_out = 0;
+                subperipheral_2_enable_out = 0;
                 subperipheral_2_data_out = 0;
                 subperipheral_2_data_out_valid = 0;
             end
@@ -80,11 +88,13 @@ module spi_subperipheral_selector (
             peripheral_data_out = 0;
             peripheral_data_out_valid = 0;
 
-            subperipheral_1_enable = 0;
+            subperipheral_1_byte_clock_out = 0;
+            subperipheral_1_enable_out = 0;
             subperipheral_1_data_out = 0;
             subperipheral_1_data_out_valid = 0;
 
-            subperipheral_2_enable = 0;
+            subperipheral_2_byte_clock_out = 0;
+            subperipheral_2_enable_out = 0;
             subperipheral_2_data_out = 0;
             subperipheral_2_data_out_valid = 0;
         end

@@ -23,16 +23,20 @@
 #
 
 default:
-	@mkdir -p sim
+	@mkdir -p simulation
 	
 	@iverilog -Wall \
 			  -g2012 \
 			  -I fpga \
-			  -o sim/spi_tb.out \
+			  -o simulation/spi_tb.out \
 			  -i spi_tb.sv
 	
-	@vvp sim/spi_tb.out \
+	@vvp simulation/spi_tb.out \
 		 -fst
 
-	@gtkwave sim/spi_tb.fst \
+	@gtkwave simulation/spi_tb.fst \
 			 spi_tb.gtkw
+
+clean:
+	@rm -rf simulation
+	@echo Cleaned
