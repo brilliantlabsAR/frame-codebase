@@ -120,7 +120,7 @@ initial begin
     // Test chip ID
     #8
     spi_select_in <= 0;    
-    send_byte('hA0);
+    send_byte('hDB);
     send_byte('hFF);
     spi_select_in <= 1;    
     #8
@@ -129,8 +129,8 @@ initial begin
     #8
     spi_select_in <= 0;    
     send_byte('hB5);
-    send_byte('hFF);
     send_byte('h00);
+    send_byte('hFF);
     send_byte('h00);
     send_byte('h00);
     spi_select_in <= 1;    

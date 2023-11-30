@@ -10,7 +10,7 @@
  */
 
 module spi_register_chip_id #(
-    parameter CHIP_ID = 'hF1
+    parameter CHIP_ID = 'h81
 )(
     input logic system_clock,
     input logic enable,

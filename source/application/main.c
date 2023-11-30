@@ -329,13 +329,13 @@ static void hardware_setup(bool *factory_reset)
         spi_write(FPGA, fpga_exit_programming_mode, 4, false);
         nrfx_systick_delay_ms(200);
 
-        uint8_t fpga_chip_id[1] = {0x00};
+        uint8_t fpga_chip_id[1] = {0xDB};
         spi_write(FPGA, fpga_chip_id, 1, true);
         spi_read(FPGA, fpga_chip_id, 1, false);
 
         if (not_real_hardware == false)
         {
-            if (fpga_chip_id[0] != 0xAA)
+            if (fpga_chip_id[0] != 0x81)
             {
                 error_with_message("FPGA not found");
             }

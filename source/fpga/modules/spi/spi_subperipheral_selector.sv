@@ -29,7 +29,7 @@ module spi_subperipheral_selector (
         
         if (address_in_valid) begin
             case (address_in)
-            'hA0: begin
+            'hDB: begin
                 peripheral_data_out = subperipheral_1_data_in;
                 peripheral_data_out_valid = subperipheral_1_data_in_valid;
                 subperipheral_1_enable_out = 1;
