@@ -164,8 +164,8 @@ static struct lfs_config cfg = {
 lfs_file_t *fs_file_open(const char *file_name, int mode)
 {
     static lfs_file_t f;
-    lfs_file_open(&lfs, &f, file_name, mode);
-    return &f;
+    int err = lfs_file_open(&lfs, &f, file_name, mode);
+    return err == 0 ? &f : NULL;
 }
 int fs_file_close(lfs_file_t *file)
 {
