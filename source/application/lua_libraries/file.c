@@ -256,10 +256,10 @@ static int lua_file_open(lua_State *L)
   switch (m[0])
   {
   case 'a':
-    md = LFS_O_APPEND;
+    md = LFS_O_APPEND | LFS_O_CREAT;
     break;
   case 'w':
-    md = LFS_O_RDWR;
+    md = LFS_O_RDWR | LFS_O_CREAT;
     break;
   default:
     md = LFS_O_RDONLY;
@@ -268,7 +268,7 @@ static int lua_file_open(lua_State *L)
   p->f = fs_file_open(filename, md);
   if (p->f == NULL)
   {
-    luaL_error(L, "can not open file %s", filename);
+    luaL_error(L, "cannot open file %s", filename);
     return 1;
   }
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
