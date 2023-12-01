@@ -22,37 +22,21 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-BUILD := ../../build
-
-fpga_application.h: $(shell find . | egrep '.sv|.pdc')
-	@mkdir -p $(BUILD)
-
-	@iverilog \
-		-Wall \
-		-g2012 \
-		-o /dev/null \
-		-i top.sv
-
-	@yosys \
-		-p "synth_nexus \
-		-json $(BUILD)/fpga_application.json" \
-		top.sv
-
-	@nextpnr-nexus \
-		--device LIFCL-17-7UWG72 \
-		--pdc fpga_pinout.pdc \
-		--json $(BUILD)/fpga_application.json \
-		--fasm $(BUILD)/fpga_application.fasm
-
-	@prjoxide pack $(BUILD)/fpga_application.fasm $(BUILD)/fpga_application.bit
+default:
+	@mkdir -p simulation
 	
-	@xxd \
-		-name fpga_application \
-	    -include $(BUILD)/fpga_application.bit \
-		$(BUILD)/fpga_application_temp.h
+	@iverilog -Wall \
+			  -g2012 \
+			  -I fpga \
+			  -o simulation/spi_tb.out \
+			  -i spi_tb.sv
+	
+	@vvp simulation/spi_tb.out \
+		 -fst
 
-	@sed '1s/^/const /' $(BUILD)/fpga_application_temp.h > fpga_application.h
+	@gtkwave simulation/spi_tb.fst \
+			 spi_tb.gtkw
 
 clean:
-	@rm fpga_application.h
+	@rm -rf simulation
 	@echo Cleaned

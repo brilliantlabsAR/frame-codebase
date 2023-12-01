@@ -12,8 +12,6 @@ FPGA architecture for Frame.
 
 | Address | Function                   | Description | 
 |:-------:|----------------------------|-------------|
-| 0x00    | GET_CHIP_ID                | Returns the chip ID value.<br>**Read: <0xAA>**
-| 0x01    | GET_BINARY_VERSION         | Returns the build date as a 12 character string.<br>**Read: "v23.124.1300"**
 | 0x10    | GRAPHICS_ASSIGN_COLOR      | Assigns a color to one of the 16 color palette slots. Color should be provided as a 24bit value, but will be internally converted to RGB565 16bit format.<br>**Write: <palette-index[7:0]>**<br>**Write: <color[23:0]>**
 | 0x11    | GRAPHICS_MOVE_PEN          | Moves the drawing pen to a specified absolute co-ordinate.<br>**Write: <x-pos[15:0]>**<br>**Write: <y-pos[15:0]>**
 | 0x12    | GRAPHICS_MOVE_PEN_FAST     | Moves the drawing pen from the current pen position.<br>**Write: <x-distance[7:0]>**<br>**Write: <y-distance[7:0]>**
@@ -28,6 +26,7 @@ FPGA architecture for Frame.
 | 0x21    | CAMERA_READ_FIFO           | Reads a number of bytes from the FIFO.<br>**Read: <bytes-available[23:0]>**<br>**Read: <data[...]>**
 | 0x23    | CAMERA_CROP                | Sets the crop limits for the camera's captured image.<br>**Write: <left-crop[15:0]>**<br>**Write: <right-crop[15:0]>**<br>**Write: <top-crop[15:0]>**<br>**Write: <bottom-crop[15:0]>**
 | 0x24    | CAMERA_COMPRESSION_FACTOR  | Sets the compression factor for the JPEG encoder.<br>**Write: <factor[7:0]>**
+| 0xDB    | GET_CHIP_ID                | Returns the chip ID value.<br>**Read: <0x81>**
 
 ## Graphics Pipeline
 
