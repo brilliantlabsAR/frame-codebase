@@ -126,7 +126,7 @@ FLAGS += \
 	-I$(LIBRARIES)/nrf5sdk/log/src \
 	-I$(LIBRARIES)/nrf5sdk/mem_manager \
 	-I$(LIBRARIES)/nrf5sdk/memobj \
-	-I$(LIBRARIES)/nrf5sdk/micro-ecc/micro-ecc \
+	-I$(LIBRARIES)/nrf5sdk/micro-ecc \
 	-I$(LIBRARIES)/nrf5sdk/mutex \
 	-I$(LIBRARIES)/nrf5sdk/nano-pb \
 	-I$(LIBRARIES)/nrf5sdk/queue \
@@ -208,7 +208,7 @@ FLAGS += \
 LINKED_LIBRARIES += \
 	-lc \
 	-lgcc \
-  	$(LIBRARIES)/nrf5sdk/micro-ecc/nrf52hf_armgcc/armgcc/micro_ecc_lib_nrf52.a \
+  	$(LIBRARIES)/nrf5sdk/micro-ecc/micro_ecc_lib_nrf52hf_armgcc.a \
 
 $(BUILD)/bootloader.hex: $(C_FILES)
 	@mkdir -p $(BUILD)
