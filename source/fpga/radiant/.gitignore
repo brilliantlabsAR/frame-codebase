@@ -1,0 +1,10 @@
+# Build output
+/frame
+
+# Logs and reports
+*.log
+*.html
+
+# Temporary and backup files
+.recovery
+*.bak
