@@ -171,9 +171,9 @@ int fs_file_close(lfs_file_t *file)
 {
     return lfs_file_close(&lfs, file);
 };
-int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l)
+int32_t fs_file_write(lfs_file_t *file, const char *content)
 {
-    int32_t err = lfs_file_write(&lfs, file, content, l);
+    int32_t err = lfs_file_write(&lfs, file, content, strlen(content));
     if (err >= 0)
     {
         check_error(lfs_file_sync(&lfs, file));
@@ -195,6 +195,66 @@ int fs_file_remove(const char *path)
 int fs_file_raname(const char *oldpath, const char *newpath)
 {
     return lfs_rename(&lfs, oldpath, newpath);
+}
+int fs_dir_mkdir(const char *path)
+{
+    return lfs_mkdir(&lfs, path);
+}
+lfs_dir_t *fs_dir_open(const char *path)
+{
+    static lfs_dir_t dir;
+    int err = lfs_dir_open(&lfs, &dir, path);
+    if (err < 0)
+    {
+        LOG(" error 1");
+        return NULL;
+    }
+    return &dir;
+}
+int fs_dir_close(lfs_dir_t *dir)
+{
+    return lfs_dir_close(&lfs, dir);
+}
+int fs_dir_read(lfs_dir_t *dir, struct lfs_info *info)
+{
+    return lfs_dir_read(&lfs, dir, info);
+}
+int fs_dir_listdir(const char *path)
+{
+
+    static lfs_dir_t dir;
+    int err = lfs_dir_open(&lfs, &dir, path);
+    if (err < 0)
+    {
+        LOG(" error 1");
+        return err;
+    }
+
+    struct lfs_info info;
+
+    while (lfs_dir_read(&lfs, &dir, &info) > 0)
+    {
+        // Check if the entry belongs to a file in the specified directory
+        // if (info.name== "." && strncmp(info.name, "..", LFS_NAME_MAX) != 0)
+        // {
+        // Process the file info as needed
+        LOG(" name %s", info.name);
+        LOG(" type %02x", info.type);
+        LOG(" size %ld", info.size);
+        // }
+        LOG(" loop");
+    }
+    LOG(" loop finished");
+    return -1;
+    // err = lfs_dir_read(&lfs, &dir, info);
+    // if (err < 0)
+    // {
+    //     LOG(" error 2");
+    //     return err;
+    // }
+    // LOG(" name %s", &info->name);
+    // LOG(" type %02x", info->type);
+    // LOG(" size %ld", info->size);
 }
 
 void testfile()
@@ -220,7 +280,7 @@ void testapi()
     const char *p = "the quick brown fox jumps over the lazy dog. _ complete";
     const char *filename = "main.lua";
     lfs_file_t *f = fs_file_open(filename, LFS_O_RDWR | LFS_O_CREAT);
-    LOG(" write  %ld", fs_file_write(f, p, 56));
+    LOG(" write  %ld", fs_file_write(f, p));
     LOG(" close  %d", fs_file_close(f));
     char ch[1000] = {0};
     lfs_file_t *fr = fs_file_open("main.lua", LFS_O_RDWR | LFS_O_CREAT);

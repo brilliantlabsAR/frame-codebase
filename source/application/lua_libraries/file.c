@@ -36,8 +36,8 @@
 
 typedef struct lua_File_Stream
 {
-  lfs_file_t *f;        /* stream (NULL for incompletely created streams) */
-  lua_CFunction closef; /* to close stream (NULL for closed streams) */
+  lfs_file_t *f;
+  lua_CFunction closef;
 } lua_File_Stream;
 #define tolstream(L) ((lua_File_Stream *)luaL_checkudata(L, 1, LUA_FILEHANDLE))
 
@@ -72,22 +72,9 @@ static int g_write(lua_State *L, lfs_file_t *f, int arg)
   int status = 1;
   for (; nargs--; arg++)
   {
-    // if (lua_type(L, arg) == LUA_TNUMBER)
-    // {
-    //   /* optimization: could be done exactly as for strings */
-    //   // int len = lua_isinteger(L, arg)
-    //   //               ? fprintf(f, LUA_INTEGER_FMT,
-    //   //                         (LUAI_UACINT)lua_tointeger(L, arg))
-    //   //               : fprintf(f, LUA_NUMBER_FMT,
-    //   //                         (LUAI_UACNUMBER)lua_tonumber(L, arg));
-    //   // status = status && (len > 0);
-    // }
-    // else
-    // {
     size_t l;
     const char *s = luaL_checklstring(L, arg, &l);
-    status = status && (fs_file_write(f, s, l) == l);
-    // }
+    status = status && (fs_file_write(f, s) == l);
   }
   if (luai_likely(status))
     return 1; /* file handle already on stack top */
@@ -201,24 +188,7 @@ static int file_handler_write(lua_State *L)
   lua_pushvalue(L, 1); /* push file at the stack top (to be returned) */
   return g_write(L, tofile(L), 2);
 }
-// static int lua_file_open(lua_State *L)
-// {
-//     if (lua_gettop(L) > 2 || lua_gettop(L) == 0)
-//     {n
-//         return luaL_error(L, "expected 1 or 2 arguments");
-//     }
-//     luaL_checkstring(L, 1);
-//     if (lua_gettop(L) == 2)
-//     {
-//         luaL_checkstring(L, 2);
-//     }
-//     char file_name[FS_NAME_MAX];
-//     sscanf(lua_tostring(L, 1), "%s", &file_name[0]);
-//     lua_settop(L, 2);
-//     fs_file_write(&file_name[0]);
-//     lua_pushcfunction(L, lua_file_write);
-//     return 1;
-// }
+
 static int file_handler_close(lua_State *L)
 {
   lua_File_Stream *p = tolstream(L);
@@ -232,13 +202,6 @@ static lua_File_Stream *newfile(lua_State *L)
   p->closef = &file_handler_close;
   luaL_setmetatable(L, LUA_FILEHANDLE);
   return p;
-}
-static void opencheck(lua_State *L, const char *fname, const char *mode)
-{
-  lua_File_Stream *p = newfile(L);
-  p->f = fs_file_open(fname, LFS_O_RDONLY);
-  if (p->f == NULL)
-    luaL_error(L, "cannot open file '%s'", fname);
 }
 
 static int file_handler_read(lua_State *L)
@@ -272,24 +235,6 @@ static int lua_file_open(lua_State *L)
     return 1;
   }
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
-}
-static int g_iofile(lua_State *L, const char *f, const char *mode)
-{
-  if (!lua_isnoneornil(L, 1))
-  {
-    const char *filename = lua_tostring(L, 1);
-    if (filename)
-      opencheck(L, filename, mode);
-    else
-    {
-      tofile(L); /* check that it's a valid file handle */
-      lua_pushvalue(L, 1);
-    }
-    lua_setfield(L, LUA_REGISTRYINDEX, f);
-  }
-  /* return current value */
-  lua_getfield(L, LUA_REGISTRYINDEX, f);
-  return 1;
 }
 
 static int io_readline(lua_State *L)
@@ -365,10 +310,6 @@ static int lua_file_read(lua_State *L)
 {
   return g_read(L, getiofile(L, IO_INPUT), 1);
 }
-static int lua_file_input(lua_State *L)
-{
-  return g_iofile(L, IO_INPUT, "r");
-}
 static int lua_file_close(lua_State *L)
 {
   if (lua_isnone(L, 1))                            /* no argument? */
@@ -386,6 +327,40 @@ static int lua_file_rename(lua_State *L)
   const char *fromname = luaL_checkstring(L, 1);
   const char *toname = luaL_checkstring(L, 2);
   return luaL_fileresult(L, fs_file_raname(fromname, toname) == 0, NULL);
+}
+static int lua_file_mkdir(lua_State *L)
+{
+  const char *path = luaL_checkstring(L, 1);
+  return luaL_fileresult(L, fs_dir_mkdir(path) == 0, NULL);
+}
+static int lua_file_listdir(lua_State *L)
+{
+  const char *path = luaL_checkstring(L, 1);
+  lfs_dir_t *dir = fs_dir_open(path);
+  struct lfs_info info;
+  int num = 0;
+  while (fs_dir_read(dir, &info) > 0)
+  {
+    lua_newtable(L);
+
+    lua_pushstring(L, "size");
+    lua_pushinteger(L, info.size);
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "type");
+    lua_pushinteger(L, info.type);
+    lua_settable(L, -3);
+    lua_pushstring(L, "name");
+    lua_pushstring(L, info.name);
+    lua_settable(L, -3);
+
+    LOG(" name %s", info.name);
+    LOG(" type %02x", info.type);
+    LOG(" size %ld", info.size);
+    num++;
+  }
+  // fs_dir_close(dir);
+  return num;
 }
 /*
 ** metamethods for file handles
@@ -435,8 +410,12 @@ void lua_open_file_library(lua_State *L)
 
   lua_pushcfunction(L, lua_file_rename);
   lua_setfield(L, -2, "rename");
-  // lua_pushcfunction(L, lua_file_input);
-  // lua_setfield(L, -2, "input");
+
+  lua_pushcfunction(L, lua_file_listdir);
+  lua_setfield(L, -2, "listdir");
+
+  lua_pushcfunction(L, lua_file_mkdir);
+  lua_setfield(L, -2, "mkdir");
 
   lua_setfield(L, -2, "file");
   lua_pop(L, 1);

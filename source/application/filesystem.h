@@ -27,7 +27,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "lfs.h"
-
 #define FS_NAME_MAX (0x100)
 #define FS_FILE_MAX (0x10000)
 
@@ -47,7 +46,7 @@ lfs_file_t *fs_file_open(const char *filename, int mode);
 
 int fs_file_close(lfs_file_t *file);
 
-int32_t fs_file_write(lfs_file_t *file, const char *content, size_t l);
+int32_t fs_file_write(lfs_file_t *file, const char *content);
 
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l);
 
@@ -56,3 +55,8 @@ int32_t fs_file_seek(lfs_file_t *file, long off, int whence);
 int fs_file_remove(const char *path);
 
 int fs_file_raname(const char *oldpath, const char *newpath);
+int fs_dir_mkdir(const char *path);
+lfs_dir_t *fs_dir_open(const char *path);
+int fs_dir_listdir(const char *path);
+int fs_dir_read(lfs_dir_t *dir, struct lfs_info *info);
+int fs_dir_close(lfs_dir_t *dir);
