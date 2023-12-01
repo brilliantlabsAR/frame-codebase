@@ -1,5 +1,15 @@
 # Build output
 /frame
+/frame_tcr*
+.ng_run_manager.ini
+.setting.ini
+reportview.xml
+
+# Generated files
+/pll_ip/*
+!/pll_ip/*.xml
+!/pll_ip/*.cfg
+!/pll_ip/*.ipx
 
 # Logs and reports
 *.log
