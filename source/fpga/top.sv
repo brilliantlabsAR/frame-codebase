@@ -8,13 +8,14 @@
  *
  * Copyright © 2023 Brilliant Labs Limited
  */
-
+`ifdef YOSYS
 `include "modules/camera/camera.sv"
 `include "modules/graphics/display.sv"
 `include "modules/spi/spi_peripheral.sv"
 `include "modules/spi/spi_subperipheral_selector.sv"
 `include "modules/spi/registers/chip_id.sv"
 `include "modules/spi/registers/version_string.sv"
+`endif
 
 module top (
     input logic spi_select_in,

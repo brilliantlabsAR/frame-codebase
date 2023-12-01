@@ -33,7 +33,7 @@ module spi_register_version_string (
         else begin
 
             if (last_data_in_valid == 0 & data_in_valid) begin
-                byte_counter++;
+                byte_counter <= byte_counter + 1;
             end
 
             case (byte_counter)

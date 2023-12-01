@@ -100,7 +100,7 @@ always_ff @(posedge system_clock) begin
             end
 
             else begin
-                spi_bit_index--;
+                spi_bit_index <= spi_bit_index - 1;
             end
 
         end
