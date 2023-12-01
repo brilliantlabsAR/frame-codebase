@@ -12,16 +12,17 @@
 module spi_register_chip_id #(
     parameter CHIP_ID = 'h81
 )(
-    input logic system_clock,
+    input logic clock,
+    input logic reset_n,
     input logic enable,
     
     output logic [7:0] data_out,
     output logic data_out_valid
 );
 
-    always_ff @(posedge system_clock) begin
+    always_ff @(posedge clock) begin
         
-        if (enable == 0) begin
+        if (enable == 0 | reset_n == 0) begin
             data_out_valid <= 0;
         end
 
