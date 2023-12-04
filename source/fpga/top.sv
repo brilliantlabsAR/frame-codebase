@@ -8,16 +8,17 @@
  *
  * Copyright © 2023 Brilliant Labs Limited
  */
+
 `ifndef RADIANT
 `include "modules/camera/camera.sv"
 `include "modules/graphics/display.sv"
+`include "modules/pll/pll_wrapper.sv"
 `include "modules/reset/reset_global.sv"
 `include "modules/reset/reset_sync.sv"
 `include "modules/spi/registers/chip_id.sv"
 `include "modules/spi/registers/version_string.sv"
 `include "modules/spi/spi_peripheral.sv"
 `include "modules/spi/spi_subperipheral_selector.sv"
-`include "radiant/pll_ip/rtl/pll_ip.v"
 `endif
 
 module top (
@@ -61,16 +62,19 @@ OSCA #(
     .HFCLKOUT(clock_18MHz_oscillator)
 );
 
-pll_ip pll_ip (
+pll_wrapper pll_wrapper (
     .clki_i(clock_18MHz_oscillator),
     .clkop_o(clock_24MHz),
     .clkos_o(clock_36MHz),
     .clkos2_o(clock_72MHz),
     .clkos3_o(clock_50MHz),
-    .clkos4_o(),
-    .clkos5_o(),
     .lock_o(pll_locked)
 );
+
+assign display_y0 = clock_24MHz;
+assign display_y1 = clock_36MHz;
+assign display_y2 = clock_72MHz;
+assign display_y3 = clock_50MHz;
 
 // Reset
 logic global_reset_n;
@@ -113,7 +117,7 @@ logic subperipheral_2_cipo_valid;
 
 spi_peripheral spi_peripheral (
     .clock(clock_72MHz),
-	.reset_n(reset_n_clock_72MHz),
+    .reset_n(reset_n_clock_72MHz),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -145,7 +149,7 @@ spi_subperipheral_selector spi_subperipheral_selector (
 
 spi_register_chip_id spi_register_chip_id (
     .clock(clock_72MHz),
-	.reset_n(reset_n_clock_72MHz),
+    .reset_n(reset_n_clock_72MHz),
     .enable(subperipheral_1_enable),
 
     .data_out(subperipheral_1_cipo),
