@@ -53,7 +53,6 @@ int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l);
 int32_t fs_file_seek(lfs_file_t *file, long off, int whence);
 
 int fs_file_remove(const char *path);
-
 int fs_file_raname(const char *oldpath, const char *newpath);
 int fs_dir_mkdir(const char *path);
 lfs_dir_t *fs_dir_open(const char *path);

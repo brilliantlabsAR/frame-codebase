@@ -208,6 +208,23 @@ static int file_handler_read(lua_State *L)
 {
   return g_read(L, tofile(L), 2);
 }
+int create_dir_recursive(const char *path)
+{
+  char *dir;
+  int err = 0;
+  char *pathCopy = strdup(path);
+  dir = strtok(pathCopy, "/");
+  char currentPath[256] = "/";
+  while (dir != NULL)
+  {
+    strcat(currentPath, dir);
+
+    err = fs_dir_mkdir(currentPath);
+    strcat(currentPath, "/");
+    dir = strtok(NULL, "/");
+  }
+  return err;
+}
 static int lua_file_open(lua_State *L)
 {
   const char *filename = luaL_checkstring(L, 1);
@@ -329,39 +346,37 @@ static int lua_file_rename(lua_State *L)
   return luaL_fileresult(L, fs_file_raname(fromname, toname) == 0, NULL);
 }
 static int lua_file_mkdir(lua_State *L)
+
 {
   const char *path = luaL_checkstring(L, 1);
-  return luaL_fileresult(L, fs_dir_mkdir(path) == 0, NULL);
+  return luaL_fileresult(L, create_dir_recursive(path) == 0, NULL);
 }
 static int lua_file_listdir(lua_State *L)
 {
   const char *path = luaL_checkstring(L, 1);
   lfs_dir_t *dir = fs_dir_open(path);
   struct lfs_info info;
-  int num = 0;
+  int i = 0;
+  lua_newtable(L);
   while (fs_dir_read(dir, &info) > 0)
   {
     lua_newtable(L);
 
-    lua_pushstring(L, "size");
     lua_pushinteger(L, info.size);
-    lua_settable(L, -3);
+    lua_rawseti(L, -2, 0);
 
-    lua_pushstring(L, "type");
     lua_pushinteger(L, info.type);
-    lua_settable(L, -3);
-    lua_pushstring(L, "name");
-    lua_pushstring(L, info.name);
-    lua_settable(L, -3);
+    lua_rawseti(L, -2, 1);
 
-    LOG(" name %s", info.name);
-    LOG(" type %02x", info.type);
-    LOG(" size %ld", info.size);
-    num++;
+    lua_pushstring(L, info.name);
+    lua_rawseti(L, -2, 2);
+
+    lua_rawseti(L, -2, ++i);
   }
-  // fs_dir_close(dir);
-  return num;
+  fs_dir_close(dir);
+  return 1;
 }
+
 /*
 ** metamethods for file handles
 */

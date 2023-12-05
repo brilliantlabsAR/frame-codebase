@@ -33,9 +33,31 @@
 #include "nrfx_log.h"
 
 lua_State *globalL = NULL;
-
+#define MAX_BUFFER_SIZE 255
+static char print_buff[MAX_BUFFER_SIZE];
 static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
+static volatile size_t current_buff_length = 0;
+void handle_prints(const char *s, size_t l)
+{
+    LOG(" output %s", s);
+    if ((current_buff_length + l) >= MAX_BUFFER_SIZE)
+    {
+        send_buffer();
+    }
+    for (size_t i = 0; i < l; i++)
+    {
+        print_buff[current_buff_length + i] = s[i];
+    }
+    current_buff_length += l;
+}
+void send_buffer()
+{
+    LOG(" output send  %s", print_buff);
+    bluetooth_send_data((uint8_t *)&print_buff[0], current_buff_length);
+    memset(print_buff, 0, MAX_BUFFER_SIZE);
 
+    current_buff_length = 0;
+}
 void lua_write_to_repl(uint8_t *buffer, uint8_t length)
 {
     // Loop copy because memcpy isn't compatible with volatile
@@ -120,8 +142,9 @@ void run_lua(void)
             strcpy(local_repl_buffer, (char *)repl_buffer);
             repl_buffer[0] = 0;
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
-
+            memset(print_buff, 0, MAX_BUFFER_SIZE);
             status = luaL_dostring(L, (char *)local_repl_buffer);
+            send_buffer();
         }
         else
         {

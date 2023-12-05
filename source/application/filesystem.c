@@ -174,10 +174,11 @@ int fs_file_close(lfs_file_t *file)
 int32_t fs_file_write(lfs_file_t *file, const char *content)
 {
     int32_t err = lfs_file_write(&lfs, file, content, strlen(content));
-    if (err >= 0)
-    {
-        check_error(lfs_file_sync(&lfs, file));
-    }
+    // do we need reflect to  reflact on flash  at every write
+    // if (err >= 0)
+    // {
+    //     check_error(lfs_file_sync(&lfs, file));
+    // }
     return err;
 };
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l)
@@ -198,18 +199,18 @@ int fs_file_raname(const char *oldpath, const char *newpath)
 }
 int fs_dir_mkdir(const char *path)
 {
-    return lfs_mkdir(&lfs, path);
+    int err = lfs_mkdir(&lfs, path);
+    if (err >= 0)
+    {
+        // check_error(lfs_fo(&lfs, file));
+    }
+    return err;
 }
 lfs_dir_t *fs_dir_open(const char *path)
 {
     static lfs_dir_t dir;
     int err = lfs_dir_open(&lfs, &dir, path);
-    if (err < 0)
-    {
-        LOG(" error 1");
-        return NULL;
-    }
-    return &dir;
+    return err >= 0 ? &dir : NULL;
 }
 int fs_dir_close(lfs_dir_t *dir)
 {
@@ -278,12 +279,14 @@ void testfile()
 void testapi()
 {
     const char *p = "the quick brown fox jumps over the lazy dog. _ complete";
-    const char *filename = "main.lua";
+    const char *filename = "test/main.lua";
+    fs_dir_mkdir("test");
+    fs_dir_close(fs_dir_open("test"));
     lfs_file_t *f = fs_file_open(filename, LFS_O_RDWR | LFS_O_CREAT);
     LOG(" write  %ld", fs_file_write(f, p));
     LOG(" close  %d", fs_file_close(f));
     char ch[1000] = {0};
-    lfs_file_t *fr = fs_file_open("main.lua", LFS_O_RDWR | LFS_O_CREAT);
+    lfs_file_t *fr = fs_file_open(filename, LFS_O_RDWR | LFS_O_CREAT);
     LOG(" read %ld", fs_file_read(fr, &ch[0], 1000));
     LOG(" close  %d", fs_file_close(fr));
     // LOG(" main.lua \nexpected =  %s\nread =  %s", p, &rd[0]);
@@ -294,7 +297,8 @@ void filesystem_setup(bool factory_reset)
 {
 
     cfg.block_size = NRF_FICR->CODEPAGESIZE;
-    cfg.block_count = (empty_flash_end - empty_flash_start) / NRF_FICR->CODEPAGESIZE;
+    // cfg.block_count = ((empty_flash_end - empty_flash_start) / NRF_FICR->CODEPAGESIZE) - 1;
+    cfg.block_count = 20;
     int file_mount_error = lfs_mount(&lfs, &cfg);
     if (factory_reset || file_mount_error != 0)
     {
