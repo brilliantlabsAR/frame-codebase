@@ -7,7 +7,6 @@ reportview.xml
 
 # Generated files
 /pll_ip/*
-!/pll_ip/rtl
 !/pll_ip/*.xml
 !/pll_ip/*.cfg
 !/pll_ip/*.ipx

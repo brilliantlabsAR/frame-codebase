@@ -19,10 +19,10 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-ldc_set_location -site {G14} [get_ports {display_y0}]
-ldc_set_location -site {G15} [get_ports {display_y1}]
-ldc_set_location -site {L13} [get_ports {display_y2}]
-ldc_set_location -site {L14} [get_ports {display_y3}]
+ldc_set_location -site {D10} [get_ports {display_y0}]
+ldc_set_location -site {D9} [get_ports {display_y1}]
+ldc_set_location -site {D7} [get_ports {display_y2}]
+ldc_set_location -site {D8} [get_ports {display_y3}]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports {display_y0}]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports {display_y1}]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS33} [get_ports {display_y2}]
