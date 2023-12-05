@@ -3,7 +3,6 @@ Tests the Frame specific Lua libraries over Bluetooth.
 """
 
 import asyncio
-import sys
 from frameutils import Bluetooth
 
 
@@ -90,14 +89,14 @@ async def main():
     # Bluetooth
     await test.lua_has_length("frame.bluetooth.address()", 17)
 
-    # Send and callback
+    ## Send and callback
     await test.lua_send(
         "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
     )
     await test.data_equal(b"test", b"test")
     await test.lua_send("frame.bluetooth.receive_callback(nil)")
 
-    # MTU size
+    ## MTU size
     max_length = test.max_data_payload()
     await test.lua_equals("frame.bluetooth.max_length()", max_length)
     await test.lua_send("frame.bluetooth.send('123')")
@@ -117,7 +116,7 @@ async def main():
 
     # Microphone
 
-    # Expected sizes for different record options
+    ## Expected sizes for different record options
     await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
     await asyncio.sleep(0.1)
     await test.lua_equals("#frame.microphone.read(512)", "400")
@@ -130,23 +129,23 @@ async def main():
     await asyncio.sleep(0.1)
     await test.lua_equals("#frame.microphone.read(512)", "100")
 
-    # Unexpected parameters
+    ## Unexpected parameters
     await test.lua_error("frame.microphone.record(0, 16000, 8)")
     await test.lua_error("frame.microphone.record(-3, 16000, 8)")
     await test.lua_error("frame.microphone.record(5, 12000, 8)")
     await test.lua_error("frame.microphone.record(5, 16000, 12)")
 
-    # Restarted recording
+    ## Restarted recording
     await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
     await asyncio.sleep(1)
     await test.lua_send("frame.microphone.record(0.0125, 16000, 16)")
     await asyncio.sleep(0.1)
     await test.lua_equals("#frame.microphone.read(512)", "400")
 
-    # Continuous readout
+    ## Continuous readout
     # TODO
 
-    # FIFO overflow
+    ## FIFO overflow
     # TODO
 
     # IMU
@@ -160,12 +159,12 @@ async def main():
 
     # Time functions
 
-    # Delays
+    ## Delays
     await test.lua_send("frame.time.utc(1698756584)")
     await test.lua_send("frame.sleep(2.0)")
     await test.lua_equals("math.floor(frame.time.utc()+0.5)", "1698756586")
 
-    # Date now under different timezones
+    ## Date now under different timezones
     await test.lua_send("frame.time.zone('0:00')")
     await test.lua_equals("frame.time.zone()", "+00:00")
 
@@ -188,12 +187,12 @@ async def main():
     await test.lua_send("frame.time.zone('-3:45')")
     await test.lua_equals("frame.time.zone()", "-03:45")
 
-    # Invalid timezones
+    ## Invalid timezones
     await test.lua_error("frame.time.zone('0:25')")
     await test.lua_error("frame.time.zone('15:00')")
     await test.lua_error("frame.time.zone('-13:00')")
 
-    # Date table from UTC timestamp
+    ## Date table from UTC timestamp
     await test.lua_send("frame.time.zone('+01:00')")
     await test.lua_equals("frame.time.date(1698943733)['second']", "53")
     await test.lua_equals("frame.time.date(1698943733)['minute']", "48")
@@ -207,21 +206,21 @@ async def main():
 
     # System functions
 
-    # Resets
+    ## Resets
     await test.send_reset_signal()
     await asyncio.sleep(1)
     await test.send_reset_signal()
 
-    # Battery level
+    ## Battery level
     await test.lua_equals("frame.battery_level()", "100.0")
 
-    # Cancelling sleep
+    ## Cancelling sleep
     await test.lua_is_type("frame.sleep", "function")
     await test.send_lua("frame.sleep()")
     await asyncio.sleep(1)
     await test.send_break_signal()
 
-    # Preventing sleep
+    ## Preventing sleep
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
     await test.send_lua("frame.sleep()")
@@ -229,13 +228,13 @@ async def main():
     await test.lua_equals("frame.stay_awake()", "true")
     await test.lua_send("frame.stay_awake(false)")
 
-    # Cancelling update
+    ## Cancelling update
     await test.lua_is_type("frame.update", "function")
     await test.send_lua("frame.update()")
     await asyncio.sleep(1)
     await test.send_break_signal()
 
-    # FPGA io
+    # FPGA IO
     # frame.fpga.read()
     # frame.fpga.write()
 
