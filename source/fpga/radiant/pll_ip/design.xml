@@ -26,8 +26,8 @@
                     <ipxact:configurableElementValue referenceId="gui_phasedet_freq">18.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_en_refclk_mon">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_refclk_mon_freq">3P2</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_fbk_mode">INTCLKOS5</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_fbk_mode_disp">INTCLKOS5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_fbk_mode">CLKOS5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_fbk_mode_disp">CLKOS5</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_n_div">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_n_div_disp">20</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_frac_n_div">0</ipxact:configurableElementValue>
@@ -119,7 +119,7 @@
                     <ipxact:configurableElementValue referenceId="CLKI_FREQ">18.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CLKI_DIVIDER_ACTUAL_STR">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FRAC_N_EN">0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="FBK_MODE">INTCLKOS5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FBK_MODE">CLKOS5</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FBCLK_DIVIDER_ACTUAL_STR">20</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="SSC_N_CODE_STR">0b000010100</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="SSC_F_CODE_STR">0b000000000000000</ipxact:configurableElementValue>
