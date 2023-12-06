@@ -174,11 +174,6 @@ int fs_file_close(lfs_file_t *file)
 int32_t fs_file_write(lfs_file_t *file, const char *content)
 {
     int32_t err = lfs_file_write(&lfs, file, content, strlen(content));
-    // do we need reflect to  reflact on flash  at every write
-    // if (err >= 0)
-    // {
-    //     check_error(lfs_file_sync(&lfs, file));
-    // }
     return err;
 };
 int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l)
@@ -220,43 +215,6 @@ int fs_dir_read(lfs_dir_t *dir, struct lfs_info *info)
 {
     return lfs_dir_read(&lfs, dir, info);
 }
-int fs_dir_listdir(const char *path)
-{
-
-    static lfs_dir_t dir;
-    int err = lfs_dir_open(&lfs, &dir, path);
-    if (err < 0)
-    {
-        LOG(" error 1");
-        return err;
-    }
-
-    struct lfs_info info;
-
-    while (lfs_dir_read(&lfs, &dir, &info) > 0)
-    {
-        // Check if the entry belongs to a file in the specified directory
-        // if (info.name== "." && strncmp(info.name, "..", LFS_NAME_MAX) != 0)
-        // {
-        // Process the file info as needed
-        LOG(" name %s", info.name);
-        LOG(" type %02x", info.type);
-        LOG(" size %ld", info.size);
-        // }
-        LOG(" loop");
-    }
-    LOG(" loop finished");
-    return -1;
-    // err = lfs_dir_read(&lfs, &dir, info);
-    // if (err < 0)
-    // {
-    //     LOG(" error 2");
-    //     return err;
-    // }
-    // LOG(" name %s", &info->name);
-    // LOG(" type %02x", info->type);
-    // LOG(" size %ld", info->size);
-}
 
 void testfile()
 {
@@ -297,8 +255,7 @@ void filesystem_setup(bool factory_reset)
 {
 
     cfg.block_size = NRF_FICR->CODEPAGESIZE;
-    // cfg.block_count = ((empty_flash_end - empty_flash_start) / NRF_FICR->CODEPAGESIZE) - 1;
-    cfg.block_count = 20;
+    cfg.block_count = ((empty_flash_end - empty_flash_start) / NRF_FICR->CODEPAGESIZE) - 1;
     int file_mount_error = lfs_mount(&lfs, &cfg);
     if (factory_reset || file_mount_error != 0)
     {

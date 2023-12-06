@@ -37,6 +37,13 @@ lua_State *globalL = NULL;
 static char print_buff[MAX_BUFFER_SIZE];
 static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
 static volatile size_t current_buff_length = 0;
+void send_buffer()
+{
+    bluetooth_send_data((uint8_t *)&print_buff[0], current_buff_length);
+    memset(print_buff, 0, MAX_BUFFER_SIZE);
+
+    current_buff_length = 0;
+}
 void handle_prints(const char *s, size_t l)
 {
     if ((current_buff_length + l) >= MAX_BUFFER_SIZE)
@@ -48,13 +55,6 @@ void handle_prints(const char *s, size_t l)
         print_buff[current_buff_length + i] = s[i];
     }
     current_buff_length += l;
-}
-void send_buffer()
-{
-    bluetooth_send_data((uint8_t *)&print_buff[0], current_buff_length);
-    memset(print_buff, 0, MAX_BUFFER_SIZE);
-
-    current_buff_length = 0;
 }
 void lua_write_to_repl(uint8_t *buffer, uint8_t length)
 {
