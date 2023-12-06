@@ -39,7 +39,6 @@ static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
 static volatile size_t current_buff_length = 0;
 void handle_prints(const char *s, size_t l)
 {
-    LOG(" output %s", s);
     if ((current_buff_length + l) >= MAX_BUFFER_SIZE)
     {
         send_buffer();
@@ -52,7 +51,6 @@ void handle_prints(const char *s, size_t l)
 }
 void send_buffer()
 {
-    LOG(" output send  %s", print_buff);
     bluetooth_send_data((uint8_t *)&print_buff[0], current_buff_length);
     memset(print_buff, 0, MAX_BUFFER_SIZE);
 
@@ -142,9 +140,11 @@ void run_lua(void)
             strcpy(local_repl_buffer, (char *)repl_buffer);
             repl_buffer[0] = 0;
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
-            memset(print_buff, 0, MAX_BUFFER_SIZE);
             status = luaL_dostring(L, (char *)local_repl_buffer);
-            send_buffer();
+            if (status == LUA_OK)
+            {
+                send_buffer();
+            }
         }
         else
         {
@@ -156,6 +156,7 @@ void run_lua(void)
             const char *lua_error = lua_tostring(L, -1);
             lua_writestring(lua_error, strlen(lua_error));
             lua_pop(L, 1);
+            send_buffer();
         }
     }
 
