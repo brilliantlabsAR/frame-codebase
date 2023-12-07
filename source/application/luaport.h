@@ -28,12 +28,12 @@
 #include <stdio.h>
 #include "bluetooth.h"
 #include "nrfx_log.h"
-#define lua_writestring(s, l) handle_prints(s, l)
-#define lua_writeline() handle_prints("\n", 1)
+#define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
+#define lua_writeline()
 #define lua_writestringerror(s, p) printf(s, p)
 
 void lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
 void lua_interrupt(void);
-void handle_prints(const char *s, size_t l);
+
 void run_lua(void);
