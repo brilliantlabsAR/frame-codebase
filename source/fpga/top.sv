@@ -22,28 +22,27 @@
 `endif
 
 module top (
-    input logic spi_select_in,
-    input logic spi_clock_in,
-    input logic spi_data_in,
-    output logic spi_data_out,
+    // input logic spi_select_in,
+    // input logic spi_clock_in,
+    // input logic spi_data_in,
+    // output logic spi_data_out,
 
-    output logic display_clock,
-    output logic display_hsync,
-    output logic display_vsync,
+    // output logic display_clock,
+    // output logic display_hsync,
+    // output logic display_vsync,
     output logic display_y0,
     output logic display_y1,
     output logic display_y2,
-    output logic display_y3,
-    output logic display_cr0,
-    output logic display_cr1,
-    output logic display_cr2,
-    output logic display_cb0,
-    output logic display_cb1,
-    output logic display_cb2,
+    output logic display_y3
+    // output logic display_cr0,
+    // output logic display_cr1,
+    // output logic display_cr2,
+    // output logic display_cb0,
+    // output logic display_cb1,
+    // output logic display_cb2,
 
-    output logic camera_clock
+    // output logic camera_clock
 );
-
 
 // Clocking
 logic clock_18MHz_oscillator;
@@ -76,6 +75,7 @@ assign display_y1 = clock_36MHz;
 assign display_y2 = clock_72MHz;
 assign display_y3 = clock_50MHz;
 
+/*
 // Reset
 logic global_reset_n;
 logic reset_n_clock_72MHz;
@@ -186,5 +186,6 @@ spi_register_version_string spi_register_version_string (
 
 // Camera
 assign camera_clock = clock_24MHz;
+*/
 
 endmodule
