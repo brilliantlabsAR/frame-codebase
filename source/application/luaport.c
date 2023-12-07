@@ -120,6 +120,7 @@ void run_lua(void)
             strcpy(local_repl_buffer, (char *)repl_buffer);
             repl_buffer[0] = 0;
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
+
             status = luaL_dostring(L, (char *)local_repl_buffer);
         }
         else

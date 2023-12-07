@@ -28,6 +28,7 @@
 #include <stdio.h>
 #include "bluetooth.h"
 #include "nrfx_log.h"
+
 #define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
 #define lua_writeline()
 #define lua_writestringerror(s, p) printf(s, p)
