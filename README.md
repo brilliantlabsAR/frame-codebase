@@ -85,3 +85,5 @@ For quickly getting up and running, the accelerators which run on the FPGA are a
     ```sh
     make fpga/fpga_application.h
     ```
+
+To understand more around how the FPGA RTL works. Check the documentation [here](source/fpga/README.md).

@@ -38,6 +38,10 @@ FPGA architecture for Frame.
 
 ![](docs/graphics-drawing-raster-images.drawio.png)
 
+## Camera Pipeline
+
+![Camera capture pipeline for Frame](docs/camera-pipeline-architecture.drawio.png)
+
 ## Licence
 
 Copyright © 2023 Brilliant Labs Limited
