@@ -87,9 +87,11 @@ async def main():
     await test.lua_has_length("frame.GIT_TAG", 7)
 
     # Bluetooth
+
+    ## MAC address
     await test.lua_has_length("frame.bluetooth.address()", 17)
 
-    ## Send and callback
+    ## Send and receive callback
     await test.lua_send(
         "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
     )
@@ -149,12 +151,12 @@ async def main():
     # TODO
 
     # IMU
-    # imu.heading().exactly                 => ±180 degrees
-    # imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
-    # imu.yaw().exactly                     => ±180 degrees
-    # imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
-    # imu.pitch().exactly                   => ±180 degrees
-    # imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
+    # TODO imu.heading().exactly                 => ±180 degrees
+    # TODO imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
+    # TODO imu.yaw().exactly                     => ±180 degrees
+    # TODO imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
+    # TODO imu.pitch().exactly                   => ±180 degrees
+    # TODO imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
     # TODO Tap, double tap?
 
     # Time functions
@@ -220,6 +222,7 @@ async def main():
     await asyncio.sleep(1)
     await test.send_break_signal()
 
+    ## TODO remove delay?
     ## Preventing sleep
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
@@ -228,6 +231,7 @@ async def main():
     await test.lua_equals("frame.stay_awake()", "true")
     await test.lua_send("frame.stay_awake(false)")
 
+    ## TODO remove delay?
     ## Cancelling update
     await test.lua_is_type("frame.update", "function")
     await test.send_lua("frame.update()")
@@ -235,11 +239,12 @@ async def main():
     await test.send_break_signal()
 
     # FPGA IO
-    # frame.fpga.read()
-    # frame.fpga.write()
+    # TODO frame.fpga.read()
+    # TODO frame.fpga.write()
 
     # File handling
     # TODO frame.file.open()
+    await test.lua_send("frame.file.open('test.lua', 'r')")
     # frame.file.read()
     # TODO frame.file.write()
     # TODO frame.file.close()
