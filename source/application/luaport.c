@@ -60,7 +60,7 @@ void lua_interrupt(void)
     lua_sethook(globalL, lua_interrupt_hook, flag, 1);
 }
 
-void run_lua(void)
+void run_lua(bool factory_reset)
 {
     lua_State *L = luaL_newstate();
 
@@ -92,7 +92,8 @@ void run_lua(void)
     lua_open_microphone_library(L);
     // lua_open_imu_library(L);
     lua_open_time_library(L);
-    lua_open_file_library(L);
+
+    lua_open_file_library(L, factory_reset);
 
     // Make sure the above functions cleared up the stack correctly
     if (lua_gettop(L) != 0)

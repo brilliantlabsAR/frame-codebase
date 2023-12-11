@@ -25,37 +25,17 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
-#include "lfs.h"
-#define FS_NAME_MAX (0x100)
-#define FS_FILE_MAX (0x10000)
 
-void filesystem_flash_event_handler(bool success);
+void flash_event_handler(bool success);
 
-void filesystem_flash_erase_page(uint32_t address);
+void flash_erase_page(uint32_t address);
 
-void filesystem_flash_write(uint32_t address,
-                            const uint32_t *data,
-                            size_t length);
+void flash_write(uint32_t address, const uint32_t *data, size_t length);
 
-void filesystem_flash_wait_until_complete(void);
+void flash_wait_until_complete(void);
 
-void filesystem_setup(bool factory_reset);
+void flash_get_info(size_t *page_size, size_t *total_size);
 
-lfs_file_t *fs_file_open(const char *filename, int mode);
-
-int fs_file_close(lfs_file_t *file);
-
-int32_t fs_file_write(lfs_file_t *file, const char *content);
-
-int32_t fs_file_read(lfs_file_t *file, char *buff, size_t l);
-
-int32_t fs_file_seek(lfs_file_t *file, long off, int whence);
-
-int fs_file_remove(const char *path);
-int fs_file_raname(const char *oldpath, const char *newpath);
-int fs_dir_mkdir(const char *path);
-lfs_dir_t *fs_dir_open(const char *path);
-int fs_dir_listdir(const char *path);
-int fs_dir_read(lfs_dir_t *dir, struct lfs_info *info);
-int fs_dir_close(lfs_dir_t *dir);
+uint32_t flash_base_address(void);

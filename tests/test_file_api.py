@@ -82,18 +82,54 @@ async def main():
     test = TestBluetooth()
     await test.initialize()
 
-    # TODO frame.file.open()
+    ## Test all modes (writable, read only, and append)
+    await test.lua_equals("print('hi')", "hi")
+
     await test.lua_send("f=frame.file.open('test.lua', 'w')")
-    await test.lua_send("f:write('test')")
+    await test.lua_send("f:write('test 123')")
     await test.lua_send("f:close()")
+
     await test.lua_send("f=frame.file.open('test.lua', 'r')")
-    await test.lua_equals("f:read()", "test")
+    await test.lua_error("f:write('456')")
+    await test.lua_equals("f:read()", "test 123")
     await test.lua_send("f:close()")
-    # frame.file.read()
-    # TODO frame.file.write()
-    # TODO frame.file.close()
-    # TODO frame.file.remove()
-    # frame.file.rename()
+
+    await test.lua_send("f=frame.file.open('test.lua', 'a')")
+    await test.lua_send("f:write('456')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_equals("f:read()", "test 123456")
+    await test.lua_send("f:close()")
+
+    ## Open with writable should reset file
+    await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    await test.lua_send("f:write('test 789')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_equals("f:read()", "789")
+    await test.lua_send("f:close()")
+
+    ## Prevent operations when file is closed
+    # await test.lua_error("f:read()")
+    # await test.lua_error("f:write('000')")
+    # await test.lua_error("f:close()")
+
+    ## List, rename and delete file
+    await test.lua_equals("frame.file.listdir()", "table")
+    await test.lua_send("file.file.rename('test.lua', 'test2.lua')")
+    await test.lua_send("file.file.rename('test2.lua', 'test3.lua')")
+    await test.lua_equals("frame.file.listdir()", "table")
+    await test.lua_send("frame.file.remove('test3.lua')")
+    await test.lua_error("frame.file.remove('test3.lua')")
+    await test.lua_equals("frame.file.listdir()", "table")
+
+    ## Create and delete directories
+    await test.lua_send("frame.file.mkdir('my_dir1/nested_dir1')")
+    await test.lua_equals("frame.file.listdir('my_dir1')", "table")
+    await test.lua_send("frame.file.remove('my_dir1')")
+    await test.lua_error("frame.file.listdir('my_dir1')")
 
     await test.end()
 

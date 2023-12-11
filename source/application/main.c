@@ -29,7 +29,6 @@
 #include "camera_configuration.h"
 #include "display_configuration.h"
 #include "error_logging.h"
-#include "filesystem.h"
 #include "fpga_application.h"
 #include "i2c.h"
 #include "luaport.h"
@@ -45,7 +44,7 @@
 #include "spi.h"
 
 bool not_real_hardware = false;
-bool stay_awake = false;
+bool stay_awake = true;
 bool force_sleep = false;
 
 static void set_power_rails(bool enable)
@@ -399,10 +398,8 @@ int main(void)
 
     bluetooth_setup(factory_reset);
 
-    filesystem_setup(factory_reset);
-
     while (1)
     {
-        run_lua();
+        run_lua(factory_reset);
     }
 }
