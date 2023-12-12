@@ -181,10 +181,13 @@ static int lua_battery_level(lua_State *L)
 static int lua_fpga_read(lua_State *L)
 {
     luaL_checkinteger(L, 1);
+    uint8_t address = (uint8_t)lua_tointeger(L, 1);
 
-    lua_Integer length = lua_tointeger(L, 1);
+    luaL_checkinteger(L, 2);
+    lua_Integer length = lua_tointeger(L, 2);
     uint8_t *data = malloc(length);
 
+    spi_write(FPGA, &address, 1, true);
     spi_read(FPGA, data, length, false);
     lua_pushlstring(L, (char *)data, length);
     free(data);
@@ -194,11 +197,14 @@ static int lua_fpga_read(lua_State *L)
 
 static int lua_fpga_write(lua_State *L)
 {
-    luaL_checkstring(L, 1);
+    luaL_checkinteger(L, 1);
+    uint8_t address = (uint8_t)lua_tointeger(L, 1);
 
+    luaL_checkstring(L, 2);
     size_t length;
-    const char *data = lua_tolstring(L, 1, &length);
+    const char *data = lua_tolstring(L, 2, &length);
 
+    spi_write(FPGA, &address, 1, true);
     spi_write(FPGA, (uint8_t *)data, length, false);
 
     return 0;
