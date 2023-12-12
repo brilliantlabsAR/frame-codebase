@@ -14,7 +14,7 @@
 `include "../spi_peripheral.sv"
 `include "../spi_subperipheral_selector.sv"
 `include "../registers/chip_id.sv"
-`include "../registers/version_string.sv"
+`include "../registers/loopback.sv"
 
 module spi_tb ();
 
@@ -47,7 +47,8 @@ logic [7:0] subperipheral_2_cipo;
 logic subperipheral_2_cipo_valid;
 
 spi_peripheral spi_peripheral (
-    .system_clock(system_clock),
+    .clock(system_clock),
+    .reset_n(1'b1),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -78,20 +79,12 @@ spi_subperipheral_selector spi_subperipheral_selector (
 );
 
 spi_register_chip_id spi_register_chip_id (
-    .system_clock(system_clock),
+    .clock(system_clock),
+    .reset_n(1'b1),
     .enable(subperipheral_1_enable),
 
     .data_out(subperipheral_1_cipo),
     .data_out_valid(subperipheral_1_cipo_valid)
-);
-
-spi_register_version_string spi_register_version_string (
-    .system_clock(system_clock),
-    .enable(subperipheral_2_enable),
-    .data_in_valid(subperipheral_copi_valid),
-
-    .data_out(subperipheral_2_cipo),
-    .data_out_valid(subperipheral_2_cipo_valid)
 );
 
 task send_byte(
@@ -125,13 +118,11 @@ initial begin
     spi_select_in <= 1;    
     #8
 
-    // Test version string
+    // Test loopback
     #8
     spi_select_in <= 0;    
     send_byte('hB5);
-    send_byte('h00);
-    send_byte('hFF);
-    send_byte('h00);
+    send_byte('h12);
     send_byte('h00);
     spi_select_in <= 1;    
     #8

@@ -35,6 +35,7 @@ logic stable_spi_select_in;
 logic stable_spi_clock_in;
 logic stable_spi_data_in;
 logic last_stable_spi_clock_in;
+logic [7:0] subperipheral_data_in_reg;
 
 integer spi_bit_index;
 
@@ -56,20 +57,26 @@ always_ff @(posedge clock) begin
         spi_bit_index <= 15;
         subperipheral_address_out_valid <= 0;
         subperipheral_data_out_valid <= 0;
+        subperipheral_data_in_reg <= 0;
     end
 
     // Normal operation
     else begin
 
-        // Set output whenever it's ready
+        // Buffer in data to output
         if (subperipheral_data_in_valid) begin
-            spi_data_out <= subperipheral_data_in[spi_bit_index];
+            subperipheral_data_in_reg <= subperipheral_data_in;
+        end
+        
+        // Output data
+        if (spi_bit_index < 8) begin
+            spi_data_out <= subperipheral_data_in_reg[spi_bit_index];
         end
 
         else begin
             spi_data_out <= 0;
         end
-        
+
         // On rising SPI clock, buffer in data
         if (last_stable_spi_clock_in == 0 & stable_spi_clock_in == 1) begin
 

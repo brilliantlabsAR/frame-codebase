@@ -36,7 +36,7 @@ module spi_subperipheral_selector (
                 subperipheral_2_enable_out = 0;
             end 
 
-            'hB5: begin
+            'hDC: begin
                 peripheral_data_out = subperipheral_2_data_in;
                 peripheral_data_out_valid = subperipheral_2_data_in_valid;
                 subperipheral_1_enable_out = 0;

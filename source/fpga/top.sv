@@ -16,7 +16,6 @@
 `include "modules/reset/reset_global.sv"
 `include "modules/reset/reset_sync.sv"
 `include "modules/spi/registers/chip_id.sv"
-`include "modules/spi/registers/version_string.sv"
 `include "modules/spi/spi_peripheral.sv"
 `include "modules/spi/spi_subperipheral_selector.sv"
 `endif
@@ -169,15 +168,6 @@ spi_register_chip_id spi_register_chip_id (
     .data_out_valid(subperipheral_1_cipo_valid)
 );
 
-spi_register_version_string spi_register_version_string (
-    .clock(clock_72MHz),
-	.reset_n(reset_n_clock_72MHz),
-    .enable(subperipheral_2_enable),
-    .data_in_valid(subperipheral_copi_valid),
-
-    .data_out(subperipheral_2_cipo),
-    .data_out_valid(subperipheral_2_cipo_valid)
-);
 
 // Graphics
 display display (
