@@ -22,26 +22,26 @@
 `endif
 
 module top (
-    // input logic spi_select_in,
-    // input logic spi_clock_in,
-    // input logic spi_data_in,
-    // output logic spi_data_out,
+    input logic spi_select_in,
+    input logic spi_clock_in,
+    input logic spi_data_in,
+    output logic spi_data_out,
 
-    // output logic display_clock,
-    // output logic display_hsync,
-    // output logic display_vsync,
+    output logic display_clock,
+    output logic display_hsync,
+    output logic display_vsync,
     output logic display_y0,
     output logic display_y1,
     output logic display_y2,
-    output logic display_y3
-    // output logic display_cr0,
-    // output logic display_cr1,
-    // output logic display_cr2,
-    // output logic display_cb0,
-    // output logic display_cb1,
-    // output logic display_cb2,
+    output logic display_y3,
+    output logic display_cr0,
+    output logic display_cr1,
+    output logic display_cr2,
+    output logic display_cb0,
+    output logic display_cb1,
+    output logic display_cb2,
 
-    // output logic camera_clock
+    output logic camera_clock
 );
 
 // Clocking
@@ -70,12 +70,6 @@ pll_wrapper pll_wrapper (
     .lock_o(pll_locked)
 );
 
-assign display_y0 = clock_24MHz;
-assign display_y1 = clock_36MHz;
-assign display_y2 = clock_72MHz;
-assign display_y3 = clock_50MHz;
-
-/*
 // Reset
 logic global_reset_n;
 logic reset_n_clock_72MHz;
@@ -167,25 +161,24 @@ spi_register_version_string spi_register_version_string (
 );
 
 // Graphics
-// display display (
-//     .clock_in(clock),
-//     .clock_out(display_clock),
-//     .hsync(display_hsync),
-//     .vsync(display_vsync),
-//     .y0(display_y0),
-//     .y1(display_y1),
-//     .y2(display_y2),
-//     .y3(display_y3),
-//     .cr0(display_cr0),
-//     .cr1(display_cr1),
-//     .cr2(display_cr2),
-//     .cb0(display_cb0),
-//     .cb1(display_cb1),
-//     .cb2(display_cb2)
-// );
+display display (
+    .clock_in(clock_50MHz),
+    .clock_out(display_clock),
+    .hsync(display_hsync),
+    .vsync(display_vsync),
+    .y0(display_y0),
+    .y1(display_y1),
+    .y2(display_y2),
+    .y3(display_y3),
+    .cr0(display_cr0),
+    .cr1(display_cr1),
+    .cr2(display_cr2),
+    .cb0(display_cb0),
+    .cb1(display_cb1),
+    .cb2(display_cb2)
+);
 
 // Camera
 assign camera_clock = clock_24MHz;
-*/
 
 endmodule
