@@ -107,14 +107,41 @@ async def main():
     await test.lua_error(f"frame.bluetooth.send(string.rep('a',{max_length + 1}))")
 
     # Display
-    # TODO frame.display.text("string", x, y, {color, alignment})
-    # TODO frame.display.show()
+
+    ## Text
+    await test.lua_send("frame.display.text('Hello there!', 0, 0, 0xFFFFFF)")
+    await test.lua_send("frame.display.text('Red', 100, 100, 0xFF0000)")
+    await test.lua_send("frame.display.text('Green', 200, 200, 0x00FF00)")
+    await test.lua_send("frame.display.text('Blue', 300, 300, 0x0000FF)")
+    await test.lua_send("frame.display.show()")
+    # TODO alignment, move and color
+
+    ## Vectors
+    # TODO
+
+    ## Sprites
+    # TODO
 
     # Camera
-    # TODO camera.output_format(xres, yres, colordepth)
-    # TODO pan and zoom?
-    # TODO camera.capture()
-    # TODO camera.read(bytes)
+
+    ## Capture and read
+    await test.lua_send("frame.camera.wake()")
+    await test.lua_send("frame.sleep(0.5)")
+    await test.lua_send("frame.camera.capture()")
+    await test.lua_equals("frame.camera.bytes_available()", "320000")
+    await test.lua_equals("#frame.camera.read(123)", "123")
+    await test.lua_equals("frame.camera.bytes_available()", "319877")
+    await test.lua_send("frame.camera.capture()")
+    await test.lua_equals("frame.camera.bytes_available()", "320000")
+    await test.lua_send("frame.camera.sleep()")
+    await test.lua_error("frame.camera.capture()")
+    await test.lua_error("frame.camera.read(123)")
+
+    ## Resolution, scale & color format
+    # TODO
+
+    ## Exposure
+    # TODO
 
     # Microphone
 
@@ -151,13 +178,26 @@ async def main():
     # TODO
 
     # IMU
-    # TODO imu.heading().exactly                 => ±180 degrees
-    # TODO imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
-    # TODO imu.yaw().exactly                     => ±180 degrees
-    # TODO imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
-    # TODO imu.pitch().exactly                   => ±180 degrees
-    # TODO imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
-    # TODO Tap, double tap?
+
+    ## Direction
+    await test.lua_send("frame.direction.heading()")
+    await test.lua_send("frame.direction.yaw()")
+    await test.lua_send("frame.direction.pitch()")
+
+    ## Tap callback
+    await test.lua_send(
+        "frame.imu.tap_callback('LEFT', (function(side)print('tapped left')end))"
+    )
+    await test.lua_send(
+        "frame.imu.tap_callback('RIGHT', (function(side)print('tapped right')end))"
+    )
+    await test.lua_send(
+        "frame.imu.tap_callback('EITHER', (function(side)print('tapped '..side)end))"
+    )
+
+    await test.lua_send("frame.imu.tap_callback('LEFT', nil)")
+    await test.lua_send("frame.imu.tap_callback('RIGHT', nil)")
+    await test.lua_send("frame.imu.tap_callback('EITHER', nil)")
 
     # Time functions
 
