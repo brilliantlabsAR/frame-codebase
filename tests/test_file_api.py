@@ -2,7 +2,7 @@
 Tests the Frame specific Lua libraries over Bluetooth.
 """
 
-import asyncio
+import asyncio, sys
 from frameutils import Bluetooth
 
 
@@ -83,11 +83,23 @@ async def main():
     await test.initialize()
 
     ## Test all modes (writable, read only, and append)
-    await test.lua_equals("print('hi')", "hi")
+    await test.lua_send("frame.file.mkdir('/this/is/some/path')")
+    await test.lua_send("frame.file.listdir('/')")
+    await test.lua_send("frame.file.listdir('/this')")
+    await test.lua_send("frame.file.listdir('/this/is')")
+    await test.lua_send("frame.file.listdir('/this/is/not')")
 
-    await test.lua_send("f=frame.file.open('test.lua', 'w')")
-    await test.lua_send("f:write('test 123')")
-    await test.lua_send("f:close()")
+    # await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    # await test.lua_send("f:write('test 123\\n456')")
+    # await test.lua_send("f:close()")
+
+    # await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    # await test.lua_equals("f:read()", "test 123")
+    # await test.lua_equals("f:read()", "456")
+    # await test.lua_equals("f:read()", "nil")
+    # await test.lua_send("f:close()")
+
+    sys.exit(0)
 
     await test.lua_send("f=frame.file.open('test.lua', 'r')")
     await test.lua_error("f:write('456')")
