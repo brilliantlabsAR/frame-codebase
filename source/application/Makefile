@@ -134,10 +134,13 @@ FLAGS += \
 
 # Preprocessor defines
 FLAGS += \
-	-DNRF52840_XXAA \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
+	-DLFS_NO_DEBUG \
+	-DLFS_NO_ERROR \
+	-DLFS_NO_WARN \
 	-DNDEBUG \
+	-DNRF52840_XXAA \
 
 # Linker options
 FLAGS += \
