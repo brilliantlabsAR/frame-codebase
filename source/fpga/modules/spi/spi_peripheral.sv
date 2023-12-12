@@ -10,7 +10,8 @@
  */
 
 module spi_peripheral (
-    input logic system_clock,
+    input logic clock,
+    input logic reset_n,
 
     // External SPI signals
     input logic spi_select_in,
@@ -37,7 +38,7 @@ logic last_stable_spi_clock_in;
 
 integer spi_bit_index;
 
-always_ff @(posedge system_clock) begin
+always_ff @(posedge clock) begin
 
     // Synchronizer
     metastable_spi_select_in <= spi_select_in;
@@ -51,7 +52,7 @@ always_ff @(posedge system_clock) begin
     last_stable_spi_clock_in <= stable_spi_clock_in;
 
     // Reset
-    if (stable_spi_select_in == 1) begin
+    if (stable_spi_select_in == 1 | reset_n == 0) begin
         spi_bit_index <= 15;
         subperipheral_address_out_valid <= 0;
         subperipheral_data_out_valid <= 0;
@@ -100,7 +101,7 @@ always_ff @(posedge system_clock) begin
             end
 
             else begin
-                spi_bit_index--;
+                spi_bit_index <= spi_bit_index - 1;
             end
 
         end
