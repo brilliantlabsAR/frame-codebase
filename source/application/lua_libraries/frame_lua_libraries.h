@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <stdbool.h>
 #include "lua.h"
 
 extern lua_State *globalL;
@@ -33,9 +34,10 @@ void lua_bluetooth_data_interrupt(uint8_t *data, size_t length);
 void lua_open_bluetooth_library(lua_State *L);
 void lua_open_camera_library(lua_State *L);
 void lua_open_display_library(lua_State *L);
-void lua_open_file_library(lua_State *L);
 void lua_open_imu_library(lua_State *L);
 void lua_open_microphone_library(lua_State *L);
 void lua_open_system_library(lua_State *L);
 void lua_open_time_library(lua_State *L);
 void lua_open_version_library(lua_State *L);
+
+void lua_open_file_library(lua_State *L, bool reformat);

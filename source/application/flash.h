@@ -25,16 +25,17 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
-void filesystem_flash_event_handler(bool success);
+void flash_event_handler(bool success);
 
-void filesystem_flash_erase_page(uint32_t address);
+void flash_erase_page(uint32_t address);
 
-void filesystem_flash_write(uint32_t address,
-                            const uint32_t *data,
-                            size_t length);
+void flash_write(uint32_t address, const uint32_t *data, size_t length);
 
-void filesystem_flash_wait_until_complete(void);
+void flash_wait_until_complete(void);
 
-void filesystem_setup(bool factory_reset);
+void flash_get_info(size_t *page_size, size_t *total_size);
+
+uint32_t flash_base_address(void);

@@ -2,7 +2,7 @@
 Tests the Frame specific Lua libraries over Bluetooth.
 """
 
-import asyncio, sys
+import asyncio
 from frameutils import Bluetooth
 
 
@@ -87,9 +87,11 @@ async def main():
     await test.lua_has_length("frame.GIT_TAG", 7)
 
     # Bluetooth
+
+    ## MAC address
     await test.lua_has_length("frame.bluetooth.address()", 17)
 
-    ## Send and callback
+    ## Send and receive callback
     await test.lua_send(
         "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
     )
@@ -105,14 +107,14 @@ async def main():
     await test.lua_error(f"frame.bluetooth.send(string.rep('a',{max_length + 1}))")
 
     # Display
-    ## TODO frame.display.text("string", x, y, {color, alignment})
-    ## TODO frame.display.show()
+    # TODO frame.display.text("string", x, y, {color, alignment})
+    # TODO frame.display.show()
 
     # Camera
-    ## TODO camera.output_format(xres, yres, colordepth)
-    ## TODO pan and zoom?
-    ## TODO camera.capture()
-    ## TODO camera.read(bytes)
+    # TODO camera.output_format(xres, yres, colordepth)
+    # TODO pan and zoom?
+    # TODO camera.capture()
+    # TODO camera.read(bytes)
 
     # Microphone
 
@@ -149,13 +151,13 @@ async def main():
     # TODO
 
     # IMU
-    ## imu.heading().exactly                 => ±180 degrees
-    ## imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
-    ## imu.yaw().exactly                     => ±180 degrees
-    ## imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
-    ## imu.pitch().exactly                   => ±180 degrees
-    ## imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
-    ## TODO Tap, double tap?
+    # TODO imu.heading().exactly                 => ±180 degrees
+    # TODO imu.heading().roughly                 => N, NNE, NE, NEE, E, ...
+    # TODO imu.yaw().exactly                     => ±180 degrees
+    # TODO imu.yaw().roughly                     => LEFT, SLIGHTLY_LEFT, CENTER, ...
+    # TODO imu.pitch().exactly                   => ±180 degrees
+    # TODO imu.pitch().roughly                   => UP, SLIGHTLY_UP, CENTER
+    # TODO Tap, double tap?
 
     # Time functions
 
@@ -220,6 +222,7 @@ async def main():
     await asyncio.sleep(1)
     await test.send_break_signal()
 
+    ## TODO remove delay?
     ## Preventing sleep
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
@@ -228,23 +231,75 @@ async def main():
     await test.lua_equals("frame.stay_awake()", "true")
     await test.lua_send("frame.stay_awake(false)")
 
+    ## TODO remove delay?
     ## Cancelling update
     await test.lua_is_type("frame.update", "function")
     await test.send_lua("frame.update()")
     await asyncio.sleep(1)
     await test.send_break_signal()
 
-    ## FPGA io
-    ## frame.fpga.read()
-    ## frame.fpga.write()
+    # FPGA IO
+    # TODO frame.fpga.read()
+    # TODO frame.fpga.write()
 
     # File handling
-    ## TODO frame.file.open()
-    ## frame.file.read()
-    ## TODO frame.file.write()
-    ## TODO frame.file.close()
-    ## TODO frame.file.remove()
-    ## frame.file.rename()
+
+    ## Test all modes (writable, read only, and append)
+    await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    await test.lua_send("f:write('test 123')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'a')")
+    await test.lua_send("f:write('\\n456')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_error("f:write('789')")
+    await test.lua_equals("f:read()", "test 123")
+    await test.lua_equals("f:read()", "456")
+    await test.lua_equals("f:read()", "nil")
+    await test.lua_send("f:close()")
+
+    # Reopening a file in write mode should erase the file
+    await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    await test.lua_send("f:write('test 789')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_equals("f:read()", "test 789")
+    await test.lua_send("f:close()")
+
+    ## Prevent operations when file is closed
+    await test.lua_error("f:read()")
+    await test.lua_error("f:write('000')")
+    await test.lua_error("f:close()")
+
+    ## List, rename and delete file
+    await test.lua_equals("#frame.file.listdir('/')", "3")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "test.lua")
+    await test.lua_equals("frame.file.listdir('/')[3]['size']", "8")
+    await test.lua_equals("frame.file.listdir('/')[3]['type']", "1")
+    await test.lua_send("frame.file.rename('test.lua', 'test2.lua')")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "test2.lua")
+    await test.lua_send("frame.file.remove('test2.lua')")
+    await test.lua_equals("#frame.file.listdir('/')", "2")
+
+    ## Create and delete directories
+    await test.lua_send("frame.file.mkdir('/this/is/some/path')")
+
+    await test.lua_equals("#frame.file.listdir('/')", "3")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "this")
+    await test.lua_equals("frame.file.listdir('/')[3]['type']", "2")
+
+    await test.lua_send("frame.file.listdir('/this')")
+    await test.lua_send("frame.file.listdir('/this/is')")
+    await test.lua_error("frame.file.listdir('/this/is/not')")
+
+    await test.lua_send("frame.file.remove('/this/is/some/path')")
+    await test.lua_send("frame.file.remove('/this/is/some')")
+    await test.lua_send("frame.file.remove('/this/is')")
+    await test.lua_send("frame.file.remove('/this')")
+    await test.lua_equals("#frame.file.listdir('/')", "2")
 
     # Standard libraries
     await test.lua_equals("math.sqrt(25)", "5.0")

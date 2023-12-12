@@ -27,7 +27,7 @@
 #include "ble.h"
 #include "bluetooth.h"
 #include "error_logging.h"
-#include "filesystem.h"
+#include "flash.h"
 #include "frame_lua_libraries.h"
 #include "luaport.h"
 #include "nrf_nvic.h"
@@ -101,11 +101,11 @@ void SD_EVT_IRQHandler(void)
         switch (evt_id)
         {
         case NRF_EVT_FLASH_OPERATION_SUCCESS:
-            filesystem_flash_event_handler(true);
+            flash_event_handler(true);
             break;
 
         case NRF_EVT_FLASH_OPERATION_ERROR:
-            filesystem_flash_event_handler(false);
+            flash_event_handler(false);
             break;
 
         default:
@@ -329,7 +329,7 @@ void SD_EVT_IRQHandler(void)
             if (ble_evt->evt.gap_evt.params.auth_status.auth_status ==
                 BLE_GAP_SEC_STATUS_SUCCESS)
             {
-                filesystem_flash_write(
+                flash_write(
                     bond_storage,
                     (uint32_t *)&bond.keyset.keys_own.p_enc_key->enc_info,
                     sizeof(bond.keyset.keys_own.p_enc_key->enc_info));
@@ -431,8 +431,8 @@ void bluetooth_setup(bool factory_reset)
 
     if (factory_reset)
     {
-        filesystem_flash_erase_page(bond_storage);
-        filesystem_flash_wait_until_complete();
+        flash_erase_page(bond_storage);
+        flash_wait_until_complete();
     }
 
     // Read stored encryption key from memory

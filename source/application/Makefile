@@ -32,7 +32,7 @@ BUILD := ../../build
 C_FILES += \
 	main.c \
 	bluetooth.c \
-	filesystem.c \
+	flash.c \
 	luaport.c \
 	spi.c \
 	lua_libraries/bluetooth.c \
@@ -47,6 +47,8 @@ C_FILES += \
 	../i2c.c \
 	../startup.c \
 	../syscalls.c \
+	$(LIBRARIES)/littlefs/lfs_util.c \
+	$(LIBRARIES)/littlefs/lfs.c \
 	$(LIBRARIES)/lua/lapi.c \
 	$(LIBRARIES)/lua/lauxlib.c \
 	$(LIBRARIES)/lua/lbaselib.c \
@@ -95,6 +97,7 @@ FLAGS += \
 	-I../fpga \
 	-Ilua_libraries \
 	-I$(LIBRARIES)/cmsis/CMSIS/Core/Include \
+	-I$(LIBRARIES)/littlefs \
 	-I$(LIBRARIES)/lua \
 	-I$(LIBRARIES)/nrfx \
 	-I$(LIBRARIES)/nrfx/drivers/include \
@@ -131,10 +134,13 @@ FLAGS += \
 
 # Preprocessor defines
 FLAGS += \
-	-DNRF52840_XXAA \
 	-DBUILD_VERSION='"$(BUILD_VERSION)"' \
 	-DGIT_COMMIT='"$(GIT_COMMIT)"' \
+	-DLFS_NO_DEBUG \
+	-DLFS_NO_ERROR \
+	-DLFS_NO_WARN \
 	-DNDEBUG \
+	-DNRF52840_XXAA \
 
 # Linker options
 FLAGS += \

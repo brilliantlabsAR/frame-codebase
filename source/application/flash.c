@@ -25,23 +25,25 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "error_logging.h"
+#include "lfs.h"
 #include "main.h"
-#include "nrfx_log.h"
 #include "nrf_soc.h"
+#include "nrfx_log.h"
 
 extern uint32_t __empty_flash_start;
 extern uint32_t __empty_flash_end;
+
 static uint32_t empty_flash_start = (uint32_t)&__empty_flash_start;
 static uint32_t empty_flash_end = (uint32_t)&__empty_flash_end;
 
 static volatile bool flash_is_busy = false;
 
-void filesystem_flash_event_handler(bool success)
+void flash_event_handler(bool success)
 {
     flash_is_busy = false;
 }
 
-void filesystem_flash_erase_page(uint32_t address)
+void flash_erase_page(uint32_t address)
 {
     if (address % NRF_FICR->CODEPAGESIZE)
     {
@@ -52,15 +54,13 @@ void filesystem_flash_erase_page(uint32_t address)
     flash_is_busy = true;
 }
 
-void filesystem_flash_write(uint32_t address,
-                            const uint32_t *data,
-                            size_t length)
+void flash_write(uint32_t address, const uint32_t *data, size_t length)
 {
     check_error(sd_flash_write((uint32_t *)address, data, length));
     flash_is_busy = true;
 }
 
-void filesystem_flash_wait_until_complete(void)
+void flash_wait_until_complete(void)
 {
     // TODO add a timeout
     while (flash_is_busy)
@@ -68,9 +68,13 @@ void filesystem_flash_wait_until_complete(void)
     }
 }
 
-void filesystem_setup(bool factory_reset)
+void flash_get_info(size_t *page_size, size_t *total_size, uint32_t)
 {
-    LOG("Empty flash goes from: 0x%08lX to 0x%08lX",
-        empty_flash_start,
-        empty_flash_end);
+    *page_size = NRF_FICR->CODEPAGESIZE;
+    *total_size = empty_flash_end - empty_flash_start;
+}
+
+uint32_t flash_base_address(void)
+{
+    return empty_flash_start;
 }
