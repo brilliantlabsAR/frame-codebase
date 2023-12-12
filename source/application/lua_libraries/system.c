@@ -32,6 +32,7 @@
 #include "nrf52840.h"
 #include "nrfx_saadc.h"
 #include "pinout.h"
+#include "spi.h"
 
 static int wait_for(lua_State *L, lua_Number seconds)
 {
@@ -177,6 +178,32 @@ static int lua_battery_level(lua_State *L)
     return 1;
 }
 
+static int lua_fpga_read(lua_State *L)
+{
+    luaL_checkinteger(L, 1);
+
+    lua_Integer length = lua_tointeger(L, 1);
+    uint8_t *data = malloc(length);
+
+    spi_read(FPGA, data, length, false);
+    lua_pushlstring(L, (char *)data, length);
+    free(data);
+
+    return 1;
+}
+
+static int lua_fpga_write(lua_State *L)
+{
+    luaL_checkstring(L, 1);
+
+    size_t length;
+    const char *data = lua_tolstring(L, 1, &length);
+
+    spi_write(FPGA, (uint8_t *)data, length, false);
+
+    return 0;
+}
+
 void lua_open_system_library(lua_State *L)
 {
     // Configure ADC
@@ -207,6 +234,20 @@ void lua_open_system_library(lua_State *L)
 
     lua_pushcfunction(L, lua_battery_level);
     lua_setfield(L, -2, "battery_level");
+
+    {
+        lua_newtable(L);
+
+        lua_pushcfunction(L, lua_fpga_read);
+        lua_setfield(L, -2, "read");
+
+        lua_pushcfunction(L, lua_fpga_write);
+        lua_setfield(L, -2, "write");
+
+        lua_setfield(L, -2, "fpga");
+
+        lua_pop(L, 1);
+    }
 
     lua_pop(L, 1);
 }
