@@ -52,6 +52,24 @@ logic clock_72MHz;
 logic clock_50MHz;
 logic pll_locked;
 
+ // TODO remove this once gatecat/prjoxide#44 is solved
+`ifndef RADIANT
+OSCA #(
+    .HF_CLK_DIV("8"), 
+    .HF_OSC_EN("ENABLED"),
+    .LF_OUTPUT_EN("DISABLED")
+    ) osc (
+    .HFOUTEN(1'b1),
+    .HFCLKOUT(clock_18MHz_oscillator) // Actually 50MHz
+);
+
+assign clock_50MHz = clock_18MHz_oscillator;
+assign clock_72MHz = clock_18MHz_oscillator;
+
+always_ff @(posedge clock_50MHz) begin
+    clock_24MHz <= ~clock_24MHz;
+end
+`else
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -69,6 +87,7 @@ pll_wrapper pll_wrapper (
     .clkos3_o(clock_50MHz),
     .lock_o(pll_locked)
 );
+`endif
 
 // Reset
 logic global_reset_n;
