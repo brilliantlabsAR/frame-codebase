@@ -243,13 +243,63 @@ async def main():
     # TODO frame.fpga.write()
 
     # File handling
-    # TODO frame.file.open()
-    await test.lua_send("frame.file.open('test.lua', 'r')")
-    # frame.file.read()
-    # TODO frame.file.write()
-    # TODO frame.file.close()
-    # TODO frame.file.remove()
-    # frame.file.rename()
+
+    ## Test all modes (writable, read only, and append)
+    await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    await test.lua_send("f:write('test 123')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'a')")
+    await test.lua_send("f:write('\\n456')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_error("f:write('789')")
+    await test.lua_equals("f:read()", "test 123")
+    await test.lua_equals("f:read()", "456")
+    await test.lua_equals("f:read()", "nil")
+    await test.lua_send("f:close()")
+
+    # Reopening a file in write mode should erase the file
+    await test.lua_send("f=frame.file.open('test.lua', 'w')")
+    await test.lua_send("f:write('test 789')")
+    await test.lua_send("f:close()")
+
+    await test.lua_send("f=frame.file.open('test.lua', 'r')")
+    await test.lua_equals("f:read()", "test 789")
+    await test.lua_send("f:close()")
+
+    ## Prevent operations when file is closed
+    await test.lua_error("f:read()")
+    await test.lua_error("f:write('000')")
+    await test.lua_error("f:close()")
+
+    ## List, rename and delete file
+    await test.lua_equals("#frame.file.listdir('/')", "3")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "test.lua")
+    await test.lua_equals("frame.file.listdir('/')[3]['size']", "8")
+    await test.lua_equals("frame.file.listdir('/')[3]['type']", "1")
+    await test.lua_send("frame.file.rename('test.lua', 'test2.lua')")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "test2.lua")
+    await test.lua_send("frame.file.remove('test2.lua')")
+    await test.lua_equals("#frame.file.listdir('/')", "2")
+
+    ## Create and delete directories
+    await test.lua_send("frame.file.mkdir('/this/is/some/path')")
+
+    await test.lua_equals("#frame.file.listdir('/')", "3")
+    await test.lua_equals("frame.file.listdir('/')[3]['name']", "this")
+    await test.lua_equals("frame.file.listdir('/')[3]['type']", "2")
+
+    await test.lua_send("frame.file.listdir('/this')")
+    await test.lua_send("frame.file.listdir('/this/is')")
+    await test.lua_error("frame.file.listdir('/this/is/not')")
+
+    await test.lua_send("frame.file.remove('/this/is/some/path')")
+    await test.lua_send("frame.file.remove('/this/is/some')")
+    await test.lua_send("frame.file.remove('/this/is')")
+    await test.lua_send("frame.file.remove('/this')")
+    await test.lua_equals("#frame.file.listdir('/')", "2")
 
     # Standard libraries
     await test.lua_equals("math.sqrt(25)", "5.0")

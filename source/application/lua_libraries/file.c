@@ -113,7 +113,6 @@ static int lfs_api_erase_block(const struct lfs_config *c, lfs_block_t block)
 {
     uint32_t address = flash_base_address() + (block * c->block_size);
 
-    LOG("Erasing block %lu at 0x%lx", block, address);
     flash_erase_page(address);
     flash_wait_until_complete();
 
@@ -142,21 +141,25 @@ typedef struct file_stream_t
     lua_CFunction close_function;
 } file_stream_t;
 
+static void check_if_file_closed(lua_State *L, file_stream_t *stream)
+{
+    if (stream->close_function == NULL)
+    {
+        luaL_error(L, "attempt to use a closed file");
+    }
+}
+
 static int lua_file_close(lua_State *L)
 {
     file_stream_t *stream = (file_stream_t *)luaL_checkudata(L,
                                                              1,
                                                              LUA_FILEHANDLE);
 
-    LOG("Closing file 0x%lx", (uint32_t)&stream->file);
+    check_if_file_closed(L, stream);
 
-    int error = lfs_file_close(&filesystem, &stream->file);
+    check_error(lfs_file_close(&filesystem, &stream->file));
 
-    if (error)
-    {
-        // TODO
-        LOG("file close error %d", error);
-    }
+    stream->close_function = NULL;
 
     return 0;
 }
@@ -165,8 +168,6 @@ static int lua_file_open(lua_State *L)
 {
     const char *filename = luaL_checkstring(L, 1);
     const char *mode = luaL_optstring(L, 2, "r");
-
-    LOG("Opening %s, in %s mode", filename, mode);
 
     file_stream_t *stream =
         (file_stream_t *)lua_newuserdatauv(L, sizeof(file_stream_t), 0);
@@ -185,7 +186,7 @@ static int lua_file_open(lua_State *L)
         lfs_mode_flag = LFS_O_RDWR | LFS_O_CREAT | LFS_O_TRUNC;
         break;
     case 'a':
-        lfs_mode_flag = LFS_O_APPEND | LFS_O_CREAT;
+        lfs_mode_flag = LFS_O_RDWR | LFS_O_APPEND | LFS_O_CREAT;
         break;
     default:
         luaL_error(L, "mode must be 'r', 'w', or 'a'");
@@ -203,8 +204,6 @@ static int lua_file_open(lua_State *L)
         return 1;
     }
 
-    LOG("Opened file 0x%lx", (uint32_t)&stream->file);
-
     return 1;
 }
 
@@ -214,7 +213,7 @@ static int lua_file_read(lua_State *L)
                                                              1,
                                                              LUA_FILEHANDLE);
 
-    LOG("Reading from file 0x%lx", (uint32_t)&stream->file);
+    check_if_file_closed(L, stream);
 
     luaL_Buffer buffer;
     luaL_buffinit(L, &buffer);
@@ -258,7 +257,12 @@ static int lua_file_write(lua_State *L)
                                                              1,
                                                              LUA_FILEHANDLE);
 
-    LOG("Writing to file 0x%lx", (uint32_t)&stream->file);
+    check_if_file_closed(L, stream);
+
+    if ((stream->file.flags & LFS_O_RDWR) == LFS_O_RDONLY)
+    {
+        luaL_error(L, "file opened in read-only mode");
+    }
 
     size_t expected_length;
     const char *string = luaL_checklstring(L, 2, &expected_length);
@@ -272,8 +276,6 @@ static int lua_file_write(lua_State *L)
     {
         luaL_error(L, "error writing to file");
     }
-
-    LOG("Wrote %ld bytes to file", (uint32_t)result);
 
     return 0;
 }
@@ -365,20 +367,36 @@ static int lua_file_listdir(lua_State *L)
 
     struct lfs_info info;
 
-    while (lfs_dir_read(&filesystem, &directory, &info) > 0)
+    while (true)
     {
+        error = lfs_dir_read(&filesystem, &directory, &info);
+
+        if (error == 0)
+        {
+            break;
+        }
+
+        if (error < 0)
+        {
+            luaL_error(L, "error reading from directory");
+        }
+
+        // TODO why do we need this?
+        char temp_name[filesystem.name_max];
+        strcpy(temp_name, info.name);
+
         lua_newtable(L);
 
         lua_pushinteger(L, info.size);
-        lua_rawseti(L, -2, 0);
+        lua_setfield(L, -2, "size");
 
         lua_pushinteger(L, info.type);
-        lua_rawseti(L, -2, 1);
+        lua_setfield(L, -2, "type");
 
-        lua_pushstring(L, info.name);
-        lua_rawseti(L, -2, 2);
+        lua_pushstring(L, temp_name);
+        lua_setfield(L, -2, "name");
 
-        lua_rawseti(L, -2, i++);
+        lua_seti(L, -2, i++);
     }
 
     lfs_dir_close(&filesystem, &directory);
@@ -388,7 +406,7 @@ static int lua_file_listdir(lua_State *L)
 
 static const luaL_Reg meta_methods[] = {
     {"__index", NULL},
-    // TODO
+    // TODO do we need garbage collection?
     // {"__gc", f_gc},
     // {"__close", f_gc},
     {NULL, NULL},
