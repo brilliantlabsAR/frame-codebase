@@ -68,6 +68,7 @@ release:
 
 clean:
 	@rm -rf $(BUILD)
+	@echo Cleaned
 
 flash:
 	@nrfutil device program \

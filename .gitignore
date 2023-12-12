@@ -2,7 +2,7 @@
 build/
 
 # Ignore simulation files
-sim/
+simulation/
 abc.history
 
 # Ignore VSCode user settings

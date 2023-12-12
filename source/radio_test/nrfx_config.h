@@ -24,31 +24,19 @@
 
 #pragma once
 
-#define SEGGER_RTT_MAX_NUM_UP_BUFFERS (1)
+#define NRFX_CONFIG_H__
+#include "templates/nrfx_config_common.h"
 
-#define SEGGER_RTT_MAX_NUM_DOWN_BUFFERS (1)
+#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
+#define NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY 7
+#define NRFX_GPIOTE_ENABLED 1
 
-#define BUFFER_SIZE_UP (512)
+#define NRFX_TIMER_ENABLED 1
+#define NRFX_TIMER0_ENABLED 1
 
-#define BUFFER_SIZE_DOWN (16)
+#define NRFX_SYSTICK_ENABLED 1
 
-#define SEGGER_RTT_MODE_DEFAULT SEGGER_RTT_MODE_NO_BLOCK_TRIM
+#define NRFX_TWIM_ENABLED 1
+#define NRFX_TWIM0_ENABLED 1
 
-#define SEGGER_RTT_MAX_INTERRUPT_PRIORITY (0x20)
-
-#define SEGGER_RTT_LOCK()                                   \
-  {                                                         \
-    unsigned int _SEGGER_RTT__LockState;                    \
-    __asm volatile("mrs   %0, basepri  \n\t"                \
-                   "mov   r1, %1       \n\t"                \
-                   "msr   basepri, r1  \n\t"                \
-                   : "=r"(_SEGGER_RTT__LockState)           \
-                   : "i"(SEGGER_RTT_MAX_INTERRUPT_PRIORITY) \
-                   : "r1", "cc");
-
-#define SEGGER_RTT_UNLOCK()                    \
-  __asm volatile("msr   basepri, %0  \n\t"     \
-                 :                             \
-                 : "r"(_SEGGER_RTT__LockState) \
-                 :);                           \
-  }
+#include "templates/nrfx_config_nrf52840.h"

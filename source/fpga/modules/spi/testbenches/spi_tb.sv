@@ -9,45 +9,27 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-`include "modules/camera/camera.sv"
-`include "modules/graphics/display.sv"
-`include "modules/spi/spi_peripheral.sv"
-`include "modules/spi/spi_subperipheral_selector.sv"
-`include "modules/spi/registers/chip_id.sv"
-`include "modules/spi/registers/version_string.sv"
+`timescale 10ns / 10ns
 
-module top (
-    input logic spi_select_in,
-    input logic spi_clock_in,
-    input logic spi_data_in,
-    output logic spi_data_out,
+`include "../spi_peripheral.sv"
+`include "../spi_subperipheral_selector.sv"
+`include "../registers/chip_id.sv"
+`include "../registers/version_string.sv"
 
-    output logic display_clock,
-    output logic display_hsync,
-    output logic display_vsync,
-    output logic display_y0,
-    output logic display_y1,
-    output logic display_y2,
-    output logic display_y3,
-    output logic display_cr0,
-    output logic display_cr1,
-    output logic display_cr2,
-    output logic display_cb0,
-    output logic display_cb1,
-    output logic display_cb2,
+module spi_tb ();
 
-    output logic camera_clock
-);
+logic system_clock = 0;
+initial begin
+    forever #1 system_clock <= ~system_clock;
+end
 
-logic system_clock;
+// Stimulating signals
+logic spi_select_in = 1;
+logic spi_clock_in = 0;
+logic spi_data_in = 0;
 
-OSCA #(
-    .HF_CLK_DIV("8"), // 50 MHz
-    .HF_OSC_EN("ENABLED")
-    ) osc (
-    .HFOUTEN(1'b1),
-    .HFCLKOUT(system_clock)
-);
+// Stimulated and interface signals
+logic spi_data_out;
 
 logic [7:0] subperipheral_address;
 logic subperipheral_address_valid;
@@ -112,25 +94,49 @@ spi_register_version_string spi_register_version_string (
     .data_out_valid(subperipheral_2_cipo_valid)
 );
 
-// display display (
-//     .clock_in(clock),
-//     .clock_out(display_clock),
-//     .hsync(display_hsync),
-//     .vsync(display_vsync),
-//     .y0(display_y0),
-//     .y1(display_y1),
-//     .y2(display_y2),
-//     .y3(display_y3),
-//     .cr0(display_cr0),
-//     .cr1(display_cr1),
-//     .cr2(display_cr2),
-//     .cb0(display_cb0),
-//     .cb1(display_cb1),
-//     .cb2(display_cb2)
-// );
+task send_byte(
+    input logic [7:0] data
+);
+    begin
+        for (integer i = 7; i >= 0; i--) begin
+            spi_data_in <= data[i];
+            #4;
+            spi_clock_in <= ~spi_clock_in;
+            #4;
+            spi_clock_in <= ~spi_clock_in;
+        end
+        
+        #4;
+    end
+endtask
 
-always_ff @(posedge system_clock) begin
-    camera_clock <= ~camera_clock; // 25MHz
+initial begin
+    $dumpfile("simulation/spi_tb.fst");
+    $dumpvars(0, spi_tb);
+end
+
+initial begin
+
+    // Test chip ID
+    #8
+    spi_select_in <= 0;    
+    send_byte('hDB);
+    send_byte('hFF);
+    spi_select_in <= 1;    
+    #8
+
+    // Test version string
+    #8
+    spi_select_in <= 0;    
+    send_byte('hB5);
+    send_byte('h00);
+    send_byte('hFF);
+    send_byte('h00);
+    send_byte('h00);
+    spi_select_in <= 1;    
+    #8
+
+    $finish;
 end
 
 endmodule

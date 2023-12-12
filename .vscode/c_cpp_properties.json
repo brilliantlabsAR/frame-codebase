@@ -22,6 +22,7 @@
                 "source/application",
                 "source/application/lua_libraries",
                 "source/bootloader",
+                "source/radio_test",
                 "source/fpga"
             ],
             "defines": [
@@ -36,6 +37,8 @@
                 "NRF_DFU_SETTINGS_VERSION=2",
                 "NRF52840_XXAA",
                 "SOFTDEVICE_PRESENT",
+                "TEST_FREQUENCY=80",
+                "TEST_POWER=8"
             ]
         }
     ],

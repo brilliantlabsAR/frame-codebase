@@ -11,7 +11,7 @@
 
 `timescale 10ns / 10ns
 
-`include "modules/graphics/display.sv"
+`include "../display.sv"
 
 module display_tb (
     output logic display_clock,
@@ -35,7 +35,7 @@ initial begin : clock_25MHz
 end
 
 initial begin
-    $dumpfile("sim/display_tb.fst");
+    $dumpfile("simulation/display_tb.fst");
     $dumpvars(0, display_tb);
 end
 
