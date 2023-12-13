@@ -22,10 +22,9 @@ FPGA architecture for Frame.
 | 0x17    | GRAPHICS_SET_PEN_THICKNESS | Sets the thickness of the pen in pixels.<br>**Write: <thickness[8:0]>**
 | 0x18    | GRAPHICS_SET_PEN_COLOR     | Sets the pen color to one of the colors held in the 16 color palette.<br>**Write: <palette-index[7:0]>**
 | 0x19    | GRAPHICS_SHOW              | Executes all buffered display commands and prints to the display.
-| 0x20    | CAMERA_CAPTURE             | Resets the FIFO and starts a fresh image capture.
-| 0x21    | CAMERA_READ_FIFO           | Reads a number of bytes from the FIFO.<br>**Read: <bytes-available[23:0]>**<br>**Read: <data[...]>**
-| 0x23    | CAMERA_CROP                | Sets the crop limits for the camera's captured image.<br>**Write: <left-crop[15:0]>**<br>**Write: <right-crop[15:0]>**<br>**Write: <top-crop[15:0]>**<br>**Write: <bottom-crop[15:0]>**
-| 0x24    | CAMERA_COMPRESSION_FACTOR  | Sets the compression factor for the JPEG encoder.<br>**Write: <factor[7:0]>**
+| 0x20    | CAMERA_CAPTURE             | Starts a new image capture.
+| 0x21    | CAMERA_BYTES_AVAILABLE     | Returns how many bytes are available in the capture memory. Returns -1 once all bytes have been read for the current capture, or no capture has been started<br>**Read: <bytes-available[23:0]**
+| 0x22    | CAMERA_READ_BYTES          | Reads a number of bytes from the capture memory.<br>**Read: <data[...]>**
 | 0xDB    | GET_CHIP_ID                | Returns the chip ID value.<br>**Read: <0x81>**
 
 ## Graphics Pipeline
