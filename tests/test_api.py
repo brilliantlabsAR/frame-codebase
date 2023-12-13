@@ -279,7 +279,7 @@ async def main():
     await test.send_break_signal()
 
     ## FPGA IO
-    await test.lua_equals("frame.fpga.read(0xDB, 1)", "")
+    await test.lua_equals("string.byte(frame.fpga.read(0xDB, 1))", "129")
     await test.lua_send("frame.fpga.write(0xDC, 'test data')")
 
     # File handling

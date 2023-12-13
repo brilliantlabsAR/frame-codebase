@@ -11,3 +11,6 @@ abc.history
 # Ignore draw.io backup files
 *.png.bkp
 *.dtmp
+
+# Temp test files
+test_api_scratch_pad.py
