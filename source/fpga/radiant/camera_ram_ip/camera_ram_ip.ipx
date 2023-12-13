@@ -1,0 +1,18 @@
+<?xml version="1.0" ?>
+<RadiantModule architecture="LIFCL" date="2023 12 13 17:03:55" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="module" module="large_ram_dp" name="camera_ram_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.2.0">
+ <Package>
+  <File modified="2023 12 13 17:03:55" name="rtl/camera_ram_ip_bb.v" type="black_box_verilog"/>
+  <File modified="2023 12 13 17:03:55" name="camera_ram_ip.cfg" type="cfg"/>
+  <File modified="2023 12 13 17:03:55" name="misc/camera_ram_ip_tmpl.v" type="template_verilog"/>
+  <File modified="2023 12 13 17:03:55" name="misc/camera_ram_ip_tmpl.vhd" type="template_vhdl"/>
+  <File modified="2023 12 13 17:03:55" name="rtl/camera_ram_ip.v" type="top_level_verilog"/>
+  <File modified="2023 12 13 17:03:55" name="testbench/dut_params.v" type="dependency_file"/>
+  <File modified="2023 12 13 17:03:55" name="testbench/dut_inst.v" type="dependency_file"/>
+  <File modified="2023 12 13 17:03:55" name="component.xml" type="IP-XACT_component"/>
+  <File modified="2023 12 13 17:03:55" name="design.xml" type="IP-XACT_design"/>
+  <File modified="2021 05 31 18:50:02" name="testbench/lram_mem_master.v" type="testbench_verilog"/>
+  <File modified="2021 05 31 18:48:23" name="testbench/tb_top.v" type="testbench_verilog"/>
+  <File modified="2020 02 26 19:33:24" name="testbench/lram_mem_model.v" type="testbench_verilog"/>
+  <File modified="2020 02 19 20:11:38" name="testbench/lscc_rstclk_gen.v" type="testbench_verilog"/>
+ </Package>
+</RadiantModule>

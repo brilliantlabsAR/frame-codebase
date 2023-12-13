@@ -9,9 +9,197 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module camera (
-    
+module camera #(SIM=0) (
+    input logic clock_36MHz,
+    input logic clock_72MHz,
+    input logic global_reset_n,
+    input logic reset_n_clock_36MHz,
+
+    inout wire mipi_clock_p,
+    inout wire mipi_clock_n,
+    inout wire mipi_data_p,
+    inout wire mipi_data_n
 );
+
+logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload;
+logic [15:0] word_count;
+logic [5:0] datatype;
+
+csi2_receiver_ip csi2_receiver_ip (
+    .clk_byte_o( ),
+    .clk_byte_hs_o(byte_clk_hs),
+    .clk_byte_fr_i(byte_clk_hs),
+    .reset_n_i(global_reset_n),
+    .reset_byte_fr_n_i(reset_n_byte),
+    .clk_p_io(mipi_clock_p),
+    .clk_n_io(mipi_clock_n),
+    .d_p_io(mipi_data_p),
+    .d_n_io(mipi_data_n),
+    .payload_en_o(payload_en),
+    .payload_o(payload),
+    .tx_rdy_i(1'b1),
+    .pd_dphy_i(~global_reset_n),
+    .dt_o(datatype),
+    .wc_o(word_count),
+    .ref_dt_i(6'h2B), // RAW10 packet code
+    .sp_en_o(sp_en),
+    .lp_en_o(lp_en),
+    .lp_av_en_o(lp_av_en)
+);
+
+always @(posedge byte_clk_hs or negedge reset_n_byte) begin
+    if (~reset_n_byte) begin
+        lp_av_en_d <= 0;
+        sp_en_d <= 0;
+    end
+    else begin
+        lp_av_en_d <= lp_av_en;
+        sp_en_d <= sp_en;
+    end
+end
+
+logic payload_en_1d, payload_en_2d, payload_en_3d;
+logic [7:0] payload_1d;
+logic [7:0] payload_2d;
+logic [7:0] payload_3d;
+always @(posedge byte_clk_hs or negedge reset_n_byte) begin
+    if (~reset_n_byte) begin
+        payload_en_1d <= 0;
+        payload_en_2d <= 0;
+        payload_en_3d <= 0;
+
+        payload_1d <= 0;
+        payload_2d <= 0;
+        payload_3d <= 0;
+    end
+    else begin
+        payload_en_1d <= payload_en;
+        payload_en_2d <= payload_en_1d;
+        payload_en_3d <= payload_en_2d;
+
+        payload_1d <= payload;
+        payload_2d <= payload_1d;
+        payload_3d <= payload_2d;
+    end
+end
+
+logic [9:0] pixel_data /* synthesis syn_keep=1 nomerge=""*/;
+logic frame_valid, line_valid /* synthesis syn_keep=1 nomerge=""*/;
+byte_to_pixel_ip byte_to_pixel_ip (
+    .reset_byte_n_i(reset_n_byte),
+    .clk_byte_i(byte_clk_hs),
+    .sp_en_i(sp_en_d),
+    .dt_i(datatype),
+    .lp_av_en_i(lp_av_en_d),
+    .payload_en_i(payload_en_3d),
+    .payload_i(payload_3d),
+    .wc_i(word_count),
+    .reset_pixel_n_i(reset_n_clock_36MHz),
+    .clk_pixel_i(clock_36MHz),
+    .fv_o(frame_valid),
+    .lv_o(line_valid),
+    .pd_o(pixel_data)
+);
+
+
+logic [29:0] rgb30;
+logic [9:0] rgb10;
+logic [7:0] rgb8;
+logic [3:0] gray4;
+logic camera_fifo_write_enable;
+logic debayer_frame_valid;
+
+generate
+    if(SIM)
+        debayer debayer (
+            .clock_72MHz(clock_72MHz),
+            .clock_36MHz(clock_36MHz),
+            .reset_n(reset_n_clock_36MHz),
+            .x_offset(10'd0),
+            .y_offset(9'd0),
+            .x_size(10'd640),
+            .y_size(9'd2),
+            .pixel_data(pixel_data),
+            .lv(line_valid),
+            .fv(frame_valid),
+            .rgb10(rgb10),
+            .rgb8(rgb8),
+            .gray4(gray4),
+            .camera_fifo_write_enable(camera_fifo_write_enable),
+            .frame_valid_o(debayer_frame_valid)
+        );
+    
+    else
+        debayer debayer (
+            .clock_72MHz(clock_72MHz),
+            .clock_36MHz(clock_36MHz),
+            .reset_n(reset_n_clock_36MHz),
+            .x_offset(10'd440),
+            .y_offset(9'd200),
+            .x_size(10'd400),
+            .y_size(9'd400),
+            .pixel_data(pixel_data),
+            .line_valid(line_valid),
+            .frame_valid(frame_valid),
+            .rgb10(rgb10),
+            .rgb8(rgb8),
+            .gray4(gray4),
+            .camera_fifo_write_enable(camera_fifo_write_enable),
+            .frame_valid_o(debayer_frame_valid)
+        );
+endgenerate
+
+logic [15:0] camera_ram_write_address;
+logic camera_ram_write_enable;
+logic [31:0] camera_ram_write_data;
+camera_fifo camera_fifo (
+    .clock(clock_72MHz),
+    .reset_n(reset_n_clock_36MHz),
+    .rgb10(rgb10),
+    .rgb8(rgb8),
+    .gray4(gray4),
+    .pixel_width(4'd8),
+    .write_enable(camera_fifo_write_enab),
+    .frame_valid(debayer_frame_valid),
+    .write_enable_frame_buffer(camera_ram_write_enable),
+    .pixel_data_to_ram(camera_ram_write_data),
+    .ram_address(camera_ram_write_address)
+);
+
+logic [31:0] cam_rd_data;
+logic [15:0] cam_rd_addr;
+logic cam_rd_en;
+
+generate
+    if(SIM)
+        camera_ram_inferred camera_ram (
+            .clk(clock_72MHz),
+            .rst_n(reset_n_clock_36MHz),
+            .wr_addr(camera_ram_write_address),
+            .rd_addr(cam_rd_addr),
+            .wr_data(camera_ram_write_data),
+            .rd_data(cam_rd_data),
+            .wr_en(camera_ram_write_enable & !cam_rd_en),
+            .rd_en(cam_rd_en)
+        );
+    
+    else
+        camera_ram_ip camera_ram (
+            .clk_i(clock_72MHz),
+            .dps_i(1'b0),
+            .rst_i(~reset_n_clock_36MHz),
+            .wr_clk_en_i(reset_n_clock_36MHz),
+            .rd_clk_en_i(reset_n_clock_36MHz),
+            .wr_en_i(camera_ram_write_enable & !cam_rd_en),
+            .wr_data_i(camera_ram_write_data),
+            .wr_addr_i(camera_ram_write_address),
+            .rd_addr_i(cam_rd_addr),
+            .rd_data_o(cam_rd_data),
+            .lramready_o( ),
+            .rd_datavalid_o( )
+        );
+endgenerate
 
 
 endmodule

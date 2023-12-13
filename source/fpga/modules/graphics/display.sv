@@ -12,9 +12,9 @@
 module display (
     input logic clock_in,
 
-    output logic clock_out = 1,
-    output logic hsync = 0,
-    output logic vsync = 0,
+    output logic clock_out,
+    output logic hsync,
+    output logic vsync,
     output logic y0,
     output logic y1,
     output logic y2,

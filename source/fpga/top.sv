@@ -26,6 +26,12 @@ module top (
     input logic spi_data_in,
     output logic spi_data_out,
 
+    inout wire mipi_clock_p,
+	inout wire mipi_clock_n,
+	inout wire mipi_data_p,
+	inout wire mipi_data_n,
+    output logic camera_clock,
+
     output logic display_clock,
     output logic display_hsync,
     output logic display_vsync,
@@ -38,9 +44,7 @@ module top (
     output logic display_cr2,
     output logic display_cb0,
     output logic display_cb1,
-    output logic display_cb2,
-
-    output logic camera_clock
+    output logic display_cb2
 );
 
 // Clocking
@@ -100,6 +104,12 @@ reset_global reset_global (
     .global_reset_n_out(global_reset_n)
 );
 
+reset_sync reset_sync_clock_36MHz (
+    .clock_in(clock_36MHz),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(reset_n_clock_36MHz)
+);
+
 reset_sync reset_sync_clock_72MHz (
     .clock_in(clock_72MHz),
     .async_reset_n_in(global_reset_n),
@@ -113,6 +123,18 @@ reset_sync reset_sync_clock_50MHz (
 );
 
 `endif // TODO remove this line once gatecat/prjoxide#44 is solved
+
+camera camera (
+    .clock_36MHz(clock_36MHz),
+    .clock_72MHz(clock_72MHz),
+    .global_reset_n(global_reset_n),
+    .reset_n_clock_36MHz(reset_n_clock_36MHz),
+
+    .mipi_clock_p(mipi_clock_p),
+    .mipi_clock_n(mipi_clock_n),
+    .mipi_data_p(mipi_data_p),
+    .mipi_data_n(mipi_data_n)
+);
 
 // SPI
 logic [7:0] subperipheral_address;
