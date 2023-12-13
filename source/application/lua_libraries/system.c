@@ -251,8 +251,6 @@ void lua_open_system_library(lua_State *L)
         lua_setfield(L, -2, "write");
 
         lua_setfield(L, -2, "fpga");
-
-        lua_pop(L, 1);
     }
 
     lua_pop(L, 1);
