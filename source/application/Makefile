@@ -39,6 +39,7 @@ C_FILES += \
 	lua_libraries/camera.c \
 	lua_libraries/display.c \
 	lua_libraries/file.c \
+	lua_libraries/imu.c \
 	lua_libraries/microphone.c \
 	lua_libraries/system.c \
 	lua_libraries/time.c \
