@@ -51,24 +51,26 @@ logic clock_72MHz;
 logic clock_50MHz;
 logic pll_locked;
 
- // TODO remove this once gatecat/prjoxide#44 is solved
-`ifndef RADIANT
+`ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
 OSCA #(
     .HF_CLK_DIV("8"), 
-    .HF_OSC_EN("ENABLED"),
-    .LF_OUTPUT_EN("DISABLED")
+    .HF_OSC_EN("ENABLED")
     ) osc (
     .HFOUTEN(1'b1),
     .HFCLKOUT(clock_18MHz_oscillator) // Actually 50MHz
 );
 
-assign clock_50MHz = clock_18MHz_oscillator;
 assign clock_72MHz = clock_18MHz_oscillator;
+assign clock_50MHz = clock_18MHz_oscillator;
 
-always_ff @(posedge clock_50MHz) begin
+logic reset_n_clock_72MHz = 1;
+logic reset_n_clock_50MHz = 1;
+
+always_ff @(posedge clock_18MHz_oscillator) begin
     clock_24MHz <= ~clock_24MHz;
 end
 `else
+
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -86,7 +88,6 @@ pll_wrapper pll_wrapper (
     .clkos3_o(clock_50MHz),
     .lock_o(pll_locked)
 );
-`endif
 
 // Reset
 logic global_reset_n;
@@ -110,6 +111,8 @@ reset_sync reset_sync_clock_50MHz (
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(reset_n_clock_50MHz)
 );
+
+`endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // SPI
 logic [7:0] subperipheral_address;
