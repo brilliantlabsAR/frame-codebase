@@ -6,6 +6,9 @@
         <Source name="../top.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog" top_module="top"/>
         </Source>
+        <Source name="../modules/graphics/display.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
         <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -16,9 +19,6 @@
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/spi/registers/chip_id.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/spi/registers/version_string.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/spi/spi_peripheral.sv" type="Verilog" type_short="Verilog">
