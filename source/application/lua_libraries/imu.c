@@ -111,22 +111,25 @@ static int lua_imu_tap_callback(lua_State *L)
 
 void lua_open_imu_library(lua_State *L)
 {
-    // Put the IMU to sleep so that the settings can be changed
-    check_error(i2c_write(ACCELEROMETER, 0x07, 0x03, 0x00).fail);
+    // NOTE: IMU must be repowered after changing these settings
+
+    // Enable tap interrupt on -Y axis
+    check_error(i2c_write(ACCELEROMETER, 0x06, 0xFF, 0x08).fail);
+
+    // Ignore multiple taps and set sample rate to 256Hz
+    check_error(i2c_write(ACCELEROMETER, 0x08, 0xFF, 0x8A).fail);
+
+    // Enable tap interrupts on -Y axis in threshold mode
+    check_error(i2c_write(ACCELEROMETER, 0x09, 0xFF, 0xC8).fail);
+
+    // Configure tap threshold on Y axis
+    check_error(i2c_write(ACCELEROMETER, 0x0B, 0xFF, 0x07).fail);
 
     // Configure 14bit mode
-    check_error(i2c_write(ACCELEROMETER, 0x20, 0x87, 0x05).fail);
+    check_error(i2c_write(ACCELEROMETER, 0x20, 0xFF, 0x05).fail);
 
-    // Configure tap duration on Y axis and ignore multiple taps
-    check_error(i2c_write(ACCELEROMETER, 0x0B, 0xFF, 0x77).fail);
-    check_error(i2c_write(ACCELEROMETER, 0x08, 0x80, 0x80).fail);
-
-    // Enable tap interrupts on +Y axis in duration mode
-    check_error(i2c_write(ACCELEROMETER, 0x06, 0xBF, 0x04).fail);
-    check_error(i2c_write(ACCELEROMETER, 0x09, 0xFF, 0x84).fail);
-
-    // Set INTA settings and configure OPCON to wake up accelerometer
-    check_error(i2c_write(ACCELEROMETER, 0x07, 0xC7, 0xC1).fail);
+    // Set INTA as push-pull active-high and come out of standby
+    check_error(i2c_write(ACCELEROMETER, 0x07, 0xFF, 0xC1).fail);
 
     // Clear interrupts
     check_error(i2c_read(ACCELEROMETER, 0x03, 0xFF).fail);
