@@ -272,6 +272,8 @@ static int lua_microphone_read(lua_State *L)
     lua_newtable(L);
     lua_Integer i = 1;
 
+    int16_t sample16, sample8, sample4_top, sample4_bot;
+    int8_t combined_sample;
     while (true)
     {
         if (fifo.tail == fifo.head)
@@ -282,7 +284,7 @@ static int lua_microphone_read(lua_State *L)
         switch (bit_depth)
         {
         case 16:
-            int16_t sample16 = averaged_sample();
+            sample16 = averaged_sample();
             lua_pushinteger(L, sample16 >> 8);
             lua_seti(L, -2, i++);
             lua_pushinteger(L, sample16 & 0xFF);
@@ -290,15 +292,15 @@ static int lua_microphone_read(lua_State *L)
             break;
 
         case 8:
-            int16_t sample8 = averaged_sample() >> 8;
+            sample8 = averaged_sample() >> 8;
             lua_pushinteger(L, sample8);
             lua_seti(L, -2, i++);
             break;
 
         case 4:
-            int16_t sample4_top = (averaged_sample() >> 12) & 0x0F;
-            int16_t sample4_bot = (averaged_sample() >> 12) & 0x0F;
-            int8_t combined_sample = (sample4_top << 4) | sample4_bot;
+            sample4_top = (averaged_sample() >> 12) & 0x0F;
+            sample4_bot = (averaged_sample() >> 12) & 0x0F;
+            combined_sample = (sample4_top << 4) | sample4_bot;
             lua_pushinteger(L, combined_sample);
             lua_seti(L, -2, i++);
             break;

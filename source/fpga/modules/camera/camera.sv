@@ -18,7 +18,11 @@ module camera #(SIM=0) (
     inout wire mipi_clock_p,
     inout wire mipi_clock_n,
     inout wire mipi_data_p,
-    inout wire mipi_data_n
+    inout wire mipi_data_n,
+
+    input logic camera_ram_read_enable,
+    input logic [15:0] camera_ram_read_address,
+    output logic [31:0] camera_ram_read_data
 );
 
 logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
@@ -160,16 +164,12 @@ camera_fifo camera_fifo (
     .rgb8(rgb8),
     .gray4(gray4),
     .pixel_width(4'd8),
-    .write_enable(camera_fifo_write_enab),
+    .write_enable(camera_fifo_write_enable),
     .frame_valid(debayer_frame_valid),
     .write_enable_frame_buffer(camera_ram_write_enable),
     .pixel_data_to_ram(camera_ram_write_data),
     .ram_address(camera_ram_write_address)
 );
-
-logic [31:0] cam_rd_data;
-logic [15:0] cam_rd_addr;
-logic cam_rd_en;
 
 generate
     if(SIM)
@@ -177,11 +177,11 @@ generate
             .clk(clock_72MHz),
             .rst_n(reset_n_clock_36MHz),
             .wr_addr(camera_ram_write_address),
-            .rd_addr(cam_rd_addr),
+            .rd_addr(camera_ram_read_address),
             .wr_data(camera_ram_write_data),
-            .rd_data(cam_rd_data),
-            .wr_en(camera_ram_write_enable & !cam_rd_en),
-            .rd_en(cam_rd_en)
+            .rd_data(camera_ram_read_data),
+            .wr_en(camera_ram_write_enable & !camera_ram_read_enable),
+            .rd_en(camera_ram_read_enable)
         );
     
     else
@@ -191,11 +191,11 @@ generate
             .rst_i(~reset_n_clock_36MHz),
             .wr_clk_en_i(reset_n_clock_36MHz),
             .rd_clk_en_i(reset_n_clock_36MHz),
-            .wr_en_i(camera_ram_write_enable & !cam_rd_en),
+            .wr_en_i(camera_ram_write_enable & !camera_ram_read_enable),
             .wr_data_i(camera_ram_write_data),
             .wr_addr_i(camera_ram_write_address),
-            .rd_addr_i(cam_rd_addr),
-            .rd_data_o(cam_rd_data),
+            .rd_addr_i(camera_ram_read_address),
+            .rd_data_o(camera_ram_read_data),
             .lramready_o( ),
             .rd_datavalid_o( )
         );

@@ -133,7 +133,11 @@ camera camera (
     .mipi_clock_p(mipi_clock_p),
     .mipi_clock_n(mipi_clock_n),
     .mipi_data_p(mipi_data_p),
-    .mipi_data_n(mipi_data_n)
+    .mipi_data_n(mipi_data_n),
+
+    .camera_ram_read_enable(camera_ram_read_enable),
+    .camera_ram_read_address(camera_ram_read_address),
+    .camera_ram_read_data(camera_ram_read_data)
 );
 
 // SPI
@@ -193,6 +197,18 @@ spi_register_chip_id spi_register_chip_id (
     .data_out_valid(subperipheral_1_cipo_valid)
 );
 
+camera_peripheral camera_peripheral (
+    .clock(clock_72MHz),
+    .reset_n(reset_n_clock_72MHz),
+    .enable(subperipheral_2_enable),
+
+    .data_in_valid(subperipheral_copi_valid),
+    .data_out(subperipheral_2_cipo),
+    .data_out_valid(subperipheral_2_cipo_valid),
+    .camera_ram_read_address(camera_ram_read_address),
+    .camera_ram_read_data(camera_ram_read_data),
+	.camera_ram_read_enable(camera_ram_read_enable)
+);
 
 // Graphics
 display display (

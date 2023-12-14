@@ -1,4 +1,15 @@
-module display_ram_inferred #(
+/*
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+ *
+ * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright © 2023 Brilliant Labs Limited
+ */
+ 
+ module display_ram_inferred #(
 	ADDR = 12,
 	DATA = 10,
 	SIM = 0
