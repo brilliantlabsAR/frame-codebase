@@ -240,13 +240,12 @@ static int lua_file_read(lua_State *L)
                 if (character == '\n')
                 {
                     lua_pushstring(L, "");
-                    return 1;
                 }
                 else
                 {
                     lua_pushnil(L);
-                    return 1;
                 }
+                return 1;
             }
 
             break;
