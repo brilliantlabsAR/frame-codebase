@@ -128,28 +128,28 @@ static int lua_imu_direction(lua_State *L)
 
     LOG("accel: x = %d, y = %d, z = %d", x_accel, y_accel, z_accel);
 
-    // Calculate heading, roll and pitch
-    double roll = atan2((double)y_accel, (double)z_accel) * (180.0 / PI);
-    double pitch = atan2((double)x_accel, (double)z_accel) * (180.0 / PI);
+    // Calculate roll, pitch, and heading
+    double roll = atan2((double)y_accel, (double)z_accel);
+    double pitch = atan2((double)x_accel, (double)z_accel);
 
-    double xM2 = x_mag * cos(pitch) + z_mag * sin(pitch);
-    double yM2 = x_mag * sin(roll) * sin(pitch) + y_mag * cos(roll) - z_mag * sin(roll) * cos(pitch);
-    double heading = (atan2(yM2, xM2) * 180 / PI);
+    double x_heading = x_mag * cos(pitch) + z_mag * sin(pitch);
+    double y_heading = x_mag * sin(roll) * sin(pitch) + y_mag * cos(roll) - z_mag * sin(roll) * cos(pitch);
+    double heading = (atan2(y_heading, x_heading) * 180.0 / PI);
+
     if (heading < 0)
     {
         heading = 360 + heading;
     }
-    LOG("heading: %f", heading);
 
     lua_newtable(L);
 
-    lua_pushnumber(L, pitch);
+    lua_pushnumber(L, pitch * (180.0 / PI));
     lua_setfield(L, -2, "pitch");
 
-    lua_pushnumber(L, roll);
+    lua_pushnumber(L, roll * (180.0 / PI));
     lua_setfield(L, -2, "roll");
 
-    lua_pushinteger(L, 0);
+    lua_pushnumber(L, heading);
     lua_setfield(L, -2, "heading");
     return 1;
 }
