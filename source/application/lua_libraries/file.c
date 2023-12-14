@@ -235,16 +235,19 @@ static int lua_file_read(lua_State *L)
         if (result == 0 || character == '\n')
         {
             // Reading empty file or line
-            if (character == '\n')
+            if (i == 0)
             {
-                lua_pushstring(L, "");
-                return 1;
-                break;
-            }
-            else
-            {
-                lua_pushnil(L);
-                return 1;
+                if (character == '\n')
+                {
+                    lua_pushstring(L, "");
+                    return 1;
+                    break;
+                }
+                else
+                {
+                    lua_pushnil(L);
+                    return 1;
+                }
             }
 
             break;
