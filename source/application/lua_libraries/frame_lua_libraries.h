@@ -42,3 +42,4 @@ void lua_open_version_library(lua_State *L);
 
 void lua_open_file_library(lua_State *L, bool reformat);
 int lua_run_main(lua_State *L);
+int lua_require(lua_State *L);

@@ -80,6 +80,8 @@ void run_lua(bool factory_reset)
     luaL_requiref(L, LUA_DBLIBNAME, luaopen_debug, 1);
     lua_pop(L, 8);
 
+    lua_pushcfunction(L, lua_require);
+    lua_setglobal(L, "require");
     // Create a global frame table and load the libraries
     lua_newtable(L);
     lua_setglobal(L, "frame");
@@ -103,7 +105,13 @@ void run_lua(bool factory_reset)
 
     // Run main.lua
     LOG("running now main.lua %d", repl_buffer[0] == 0x04);
-    lua_run_main(L);
+    int status = luaL_dostring(L, "require('main')");
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        lua_writestring(lua_error, strlen(lua_error));
+        lua_pop(L, 1);
+    }
     while (true)
     {
         // If we get a reset command

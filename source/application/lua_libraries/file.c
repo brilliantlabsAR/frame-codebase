@@ -425,10 +425,12 @@ static const luaL_Reg file_methods[] = {
     {NULL, NULL},
 };
 
-int lua_run_main(lua_State *L)
+int lua_require(lua_State *L)
 {
+    const char *module_name = luaL_checkstring(L, 1);
+
+    const char *filename = lua_pushfstring(L, "%s.lua", module_name);
     file_stream_t stream;
-    char *filename = "main.lua";
     int error = lfs_file_open(&filesystem,
                               &stream.file,
                               filename,
@@ -438,8 +440,7 @@ int lua_run_main(lua_State *L)
     size_t size = 0;
     if (error)
     {
-        LOG("cannot open file %s", filename);
-        return -1;
+        return luaL_error(L, "cannot open file: %s", filename);
     }
     char character;
     while (true)
@@ -451,8 +452,7 @@ int lua_run_main(lua_State *L)
         if (result < 0)
         {
             free(buffer);
-            LOG("error reading %s", filename);
-            return -1;
+            return luaL_error(L, "error reading file: %s", filename);
         }
 
         if (result == 0)
@@ -466,18 +466,12 @@ int lua_run_main(lua_State *L)
 
     check_error(lfs_file_close(&filesystem, &stream.file));
     int status = luaL_loadbuffer(L, buffer, size, filename);
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        LOG("main.lua error %s", lua_error);
-        lua_writestring(lua_error, strlen(lua_error));
-        free(buffer);
-        return status;
-    }
-
     free(buffer);
-    lua_call(L, 0, 0);
-    return status;
+    if (status || lua_pcall(L, 0, 1, 0))
+    {
+        return luaL_error(L, "Error loading module '%s': %s", module_name, lua_tostring(L, -1));
+    }
+    return 1;
 }
 
 void lua_open_file_library(lua_State *L, bool reformat)
