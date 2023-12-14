@@ -103,9 +103,10 @@ static int lua_imu_direction(lua_State *L)
     int16_t z_mag_lsb = i2c_read(MAGNETOMETER, 0x14, 0xFF).value;
     int16_t z_mag_msb = i2c_read(MAGNETOMETER, 0x15, 0xFF).value;
 
-    int16_t x_mag = x_mag_msb << 8 | x_mag_lsb;
+    // Combine bytes and swap the axis to match the worn orientation
+    int16_t x_mag = z_mag_msb << 8 | z_mag_lsb;
     int16_t y_mag = y_mag_msb << 8 | y_mag_lsb;
-    int16_t z_mag = z_mag_msb << 8 | z_mag_lsb;
+    int16_t z_mag = x_mag_msb << 8 | x_mag_lsb;
 
     LOG("mag: x = %d, y = %d, z = %d", x_mag, y_mag, z_mag);
 
@@ -121,16 +122,24 @@ static int lua_imu_direction(lua_State *L)
     int16_t z_accel_msb = i2c_read(ACCELEROMETER, 0x12, 0xFF).value;
 
     // Combine bytes and swap the axis to match the worn orientation
-    int16_t z_accel = x_accel_msb << 8 | x_accel_lsb;
-    int16_t y_accel = y_accel_msb << 8 | y_accel_lsb;
     int16_t x_accel = z_accel_msb << 8 | z_accel_lsb;
+    int16_t y_accel = y_accel_msb << 8 | y_accel_lsb;
+    int16_t z_accel = x_accel_msb << 8 | x_accel_lsb;
 
     LOG("accel: x = %d, y = %d, z = %d", x_accel, y_accel, z_accel);
 
     // Calculate heading, roll and pitch
     double roll = atan2((double)y_accel, (double)z_accel) * (180.0 / PI);
     double pitch = atan2((double)x_accel, (double)z_accel) * (180.0 / PI);
-    LOG("pitch: %f", pitch);
+
+    double xM2 = x_mag * cos(pitch) + z_mag * sin(pitch);
+    double yM2 = x_mag * sin(roll) * sin(pitch) + y_mag * cos(roll) - z_mag * sin(roll) * cos(pitch);
+    double heading = (atan2(yM2, xM2) * 180 / PI);
+    if (heading < 0)
+    {
+        heading = 360 + heading;
+    }
+    LOG("heading: %f", heading);
 
     lua_newtable(L);
 
