@@ -22,21 +22,57 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#include "lua.h"
-#include "i2c.h"
 #include "error_logging.h"
-#include "nrfx_systick.h"
+#include "frame_lua_libraries.h"
+#include "i2c.h"
+#include "lauxlib.h"
+#include "lua.h"
 #include "nrfx_gpiote.h"
+#include "nrfx_systick.h"
 #include "pinout.h"
+
+static int lua_imu_callback_function = 0;
+
+static void lua_imu_tap_callback_handler(lua_State *L, lua_Debug *ar)
+{
+    lua_sethook(L, NULL, 0, 0);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_imu_callback_function);
+
+    lua_pcall(L, 0, 0, 0);
+}
 
 void imu_tap_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
                                nrfx_gpiote_trigger_t unused_gptiote_trigger,
                                void *unused_gptiote_context_pointer)
 {
-    // Check side tapped
-    uint8_t status = i2c_read(ACCELEROMETER, 0x03, 0xFF).value;
+    if (lua_imu_callback_function != 0)
+    {
+        int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
+        lua_sethook(globalL, lua_imu_tap_callback_handler, flag, 1);
+    }
 
-    LOG("Tap! %x", status);
+    // Clear the interrupt by reading the status register
+    check_error(i2c_read(ACCELEROMETER, 0x03, 0xFF).fail);
+}
+
+static int lua_imu_tap_callback(lua_State *L)
+{
+    if (lua_isnil(L, 1))
+    {
+        lua_imu_callback_function = 0;
+        return 0;
+    }
+
+    if (lua_isfunction(L, 1))
+    {
+        lua_imu_callback_function = luaL_ref(L, LUA_REGISTRYINDEX);
+        return 0;
+    }
+
+    luaL_error(L, "expected nil or function");
+
+    return 0;
 }
 
 static int lua_imu_direction(lua_State *L)
@@ -104,11 +140,6 @@ static int lua_imu_direction(lua_State *L)
     return 1;
 }
 
-static int lua_imu_tap_callback(lua_State *L)
-{
-    return 0;
-}
-
 void lua_open_imu_library(lua_State *L)
 {
     // NOTE: IMU must be repowered after changing these settings
@@ -161,11 +192,11 @@ void lua_open_imu_library(lua_State *L)
 
     lua_newtable(L);
 
-    lua_pushcfunction(L, lua_imu_direction);
-    lua_setfield(L, -2, "direction");
-
     lua_pushcfunction(L, lua_imu_tap_callback);
     lua_setfield(L, -2, "tap_callback");
+
+    lua_pushcfunction(L, lua_imu_direction);
+    lua_setfield(L, -2, "direction");
 
     lua_setfield(L, -2, "imu");
 
