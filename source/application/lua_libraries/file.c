@@ -241,7 +241,6 @@ static int lua_file_read(lua_State *L)
                 {
                     lua_pushstring(L, "");
                     return 1;
-                    break;
                 }
                 else
                 {
