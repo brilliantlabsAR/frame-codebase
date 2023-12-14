@@ -22,6 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <math.h>
 #include "error_logging.h"
 #include "frame_lua_libraries.h"
 #include "i2c.h"
@@ -30,6 +31,8 @@
 #include "nrfx_gpiote.h"
 #include "nrfx_systick.h"
 #include "pinout.h"
+
+#define PI 3.14159265
 
 static int lua_imu_callback_function = 0;
 
@@ -117,26 +120,28 @@ static int lua_imu_direction(lua_State *L)
     int16_t z_accel_lsb = i2c_read(ACCELEROMETER, 0x11, 0xFF).value;
     int16_t z_accel_msb = i2c_read(ACCELEROMETER, 0x12, 0xFF).value;
 
-    int16_t x_accel = x_accel_msb << 8 | x_accel_lsb;
+    // Combine bytes and swap the axis to match the worn orientation
+    int16_t z_accel = x_accel_msb << 8 | x_accel_lsb;
     int16_t y_accel = y_accel_msb << 8 | y_accel_lsb;
-    int16_t z_accel = z_accel_msb << 8 | z_accel_lsb;
+    int16_t x_accel = z_accel_msb << 8 | z_accel_lsb;
 
     LOG("accel: x = %d, y = %d, z = %d", x_accel, y_accel, z_accel);
 
-    // Calculate heading, pitch and yaw
-    // TODO
+    // Calculate heading, roll and pitch
+    double roll = atan2((double)y_accel, (double)z_accel) * (180.0 / PI);
+    double pitch = atan2((double)x_accel, (double)z_accel) * (180.0 / PI);
+    LOG("pitch: %f", pitch);
 
     lua_newtable(L);
 
-    lua_pushinteger(L, 0);
-    lua_setfield(L, -2, "heading");
-
-    lua_pushinteger(L, 0);
+    lua_pushnumber(L, pitch);
     lua_setfield(L, -2, "pitch");
 
-    lua_pushinteger(L, 0);
-    lua_setfield(L, -2, "yaw");
+    lua_pushnumber(L, roll);
+    lua_setfield(L, -2, "roll");
 
+    lua_pushinteger(L, 0);
+    lua_setfield(L, -2, "heading");
     return 1;
 }
 
