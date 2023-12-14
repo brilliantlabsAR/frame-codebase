@@ -442,7 +442,7 @@ int lua_run_main(lua_State *L)
         return -1;
     }
     char character;
-    for (size_t i = 0; i < 100; i++)
+    while (true)
     {
         lfs_ssize_t result = lfs_file_read(&filesystem,
                                            &stream.file,
@@ -462,7 +462,8 @@ int lua_run_main(lua_State *L)
         size++;
         buffer = (char *)realloc(buffer, size * sizeof(char));
         buffer[size - 1] = character;
-    }
+    };
+
     check_error(lfs_file_close(&filesystem, &stream.file));
     int status = luaL_loadbuffer(L, buffer, size, filename);
     if (status != LUA_OK)
