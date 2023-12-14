@@ -101,8 +101,9 @@ void run_lua(bool factory_reset)
         error_with_message("Lua stack not cleared");
     }
 
-    // TODO attempt to run main.lua
-
+    // Run main.lua
+    LOG("running now main.lua %d", repl_buffer[0] == 0x04);
+    lua_run_main(L);
     while (true)
     {
         // If we get a reset command

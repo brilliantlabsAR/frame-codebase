@@ -168,7 +168,6 @@ static int lua_file_open(lua_State *L)
 {
     const char *filename = luaL_checkstring(L, 1);
     const char *mode = luaL_optstring(L, 2, "r");
-
     file_stream_t *stream =
         (file_stream_t *)lua_newuserdatauv(L, sizeof(file_stream_t), 0);
 
@@ -425,6 +424,60 @@ static const luaL_Reg file_methods[] = {
     {"close", lua_file_close},
     {NULL, NULL},
 };
+
+int lua_run_main(lua_State *L)
+{
+    file_stream_t stream;
+    char *filename = "main.lua";
+    int error = lfs_file_open(&filesystem,
+                              &stream.file,
+                              filename,
+                              LFS_O_RDONLY);
+
+    char *buffer = NULL;
+    size_t size = 0;
+    if (error)
+    {
+        LOG("cannot open file %s", filename);
+        return -1;
+    }
+    char character;
+    for (size_t i = 0; i < 100; i++)
+    {
+        lfs_ssize_t result = lfs_file_read(&filesystem,
+                                           &stream.file,
+                                           &character,
+                                           1);
+        if (result < 0)
+        {
+            free(buffer);
+            LOG("error reading %s", filename);
+            return -1;
+        }
+
+        if (result == 0)
+        {
+            break;
+        }
+        size++;
+        buffer = (char *)realloc(buffer, size * sizeof(char));
+        buffer[size - 1] = character;
+    }
+    check_error(lfs_file_close(&filesystem, &stream.file));
+    int status = luaL_loadbuffer(L, buffer, size, filename);
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        LOG("main.lua error %s", lua_error);
+        lua_writestring(lua_error, strlen(lua_error));
+        free(buffer);
+        return status;
+    }
+
+    free(buffer);
+    lua_call(L, 0, 0);
+    return status;
+}
 
 void lua_open_file_library(lua_State *L, bool reformat)
 {
