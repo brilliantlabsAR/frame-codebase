@@ -33,7 +33,6 @@
 #define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
 #define lua_writeline()
 #define lua_writestringerror(s, p) printf(s, p)
-
 void lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
 void lua_interrupt(void);
