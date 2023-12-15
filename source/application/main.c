@@ -384,7 +384,7 @@ static void hardware_setup(bool *factory_reset)
         }
 
         // Put the camera to sleep
-        // nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+        // nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false); // TODO enable this
     }
 }
 

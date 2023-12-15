@@ -87,10 +87,10 @@ void run_lua(bool factory_reset)
     lua_open_version_library(L);
     lua_open_system_library(L);
     lua_open_bluetooth_library(L);
-    // lua_open_display_library(L);
-    // lua_open_camera_library(L);
+    lua_open_display_library(L);
+    lua_open_camera_library(L);
     lua_open_microphone_library(L);
-    // lua_open_imu_library(L);
+    lua_open_imu_library(L);
     lua_open_time_library(L);
 
     lua_open_file_library(L, factory_reset);
