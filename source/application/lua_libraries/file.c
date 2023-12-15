@@ -168,6 +168,7 @@ static int lua_file_open(lua_State *L)
 {
     const char *filename = luaL_checkstring(L, 1);
     const char *mode = luaL_optstring(L, 2, "r");
+
     file_stream_t *stream =
         (file_stream_t *)lua_newuserdatauv(L, sizeof(file_stream_t), 0);
 
@@ -200,7 +201,6 @@ static int lua_file_open(lua_State *L)
     if (error)
     {
         luaL_error(L, "cannot open file %s", filename);
-        return 1;
     }
 
     return 1;
@@ -410,6 +410,65 @@ static int lua_file_listdir(lua_State *L)
     return 1;
 }
 
+static int lua_file_require(lua_State *L)
+{
+    file_stream_t stream;
+
+    const char *module_name = luaL_checkstring(L, 1);
+    const char *filename = lua_pushfstring(L, "%s.lua", module_name);
+
+    int error = lfs_file_open(&filesystem,
+                              &stream.file,
+                              filename,
+                              LFS_O_RDONLY);
+
+    if (error)
+    {
+        luaL_error(L, "cannot open file: %s", filename);
+    }
+
+    size_t size = 0;
+    char *buffer = NULL;
+    char character;
+
+    while (true)
+    {
+        lfs_ssize_t result = lfs_file_read(&filesystem,
+                                           &stream.file,
+                                           &character,
+                                           1);
+
+        if (result < 0)
+        {
+            free(buffer);
+            luaL_error(L, "error reading file: %s", filename);
+        }
+
+        if (result == 0)
+        {
+            break;
+        }
+
+        buffer = (char *)realloc(buffer, size + 1);
+        buffer[size++] = character;
+    };
+
+    check_error(lfs_file_close(&filesystem, &stream.file));
+
+    int status = luaL_loadbuffer(L, buffer, size, filename);
+    free(buffer);
+
+    if (status || lua_pcall(L, 0, 1, 0))
+    {
+        luaL_error(L,
+                   "Error loading module '%s': %s",
+                   module_name,
+                   lua_tostring(L, -1));
+    }
+
+    return 1;
+}
+
 static const luaL_Reg meta_methods[] = {
     {"__index", NULL},
     // TODO do we need garbage collection?
@@ -424,55 +483,6 @@ static const luaL_Reg file_methods[] = {
     {"close", lua_file_close},
     {NULL, NULL},
 };
-
-int lua_require(lua_State *L)
-{
-    const char *module_name = luaL_checkstring(L, 1);
-
-    const char *filename = lua_pushfstring(L, "%s.lua", module_name);
-    file_stream_t stream;
-    int error = lfs_file_open(&filesystem,
-                              &stream.file,
-                              filename,
-                              LFS_O_RDONLY);
-
-    char *buffer = NULL;
-    size_t size = 0;
-    if (error)
-    {
-        return luaL_error(L, "cannot open file: %s", filename);
-    }
-    char character;
-    while (true)
-    {
-        lfs_ssize_t result = lfs_file_read(&filesystem,
-                                           &stream.file,
-                                           &character,
-                                           1);
-        if (result < 0)
-        {
-            free(buffer);
-            return luaL_error(L, "error reading file: %s", filename);
-        }
-
-        if (result == 0)
-        {
-            break;
-        }
-        size++;
-        buffer = (char *)realloc(buffer, size * sizeof(char));
-        buffer[size - 1] = character;
-    };
-
-    check_error(lfs_file_close(&filesystem, &stream.file));
-    int status = luaL_loadbuffer(L, buffer, size, filename);
-    free(buffer);
-    if (status || lua_pcall(L, 0, 1, 0))
-    {
-        return luaL_error(L, "Error loading module '%s': %s", module_name, lua_tostring(L, -1));
-    }
-    return 1;
-}
 
 void lua_open_file_library(lua_State *L, bool reformat)
 {
@@ -519,4 +529,7 @@ void lua_open_file_library(lua_State *L, bool reformat)
 
     lua_setfield(L, -2, "file");
     lua_pop(L, 1);
+
+    lua_pushcfunction(L, lua_file_require);
+    lua_setglobal(L, "require");
 }
