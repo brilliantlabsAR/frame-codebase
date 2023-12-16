@@ -32,7 +32,7 @@
 #include "nrf_soc.h"
 #include "nrfx_log.h"
 
-lua_State *globalL = NULL;
+lua_State *L_global = NULL;
 
 static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
 
@@ -48,22 +48,24 @@ void lua_write_to_repl(uint8_t *buffer, uint8_t length)
     repl_buffer[length] = 0;
 }
 
-static void lua_interrupt_hook(lua_State *L, lua_Debug *ar)
+static void lua_break_signal_handler(lua_State *L, lua_Debug *ar)
 {
     lua_sethook(L, NULL, 0, 0);
-    luaL_error(L, "interrupted!");
+    luaL_error(L, "break signal");
 }
 
-void lua_interrupt(void)
+void lua_break_signal_interrupt(void)
 {
-    int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
-    lua_sethook(globalL, lua_interrupt_hook, flag, 1);
+    lua_sethook(L_global,
+                lua_break_signal_handler,
+                LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
+                1);
 }
 
 void run_lua(bool factory_reset)
 {
     lua_State *L = luaL_newstate();
-    globalL = L; // Only used for interrupts
+    L_global = L; // Only used for interrupts
 
     if (L == NULL)
     {
@@ -117,6 +119,7 @@ void run_lua(bool factory_reset)
         // If we get a reset command
         if (repl_buffer[0] == 0x04)
         {
+            repl_buffer[0] = 0;
             break;
         }
 

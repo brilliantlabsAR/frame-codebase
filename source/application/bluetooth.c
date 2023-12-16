@@ -229,7 +229,7 @@ void SD_EVT_IRQHandler(void)
                 // Catch keyboard interrupts
                 else if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x03)
                 {
-                    lua_interrupt();
+                    lua_break_signal_interrupt();
                 }
 
                 // Lua reset (0x04) is handled in the luaport.c file directly
