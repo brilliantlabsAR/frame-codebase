@@ -110,8 +110,10 @@ void lua_bluetooth_data_interrupt(uint8_t *data, size_t length)
     memcpy(lua_bluetooth_callback.data, data, length);
     lua_bluetooth_callback.length = length;
 
-    int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
-    lua_sethook(globalL, lua_bluetooth_receive_callback_handler, flag, 1);
+    lua_sethook(L_global,
+                lua_bluetooth_receive_callback_handler,
+                LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
+                1);
 }
 
 static int lua_bluetooth_receive_callback(lua_State *L)
