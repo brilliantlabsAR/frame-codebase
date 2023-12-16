@@ -51,8 +51,10 @@ void imu_tap_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
 {
     if (lua_imu_callback_function != 0)
     {
-        int flag = LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT;
-        lua_sethook(globalL, lua_imu_tap_callback_handler, flag, 1);
+        lua_sethook(L_global,
+                    lua_imu_tap_callback_handler,
+                    LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
+                    1);
     }
 
     // Clear the interrupt by reading the status register
@@ -92,6 +94,7 @@ static int lua_imu_direction(lua_State *L)
             break;
         }
 
+        // TODO this hangs on the devkit
         nrfx_systick_delay_ms(1);
     }
 
