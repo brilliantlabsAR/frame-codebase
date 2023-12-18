@@ -79,42 +79,8 @@ int main(void)
     LOG(RTT_CTRL_CLEAR);
     LOG("Starting radio test firmware");
 
-    // Always reboot into bootloader
-    NRF_POWER->GPREGRET = 0xB1;
-
     // Init systick so it can be used later
     nrfx_systick_init();
-
-    // Configure the shutdown pin
-    check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
-
-    nrfx_gpiote_input_config_t input_config = {
-        .pull = NRF_GPIO_PIN_NOPULL,
-    };
-
-    nrfx_gpiote_trigger_config_t trigger_config = {
-        .trigger = NRFX_GPIOTE_TRIGGER_LOTOHI,
-        .p_in_channel = NULL,
-    };
-
-    nrfx_gpiote_handler_config_t handler_config = {
-        .handler = case_detect_pin_interrupt_handler,
-        .p_context = NULL,
-    };
-
-    check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
-                                            &input_config,
-                                            &trigger_config,
-                                            &handler_config));
-
-    bool case_detect_pin = nrf_gpio_pin_read(CASE_DETECT_PIN);
-
-    if (case_detect_pin == true)
-    {
-        case_detect_pin_interrupt_handler(0, 0, NULL);
-    }
-
-    nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
 
     // Setup I2C and PMIC
     i2c_configure();
@@ -172,6 +138,53 @@ int main(void)
 
     // Connect AMUX to battery voltage
     check_error(i2c_write(PMIC, 0x28, 0x0F, 0x03).fail);
+
+    // Configure the shutdown pin
+    check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+
+    nrfx_gpiote_input_config_t input_config = {
+        .pull = NRF_GPIO_PIN_NOPULL,
+    };
+
+    nrfx_gpiote_trigger_config_t trigger_config = {
+        .trigger = NRFX_GPIOTE_TRIGGER_LOTOHI,
+        .p_in_channel = NULL,
+    };
+
+    nrfx_gpiote_handler_config_t handler_config = {
+        .handler = case_detect_pin_interrupt_handler,
+        .p_context = NULL,
+    };
+
+    check_error(nrfx_gpiote_input_configure(CASE_DETECT_PIN,
+                                            &input_config,
+                                            &trigger_config,
+                                            &handler_config));
+
+    bool case_detect_pin = nrf_gpio_pin_read(CASE_DETECT_PIN);
+
+    // Check if the device is docked by reading STAT_CHG_B
+    i2c_response_t charger_status = i2c_read(PMIC, 0x03, 0x0C);
+    check_error(charger_status.fail);
+    bool charging = charger_status.value;
+
+    if (charging)
+    {
+        // Just go to sleep if the case detect pin is high
+        if (case_detect_pin == true)
+        {
+            case_detect_pin_interrupt_handler(0, 0, NULL);
+        }
+
+        // Otherwise reboot into bootloader if button is pressed
+        else
+        {
+            NRF_POWER->GPREGRET = 0xB1;
+            NVIC_SystemReset();
+        }
+    }
+
+    nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
 
     // Start 64 MHz crystal oscillator.
     NRF_CLOCK->EVENTS_HFCLKSTARTED = 0;
