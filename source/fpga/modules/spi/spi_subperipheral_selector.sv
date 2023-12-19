@@ -29,6 +29,10 @@ module spi_subperipheral_selector (
         
         if (address_in_valid) begin
             case (address_in)
+			'hAA: begin
+				peripheral_data_out = 'hcc;
+				peripheral_data_out_valid = 1;
+			end
             'hDB: begin
                 peripheral_data_out = subperipheral_1_data_in;
                 peripheral_data_out_valid = subperipheral_1_data_in_valid;
@@ -36,7 +40,7 @@ module spi_subperipheral_selector (
                 subperipheral_2_enable_out = 0;
             end 
 
-            'hDC: begin
+            'hBB: begin
                 peripheral_data_out = subperipheral_2_data_in;
                 peripheral_data_out_valid = subperipheral_2_data_in_valid;
                 subperipheral_1_enable_out = 0;

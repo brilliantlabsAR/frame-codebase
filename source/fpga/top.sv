@@ -20,7 +20,7 @@
 `include "modules/spi/spi_subperipheral_selector.sv"
 `endif
 
-module top (
+module top #(SIM=0) (
     input logic spi_select_in,
     input logic spi_clock_in,
     input logic spi_data_in,
@@ -53,6 +53,7 @@ logic clock_24MHz;
 logic clock_36MHz;
 logic clock_72MHz;
 logic clock_50MHz;
+logic clock_96MHz;
 logic pll_locked;
 
 `ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
@@ -84,19 +85,32 @@ OSCA #(
     .HFCLKOUT(clock_18MHz_oscillator)
 );
 
-pll_wrapper pll_wrapper (
+// pll_wrapper pll_wrapper (
+//     .clki_i(clock_18MHz_oscillator),
+//     .clkop_o(clock_24MHz),
+//     .clkos_o(clock_36MHz),
+//     .clkos2_o(clock_72MHz),
+//     .clkos3_o(clock_50MHz),
+//     .lock_o(pll_locked)
+// );
+		
+pll_ip pll_ip (
     .clki_i(clock_18MHz_oscillator),
     .clkop_o(clock_24MHz),
     .clkos_o(clock_36MHz),
     .clkos2_o(clock_72MHz),
     .clkos3_o(clock_50MHz),
+    .clkos4_o(clock_96MHz),
+    .clkos5_o( ),
     .lock_o(pll_locked)
 );
 
 // Reset
-logic global_reset_n;
+logic global_reset_n /* synthesis syn_keep=1 */;
+logic reset_n_clock_36MHz;
 logic reset_n_clock_72MHz;
 logic reset_n_clock_50MHz;
+logic reset_n_clock_96MHz;
 
 reset_global reset_global (
     .clock_in(clock_18MHz_oscillator),
@@ -122,13 +136,21 @@ reset_sync reset_sync_clock_50MHz (
     .sync_reset_n_out(reset_n_clock_50MHz)
 );
 
-`endif // TODO remove this line once gatecat/prjoxide#44 is solved
+reset_sync reset_sync_clock_96MHz (
+    .clock_in(clock_96MHz),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(reset_n_clock_96MHz)
+);
 
-camera camera (
+logic [15:0] camera_ram_read_address;
+logic [31:0] camera_ram_read_data;
+logic camera_ram_read_enable;
+camera #(.SIM(SIM)) camera (
     .clock_36MHz(clock_36MHz),
     .clock_72MHz(clock_72MHz),
     .global_reset_n(global_reset_n),
     .reset_n_clock_36MHz(reset_n_clock_36MHz),
+    .reset_n_clock_96MHz(reset_n_clock_96MHz),
 
     .mipi_clock_p(mipi_clock_p),
     .mipi_clock_n(mipi_clock_n),
@@ -139,6 +161,8 @@ camera camera (
     .camera_ram_read_address(camera_ram_read_address),
     .camera_ram_read_data(camera_ram_read_data)
 );
+
+`endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // SPI
 logic [7:0] subperipheral_address;
@@ -213,6 +237,7 @@ camera_peripheral camera_peripheral (
 // Graphics
 display display (
     .clock_in(clock_50MHz),
+	.reset_n(reset_n_clock_50MHz),
     .clock_out(display_clock),
     .hsync(display_hsync),
     .vsync(display_vsync),

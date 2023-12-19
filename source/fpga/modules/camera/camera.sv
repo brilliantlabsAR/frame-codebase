@@ -14,6 +14,7 @@ module camera #(SIM=0) (
     input logic clock_72MHz,
     input logic global_reset_n,
     input logic reset_n_clock_36MHz,
+    input logic reset_n_clock_96MHz,
 
     inout wire mipi_clock_p,
     inout wire mipi_clock_n,
@@ -26,8 +27,8 @@ module camera #(SIM=0) (
 );
 
 logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
-logic [7:0] payload;
-logic [15:0] word_count;
+logic [7:0] payload /* synthesis syn_keep=1 nomerge=""*/;
+logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
 logic [5:0] datatype;
 
 csi2_receiver_ip csi2_receiver_ip (
@@ -35,7 +36,7 @@ csi2_receiver_ip csi2_receiver_ip (
     .clk_byte_hs_o(byte_clk_hs),
     .clk_byte_fr_i(byte_clk_hs),
     .reset_n_i(global_reset_n),
-    .reset_byte_fr_n_i(reset_n_byte),
+    .reset_byte_fr_n_i(reset_n_clock_96MHz),
     .clk_p_io(mipi_clock_p),
     .clk_n_io(mipi_clock_n),
     .d_p_io(mipi_data_p),
@@ -52,8 +53,8 @@ csi2_receiver_ip csi2_receiver_ip (
     .lp_av_en_o(lp_av_en)
 );
 
-always @(posedge byte_clk_hs or negedge reset_n_byte) begin
-    if (~reset_n_byte) begin
+always @(posedge byte_clk_hs or negedge reset_n_clock_96MHz) begin
+    if (!reset_n_clock_96MHz) begin
         lp_av_en_d <= 0;
         sp_en_d <= 0;
     end
@@ -63,12 +64,12 @@ always @(posedge byte_clk_hs or negedge reset_n_byte) begin
     end
 end
 
-logic payload_en_1d, payload_en_2d, payload_en_3d;
-logic [7:0] payload_1d;
-logic [7:0] payload_2d;
-logic [7:0] payload_3d;
-always @(posedge byte_clk_hs or negedge reset_n_byte) begin
-    if (~reset_n_byte) begin
+logic payload_en_1d, payload_en_2d, payload_en_3d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_1d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_2d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_3d /* synthesis syn_keep=1 nomerge=""*/;
+always @(posedge byte_clk_hs or negedge reset_n_clock_96MHz) begin
+    if (!reset_n_clock_96MHz) begin
         payload_en_1d <= 0;
         payload_en_2d <= 0;
         payload_en_3d <= 0;
@@ -91,7 +92,7 @@ end
 logic [9:0] pixel_data /* synthesis syn_keep=1 nomerge=""*/;
 logic frame_valid, line_valid /* synthesis syn_keep=1 nomerge=""*/;
 byte_to_pixel_ip byte_to_pixel_ip (
-    .reset_byte_n_i(reset_n_byte),
+    .reset_byte_n_i(reset_n_clock_96MHz),
     .clk_byte_i(byte_clk_hs),
     .sp_en_i(sp_en_d),
     .dt_i(datatype),
@@ -107,16 +108,16 @@ byte_to_pixel_ip byte_to_pixel_ip (
 );
 
 
-logic [29:0] rgb30;
-logic [9:0] rgb10;
-logic [7:0] rgb8;
-logic [3:0] gray4;
-logic camera_fifo_write_enable;
-logic debayer_frame_valid;
+logic [29:0] rgb30 /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] rgb10 /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] rgb8 /* synthesis syn_keep=1 nomerge=""*/;
+logic [3:0] gray4 /* synthesis syn_keep=1 nomerge=""*/;
+logic camera_fifo_write_enable /* synthesis syn_keep=1 nomerge=""*/;
+logic debayer_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
 
 generate
     if(SIM)
-        debayer debayer (
+        debayer #(.HSIZE('d640)) debayer_inst (
             .clock_72MHz(clock_72MHz),
             .clock_36MHz(clock_36MHz),
             .reset_n(reset_n_clock_36MHz),
@@ -125,8 +126,8 @@ generate
             .x_size(10'd640),
             .y_size(9'd2),
             .pixel_data(pixel_data),
-            .lv(line_valid),
-            .fv(frame_valid),
+            .line_valid(line_valid),
+            .frame_valid(frame_valid),
             .rgb10(rgb10),
             .rgb8(rgb8),
             .gray4(gray4),
@@ -135,7 +136,7 @@ generate
         );
     
     else
-        debayer debayer (
+        debayer debayer_inst (
             .clock_72MHz(clock_72MHz),
             .clock_36MHz(clock_36MHz),
             .reset_n(reset_n_clock_36MHz),
@@ -151,12 +152,12 @@ generate
             .gray4(gray4),
             .camera_fifo_write_enable(camera_fifo_write_enable),
             .frame_valid_o(debayer_frame_valid)
-        );
+        ) /* synthesis syn_keep=1 */;
 endgenerate
 
-logic [15:0] camera_ram_write_address;
-logic camera_ram_write_enable;
-logic [31:0] camera_ram_write_data;
+logic [15:0] camera_ram_write_address /* synthesis syn_keep=1 nomerge=""*/;
+logic camera_ram_write_enable /* synthesis syn_keep=1 nomerge=""*/;
+logic [31:0] camera_ram_write_data /* synthesis syn_keep=1 nomerge=""*/;
 camera_fifo camera_fifo (
     .clock(clock_72MHz),
     .reset_n(reset_n_clock_36MHz),
@@ -198,7 +199,7 @@ generate
             .rd_data_o(camera_ram_read_data),
             .lramready_o( ),
             .rd_datavalid_o( )
-        );
+        )/* synthesis syn_keep=1 */;
 endgenerate
 
 

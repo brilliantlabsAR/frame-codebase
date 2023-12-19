@@ -21,7 +21,7 @@
         <Source name="../modules/graphics/display.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog" excluded="TRUE">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/reset/reset_global.sv" type="Verilog" type_short="Verilog">
@@ -51,7 +51,16 @@
         <Source name="csi2_receiver_ip/csi2_receiver_ip.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
-        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
+        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
+        <Source name="osc_ip/osc_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="sim/csi2_transmitter_ip/csi2_transmitter_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
+            <Options/>
+        </Source>
+        <Source name="sim/pixel_to_byte_ip/pixel_to_byte_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="source/frame/frame.pdc" type="Physical Constraints File" type_short="PDC">
