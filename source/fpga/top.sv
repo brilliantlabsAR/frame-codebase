@@ -11,7 +11,7 @@
 
 `ifndef RADIANT
 `include "modules/camera/camera.sv"
-`include "modules/graphics/display.sv"
+`include "modules/graphics/graphics.sv"
 `include "modules/pll/pll_wrapper.sv"
 `include "modules/reset/reset_global.sv"
 `include "modules/reset/reset_sync.sv"

@@ -9,43 +9,31 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module display (
+module display_driver (
     input logic clock_in,
+    input logic reset_n_in,
 
-    output logic clock_out = 1,
-    output logic hsync = 0,
-    output logic vsync = 0,
-    output logic y0,
-    output logic y1,
-    output logic y2,
-    output logic y3,
-    output logic cr0,
-    output logic cr1,
-    output logic cr2,
-    output logic cb0,
-    output logic cb1,
-    output logic cb2
+    output logic [16:0] pixel_data_address_out,
+    input logic [9:0] pixel_data_value_in,
+    output logic frame_complete_out,
+
+    output logic display_clock_out,
+    output logic display_hsync_out,
+    output logic display_vsync_out,
+    output logic [3:0] display_y_out,
+    output logic [2:0] display_cb_out,
+    output logic [2:0] display_cr_out
 );
-
-assign y0 = 1;
-assign y1 = 1;
-assign y2 = 1;
-assign y3 = 1;
-assign cr0 = 1;
-assign cr1 = 1;
-assign cr2 = 1;
-assign cb0 = 1;
-assign cb1 = 1;
-assign cb2 = 1;
 
 logic [15:0] hsync_counter = 0;
 logic [15:0] vsync_counter = 0;
+logic [16:0] pixel_address_counter = 0;
 
 logic internal_clock = 1;
 
 always_ff @(posedge clock_in) begin
     
-    clock_out <= ~clock_out;
+    display_clock_out <= ~display_clock_out;
     internal_clock <= ~internal_clock;
 
 end
@@ -65,14 +53,14 @@ always_ff @(posedge internal_clock) begin
     end
 
     // Output the horizontal sync signal based on column number
-    if (hsync_counter < 64) hsync <= 0;
+    if (hsync_counter < 64) display_hsync_out <= 0;
 
-    else hsync <= 1;
+    else display_hsync_out <= 1;
 
     // Output the vertical sync signal based on line number
-    if (vsync_counter < 6) vsync <= 0;
+    if (vsync_counter < 6) display_vsync_out <= 0;
 
-    else vsync <= 1;
+    else display_vsync_out <= 1;
 
 end
 
