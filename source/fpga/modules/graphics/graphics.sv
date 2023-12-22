@@ -33,13 +33,14 @@ module graphics (
     output logic [2:0] display_cr_out
 );
 
+logic [17:0] display_read_address;
 
 display_driver display_driver (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
-    .pixel_data_address_out(),
-    .pixel_data_value_in(10'b101011011),
+    .pixel_data_address_out(display_read_address),
+    .pixel_data_value_in(display_read_address[17:8]),
     .frame_complete_out(),
 
     .display_clock_out(display_clock_out),

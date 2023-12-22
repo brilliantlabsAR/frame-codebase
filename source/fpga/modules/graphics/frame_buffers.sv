@@ -10,11 +10,11 @@
  */
  
 module frame_buffers (
-    input logic [16:0] pixel_write_address_in,
+    input logic [17:0] pixel_write_address_in,
     input logic [3:0] pixel_write_data_in,
     output logic pixel_write_buffer_ready_out,
 
-    input logic [16:0] pixel_read_address_in,
+    input logic [17:0] pixel_read_address_in,
     output logic [3:0] pixel_read_data_out,
     input logic pixel_read_frame_complete_in,
 
