@@ -10,10 +10,10 @@
  */
 
 `ifndef RADIANT
-`include "modules/graphics/color_pallet.sv"
-`include "modules/graphics/display_driver.sv"
-`include "modules/graphics/frame_buffers.sv"
-`include "modules/graphics/sprite_engine.sv"
+`include "color_pallet.sv"
+`include "display_driver.sv"
+`include "frame_buffers.sv"
+`include "sprite_engine.sv"
 `endif
 
 module graphics (
@@ -34,5 +34,20 @@ module graphics (
 );
 
 
+display_driver display_driver (
+    .clock_in(clock_in),
+    .reset_n_in(reset_n_in),
+
+    .pixel_data_address_out(),
+    .pixel_data_value_in(10'b101011011),
+    .frame_complete_out(),
+
+    .display_clock_out(display_clock_out),
+    .display_hsync_out(display_hsync_out),
+    .display_vsync_out(display_vsync_out),
+    .display_y_out(display_y_out),
+    .display_cb_out(display_cb_out),
+    .display_cr_out(display_cr_out)
+);
 
 endmodule

@@ -171,23 +171,22 @@ spi_register_chip_id spi_register_chip_id (
     .data_out_valid(subperipheral_1_cipo_valid)
 );
 
-
 // Graphics
-display display (
+graphics graphics (
     .clock_in(clock_50MHz),
-    .clock_out(display_clock),
-    .hsync(display_hsync),
-    .vsync(display_vsync),
-    .y0(display_y0),
-    .y1(display_y1),
-    .y2(display_y2),
-    .y3(display_y3),
-    .cr0(display_cr0),
-    .cr1(display_cr1),
-    .cr2(display_cr2),
-    .cb0(display_cb0),
-    .cb1(display_cb1),
-    .cb2(display_cb2)
+    .reset_n_in(reset_n_clock_50MHz),
+
+    .op_code_in(),
+    .op_code_valid_in(),
+    .operand_in(),
+    .operand_valid_in(),
+
+    .display_clock_out(display_clock),
+    .display_hsync_out(display_hsync),
+    .display_vsync_out(display_vsync),
+    .display_y_out({display_y3, display_y2, display_y1, display_y0}),
+    .display_cb_out({display_cb2, display_cb1, display_cb0}),
+    .display_cr_out({display_cr2, display_cr1, display_cr0})
 );
 
 // Camera
