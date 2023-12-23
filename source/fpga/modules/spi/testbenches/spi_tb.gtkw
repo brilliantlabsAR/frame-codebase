@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Dec 12 19:35:20 2023
+[*] Sat Dec 23 15:12:29 2023
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Tue Dec 12 19:31:17 2023"
-[dumpfile_size] 1695
+[dumpfile_mtime] "Sat Dec 23 15:11:39 2023"
+[dumpfile_size] 1699
 [savefile] "spi_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
-*-10.193202 1234 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-10.193202 942 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -43,6 +43,7 @@
 [sst_vpaned_height] 432
 @28
 spi_tb.system_clock
+spi_tb.reset
 @200
 -
 -SPI peripheral
@@ -54,77 +55,47 @@ spi_tb.spi_data_out
 @200
 -
 @22
-spi_tb.spi_peripheral.subperipheral_address_out[7:0]
+spi_tb.spi_peripheral.opcode_out[7:0]
 @28
-spi_tb.spi_peripheral.subperipheral_address_out_valid
+spi_tb.spi_peripheral.opcode_valid_out
 @22
-spi_tb.spi_peripheral.subperipheral_data_out[7:0]
+spi_tb.spi_peripheral.operand_out[7:0]
 @28
-spi_tb.spi_peripheral.subperipheral_data_out_valid
-@22
-spi_tb.spi_peripheral.subperipheral_data_in[7:0]
-@28
-spi_tb.spi_peripheral.subperipheral_data_in_valid
+spi_tb.spi_peripheral.operand_valid_out
+@420
+spi_tb.spi_peripheral.operand_count_out
 @200
 -
 @420
 spi_tb.spi_peripheral.spi_bit_index
 @22
-spi_tb.spi_peripheral.subperipheral_data_in_reg[7:0]
+spi_tb.spi_peripheral.response_reg[7:0]
 @200
 -
--Subperipheral interface
-@22
-spi_tb.spi_subperipheral_selector.address_in[7:0]
+-Chip ID 1 register
 @28
-spi_tb.spi_subperipheral_selector.address_in_valid
+spi_tb.chip_id_1.clock_in
+spi_tb.chip_id_1.reset_n_in
 @22
-spi_tb.spi_subperipheral_selector.peripheral_data_out[7:0]
+spi_tb.chip_id_1.opcode_in[7:0]
 @28
-spi_tb.spi_subperipheral_selector.peripheral_data_out_valid
+spi_tb.chip_id_1.opcode_valid_in
+@22
+spi_tb.chip_id_1.response_out[7:0]
+@28
+spi_tb.chip_id_1.response_valid_out
 @200
 -
+-Chip ID 2 register
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_1_enable_out
+spi_tb.chip_id_2.clock_in
+spi_tb.chip_id_2.reset_n_in
 @22
-spi_tb.spi_subperipheral_selector.subperipheral_1_data_in[7:0]
+spi_tb.chip_id_2.opcode_in[7:0]
 @28
-spi_tb.spi_subperipheral_selector.subperipheral_1_data_in_valid
-@200
--
-@28
-spi_tb.spi_subperipheral_selector.subperipheral_2_enable_out
+spi_tb.chip_id_2.opcode_valid_in
 @22
-spi_tb.spi_subperipheral_selector.subperipheral_2_data_in[7:0]
-@28
-spi_tb.spi_subperipheral_selector.subperipheral_2_data_in_valid
-@200
--
--Chip ID register
-@28
-spi_tb.spi_register_chip_id.reset_n
-spi_tb.spi_register_chip_id.enable
-@200
--
-@22
-spi_tb.spi_register_chip_id.data_out[7:0]
-@28
-spi_tb.spi_register_chip_id.data_out_valid
-@200
--
--Loopback register
-@28
-spi_tb.spi_register_loopback.reset_n
-spi_tb.spi_register_loopback.enable
-@22
-spi_tb.spi_register_loopback.data_in[7:0]
-@28
-spi_tb.spi_register_loopback.data_in_valid
-@200
--
-@22
-spi_tb.spi_register_loopback.data_out[7:0]
-@28
-spi_tb.spi_register_loopback.data_out_valid
+spi_tb.chip_id_2.response_out[7:0]
+spi_tb.chip_id_2.response_out[7:0]
 [pattern_trace] 1
 [pattern_trace] 0

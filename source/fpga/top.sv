@@ -15,9 +15,8 @@
 `include "modules/pll/pll_wrapper.sv"
 `include "modules/reset/reset_global.sv"
 `include "modules/reset/reset_sync.sv"
-`include "modules/spi/registers/chip_id.sv"
 `include "modules/spi/spi_peripheral.sv"
-`include "modules/spi/spi_subperipheral_selector.sv"
+`include "modules/spi/spi_register.sv"
 `endif
 
 module top (
@@ -115,59 +114,42 @@ reset_sync reset_sync_clock_50MHz (
 `endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // SPI
-logic [7:0] subperipheral_address;
-logic subperipheral_address_valid;
-logic [7:0] subperipheral_copi;
-logic subperipheral_copi_valid;
-logic [7:0] subperipheral_cipo;
-logic subperipheral_cipo_valid;
+logic [7:0] opcode;
+logic opcode_valid;
+logic [7:0] operand;
+logic operand_valid;
+integer operand_count;
 
-logic subperipheral_1_enable;
-logic [7:0] subperipheral_1_cipo;
-logic subperipheral_1_cipo_valid;
+logic [7:0] response_1;
+logic response_1_valid = 0;
 
-logic subperipheral_2_enable;
-logic [7:0] subperipheral_2_cipo;
-logic subperipheral_2_cipo_valid;
+logic [7:0] response_2;
+logic response_2_valid = 0;
 
-logic subperipheral_3_enable;
-logic [7:0] subperipheral_3_cipo;
-logic subperipheral_3_cipo_valid;
+logic [7:0] response_3;
+logic response_3_valid;
 
 spi_peripheral spi_peripheral (
-    .clock(clock_72MHz),
-    .reset_n(reset_n_clock_72MHz),
+    .clock_in(clock_72MHz),
+    .reset_n_in(reset_n_clock_72MHz),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
-    .subperipheral_address_out(subperipheral_address),
-    .subperipheral_address_out_valid(subperipheral_address_valid),
-    .subperipheral_data_out(subperipheral_copi),
-    .subperipheral_data_out_valid(subperipheral_copi_valid),
-    .subperipheral_data_in(subperipheral_cipo),
-    .subperipheral_data_in_valid(subperipheral_cipo_valid)
-);
+    .opcode_out(opcode),
+    .opcode_valid_out(opcode_valid),
+    .operand_out(operand),
+    .operand_valid_out(operand_valid),
+    .operand_count_out(operand_count),
 
-spi_subperipheral_selector spi_subperipheral_selector (
-    .address_in(subperipheral_address),
-    .address_in_valid(subperipheral_address_valid),
-    .peripheral_data_out(subperipheral_cipo),
-    .peripheral_data_out_valid(subperipheral_cipo_valid),
-
-    .subperipheral_1_enable_out(subperipheral_1_enable),
-    .subperipheral_1_data_in(subperipheral_1_cipo),
-    .subperipheral_1_data_in_valid(subperipheral_1_cipo_valid),
-
-    .subperipheral_2_enable_out(subperipheral_2_enable),
-    .subperipheral_2_data_in(subperipheral_2_cipo),
-    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid),
-
-    .subperipheral_3_enable_out(subperipheral_3_enable),
-    .subperipheral_3_data_in(subperipheral_3_cipo),
-    .subperipheral_3_data_in_valid(subperipheral_3_cipo_valid)
+    .response_1_in(response_1),
+    .response_2_in(response_2),
+    .response_3_in(response_3),
+    .response_1_valid_in(response_1_valid),
+    .response_2_valid_in(response_2_valid),
+    .response_3_valid_in(response_3_valid)
 );
 
 // Graphics
@@ -175,10 +157,11 @@ graphics graphics (
     .clock_in(clock_50MHz),
     .reset_n_in(reset_n_clock_50MHz),
 
-    .op_code_in(subperipheral_address),
-    .op_code_valid_in(subperipheral_1_enable),
-    .operand_in(subperipheral_cipo),
-    .operand_valid_in(subperipheral_cipo_valid),
+    .op_code_in(opcode),
+    .op_code_valid_in(opcode_valid),
+    .operand_in(operand),
+    .operand_valid_in(operand_valid),
+    .operand_count_in(operand_count),
 
     .display_clock_out(display_clock),
     .display_hsync_out(display_hsync),
@@ -192,13 +175,17 @@ graphics graphics (
 assign camera_clock = clock_24MHz;
 
 // Chip ID register
-spi_register_chip_id spi_register_chip_id (
-    .clock(clock_72MHz),
-    .reset_n(reset_n_clock_72MHz),
-    .enable(subperipheral_3_enable),
+spi_register #(
+    .REGISTER_ADDRESS('hDB),
+    .REGISTER_VALUE('h81)
+) chip_id_1 (
+    .clock_in(clock_72MHz),
+    .reset_n_in(reset_n_clock_72MHz),
 
-    .data_out(subperipheral_3_cipo),
-    .data_out_valid(subperipheral_3_cipo_valid)
+    .opcode_in(opcode),
+    .opcode_valid_in(opcode_valid),
+    .response_out(response_3),
+    .response_valid_out(response_3_valid)
 );
 
 endmodule
