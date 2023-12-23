@@ -84,7 +84,7 @@ module color_pallet (
             color_table[14] <= SKYBLUE;
             color_table[15] <= CLOUDBLUE;
         
-            yuv_color_out <= VOID; // Transparant/black
+            yuv_color_out <= VOID;
         end
 
         else begin
@@ -92,7 +92,7 @@ module color_pallet (
             if (assign_color_enable_in) begin
 
                 color_table[assign_color_index_in] <= assign_color_value_in;
-                yuv_color_out <= VOID; // Transparant/black
+                yuv_color_out <= VOID;
             
             end
 

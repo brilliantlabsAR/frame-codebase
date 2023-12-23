@@ -19,24 +19,43 @@ module frame_buffers (
 
     input logic [17:0] pixel_read_address_in,
     output logic [3:0] pixel_read_data_out,
-    input logic pixel_read_frame_complete_in,
 
     input logic switch_write_buffer_in
 );
     
 logic currently_displayed_buffer = 0;
+logic [1:0] switch_write_buffer_edge_monitor = 0;
+logic buffer_switch_pending = 0;
 
 always_ff @(posedge clock_in) begin
-    
+        
     if (reset_n_in == 0) begin
 
         pixel_write_buffer_ready_out <= 0;
         pixel_read_data_out <= 0;
-    
+
+        currently_displayed_buffer <= 0;
+        switch_write_buffer_edge_monitor <= 'b00;
+        buffer_switch_pending = 0;
+
     end
 
     else begin
         
+        switch_write_buffer_edge_monitor <= {
+            switch_write_buffer_edge_monitor[0], 
+            switch_write_buffer_in
+        };
+
+        if (switch_write_buffer_edge_monitor == 'b01) begin
+            buffer_switch_pending <= 1;
+        end
+
+        if (buffer_switch_pending == 1 && pixel_read_address_in == 0) begin
+            currently_displayed_buffer <= ~currently_displayed_buffer;
+            buffer_switch_pending <= 0;
+        end
+    
         if (currently_displayed_buffer == 0) begin
             if      (pixel_read_address_in < 25  * 640) pixel_read_data_out <= 0;
             else if (pixel_read_address_in < 50  * 640) pixel_read_data_out <= 1;

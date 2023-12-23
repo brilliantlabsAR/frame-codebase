@@ -130,6 +130,10 @@ logic subperipheral_2_enable;
 logic [7:0] subperipheral_2_cipo;
 logic subperipheral_2_cipo_valid;
 
+logic subperipheral_3_enable;
+logic [7:0] subperipheral_3_cipo;
+logic subperipheral_3_cipo_valid;
+
 spi_peripheral spi_peripheral (
     .clock(clock_72MHz),
     .reset_n(reset_n_clock_72MHz),
@@ -159,16 +163,11 @@ spi_subperipheral_selector spi_subperipheral_selector (
 
     .subperipheral_2_enable_out(subperipheral_2_enable),
     .subperipheral_2_data_in(subperipheral_2_cipo),
-    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid)
-);
+    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid),
 
-spi_register_chip_id spi_register_chip_id (
-    .clock(clock_72MHz),
-    .reset_n(reset_n_clock_72MHz),
-    .enable(subperipheral_1_enable),
-
-    .data_out(subperipheral_1_cipo),
-    .data_out_valid(subperipheral_1_cipo_valid)
+    .subperipheral_3_enable_out(subperipheral_3_enable),
+    .subperipheral_3_data_in(subperipheral_3_cipo),
+    .subperipheral_3_data_in_valid(subperipheral_3_cipo_valid)
 );
 
 // Graphics
@@ -176,10 +175,10 @@ graphics graphics (
     .clock_in(clock_50MHz),
     .reset_n_in(reset_n_clock_50MHz),
 
-    .op_code_in(),
-    .op_code_valid_in(),
-    .operand_in(),
-    .operand_valid_in(),
+    .op_code_in(subperipheral_address),
+    .op_code_valid_in(subperipheral_1_enable),
+    .operand_in(subperipheral_cipo),
+    .operand_valid_in(subperipheral_cipo_valid),
 
     .display_clock_out(display_clock),
     .display_hsync_out(display_hsync),
@@ -191,5 +190,15 @@ graphics graphics (
 
 // Camera
 assign camera_clock = clock_24MHz;
+
+// Chip ID register
+spi_register_chip_id spi_register_chip_id (
+    .clock(clock_72MHz),
+    .reset_n(reset_n_clock_72MHz),
+    .enable(subperipheral_3_enable),
+
+    .data_out(subperipheral_3_cipo),
+    .data_out_valid(subperipheral_3_cipo_valid)
+);
 
 endmodule

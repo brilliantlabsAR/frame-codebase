@@ -15,7 +15,6 @@ module display_driver (
 
     output logic [17:0] pixel_data_address_out,
     input logic [9:0] pixel_data_value_in,
-    output logic frame_complete_out,
 
     output logic display_clock_out,
     output logic display_hsync_out,

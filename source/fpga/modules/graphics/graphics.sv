@@ -39,6 +39,8 @@ logic display_to_frame_buffer_frame_complete;
 logic [3:0] frame_buffer_to_display_indexed_color;
 logic [9:0] frame_buffer_to_display_real_color;
 
+logic switch_buffer_command_to_frame_buffer;
+
 frame_buffers frame_buffers (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
@@ -49,9 +51,8 @@ frame_buffers frame_buffers (
 
     .pixel_read_address_in(display_to_frame_buffer_read_address),
     .pixel_read_data_out(frame_buffer_to_display_indexed_color),
-    .pixel_read_frame_complete_in(display_to_frame_buffer_frame_complete),
 
-    .switch_write_buffer_in(0)
+    .switch_write_buffer_in(switch_buffer_command_to_frame_buffer)
 );
 
 color_pallet color_pallet (
@@ -72,7 +73,6 @@ display_driver display_driver (
 
     .pixel_data_address_out(display_to_frame_buffer_read_address),
     .pixel_data_value_in(frame_buffer_to_display_real_color),
-    .frame_complete_out(display_to_frame_buffer_frame_complete),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
@@ -81,5 +81,25 @@ display_driver display_driver (
     .display_cb_out(display_cb_out),
     .display_cr_out(display_cr_out)
 );
+
+always_ff @(posedge clock_in) begin
+    
+    if (op_code_valid_in) begin
+        case (op_code_in)
+            'h?7: begin
+                switch_buffer_command_to_frame_buffer <= 1;
+            end
+
+            default: begin
+                switch_buffer_command_to_frame_buffer <= 0;
+            end 
+        endcase
+    end
+
+    else begin
+        switch_buffer_command_to_frame_buffer <= 0;
+    end
+
+end
 
 endmodule

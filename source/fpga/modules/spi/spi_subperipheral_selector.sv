@@ -22,25 +22,39 @@ module spi_subperipheral_selector (
 
     output logic subperipheral_2_enable_out,
     input logic [7:0] subperipheral_2_data_in,
-    input logic subperipheral_2_data_in_valid
+    input logic subperipheral_2_data_in_valid,
+
+    output logic subperipheral_3_enable_out,
+    input logic [7:0] subperipheral_3_data_in,
+    input logic subperipheral_3_data_in_valid
 );
     
     always_comb begin
         
         if (address_in_valid) begin
             case (address_in)
-            'hDB: begin
+            'h1?: begin
                 peripheral_data_out = subperipheral_1_data_in;
                 peripheral_data_out_valid = subperipheral_1_data_in_valid;
                 subperipheral_1_enable_out = 1;
                 subperipheral_2_enable_out = 0;
+                subperipheral_3_enable_out = 0;
             end 
 
-            'hDC: begin
+            'h2?: begin
                 peripheral_data_out = subperipheral_2_data_in;
                 peripheral_data_out_valid = subperipheral_2_data_in_valid;
                 subperipheral_1_enable_out = 0;
                 subperipheral_2_enable_out = 1;
+                subperipheral_3_enable_out = 0;
+            end 
+
+            'hDB: begin
+                peripheral_data_out = subperipheral_3_data_in;
+                peripheral_data_out_valid = subperipheral_3_data_in_valid;
+                subperipheral_1_enable_out = 0;
+                subperipheral_2_enable_out = 0;
+                subperipheral_3_enable_out = 1;
             end 
 
             default: begin
@@ -48,6 +62,7 @@ module spi_subperipheral_selector (
                 peripheral_data_out_valid = 0;
                 subperipheral_1_enable_out = 0;
                 subperipheral_2_enable_out = 0;
+                subperipheral_3_enable_out = 0;
             end
             endcase
         end
@@ -57,6 +72,7 @@ module spi_subperipheral_selector (
             peripheral_data_out_valid = 0;
             subperipheral_1_enable_out = 0;
             subperipheral_2_enable_out = 0;
+            subperipheral_3_enable_out = 0;
         end
 
     end
