@@ -35,14 +35,12 @@ module graphics (
 );
 
 logic [17:0] display_to_frame_buffer_read_address;
-logic display_to_frame_buffer_frame_complete;
-
 logic [3:0] frame_buffer_to_display_indexed_color;
 logic [9:0] frame_buffer_to_display_real_color;
 
-logic command_to_color_pallet_assign_color_enable;
-logic command_to_color_pallet_assign_color_value;
-logic command_to_color_pallet_assign_color_index;
+logic command_to_color_pallet_assign_color_enable = 0;
+logic [7:0] command_to_color_pallet_assign_color_index = 0;
+logic [9:0] command_to_color_pallet_assign_color_value = 0;
 logic command_to_frame_buffer_switch_buffer;
 
 frame_buffers frame_buffers (
@@ -66,9 +64,9 @@ color_pallet color_pallet (
     .pixel_index_in(frame_buffer_to_display_indexed_color),
     .yuv_color_out(frame_buffer_to_display_real_color),
 
-    .assign_color_enable_in(0),
-    .assign_color_index_in(0),
-    .assign_color_value_in(0)
+    .assign_color_enable_in(command_to_color_pallet_assign_color_enable),
+    .assign_color_index_in(command_to_color_pallet_assign_color_index),
+    .assign_color_value_in(command_to_color_pallet_assign_color_value)
 );
 
 display_driver display_driver (
@@ -88,39 +86,39 @@ display_driver display_driver (
 
 always_ff @(posedge clock_in) begin
     
-    if (reset_n_in == 0) begin
+    // Assign color
+    if (op_code_valid_in && op_code_in == 'h10) begin
+         
+        if (operand_valid_in && operand_count_in == 1) begin
+            command_to_color_pallet_assign_color_index <= operand;
+        end
+
+        if (operand_valid_in && operand_count_in == 2) begin
+            command_to_color_pallet_assign_color_value[9:6] <= operand[7:4];
+        end
+
+        if (operand_valid_in && operand_count_in == 3) begin
+            command_to_color_pallet_assign_color_value[5:3] <= operand[7:5];
+        end
+
+        if (operand_valid_in && operand_count_in == 4) begin
+            command_to_color_pallet_assign_color_value[2:0] <= operand[7:5];
+            command_to_color_pallet_assign_color_enable <= 1;
+        end
 
     end
 
+    // Buffer show
+    else if (op_code_valid_in && op_code_in == 'h17) begin
+        command_to_frame_buffer_switch_buffer <= 1;
+    end
+
+    // Reset state
     else begin
-
-        if (op_code_valid_in) begin
-            case (op_code_in)
-
-                // Assign color
-                // 'h?0: begin
-
-                // end
-
-                // Buffer show
-                'h17: begin
-                    command_to_frame_buffer_switch_buffer <= 1;
-                end
-
-                default: begin
-                    command_to_frame_buffer_switch_buffer <= 0;
-                end 
-            endcase
-        end
-
-        else begin
-            operand_counter <= 0;
-            command_to_color_pallet_assign_color_enable <= 0;
-            command_to_color_pallet_assign_color_value <= 0;
-            command_to_color_pallet_assign_color_index <= 0;
-            command_to_frame_buffer_switch_buffer <= 0;
-        end
-
+        command_to_color_pallet_assign_color_enable <= 0;
+        command_to_color_pallet_assign_color_value <= 0;
+        command_to_color_pallet_assign_color_index <= 0;
+        command_to_frame_buffer_switch_buffer <= 0;
     end
 
 end
