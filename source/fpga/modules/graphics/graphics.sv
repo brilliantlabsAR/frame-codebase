@@ -33,15 +33,46 @@ module graphics (
     output logic [2:0] display_cr_out
 );
 
-logic [17:0] display_read_address;
+logic [17:0] display_to_frame_buffer_read_address;
+logic display_to_frame_buffer_frame_complete;
+
+logic [3:0] frame_buffer_to_display_indexed_color;
+logic [9:0] frame_buffer_to_display_real_color;
+
+frame_buffers frame_buffers (
+    .clock_in(clock_in),
+    .reset_n_in(reset_n_in),
+
+    .pixel_write_address_in(0),
+    .pixel_write_data_in(0),
+    .pixel_write_buffer_ready_out(),
+
+    .pixel_read_address_in(display_to_frame_buffer_read_address),
+    .pixel_read_data_out(frame_buffer_to_display_indexed_color),
+    .pixel_read_frame_complete_in(display_to_frame_buffer_frame_complete),
+
+    .switch_write_buffer_in(0)
+);
+
+color_pallet color_pallet (
+    .clock_in(clock_in),
+    .reset_n_in(reset_n_in),
+
+    .pixel_index_in(frame_buffer_to_display_indexed_color),
+    .yuv_color_out(frame_buffer_to_display_real_color),
+
+    .assign_color_enable_in(0),
+    .assign_color_index_in(0),
+    .assign_color_value_in(0)
+);
 
 display_driver display_driver (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
-    .pixel_data_address_out(display_read_address),
-    .pixel_data_value_in(display_read_address[17:8]),
-    .frame_complete_out(),
+    .pixel_data_address_out(display_to_frame_buffer_read_address),
+    .pixel_data_value_in(frame_buffer_to_display_real_color),
+    .frame_complete_out(display_to_frame_buffer_frame_complete),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
