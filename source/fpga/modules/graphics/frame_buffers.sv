@@ -78,7 +78,11 @@ always_ff @(posedge clock_in) begin
         end
 
         else begin
-            pixel_read_data_out <= 12;
+            if      (pixel_read_address_in < 100 * 640) pixel_read_data_out <= 0;
+            else if (pixel_read_address_in < 200 * 640) pixel_read_data_out <= 1;
+            else if (pixel_read_address_in < 300 * 640) pixel_read_data_out <= 2;
+            else if (pixel_read_address_in < 400 * 640) pixel_read_data_out <= 3;
+            else                                        pixel_read_data_out <= 0;
         end
 
     end
