@@ -23,7 +23,6 @@
 #
 
 BUILD := ../../build
-RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
 
 fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
@@ -57,17 +56,3 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 clean:
 	@rm -rf $(BUILD) fpga_application.h
 	@echo Cleaned
-
-radiant:
-	@mkdir -p $(BUILD)
-
-	@$(RADIANT_PATH)/radiantc radiant/run.tcl
-
-	@xxd \
-	    -include ./radiant/frame/frame_frame.bit \
-		$(BUILD)/fpga_application_temp.h
-	
-	@sed -i 's/__radiant_frame_frame_frame_bit/fpga_application/g' $(BUILD)/fpga_application_temp.h
-	@sed '1s/^/const /' $(BUILD)/fpga_application_temp.h > fpga_application.h
-
-.PHONY: radiant clean

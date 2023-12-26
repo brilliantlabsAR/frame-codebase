@@ -20,17 +20,11 @@
 `include "modules/spi/spi_subperipheral_selector.sv"
 `endif
 
-module top #(SIM=0) (
+module top (
     input logic spi_select_in,
     input logic spi_clock_in,
     input logic spi_data_in,
     output logic spi_data_out,
-
-    inout wire mipi_clock_p,
-	inout wire mipi_clock_n,
-	inout wire mipi_data_p,
-	inout wire mipi_data_n,
-    output logic camera_clock,
 
     output logic display_clock,
     output logic display_hsync,
@@ -44,7 +38,9 @@ module top #(SIM=0) (
     output logic display_cr2,
     output logic display_cb0,
     output logic display_cb1,
-    output logic display_cb2
+    output logic display_cb2,
+
+    output logic camera_clock
 );
 
 // Clocking
@@ -53,7 +49,6 @@ logic clock_24MHz;
 logic clock_36MHz;
 logic clock_72MHz;
 logic clock_50MHz;
-logic clock_96MHz;
 logic pll_locked;
 
 `ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
@@ -85,43 +80,24 @@ OSCA #(
     .HFCLKOUT(clock_18MHz_oscillator)
 );
 
-// pll_wrapper pll_wrapper (
-//     .clki_i(clock_18MHz_oscillator),
-//     .clkop_o(clock_24MHz),
-//     .clkos_o(clock_36MHz),
-//     .clkos2_o(clock_72MHz),
-//     .clkos3_o(clock_50MHz),
-//     .lock_o(pll_locked)
-// );
-		
-pll_ip pll_ip (
+pll_wrapper pll_wrapper (
     .clki_i(clock_18MHz_oscillator),
     .clkop_o(clock_24MHz),
     .clkos_o(clock_36MHz),
     .clkos2_o(clock_72MHz),
     .clkos3_o(clock_50MHz),
-    .clkos4_o(clock_96MHz),
-    .clkos5_o( ),
     .lock_o(pll_locked)
 );
 
 // Reset
-logic global_reset_n /* synthesis syn_keep=1 */;
-logic reset_n_clock_36MHz;
+logic global_reset_n;
 logic reset_n_clock_72MHz;
 logic reset_n_clock_50MHz;
-logic reset_n_clock_96MHz;
 
 reset_global reset_global (
     .clock_in(clock_18MHz_oscillator),
     .pll_locked_in(pll_locked),
     .global_reset_n_out(global_reset_n)
-);
-
-reset_sync reset_sync_clock_36MHz (
-    .clock_in(clock_36MHz),
-    .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_36MHz)
 );
 
 reset_sync reset_sync_clock_72MHz (
@@ -134,32 +110,6 @@ reset_sync reset_sync_clock_50MHz (
     .clock_in(clock_50MHz),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(reset_n_clock_50MHz)
-);
-
-reset_sync reset_sync_clock_96MHz (
-    .clock_in(clock_96MHz),
-    .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_96MHz)
-);
-
-logic [15:0] camera_ram_read_address;
-logic [31:0] camera_ram_read_data;
-logic camera_ram_read_enable;
-camera #(.SIM(SIM)) camera (
-    .clock_36MHz(clock_36MHz),
-    .clock_72MHz(clock_72MHz),
-    .global_reset_n(global_reset_n),
-    .reset_n_clock_36MHz(reset_n_clock_36MHz),
-    .reset_n_clock_96MHz(reset_n_clock_96MHz),
-
-    .mipi_clock_p(mipi_clock_p),
-    .mipi_clock_n(mipi_clock_n),
-    .mipi_data_p(mipi_data_p),
-    .mipi_data_n(mipi_data_n),
-
-    .camera_ram_read_enable(camera_ram_read_enable),
-    .camera_ram_read_address(camera_ram_read_address),
-    .camera_ram_read_data(camera_ram_read_data)
 );
 
 `endif // TODO remove this line once gatecat/prjoxide#44 is solved
@@ -221,23 +171,10 @@ spi_register_chip_id spi_register_chip_id (
     .data_out_valid(subperipheral_1_cipo_valid)
 );
 
-camera_peripheral camera_peripheral (
-    .clock(clock_72MHz),
-    .reset_n(reset_n_clock_72MHz),
-    .enable(subperipheral_2_enable),
-
-    .data_in_valid(subperipheral_copi_valid),
-    .data_out(subperipheral_2_cipo),
-    .data_out_valid(subperipheral_2_cipo_valid),
-    .camera_ram_read_address(camera_ram_read_address),
-    .camera_ram_read_data(camera_ram_read_data),
-	.camera_ram_read_enable(camera_ram_read_enable)
-);
 
 // Graphics
 display display (
     .clock_in(clock_50MHz),
-	.reset_n(reset_n_clock_50MHz),
     .clock_out(display_clock),
     .hsync(display_hsync),
     .vsync(display_vsync),

@@ -11,11 +11,10 @@
 
 module display (
     input logic clock_in,
-	input logic reset_n,
 
-    output logic clock_out,
-    output logic hsync,
-    output logic vsync,
+    output logic clock_out = 1,
+    output logic hsync = 0,
+    output logic vsync = 0,
     output logic y0,
     output logic y1,
     output logic y2,
@@ -42,42 +41,39 @@ assign cb2 = 1;
 logic [15:0] hsync_counter = 0;
 logic [15:0] vsync_counter = 0;
 
-logic internal_clock;
+logic internal_clock = 1;
 
-always @(posedge clock_in) begin
-	
-	if (!reset_n) begin
-		clock_out <= 1;
-		internal_clock <= 1;
-	end
-	
-	else begin
-		clock_out <= ~clock_out;
-		internal_clock <= ~internal_clock;
-		if (clock_out) begin
-			if (hsync_counter < 857) hsync_counter <= hsync_counter + 1;
+always_ff @(posedge clock_in) begin
+    
+    clock_out <= ~clock_out;
+    internal_clock <= ~internal_clock;
 
-			else begin 
+end
 
-				hsync_counter <= 0;
+always_ff @(posedge internal_clock) begin
 
-				if (vsync_counter < 524) vsync_counter <= vsync_counter + 1;
+    if (hsync_counter < 857) hsync_counter <= hsync_counter + 1;
 
-				else vsync_counter <= 0;
+    else begin 
 
-			end
+        hsync_counter <= 0;
 
-			// Output the horizontal sync signal based on column number
-			if (hsync_counter < 64) hsync <= 0;
+        if (vsync_counter < 524) vsync_counter <= vsync_counter + 1;
 
-			else hsync <= 1;
+        else vsync_counter <= 0;
 
-			// Output the vertical sync signal based on line number
-			if (vsync_counter < 6) vsync <= 0;
+    end
 
-			else vsync <= 1;
-		end
-	end
+    // Output the horizontal sync signal based on column number
+    if (hsync_counter < 64) hsync <= 0;
+
+    else hsync <= 1;
+
+    // Output the vertical sync signal based on line number
+    if (vsync_counter < 6) vsync <= 0;
+
+    else vsync <= 1;
+
 end
 
 endmodule
