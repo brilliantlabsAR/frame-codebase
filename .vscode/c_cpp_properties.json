@@ -6,7 +6,9 @@
             "cppStandard": "gnu++14",
             "includePath": [
                 "libraries/cmsis/CMSIS/Core/Include",
+                "libraries/littlefs",
                 "libraries/lua",
+                "libraries/lz4",
                 "libraries/nrf5sdk/**",
                 "libraries/nrfx",
                 "libraries/nrfx/drivers/include",
@@ -14,7 +16,6 @@
                 "libraries/nrfx/mdk",
                 "libraries/nrfx/soc",
                 "libraries/picolibc",
-                "libraries/littlefs",
                 "libraries/segger",
                 "libraries/softdevice/include",
                 "libraries/softdevice/include/nrf52",
@@ -22,8 +23,8 @@
                 "source/application",
                 "source/application/lua_libraries",
                 "source/bootloader",
+                "source/fpga",
                 "source/radio_test",
-                "source/fpga"
             ],
             "defines": [
                 "BLE_STACK_SUPPORT_REQD",
@@ -38,7 +39,7 @@
                 "NRF52840_XXAA",
                 "SOFTDEVICE_PRESENT",
                 "TEST_FREQUENCY=80",
-                "TEST_POWER=8"
+                "TEST_POWER=8",
             ]
         }
     ],
