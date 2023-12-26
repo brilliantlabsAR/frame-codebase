@@ -14,3 +14,5 @@ abc.history
 
 # Temp test files
 test_api_scratch_pad.py
+tests/log.txt
+tests/camera_test.py
