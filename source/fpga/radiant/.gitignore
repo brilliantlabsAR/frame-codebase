@@ -6,14 +6,50 @@
 reportview.xml
 
 # Generated files
+/osc_ip/*
+!/osc_ip/*.xml
+!/osc_ip/*.cfg
+!/osc_ip/*.ipx
+
 /pll_ip/*
 !/pll_ip/*.xml
 !/pll_ip/*.cfg
 !/pll_ip/*.ipx
 
+/byte_to_pixel_ip/*
+!/byte_to_pixel_ip/*.xml
+!/byte_to_pixel_ip/*.cfg
+!/byte_to_pixel_ip/*.ipx
+
+/csi2_receiver_ip/*
+!/csi2_receiver_ip/*.xml
+!/csi2_receiver_ip/*.cfg
+!/csi2_receiver_ip/*.ipx
+
+/camera_ram_ip/*
+!/camera_ram_ip/*.xml
+!/camera_ram_ip/*.cfg
+!/camera_ram_ip/*.ipx
+
+/sim/pixel_to_byte_ip/*
+!/pixel_to_byte_ip/*.xml
+!/pixel_to_byte_ip/*.cfg
+!/pixel_to_byte_ip/*.ipx
+
+/sim/csi2_transmitter_ip/*
+!/csi2_transmitter_ip/*.xml
+!/csi2_transmitter_ip/*.cfg
+!/csi2_transmitter_ip/*.ipx
+
+/sim/top_sim/*
+!/sim/top_sim/image_gen.sv
+!/sim/top_sim/tb_top.sv
+
 # Logs and reports
 *.log
 *.html
+*.wlf
+transcript
 
 # Temporary and backup files
 .recovery

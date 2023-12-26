@@ -47,4 +47,4 @@ ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb2]
 # Camera interface
 ldc_set_location -site {B5} [get_ports camera_clock]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports camera_clock]
-ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE}
+ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE COMPRESS_CONFIG=OFF}
