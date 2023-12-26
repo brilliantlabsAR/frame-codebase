@@ -6,22 +6,7 @@
         <Source name="../top.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog" top_module="top"/>
         </Source>
-        <Source name="../modules/camera/camera.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/camera/camera_fifo.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/camera/camera_ram_inferred.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/camera/debayer.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/graphics/display.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog" excluded="TRUE">
+        <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/reset/reset_global.sv" type="Verilog" type_short="Verilog">
@@ -33,7 +18,7 @@
         <Source name="../modules/spi/registers/chip_id.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/spi/camera_peripheral.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/spi/registers/version_string.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/spi/spi_peripheral.sv" type="Verilog" type_short="Verilog">
@@ -42,25 +27,7 @@
         <Source name="../modules/spi/spi_subperipheral_selector.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="byte_to_pixel_ip/byte_to_pixel_ip.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="camera_ram_ip/camera_ram_ip.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="csi2_receiver_ip/csi2_receiver_ip.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="osc_ip/osc_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="sim/csi2_transmitter_ip/csi2_transmitter_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
-            <Options/>
-        </Source>
-        <Source name="sim/pixel_to_byte_ip/pixel_to_byte_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
+        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
             <Options/>
         </Source>
         <Source name="source/frame/frame.pdc" type="Physical Constraints File" type_short="PDC">

@@ -31,8 +31,6 @@
 #include "lualib.h"
 #include "nrf_soc.h"
 #include "nrfx_log.h"
-#include "spi.h"
-#include "nrfx_systick.h"
 
 lua_State *L_global = NULL;
 
@@ -97,7 +95,7 @@ void run_lua(bool factory_reset)
     lua_open_imu_library(L);
     lua_open_time_library(L);
 
-    // lua_open_file_library(L, factory_reset);
+    lua_open_file_library(L, factory_reset);
 
     // Make sure the above functions cleared up the stack correctly
     if (lua_gettop(L) != 0)
@@ -136,21 +134,6 @@ void run_lua(bool factory_reset)
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
 
             status = luaL_dostring(L, (char *)local_repl_buffer);
-            if (repl_buffer[0] == 'c') {
-                uint8_t txbuf = 0xbb;
-                uint8_t rxbuf;
-                spi_write(FPGA, &txbuf, 1, true);
-
-                for (uint32_t i = 0; i<40000; i++) {
-                    if (i==39999)
-                        spi_read(FPGA, &rxbuf, 1, false);
-                    else
-                        spi_read(FPGA, &rxbuf, 1, true);
-                    
-                    LOG("%d", rxbuf);
-                    nrfx_systick_delay_ms(1);
-                }
-            }
         }
         else
         {

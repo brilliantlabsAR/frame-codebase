@@ -63,12 +63,20 @@ always_ff @(posedge clock) begin
     // Normal operation
     else begin
 
-        // Set output whenever it's ready
-        spi_data_out <= subperipheral_data_in_reg[spi_bit_index];
+        // Buffer in data to output
         if (subperipheral_data_in_valid) begin
             subperipheral_data_in_reg <= subperipheral_data_in;
         end
         
+        // Output data
+        if (spi_bit_index < 8) begin
+            spi_data_out <= subperipheral_data_in_reg[spi_bit_index];
+        end
+
+        else begin
+            spi_data_out <= 0;
+        end
+
         // On rising SPI clock, buffer in data
         if (last_stable_spi_clock_in == 0 & stable_spi_clock_in == 1) begin
 
@@ -84,23 +92,26 @@ always_ff @(posedge clock) begin
             // Otherwise data
             else begin
                 subperipheral_data_out[spi_bit_index] <= stable_spi_data_in;
+                
+                if (spi_bit_index == 0) begin
+                    subperipheral_data_out_valid <= 1;
+                end
+
+                else begin
+                    subperipheral_data_out_valid <= 0;
+                end
             end
 
-        end
-		
-		// On falling edge, increment bit_index
-		if (last_stable_spi_clock_in == 1 & stable_spi_clock_in == 0) begin
-			// Roll underflows back over to read multiple bytes continiously
+            // Roll underflows back over to read multiple bytes continiously
             if (spi_bit_index == 0) begin 
                 spi_bit_index <= 7;
-                subperipheral_data_out_valid <= 1;
             end
 
             else begin
                 spi_bit_index <= spi_bit_index - 1;
-                subperipheral_data_out_valid <= 0;
             end
-		end
+
+        end
     end
 end
 

@@ -68,7 +68,7 @@ void flash_wait_until_complete(void)
     }
 }
 
-void flash_get_info(size_t *page_size, size_t *total_size)
+void flash_get_info(size_t *page_size, size_t *total_size, uint32_t)
 {
     *page_size = NRF_FICR->CODEPAGESIZE;
     *total_size = empty_flash_end - empty_flash_start;

@@ -106,7 +106,7 @@
                     <ipxact:configurableElementValue referenceId="gui_en_clken_s5">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_en_pll_reset">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_en_pll_lock">1</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_pll_lock_sticky">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_pll_lock_sticky">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_reg_interface">None</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_en_legacy">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_en_powerdown">0</ipxact:configurableElementValue>
@@ -186,7 +186,7 @@
                     <ipxact:configurableElementValue referenceId="DYN_PORTS_EN">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PLL_RST">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="LOCK_EN">1</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="PLL_LOCK_STICKY">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PLL_LOCK_STICKY">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="LMMI_EN">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="APB_EN">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="LEGACY_EN">0</ipxact:configurableElementValue>
