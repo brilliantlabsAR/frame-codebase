@@ -50,8 +50,8 @@ frame_buffers frame_buffers (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
-    .pixel_write_address_in(temp_pixel_address),
-    .pixel_write_data_in(temp_pixel_color),
+    .pixel_write_address_in(10/*temp_pixel_address*/),
+    .pixel_write_data_in(3/*temp_pixel_color*/),
     .pixel_write_buffer_ready_out(),
 
     .pixel_read_address_in(display_to_frame_buffer_read_address),

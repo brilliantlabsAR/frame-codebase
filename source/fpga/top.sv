@@ -62,11 +62,13 @@ OSCA #(
 assign clock_72MHz = clock_18MHz_oscillator;
 assign clock_50MHz = clock_18MHz_oscillator;
 
-logic reset_n_clock_72MHz = 1;
-logic reset_n_clock_50MHz = 1;
+logic reset_n_clock_72MHz = 0;
+logic reset_n_clock_50MHz = 0;
 
 always_ff @(posedge clock_18MHz_oscillator) begin
     clock_24MHz <= ~clock_24MHz;
+    reset_n_clock_72MHz <= 1;
+    reset_n_clock_50MHz <= 1;
 end
 `else
 
