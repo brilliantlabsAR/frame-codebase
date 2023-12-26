@@ -1,3 +1,14 @@
+/*
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+ *
+ * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright © 2023 Brilliant Labs Limited
+ */
+
 module debayer #(
     HSIZE = 'd1288,
     ONELINE = 0 // debug output oneline (640p)
