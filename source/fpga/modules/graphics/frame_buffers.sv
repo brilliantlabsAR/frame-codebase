@@ -23,6 +23,9 @@ module frame_buffers (
     input logic switch_write_buffer_in
 );
     
+(* lram *) reg [7:0] frame_buffer_a [0:32000];
+// (* lram *) reg [3:0] frame_buffer_b [0:16000];
+
 logic currently_displayed_buffer = 0;
 logic [1:0] switch_write_buffer_edge_monitor = 0;
 logic buffer_switch_pending = 0;
@@ -42,6 +45,7 @@ always_ff @(posedge clock_in) begin
 
     else begin
         
+        // 
         switch_write_buffer_edge_monitor <= {
             switch_write_buffer_edge_monitor[0], 
             switch_write_buffer_in
@@ -56,33 +60,42 @@ always_ff @(posedge clock_in) begin
             buffer_switch_pending <= 0;
         end
     
+        // 
         if (currently_displayed_buffer == 0) begin
-            if      (pixel_read_address_in < 25  * 640) pixel_read_data_out <= 0;
-            else if (pixel_read_address_in < 50  * 640) pixel_read_data_out <= 1;
-            else if (pixel_read_address_in < 75  * 640) pixel_read_data_out <= 2;
-            else if (pixel_read_address_in < 100 * 640) pixel_read_data_out <= 3;
-            else if (pixel_read_address_in < 125 * 640) pixel_read_data_out <= 4;
-            else if (pixel_read_address_in < 150 * 640) pixel_read_data_out <= 5;
-            else if (pixel_read_address_in < 175 * 640) pixel_read_data_out <= 6;
-            else if (pixel_read_address_in < 200 * 640) pixel_read_data_out <= 7;
-            else if (pixel_read_address_in < 225 * 640) pixel_read_data_out <= 8;
-            else if (pixel_read_address_in < 250 * 640) pixel_read_data_out <= 9;
-            else if (pixel_read_address_in < 275 * 640) pixel_read_data_out <= 10;
-            else if (pixel_read_address_in < 300 * 640) pixel_read_data_out <= 11;
-            else if (pixel_read_address_in < 325 * 640) pixel_read_data_out <= 12;
-            else if (pixel_read_address_in < 350 * 640) pixel_read_data_out <= 13;
-            else if (pixel_read_address_in < 375 * 640) pixel_read_data_out <= 14;
-            else if (pixel_read_address_in < 400 * 640) pixel_read_data_out <= 15;
-            else                                        pixel_read_data_out <= 0;
+    
+            // Odd pixel
+            if (pixel_read_address_in[0]) begin
+                pixel_read_data_out <= frame_buffer_a[pixel_read_address_in >> 1][3:0];
+                // TODO write buffer B
+            end
+
+            // Even pixel
+            else begin
+                pixel_read_data_out <= frame_buffer_a[pixel_read_address_in >> 1][7:4];
+                // TODO write buffer B
+            end
 
         end
 
         else begin
-            if      (pixel_read_address_in < 100 * 640) pixel_read_data_out <= 0;
-            else if (pixel_read_address_in < 200 * 640) pixel_read_data_out <= 1;
-            else if (pixel_read_address_in < 300 * 640) pixel_read_data_out <= 2;
-            else if (pixel_read_address_in < 400 * 640) pixel_read_data_out <= 3;
-            else                                        pixel_read_data_out <= 0;
+
+            // Odd pixel
+            if (pixel_read_address_in[0]) begin
+                frame_buffer_a[pixel_write_address_in >> 1] <= {
+                        frame_buffer_a[pixel_write_address_in >> 1][7:4],
+                        pixel_write_data_in
+                    };
+                // pixel_read_data_out <= frame_buffer_b[pixel_read_address_in >> 1][3:0];
+            end
+
+            // Even pixel
+            else begin
+                frame_buffer_a[pixel_write_address_in >> 1] <= {
+                        pixel_write_data_in,
+                        frame_buffer_a[pixel_write_address_in >> 1][3:0]
+                    };
+                // pixel_read_data_out <= frame_buffer_b[pixel_read_address_in >> 1][7:4];
+            end
         end
 
     end
