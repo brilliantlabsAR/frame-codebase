@@ -23,10 +23,12 @@ module reset_global (
             reset_counter <= reset_counter + 1;
         end
 
-        if (!pll_locked_in) reset_counter <= 0;
+        if (!pll_locked_in) begin
+            reset_counter <= 0;
+        end
         
     end
 
-    assign global_reset_n_out = pll_locked_in & reset_counter[7] ? 1 : 0;
+    assign global_reset_n_out = pll_locked_in && reset_counter[7];
 
 endmodule

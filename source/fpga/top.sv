@@ -62,7 +62,6 @@ OSCA #(
 assign clock_72MHz = clock_18MHz_oscillator;
 assign clock_50MHz = clock_18MHz_oscillator;
 
-
 initial begin
     pll_locked = 0;    
 end
