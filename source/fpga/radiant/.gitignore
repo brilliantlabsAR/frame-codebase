@@ -3,6 +3,7 @@
 /frame_tcr*
 .ng_run_manager.ini
 .setting.ini
+promote.xml
 reportview.xml
 
 # Generated files

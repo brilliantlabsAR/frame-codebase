@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<RadiantProject version="4.2" radiant="2023.1.1.200.1" title="frame" device="LIFCL-17-8UWG72C" performance_grade="8_Low-Power_1.0V" default_implementation="frame">
+<RadiantProject version="4.2" radiant="2023.2.0.38.1" title="frame" device="LIFCL-17-8UWG72C" performance_grade="8_Low-Power_1.0V" default_implementation="frame">
     <Options/>
     <Implementation title="frame" dir="frame" description="frame" synthesis="lse" default_strategy="Strategy">
-        <Options VERILOG_DIRECTIVES="RADIANT=1" VerilogStandard="System Verilog" def_top="top" top="top"/>
+        <Options VERILOG_DIRECTIVES="RADIANT=1" VerilogStandard="System Verilog" def_top="top" hdl_sort="off" top="top"/>
         <Source name="../top.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog" top_module="top"/>
         </Source>
@@ -15,16 +15,25 @@
         <Source name="../modules/reset/reset_sync.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/spi/registers/chip_id.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="../modules/spi/registers/version_string.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
         <Source name="../modules/spi/spi_peripheral.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/spi/spi_subperipheral_selector.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/spi/spi_register.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/graphics/color_pallet.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/graphics/display_buffers.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/graphics/display_driver.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/graphics/graphics.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/graphics/sprite_engine.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
