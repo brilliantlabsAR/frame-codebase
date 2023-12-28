@@ -62,13 +62,14 @@ OSCA #(
 assign clock_72MHz = clock_18MHz_oscillator;
 assign clock_50MHz = clock_18MHz_oscillator;
 
-logic reset_n_clock_72MHz = 0;
-logic reset_n_clock_50MHz = 0;
+
+initial begin
+    pll_locked = 0;    
+end
 
 always_ff @(posedge clock_18MHz_oscillator) begin
     clock_24MHz <= ~clock_24MHz;
-    reset_n_clock_72MHz <= 1;
-    reset_n_clock_50MHz <= 1;
+    pll_locked <= 1;
 end
 `else
 
@@ -89,6 +90,8 @@ pll_wrapper pll_wrapper (
     .clkos3_o(clock_50MHz),
     .lock_o(pll_locked)
 );
+
+`endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // Reset
 logic global_reset_n;
@@ -112,8 +115,6 @@ reset_sync reset_sync_clock_50MHz (
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(reset_n_clock_50MHz)
 );
-
-`endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // SPI
 logic [7:0] opcode;

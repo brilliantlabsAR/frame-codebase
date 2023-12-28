@@ -15,7 +15,7 @@ module reset_global (
 	output logic global_reset_n_out
 );
 
-    logic [7:0] reset_counter;
+    logic [7:0] reset_counter /* synthesis syn_keep=1 nomerge=""*/;
 
     always_ff @(posedge clock_in) begin
 
@@ -23,12 +23,10 @@ module reset_global (
             reset_counter <= reset_counter + 1;
         end
 
-        else begin
-            reset_counter <= 0;
-        end
+        if (!pll_locked_in) reset_counter <= 0;
         
     end
 
-    assign global_reset_n_out = pll_locked_in & reset_counter[7];
+    assign global_reset_n_out = pll_locked_in & reset_counter[7] ? 1 : 0;
 
 endmodule
