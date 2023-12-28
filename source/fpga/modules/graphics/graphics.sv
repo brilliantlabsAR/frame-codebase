@@ -11,8 +11,8 @@
 
 `ifndef RADIANT
 `include "color_pallet.sv"
+`include "display_buffers.sv"
 `include "display_driver.sv"
-`include "frame_buffers.sv"
 `include "sprite_engine.sv"
 `endif
 
@@ -46,7 +46,7 @@ logic command_to_frame_buffer_switch_buffer;
 logic [17:0] temp_pixel_address;
 logic [3:0] temp_pixel_color;
 
-frame_buffers frame_buffers (
+display_buffers display_buffers (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 

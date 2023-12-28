@@ -9,7 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
  
-module frame_buffers (
+module display_buffers (
     input logic clock_in,
     input logic reset_n_in,
 
@@ -27,11 +27,11 @@ logic currently_displayed_buffer = 0;
 logic [1:0] switch_write_buffer_edge_monitor = 0;
 logic buffer_switch_pending = 0;
 
-logic [13:0] frame_buffer_a_read_address;
-logic [13:0] frame_buffer_a_write_address;
-logic [7:0] frame_buffer_a_read_data;
-logic [7:0] frame_buffer_a_write_data;
-logic frame_buffer_a_write_enable;
+logic [13:0] display_buffer_a_read_address;
+logic [13:0] display_buffer_a_write_address;
+logic [7:0] display_buffer_a_read_data;
+logic [7:0] display_buffer_a_write_data;
+logic display_buffer_a_write_enable;
 
 PDPSC512K #(
     .OUTREG("NO_REG"),
@@ -167,19 +167,19 @@ PDPSC512K #(
     .INITVAL_7F(),
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
-) frame_buffer_a (
-    .DI(frame_buffer_a_write_data),
-    .ADW(frame_buffer_a_write_address),
-    .ADR(frame_buffer_a_read_address),
+) display_buffer_a (
+    .DI(display_buffer_a_write_data),
+    .ADW(display_buffer_a_write_address),
+    .ADR(display_buffer_a_read_address),
     .CLK(clock_in),
     .CEW(1),
     .CER(1),
-    .WE(frame_buffer_a_write_enable),
+    .WE(display_buffer_a_write_enable),
     .CSW(1),
     .CSR(1),
     .RSTR(0),
     .BYTEEN_N('b0000),
-    .DO(frame_buffer_a_read_data)
+    .DO(display_buffer_a_read_data)
 );
 
 always_ff @(posedge clock_in) begin
@@ -191,7 +191,7 @@ always_ff @(posedge clock_in) begin
 
         currently_displayed_buffer <= 0;
         switch_write_buffer_edge_monitor <= 'b00;
-        buffer_switch_pending = 0;
+        buffer_switch_pending <= 0;
 
     end
 
@@ -215,17 +215,17 @@ always_ff @(posedge clock_in) begin
         // 
         if (currently_displayed_buffer == 0) begin
     
-            frame_buffer_a_read_address <= pixel_read_address_in[13:0];
-            pixel_read_data_out <= frame_buffer_a_read_data[3:0];
-            frame_buffer_a_write_enable <= 0;
+            display_buffer_a_read_address <= pixel_read_address_in[13:0];
+            pixel_read_data_out <= display_buffer_a_read_data[3:0];
+            display_buffer_a_write_enable <= 0;
 
         end
 
         else begin
 
-            frame_buffer_a_write_address <= pixel_write_address_in[13:0];
-            frame_buffer_a_write_data <= pixel_write_data_in[3:0];
-            frame_buffer_a_write_enable <= 1;
+            display_buffer_a_write_address <= pixel_write_address_in[13:0];
+            display_buffer_a_write_data <= pixel_write_data_in[3:0];
+            display_buffer_a_write_enable <= 1;
 
             if      (pixel_read_address_in < 25  * 640) pixel_read_data_out <= 0;
             else if (pixel_read_address_in < 50  * 640) pixel_read_data_out <= 1;
