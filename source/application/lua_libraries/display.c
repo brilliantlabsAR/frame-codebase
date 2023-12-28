@@ -23,3 +23,7 @@
  */
 
 #include "lua.h"
+
+void lua_open_display_library(lua_State *L)
+{
+}

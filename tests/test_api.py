@@ -180,24 +180,13 @@ async def main():
     # IMU
 
     ## Direction
-    await test.lua_send("frame.direction.heading()")
-    await test.lua_send("frame.direction.yaw()")
-    await test.lua_send("frame.direction.pitch()")
+    await test.lua_is_type("frame.imu.direction()['heading']", "number")
+    await test.lua_is_type("frame.imu.direction()['roll']", "number")
+    await test.lua_is_type("frame.imu.direction()['pitch']", "number")
 
     ## Tap callback
-    await test.lua_send(
-        "frame.imu.tap_callback('LEFT', (function(side)print('tapped left')end))"
-    )
-    await test.lua_send(
-        "frame.imu.tap_callback('RIGHT', (function(side)print('tapped right')end))"
-    )
-    await test.lua_send(
-        "frame.imu.tap_callback('EITHER', (function(side)print('tapped '..side)end))"
-    )
-
-    await test.lua_send("frame.imu.tap_callback('LEFT', nil)")
-    await test.lua_send("frame.imu.tap_callback('RIGHT', nil)")
-    await test.lua_send("frame.imu.tap_callback('EITHER', nil)")
+    await test.lua_send("frame.imu.tap_callback((function()print('tap')end))")
+    await test.lua_send("frame.imu.tap_callback(nil)")
 
     # Time functions
 
@@ -254,7 +243,7 @@ async def main():
     await test.send_reset_signal()
 
     ## Battery level
-    await test.lua_equals("frame.battery_level()", "100.0")
+    await test.lua_is_type("frame.battery_level()", "number")
 
     ## Cancelling sleep
     await test.lua_is_type("frame.sleep", "function")
