@@ -23,7 +23,8 @@ module camera #(SIM=0) (
 
     input logic camera_ram_read_enable,
     input logic [15:0] camera_ram_read_address,
-    output logic [31:0] camera_ram_read_data
+    output logic [31:0] camera_ram_read_data,
+    input logic capture
 );
 
 logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
@@ -158,6 +159,7 @@ endgenerate
 logic [15:0] camera_ram_write_address /* synthesis syn_keep=1 nomerge=""*/;
 logic camera_ram_write_enable /* synthesis syn_keep=1 nomerge=""*/;
 logic [31:0] camera_ram_write_data /* synthesis syn_keep=1 nomerge=""*/;
+
 camera_fifo camera_fifo (
     .clock(clock_72MHz),
     .reset_n(reset_n_clock_36MHz),
@@ -172,6 +174,21 @@ camera_fifo camera_fifo (
     .ram_address(camera_ram_write_address)
 );
 
+logic capture_state = 0;
+logic [1:0] debayer_frame_valid_edge = 0;
+logic [1:0] frame_count = 0;
+always_ff @(posedge clock_72MHz) begin : capture_control
+    debayer_frame_valid_edge <= {debayer_frame_valid_edge[0], debayer_frame_valid};
+    if (capture == 1) begin
+        capture_state <= 1;
+        frame_count <= 0;
+    end
+    else if (capture_state == 1 && debayer_frame_valid_edge == 2'b10) begin
+        if (frame_count == 0) frame_count <= frame_count+1;
+        else capture_state <= 0;
+    end
+end
+
 generate
     if(SIM)
         camera_ram_inferred camera_ram (
@@ -181,7 +198,7 @@ generate
             .rd_addr(camera_ram_read_address),
             .wr_data(camera_ram_write_data),
             .rd_data(camera_ram_read_data),
-            .wr_en(camera_ram_write_enable & !camera_ram_read_enable),
+            .wr_en(camera_ram_write_enable & capture_state),
             .rd_en(camera_ram_read_enable)
         );
     
@@ -192,7 +209,7 @@ generate
             .rst_i(~reset_n_clock_36MHz),
             .wr_clk_en_i(reset_n_clock_36MHz),
             .rd_clk_en_i(reset_n_clock_36MHz),
-            .wr_en_i(camera_ram_write_enable & !camera_ram_read_enable),
+            .wr_en_i(camera_ram_write_enable & capture_state),
             .wr_data_i(camera_ram_write_data),
             .wr_addr_i(camera_ram_write_address),
             .rd_addr_i(camera_ram_read_address),

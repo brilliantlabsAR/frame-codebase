@@ -16,3 +16,4 @@ abc.history
 test_api_scratch_pad.py
 tests/log.txt
 tests/camera_test.py
+tests/camera_test.png

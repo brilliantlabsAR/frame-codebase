@@ -28,9 +28,11 @@ module camera_peripheral (
         
         if (enable == 0 | reset_n == 0) begin
             data_out_valid <= 0;
-            camera_ram_read_address <= 0;
             camera_ram_read_enable <= 0;
 			byte_counter <= 0;
+			//TODO: change this based on image config
+			if (camera_ram_read_address >= 'd10000 | reset_n == 0)
+				camera_ram_read_address <= 0;
         end
 
         else begin
@@ -45,13 +47,13 @@ module camera_peripheral (
 			
             if (data_in_valid_reg == 'b01) begin
 				byte_counter <= byte_counter + 1;
+                data_out_valid <= 1;
 				if (byte_counter == 'b11)
 					camera_ram_read_address <= camera_ram_read_address + 1;
             end
-            else if (data_in_valid_reg == 'b11) begin
+            else if (data_in_valid_reg == 'b10 | data_in_valid_reg == 'b00) begin
                 data_out_valid <= 1;
             end
-            else data_out_valid <= 0;
         end
 
     end

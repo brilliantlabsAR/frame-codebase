@@ -145,6 +145,8 @@ reset_sync reset_sync_clock_96MHz (
 logic [15:0] camera_ram_read_address;
 logic [31:0] camera_ram_read_data;
 logic camera_ram_read_enable;
+logic capture;
+
 camera #(.SIM(SIM)) camera (
     .clock_36MHz(clock_36MHz),
     .clock_72MHz(clock_72MHz),
@@ -159,7 +161,8 @@ camera #(.SIM(SIM)) camera (
 
     .camera_ram_read_enable(camera_ram_read_enable),
     .camera_ram_read_address(camera_ram_read_address),
-    .camera_ram_read_data(camera_ram_read_data)
+    .camera_ram_read_data(camera_ram_read_data),
+    .capture(capture)
 );
 
 `endif // TODO remove this line once gatecat/prjoxide#44 is solved
@@ -209,7 +212,8 @@ spi_subperipheral_selector spi_subperipheral_selector (
 
     .subperipheral_2_enable_out(subperipheral_2_enable),
     .subperipheral_2_data_in(subperipheral_2_cipo),
-    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid)
+    .subperipheral_2_data_in_valid(subperipheral_2_cipo_valid),
+    .capture(capture)
 );
 
 spi_register_chip_id spi_register_chip_id (

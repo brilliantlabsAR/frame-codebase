@@ -136,21 +136,6 @@ void run_lua(bool factory_reset)
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
 
             status = luaL_dostring(L, (char *)local_repl_buffer);
-            if (repl_buffer[0] == 'c') {
-                uint8_t txbuf = 0xbb;
-                uint8_t rxbuf;
-                spi_write(FPGA, &txbuf, 1, true);
-
-                for (uint32_t i = 0; i<40000; i++) {
-                    if (i==39999)
-                        spi_read(FPGA, &rxbuf, 1, false);
-                    else
-                        spi_read(FPGA, &rxbuf, 1, true);
-                    
-                    LOG("%d", rxbuf);
-                    nrfx_systick_delay_ms(1);
-                }
-            }
         }
         else
         {

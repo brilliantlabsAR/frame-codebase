@@ -23,7 +23,61 @@
  */
 
 #include "lua.h"
+#include "lauxlib.h"
+#include "spi.h"
+#include "nrfx_systick.h"
+
+static uint32_t camera_bytes_available = 0;
+
+static int lua_capture(lua_State *L) {
+    uint8_t txbuf = 0x20;
+    spi_write(FPGA, &txbuf, 1, false);
+    // TODO: change this based on resolution / config
+    camera_bytes_available = 200*200;
+    lua_pushinteger(L, camera_bytes_available);
+    return 1;
+}
+
+static int lua_read(lua_State *L) {
+    luaL_checkinteger(L, 1);
+    lua_Integer num_bytes = lua_tointeger(L, 1);
+
+    uint8_t txbuf = 0x22;
+    uint8_t rxbuf[128];
+    spi_write(FPGA, &txbuf, 1, true);
+    spi_read(FPGA, &rxbuf[0], num_bytes, false);
+
+    lua_pushlstring(L, (char *)rxbuf, num_bytes);
+    LOG("%d", strlen((char *)rxbuf));
+    return 1;
+}
+
+static int lua_test(lua_State *L) {
+    luaL_checkinteger(L, 1);
+    lua_Integer num_bytes = lua_tointeger(L, 1);
+
+    char test[15] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
+
+    lua_pushlstring(L, test, num_bytes);
+    return 1;
+}
 
 void lua_open_camera_library(lua_State *L)
 {
+    lua_getglobal(L, "frame");
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, lua_capture);
+    lua_setfield(L, -2, "capture");
+
+    lua_pushcfunction(L, lua_read);
+    lua_setfield(L, -2, "read");
+
+    lua_pushcfunction(L, lua_test);
+    lua_setfield(L, -2, "test");
+
+    lua_setfield(L, -2, "camera");
+
+    lua_pop(L, 1);
 }

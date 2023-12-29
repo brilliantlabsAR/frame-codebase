@@ -22,7 +22,8 @@ module spi_subperipheral_selector (
 
     output logic subperipheral_2_enable_out,
     input logic [7:0] subperipheral_2_data_in,
-    input logic subperipheral_2_data_in_valid
+    input logic subperipheral_2_data_in_valid,
+    output logic capture
 );
     
     always_comb begin
@@ -32,22 +33,28 @@ module spi_subperipheral_selector (
 			'hAA: begin
 				peripheral_data_out = 'hcc;
 				peripheral_data_out_valid = 1;
+                capture = 0;
 			end
             'hDB: begin
                 peripheral_data_out = subperipheral_1_data_in;
                 peripheral_data_out_valid = subperipheral_1_data_in_valid;
                 subperipheral_1_enable_out = 1;
                 subperipheral_2_enable_out = 0;
+                capture = 0;
             end 
 
-            'hBB: begin
+            'h20: capture = 1;
+
+            'h22: begin
                 peripheral_data_out = subperipheral_2_data_in;
                 peripheral_data_out_valid = subperipheral_2_data_in_valid;
                 subperipheral_1_enable_out = 0;
                 subperipheral_2_enable_out = 1;
+                capture = 0;
             end 
 
             default: begin
+                capture = 0;
                 peripheral_data_out = 0;
                 peripheral_data_out_valid = 0;
                 subperipheral_1_enable_out = 0;
@@ -61,6 +68,7 @@ module spi_subperipheral_selector (
             peripheral_data_out_valid = 0;
             subperipheral_1_enable_out = 0;
             subperipheral_2_enable_out = 0;
+            capture = 0;
         end
 
     end
