@@ -43,16 +43,17 @@ logic [7:0] command_to_color_pallet_assign_color_index;
 logic [9:0] command_to_color_pallet_assign_color_value;
 logic command_to_frame_buffer_switch_buffer;
 
-logic [17:0] temp_pixel_address;
-logic [3:0] temp_pixel_color;
+logic [17:0] temp_pixel_write_address;
+logic [3:0] temp_pixel_write_color;
+// logic temp_pixel_write_enable;
 
 display_buffers display_buffers (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
-    .pixel_write_address_in(temp_pixel_address),
-    .pixel_write_data_in(temp_pixel_color),
-    .pixel_write_buffer_ready_out(),
+    .pixel_write_address_in(temp_pixel_write_address),
+    .pixel_write_data_in(temp_pixel_write_color),
+    .pixel_write_enable_in(1),
 
     .pixel_read_address_in(display_to_frame_buffer_read_address),
     .pixel_read_data_out(frame_buffer_to_display_indexed_color),
@@ -93,11 +94,19 @@ always_ff @(posedge clock_in) begin
     if (op_code_valid_in && op_code_in == 'h19) begin
 
         if (operand_valid_in && operand_count_in == 1) begin
-            temp_pixel_address[7:0] <= operand_in;
+            temp_pixel_write_address <= {operand_in[1:0], 16'b0000000000000000};
         end
 
         if (operand_valid_in && operand_count_in == 2) begin
-            temp_pixel_color <= operand_in[3:0];
+            temp_pixel_write_address <= {temp_pixel_write_address[17:16], operand_in, temp_pixel_write_address[7:0]};
+        end
+
+        if (operand_valid_in && operand_count_in == 3) begin
+            temp_pixel_write_address <= {temp_pixel_write_address[17:8], operand_in};
+        end
+
+        if (operand_valid_in && operand_count_in == 4) begin
+            temp_pixel_write_color <= operand_in[3:0];
         end
 
     end

@@ -9,13 +9,30 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
  
+ /*
+  * Each display buffer holds 640 * 400 pixels, and each pixel is a 4bit value.
+  * In total, 256,000 pixels, or 1,024,000 bits are needed per buffer. Each LRAM
+  * block can hold 524,288 bits, therefore, 2 blocks are needed for a single 
+  * buffer, and 4 blocks are required for double display buffering. While one 
+  * buffer is being displayed, the other may be written to. Once ready, the 
+  * buffers are switched. Each LRAM block has a 14 bit address bus. Therefore,
+  * 32 bit words are addressed at a time. i.e. 8 pixels per address. To properly 
+  * address each LRAM block, the following scheme is used:
+  * 
+  *   xx xxxx xxxx xxxx xxxx = 18 bits needed to address 256,000 pixels
+  *   0                      = Selects top LRAM of a buffer
+  *   1                      = Selects bottom LRAM of a buffer
+  *                      xxx = Lower 3 bits selects a pixel from the 32 bit word
+  *    x xxxx xxxx xxxx x    = This leaves 14 bits to address an LRAM block
+  */
+
 module display_buffers (
     input logic clock_in,
     input logic reset_n_in,
 
     input logic [17:0] pixel_write_address_in,
     input logic [3:0] pixel_write_data_in,
-    output logic pixel_write_buffer_ready_out,
+    input logic pixel_write_enable_in,
 
     input logic [17:0] pixel_read_address_in,
     output logic [3:0] pixel_read_data_out,
@@ -23,33 +40,26 @@ module display_buffers (
     input logic switch_write_buffer_in
 );
 
-enum {BUFFER_A, BUFFER_B} displayed_buffer;
-logic [1:0] switch_write_buffer_edge_monitor = 0;
-logic buffer_switch_pending = 0;
+enum logic {BUFFER_A, BUFFER_B} displayed_buffer;
+logic [1:0] switch_write_buffer_edge_monitor;
+logic buffer_switch_pending;
 
-logic [13:0] display_buffer_a_top_read_address;
-logic [13:0] display_buffer_a_top_write_address;
-logic [31:0] display_buffer_a_top_read_data;
-logic [31:0] display_buffer_a_top_write_data;
-logic display_buffer_a_top_write_enable;
+logic [13:0] display_ram_read_address;
+logic [13:0] display_ram_write_address;
 
-logic [13:0] display_buffer_a_bottom_read_address;
-logic [13:0] display_buffer_a_bottom_write_address;
-logic [31:0] display_buffer_a_bottom_read_data;
-logic [31:0] display_buffer_a_bottom_write_data;
-logic display_buffer_a_bottom_write_enable;
+logic [31:0] display_ram_read_data_a_top;
+logic [31:0] display_ram_read_data_a_bottom;
+logic [31:0] display_ram_read_data_b_top;
+logic [31:0] display_ram_read_data_b_bottom;
 
-logic [13:0] display_buffer_b_top_read_address;
-logic [13:0] display_buffer_b_top_write_address;
-logic [31:0] display_buffer_b_top_read_data;
-logic [31:0] display_buffer_b_top_write_data;
-logic display_buffer_b_top_write_enable;
+logic [31:0] display_ram_write_data;
 
-logic [13:0] display_buffer_b_bottom_read_address;
-logic [13:0] display_buffer_b_bottom_write_address;
-logic [31:0] display_buffer_b_bottom_read_data;
-logic [31:0] display_buffer_b_bottom_write_data;
-logic display_buffer_b_bottom_write_enable;
+logic display_ram_write_enable_a_top;
+logic display_ram_write_enable_a_bottom;
+logic display_ram_write_enable_b_top;
+logic display_ram_write_enable_b_bottom;
+
+logic [3:0] pixel_read_data_out_reg;
 
 PDPSC512K #(
     .OUTREG("NO_REG"),
@@ -186,38 +196,35 @@ PDPSC512K #(
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_a_top (
-    .DI(display_buffer_a_top_write_data),
-    .ADW(display_buffer_a_top_write_address),
-    .ADR(display_buffer_a_top_read_address),
+    .DI(display_ram_write_data),
+    .ADW(display_ram_write_address),
+    .ADR(display_ram_read_address),
     .CLK(clock_in),
     .CEW(1),
     .CER(1),
-    .WE(display_buffer_a_top_write_enable),
+    .WE(display_ram_write_enable_a_top),
     .CSW(1),
     .CSR(1),
     .RSTR(0),
     .BYTEEN_N('b0000),
-    .DO(display_buffer_a_top_read_data)
+    .DO(display_ram_read_data_a_top)
 );
 
+// Buffer switching logic
 always_ff @(posedge clock_in) begin
         
     if (reset_n_in == 0) begin
-
-        pixel_write_buffer_ready_out <= 0;
-
         displayed_buffer <= BUFFER_A;
         switch_write_buffer_edge_monitor <= 'b00;
         buffer_switch_pending <= 0;
-
+        pixel_read_data_out <= 0;
     end
 
     else begin
         
         // Switch buffer only when the read address resets back to zero
         switch_write_buffer_edge_monitor <= {
-            switch_write_buffer_edge_monitor[0], 
-            switch_write_buffer_in
+            switch_write_buffer_edge_monitor[0], switch_write_buffer_in
         };
 
         if (switch_write_buffer_edge_monitor == 'b01) begin
@@ -235,140 +242,88 @@ always_ff @(posedge clock_in) begin
 
             buffer_switch_pending <= 0;
         end
-    
-        /*
-        if (displayed_buffer == 0) begin
-    
-            // Read from top of buffer A
-            if (pixel_read_address_in[17] == 0) begin
-                
-                // 14 bit addressable range per ram block
-                display_buffer_a_top_read_address <= pixel_read_address_in[16:3];
-                display_buffer_a_bottom_read_address <= 0;
 
-                // Pixels are stored in groups of 32 bits. i.e. 8 pixels
-                case (pixel_read_address_in[2:0])
-                    'd0: pixel_read_data_out <= display_buffer_a_top_read_data[3:0];
-                    'd1: pixel_read_data_out <= display_buffer_a_top_read_data[7:4];
-                    'd2: pixel_read_data_out <= display_buffer_a_top_read_data[11:8];
-                    'd3: pixel_read_data_out <= display_buffer_a_top_read_data[15:12];
-                    'd4: pixel_read_data_out <= display_buffer_a_top_read_data[19:16];
-                    'd5: pixel_read_data_out <= display_buffer_a_top_read_data[23:20];
-                    'd6: pixel_read_data_out <= display_buffer_a_top_read_data[27:24];
-                    'd7: pixel_read_data_out <= display_buffer_a_top_read_data[31:28];
-                endcase
+        pixel_read_data_out <= pixel_read_data_out_reg;
 
-            end
-
-            // Read from bottom of buffer A
-            else begin
-    
-                // 14 bit addressable range per ram block
-                display_buffer_a_top_read_address <= 0;
-                display_buffer_a_bottom_read_address <= pixel_read_address_in[16:3];
-
-                // Pixels are stored in groups of 32 bits. i.e. 8 pixels
-                // case (pixel_read_address_in[2:0])
-                
-                pixel_read_data_out <= 0;
-
-            end
-
-        end
-
-        else begin
-
-            // Write to top of buffer A
-            if (pixel_write_address_in[17] == 0) begin
-            
-                // 14 bit addressable range per ram block
-                display_buffer_a_top_write_address <= pixel_write_address_in[16:3];
-                display_buffer_a_bottom_write_address <= 0;
-
-                case (pixel_write_data_in[2:0])
-                    'd0: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:4],  pixel_write_data_in};
-                    'd1: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:8],  pixel_write_data_in, display_buffer_a_top_read_data[3:0]};
-                    'd2: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:12], pixel_write_data_in, display_buffer_a_top_read_data[7:0]};
-                    'd3: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:16], pixel_write_data_in, display_buffer_a_top_read_data[11:0]};
-                    'd4: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:20], pixel_write_data_in, display_buffer_a_top_read_data[15:0]};
-                    'd5: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:24], pixel_write_data_in, display_buffer_a_top_read_data[19:0]};
-                    'd6: display_buffer_a_top_write_data <= {display_buffer_a_top_read_data[31:28], pixel_write_data_in, display_buffer_a_top_read_data[23:0]};
-                    'd7: display_buffer_a_top_write_data <= {                                       pixel_write_data_in, display_buffer_a_top_read_data[27:0]};
-                endcase
-
-            end
-
-            // Write to bottom of buffer A
-            else begin
-
-                // 14 bit addressable range per ram block
-                display_buffer_a_top_write_address <= 0;
-                display_buffer_a_bottom_write_address <= pixel_write_address_in[16:3];
-
-                // case ...
-
-            end
-
-            // TEMP for testing
-            if      (pixel_read_address_in < 25  * 640) pixel_read_data_out <= 0;
-            else if (pixel_read_address_in < 50  * 640) pixel_read_data_out <= 1;
-            else if (pixel_read_address_in < 75  * 640) pixel_read_data_out <= 2;
-            else if (pixel_read_address_in < 100 * 640) pixel_read_data_out <= 3;
-            else if (pixel_read_address_in < 125 * 640) pixel_read_data_out <= 4;
-            else if (pixel_read_address_in < 150 * 640) pixel_read_data_out <= 5;
-            else if (pixel_read_address_in < 175 * 640) pixel_read_data_out <= 6;
-            else if (pixel_read_address_in < 200 * 640) pixel_read_data_out <= 7;
-            else if (pixel_read_address_in < 225 * 640) pixel_read_data_out <= 8;
-            else if (pixel_read_address_in < 250 * 640) pixel_read_data_out <= 9;
-            else if (pixel_read_address_in < 275 * 640) pixel_read_data_out <= 10;
-            else if (pixel_read_address_in < 300 * 640) pixel_read_data_out <= 11;
-            else if (pixel_read_address_in < 325 * 640) pixel_read_data_out <= 12;
-            else if (pixel_read_address_in < 350 * 640) pixel_read_data_out <= 13;
-            else if (pixel_read_address_in < 375 * 640) pixel_read_data_out <= 14;
-            else if (pixel_read_address_in < 400 * 640) pixel_read_data_out <= 15;
-            else                                        pixel_read_data_out <= 0;
-
-        end
-        */
     end
 
 end
 
+// Ram selection and read/write connections
 always_comb begin
 
-    // Select one of the four RAMs based on write address and selected buffer
-    display_buffer_a_top_write_enable = displayed_buffer == BUFFER_B && 
-                                        pixel_write_address_in[17] == 1
-                                      ? 1 : 0;
-
-    display_buffer_a_bottom_write_enable = displayed_buffer == BUFFER_B  && 
-                                           pixel_write_address_in[17] == 0
-                                         ? 1 : 0;
-
-    display_buffer_b_top_write_enable = displayed_buffer == BUFFER_A && 
-                                        pixel_write_address_in[17] == 1
-                                      ? 1 : 0;
-
-    display_buffer_b_bottom_write_enable = displayed_buffer == BUFFER_A && 
-                                           pixel_write_address_in[17] == 0
-                                         ? 1 : 0;
-
     // Output pixel value based on read address and selected buffer
+    display_ram_read_address = pixel_read_address_in[16:3];
+
     if (displayed_buffer == BUFFER_A && pixel_read_address_in[17] == 0) begin
-        pixel_read_data_out = 0;
+        case (pixel_read_address_in[2:0])
+            'd0: pixel_read_data_out_reg = display_ram_read_data_a_top[3:0];
+            'd1: pixel_read_data_out_reg = display_ram_read_data_a_top[7:4];
+            'd2: pixel_read_data_out_reg = display_ram_read_data_a_top[11:8];
+            'd3: pixel_read_data_out_reg = display_ram_read_data_a_top[15:12];
+            'd4: pixel_read_data_out_reg = display_ram_read_data_a_top[19:16];
+            'd5: pixel_read_data_out_reg = display_ram_read_data_a_top[23:20];
+            'd6: pixel_read_data_out_reg = display_ram_read_data_a_top[27:24];
+            'd7: pixel_read_data_out_reg = display_ram_read_data_a_top[31:28];
+        endcase
     end
     
     else if (displayed_buffer == BUFFER_A && pixel_read_address_in[17] == 1) begin
-        pixel_read_data_out = 1;
+        pixel_read_data_out_reg = 1;
     end
     
     else if (displayed_buffer == BUFFER_B && pixel_read_address_in[17] == 0) begin
-        pixel_read_data_out = 2;
+        pixel_read_data_out_reg = 2;
     end
 
     else begin
-        pixel_read_data_out = 3;
+        pixel_read_data_out_reg = 3;
     end
+
+    // Write pixels based on write address and opposite buffer
+    display_ram_write_address = pixel_write_address_in[16:3];
+
+    if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 0) begin
+        case (pixel_write_address_in[2:0])
+            'd0: display_ram_write_data = {display_ram_read_data_a_top[31:4],  pixel_write_data_in                                   };
+            'd1: display_ram_write_data = {display_ram_read_data_a_top[31:8],  pixel_write_data_in, display_ram_read_data_a_top[3:0] };
+            'd2: display_ram_write_data = {display_ram_read_data_a_top[31:12], pixel_write_data_in, display_ram_read_data_a_top[7:0] };
+            'd3: display_ram_write_data = {display_ram_read_data_a_top[31:16], pixel_write_data_in, display_ram_read_data_a_top[11:0]};
+            'd4: display_ram_write_data = {display_ram_read_data_a_top[31:20], pixel_write_data_in, display_ram_read_data_a_top[15:0]};
+            'd5: display_ram_write_data = {display_ram_read_data_a_top[31:24], pixel_write_data_in, display_ram_read_data_a_top[19:0]};
+            'd6: display_ram_write_data = {display_ram_read_data_a_top[31:28], pixel_write_data_in, display_ram_read_data_a_top[23:0]};
+            'd7: display_ram_write_data = {                                    pixel_write_data_in, display_ram_read_data_a_top[27:0]};
+        endcase
+    end
+
+    else if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 1) begin
+        display_ram_write_data = 'h11111111;
+    end
+
+    else if (displayed_buffer == BUFFER_A && pixel_write_address_in[17] == 0) begin
+        display_ram_write_data = 'h22222222;
+    end
+
+    else begin
+        display_ram_write_data = 'h33333333;
+    end
+
+    // Select one of the four enables based on write address and selected buffer
+    display_ram_write_enable_a_top = displayed_buffer == BUFFER_B && 
+                                     pixel_write_address_in[17] == 0
+                                   ? 1 : 0;
+
+    display_ram_write_enable_a_bottom = displayed_buffer == BUFFER_B  && 
+                                        pixel_write_address_in[17] == 1
+                                      ? 1 : 0;
+
+    display_ram_write_enable_b_top = displayed_buffer == BUFFER_A && 
+                                     pixel_write_address_in[17] == 0
+                                   ? 1 : 0;
+
+    display_ram_write_enable_b_bottom = displayed_buffer == BUFFER_A && 
+                                        pixel_write_address_in[17] == 1
+                                      ? 1 : 0;
 
 end
 
