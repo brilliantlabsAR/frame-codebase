@@ -10,10 +10,10 @@
  */
 
 `ifndef RADIANT
-`include "color_pallet.sv"
-`include "display_buffers.sv"
-`include "display_driver.sv"
-`include "sprite_engine.sv"
+`include "modules/graphics/color_pallet.sv"
+`include "modules/graphics/display_buffers.sv"
+`include "modules/graphics/display_driver.sv"
+`include "modules/graphics/sprite_engine.sv"
 `endif
 
 module graphics (
@@ -38,22 +38,23 @@ logic [17:0] display_to_frame_buffer_read_address;
 logic [3:0] frame_buffer_to_display_indexed_color;
 logic [9:0] frame_buffer_to_display_real_color;
 
+logic temp_pixel_write_enable;
+logic [17:0] temp_pixel_write_address;
+logic [3:0] temp_pixel_write_color;
+
 logic command_to_color_pallet_assign_color_enable;
 logic [7:0] command_to_color_pallet_assign_color_index;
 logic [9:0] command_to_color_pallet_assign_color_value;
-logic command_to_frame_buffer_switch_buffer;
 
-logic [17:0] temp_pixel_write_address;
-logic [3:0] temp_pixel_write_color;
-// logic temp_pixel_write_enable;
+logic command_to_frame_buffer_switch_buffer;
 
 display_buffers display_buffers (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
+    .pixel_write_enable_in(temp_pixel_write_enable),
     .pixel_write_address_in(temp_pixel_write_address),
     .pixel_write_data_in(temp_pixel_write_color),
-    .pixel_write_enable_in(1),
 
     .pixel_read_address_in(display_to_frame_buffer_read_address),
     .pixel_read_data_out(frame_buffer_to_display_indexed_color),
@@ -90,60 +91,63 @@ display_driver display_driver (
 
 always_ff @(posedge clock_in) begin
     
-    // TEST command to draw pixels
-    if (op_code_valid_in && op_code_in == 'h19) begin
-
-        if (operand_valid_in && operand_count_in == 1) begin
-            temp_pixel_write_address <= {operand_in[1:0], 16'b0000000000000000};
-        end
-
-        if (operand_valid_in && operand_count_in == 2) begin
-            temp_pixel_write_address <= {temp_pixel_write_address[17:16], operand_in, temp_pixel_write_address[7:0]};
-        end
-
-        if (operand_valid_in && operand_count_in == 3) begin
-            temp_pixel_write_address <= {temp_pixel_write_address[17:8], operand_in};
-        end
-
-        if (operand_valid_in && operand_count_in == 4) begin
-            temp_pixel_write_color <= operand_in[3:0];
-        end
-
-    end
-
-    // Assign color
-    if (op_code_valid_in && op_code_in == 'h10) begin
-         
-        if (operand_valid_in && operand_count_in == 1) begin
-            command_to_color_pallet_assign_color_index <= operand_in;
-        end
-
-        if (operand_valid_in && operand_count_in == 2) begin
-            command_to_color_pallet_assign_color_value[9:6] <= operand_in[7:4];
-        end
-
-        if (operand_valid_in && operand_count_in == 3) begin
-            command_to_color_pallet_assign_color_value[5:3] <= operand_in[7:5];
-        end
-
-        if (operand_valid_in && operand_count_in == 4) begin
-            command_to_color_pallet_assign_color_value[2:0] <= operand_in[7:5];
-            command_to_color_pallet_assign_color_enable <= 1;
-        end
-
-    end
-
-    // Buffer show
-    else if (op_code_valid_in && op_code_in == 'h17) begin
-        command_to_frame_buffer_switch_buffer <= 1;
-    end
-
-    // Reset state
-    else begin
+    if (op_code_valid_in == 0) begin
+        temp_pixel_write_enable <= 0;
         command_to_color_pallet_assign_color_enable <= 0;
-        command_to_color_pallet_assign_color_value <= 0;
-        command_to_color_pallet_assign_color_index <= 0;
-        command_to_frame_buffer_switch_buffer <= 0;
+        command_to_frame_buffer_switch_buffer <= 0; 
+    end
+
+    else begin
+        
+        case (op_code_in)
+            'h19: begin
+
+                if (operand_valid_in && operand_count_in == 1) begin
+                    temp_pixel_write_address <= {operand_in[1:0], 16'b0000000000000000};
+                end
+
+                if (operand_valid_in && operand_count_in == 2) begin
+                    temp_pixel_write_address <= {temp_pixel_write_address[17:16], operand_in, temp_pixel_write_address[7:0]};
+                end
+
+                if (operand_valid_in && operand_count_in == 3) begin
+                    temp_pixel_write_address <= {temp_pixel_write_address[17:8], operand_in};
+                end
+
+                if (operand_valid_in && operand_count_in == 4) begin
+                    temp_pixel_write_color <= operand_in[3:0];
+                    temp_pixel_write_enable <= 1;
+                end
+
+            end
+
+            'h10: begin
+
+                if (operand_valid_in && operand_count_in == 1) begin
+                    command_to_color_pallet_assign_color_index <= operand_in;
+                end
+
+                if (operand_valid_in && operand_count_in == 2) begin
+                    command_to_color_pallet_assign_color_value[9:6] <= operand_in[7:4];
+                end
+
+                if (operand_valid_in && operand_count_in == 3) begin
+                    command_to_color_pallet_assign_color_value[5:3] <= operand_in[7:5];
+                end
+
+                if (operand_valid_in && operand_count_in == 4) begin
+                    command_to_color_pallet_assign_color_value[2:0] <= operand_in[7:5];
+                    command_to_color_pallet_assign_color_enable <= 1;
+                end
+
+            end
+
+            'h17: begin
+                command_to_frame_buffer_switch_buffer <= 1;
+            end
+
+        endcase
+
     end
 
 end

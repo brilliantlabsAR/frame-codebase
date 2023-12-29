@@ -30,9 +30,9 @@ module display_buffers (
     input logic clock_in,
     input logic reset_n_in,
 
+    input logic pixel_write_enable_in,
     input logic [17:0] pixel_write_address_in,
     input logic [3:0] pixel_write_data_in,
-    input logic pixel_write_enable_in,
 
     input logic [17:0] pixel_read_address_in,
     output logic [3:0] pixel_read_data_out,
@@ -200,12 +200,12 @@ PDPSC512K #(
     .ADW(display_ram_write_address),
     .ADR(display_ram_read_address),
     .CLK(clock_in),
-    .CEW(1),
-    .CER(1),
+    .CEW('b1),
+    .CER('b1),
     .WE(display_ram_write_enable_a_top),
-    .CSW(1),
-    .CSR(1),
-    .RSTR(0),
+    .CSW('b1),
+    .CSR('b1),
+    .RSTR('b0),
     .BYTEEN_N('b0000),
     .DO(display_ram_read_data_a_top)
 );
@@ -310,19 +310,23 @@ always_comb begin
 
     // Select one of the four enables based on write address and selected buffer
     display_ram_write_enable_a_top = displayed_buffer == BUFFER_B && 
-                                     pixel_write_address_in[17] == 0
+                                     pixel_write_address_in[17] == 0 &&
+                                     pixel_write_enable_in == 1
                                    ? 1 : 0;
 
     display_ram_write_enable_a_bottom = displayed_buffer == BUFFER_B  && 
-                                        pixel_write_address_in[17] == 1
+                                        pixel_write_address_in[17] == 1 &&
+                                        pixel_write_enable_in == 1
                                       ? 1 : 0;
 
     display_ram_write_enable_b_top = displayed_buffer == BUFFER_A && 
-                                     pixel_write_address_in[17] == 0
+                                     pixel_write_address_in[17] == 0 &&
+                                     pixel_write_enable_in == 1
                                    ? 1 : 0;
 
     display_ram_write_enable_b_bottom = displayed_buffer == BUFFER_A && 
-                                        pixel_write_address_in[17] == 1
+                                        pixel_write_address_in[17] == 1 &&
+                                        pixel_write_enable_in == 1
                                       ? 1 : 0;
 
 end
