@@ -75,16 +75,16 @@ always_ff @(posedge clock_osc) begin
     clock_osc_counter <= clock_osc_counter + 1;
 
     // 75MHz
-    if (clock_osc_counter[5]) clock_72MHz <= 1;
-    else                      clock_72MHz <= 0;
+    if (clock_osc_counter[5])  clock_72MHz <= 1;
+    else                       clock_72MHz <= 0;
     
     // 50MHz
-    if (clock_osc_counter[8]) clock_50MHz <= 1;
-    else                      clock_50MHz <= 0;
+    if (clock_osc_counter[8])  clock_50MHz <= 1;
+    else                       clock_50MHz <= 0;
 
     // 23.684MHz
     if (clock_osc_counter[18]) clock_24MHz <= 1;
-    else                      clock_24MHz <= 0;
+    else                       clock_24MHz <= 0;
 
     // Release reset after some time
     if (clock_osc_counter[20]) pll_locked <= 1;
