@@ -44,8 +44,8 @@ enum logic {BUFFER_A, BUFFER_B} displayed_buffer;
 logic [1:0] switch_write_buffer_edge_monitor;
 logic buffer_switch_pending;
 
-logic [13:0] display_ram_read_address;
-logic [13:0] display_ram_write_address;
+logic [13:0] display_ram_address_a;
+logic [13:0] display_ram_address_b;
 
 logic [31:0] display_ram_read_data_a_top;
 logic [31:0] display_ram_read_data_a_bottom;
@@ -58,6 +58,10 @@ logic display_ram_write_enable_a_top;
 logic display_ram_write_enable_a_bottom;
 logic display_ram_write_enable_b_top;
 logic display_ram_write_enable_b_bottom;
+
+logic pixel_write_enable_reg;
+logic [17:0] pixel_write_address_reg;
+logic [3:0] pixel_write_data_reg;
 
 logic [3:0] pixel_read_data_out_reg;
 
@@ -197,8 +201,8 @@ PDPSC512K #(
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_a_top (
     .DI(display_ram_write_data),
-    .ADW(display_ram_write_address),
-    .ADR(display_ram_read_address),
+    .ADW(display_ram_address_a),
+    .ADR(display_ram_address_a),
     .CLK(clock_in),
     .CEW('b1),
     .CER('b1),
@@ -217,6 +221,9 @@ always_ff @(posedge clock_in) begin
         displayed_buffer <= BUFFER_A;
         switch_write_buffer_edge_monitor <= 'b00;
         buffer_switch_pending <= 0;
+        pixel_write_enable_reg <= 0;
+        pixel_write_address_reg <= 0;
+        pixel_write_data_reg <= 0;
         pixel_read_data_out <= 0;
     end
 
@@ -243,6 +250,10 @@ always_ff @(posedge clock_in) begin
             buffer_switch_pending <= 0;
         end
 
+        pixel_write_enable_reg <= pixel_write_enable_in;
+        pixel_write_address_reg <= pixel_write_address_in;
+        pixel_write_data_reg <= pixel_write_data_in;
+
         pixel_read_data_out <= pixel_read_data_out_reg;
 
     end
@@ -252,9 +263,18 @@ end
 // Ram selection and read/write connections
 always_comb begin
 
-    // Output pixel value based on read address and selected buffer
-    display_ram_read_address = pixel_read_address_in[16:3];
+    // Connect address lines based on selected buffer
+    if (displayed_buffer == BUFFER_A) begin
+        display_ram_address_a = pixel_read_address_in[16:3];
+        display_ram_address_b = pixel_write_address_reg[16:3];
+    end
 
+    else begin
+        display_ram_address_a = pixel_write_address_reg[16:3];
+        display_ram_address_b = pixel_read_address_in[16:3];
+    end
+
+    // Read pixels from displayed_buffer
     if (displayed_buffer == BUFFER_A && pixel_read_address_in[17] == 0) begin
         case (pixel_read_address_in[2:0])
             'd0: pixel_read_data_out_reg = display_ram_read_data_a_top[3:0];
@@ -280,27 +300,25 @@ always_comb begin
         pixel_read_data_out_reg = 3;
     end
 
-    // Write pixels based on write address and opposite buffer
-    display_ram_write_address = pixel_write_address_in[16:3];
-
-    if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 0) begin
-        case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_a_top[31:4],  pixel_write_data_in                                   };
-            'd1: display_ram_write_data = {display_ram_read_data_a_top[31:8],  pixel_write_data_in, display_ram_read_data_a_top[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_a_top[31:12], pixel_write_data_in, display_ram_read_data_a_top[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_a_top[31:16], pixel_write_data_in, display_ram_read_data_a_top[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_a_top[31:20], pixel_write_data_in, display_ram_read_data_a_top[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_a_top[31:24], pixel_write_data_in, display_ram_read_data_a_top[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_a_top[31:28], pixel_write_data_in, display_ram_read_data_a_top[23:0]};
-            'd7: display_ram_write_data = {                                    pixel_write_data_in, display_ram_read_data_a_top[27:0]};
+    // Write pixels on the opposite buffer
+    if (displayed_buffer == BUFFER_B && pixel_write_address_reg[17] == 0) begin
+        case (pixel_write_address_reg[2:0])
+            'd0: display_ram_write_data = {display_ram_read_data_a_top[31:4],  pixel_write_data_reg                                   };
+            'd1: display_ram_write_data = {display_ram_read_data_a_top[31:8],  pixel_write_data_reg, display_ram_read_data_a_top[3:0] };
+            'd2: display_ram_write_data = {display_ram_read_data_a_top[31:12], pixel_write_data_reg, display_ram_read_data_a_top[7:0] };
+            'd3: display_ram_write_data = {display_ram_read_data_a_top[31:16], pixel_write_data_reg, display_ram_read_data_a_top[11:0]};
+            'd4: display_ram_write_data = {display_ram_read_data_a_top[31:20], pixel_write_data_reg, display_ram_read_data_a_top[15:0]};
+            'd5: display_ram_write_data = {display_ram_read_data_a_top[31:24], pixel_write_data_reg, display_ram_read_data_a_top[19:0]};
+            'd6: display_ram_write_data = {display_ram_read_data_a_top[31:28], pixel_write_data_reg, display_ram_read_data_a_top[23:0]};
+            'd7: display_ram_write_data = {                                    pixel_write_data_reg, display_ram_read_data_a_top[27:0]};
         endcase
     end
 
-    else if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 1) begin
+    else if (displayed_buffer == BUFFER_B && pixel_write_address_reg[17] == 1) begin
         display_ram_write_data = 'h11111111;
     end
 
-    else if (displayed_buffer == BUFFER_A && pixel_write_address_in[17] == 0) begin
+    else if (displayed_buffer == BUFFER_A && pixel_write_address_reg[17] == 0) begin
         display_ram_write_data = 'h22222222;
     end
 
@@ -310,23 +328,23 @@ always_comb begin
 
     // Select one of the four enables based on write address and selected buffer
     display_ram_write_enable_a_top = displayed_buffer == BUFFER_B && 
-                                     pixel_write_address_in[17] == 0 &&
-                                     pixel_write_enable_in == 1
+                                     pixel_write_address_reg[17] == 0 &&
+                                     pixel_write_enable_reg == 1
                                    ? 1 : 0;
 
     display_ram_write_enable_a_bottom = displayed_buffer == BUFFER_B  && 
-                                        pixel_write_address_in[17] == 1 &&
-                                        pixel_write_enable_in == 1
+                                        pixel_write_address_reg[17] == 1 &&
+                                        pixel_write_enable_reg == 1
                                       ? 1 : 0;
 
     display_ram_write_enable_b_top = displayed_buffer == BUFFER_A && 
-                                     pixel_write_address_in[17] == 0 &&
-                                     pixel_write_enable_in == 1
+                                     pixel_write_address_reg[17] == 0 &&
+                                     pixel_write_enable_reg == 1
                                    ? 1 : 0;
 
     display_ram_write_enable_b_bottom = displayed_buffer == BUFFER_A && 
-                                        pixel_write_address_in[17] == 1 &&
-                                        pixel_write_enable_in == 1
+                                        pixel_write_address_reg[17] == 1 &&
+                                        pixel_write_enable_reg == 1
                                       ? 1 : 0;
 
 end
