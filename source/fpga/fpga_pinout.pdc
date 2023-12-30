@@ -51,9 +51,8 @@ ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb2]
 ldc_set_location -site {B5} [get_ports camera_clock]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports camera_clock]
 
-# Clock constraints (TODO update these once the PLL works)
+# Clock constraints including +7% accuracy (TODO update these once the PLL works)
 create_clock -name {clock_72MHz} -period 12.46105919 [get_nets clock_72MHz]
-#create_clock -name {clock_50MHz} -period 18.69158879 [get_nets clock_50MHz]
+create_clock -name {clock_50MHz} -period 24.92211838 [get_nets clock_50MHz]
 create_clock -name {clock_24MHz} -period 37.38317757 [get_nets clock_24MHz]
-create_clock -name {clock_18MHz} -period 49.84423676 [get_nets clock_18MHz]
 #create_clock -name {pll_wrapper.feedback_w} -period 2.78 [get_nets {pll_wrapper.feedback_w}]
