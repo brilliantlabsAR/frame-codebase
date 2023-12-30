@@ -43,33 +43,54 @@ module top (
 );
 
 // Clocking
-logic clock_18MHz_oscillator;
-logic clock_24MHz;
-logic clock_36MHz;
+logic clock_osc;
 logic clock_72MHz;
 logic clock_50MHz;
+logic clock_36MHz;
+logic clock_24MHz;
 logic pll_locked;
 
 `ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
+
+logic [31:0] clock_osc_counter;
+
+initial begin
+    clock_72MHz = 0;
+    clock_50MHz = 0;
+    clock_24MHz = 0;
+    clock_osc_counter = 0; 
+    pll_locked = 0;
+end
+
 OSCA #(
-    .HF_CLK_DIV("8"), 
+    .HF_CLK_DIV("0"),
     .HF_OSC_EN("ENABLED")
     ) osc (
     .HFOUTEN(1'b1),
-    .HFCLKOUT(clock_18MHz_oscillator) // Actually 50MHz
+    .HFCLKOUT(clock_osc)
 );
 
-assign clock_72MHz = clock_18MHz_oscillator;
-assign clock_50MHz = clock_18MHz_oscillator;
+always_ff @(posedge clock_osc) begin
 
-initial begin
-    pll_locked = 0;    
+    clock_osc_counter <= clock_osc_counter + 1;
+
+    // 75MHz
+    if (clock_osc_counter[5]) clock_72MHz <= 1;
+    else                      clock_72MHz <= 0;
+    
+    // 50MHz
+    if (clock_osc_counter[8]) clock_50MHz <= 1;
+    else                      clock_50MHz <= 0;
+
+    // 23.684MHz
+    if (clock_osc_counter[18]) clock_24MHz <= 1;
+    else                      clock_24MHz <= 0;
+
+    // Release reset after some time
+    if (clock_osc_counter[20]) pll_locked <= 1;
+
 end
 
-always_ff @(posedge clock_18MHz_oscillator) begin
-    clock_24MHz <= ~clock_24MHz;
-    pll_locked <= 1;
-end
 `else
 
 OSCA #(
@@ -78,11 +99,11 @@ OSCA #(
     .LF_OUTPUT_EN("DISABLED")
     ) osc (
     .HFOUTEN(1'b1),
-    .HFCLKOUT(clock_18MHz_oscillator)
+    .HFCLKOUT(clock_osc)
 );
 
 pll_wrapper pll_wrapper (
-    .clki_i(clock_18MHz_oscillator),
+    .clki_i(clock_osc),
     .clkop_o(clock_24MHz),
     .clkos_o(clock_36MHz),
     .clkos2_o(clock_72MHz),
@@ -96,9 +117,10 @@ pll_wrapper pll_wrapper (
 logic global_reset_n;
 logic reset_n_clock_72MHz;
 logic reset_n_clock_50MHz;
+logic reset_n_clock_24MHz;
 
 reset_global reset_global (
-    .clock_in(clock_18MHz_oscillator),
+    .clock_in(clock_osc),
     .pll_locked_in(pll_locked),
     .global_reset_n_out(global_reset_n)
 );
@@ -113,6 +135,12 @@ reset_sync reset_sync_clock_50MHz (
     .clock_in(clock_50MHz),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(reset_n_clock_50MHz)
+);
+
+reset_sync reset_sync_clock_24MHz (
+    .clock_in(clock_24MHz),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(reset_n_clock_24MHz)
 );
 
 // SPI

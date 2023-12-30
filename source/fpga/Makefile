@@ -39,6 +39,7 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 		top.sv
 
 	@nextpnr-nexus \
+		--seed 12345 \
 		--device LIFCL-17-7UWG72 \
 		--pdc fpga_pinout.pdc \
 		--json $(BUILD)/fpga_application.json \
