@@ -69,7 +69,7 @@ PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
     .RESETMODE("SYNC"),
-    .INITVAL_00("0x00000000"),
+    .INITVAL_00(),
     .INITVAL_01(),
     .INITVAL_02(),
     .INITVAL_03(),
