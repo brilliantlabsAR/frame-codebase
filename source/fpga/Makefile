@@ -39,6 +39,7 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 		top.sv
 
 	@nextpnr-nexus \
+		--seed 12345 \
 		--device LIFCL-17-7UWG72 \
 		--pdc fpga_pinout.pdc \
 		--json $(BUILD)/fpga_application.json \
@@ -46,9 +47,11 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 
 	@prjoxide pack $(BUILD)/fpga_application.fasm $(BUILD)/fpga_application.bit
 	
+	@lz4 -9 -f -B4096 $(BUILD)/fpga_application.bit $(BUILD)/fpga_application.lz4
+
 	@xxd \
 		-name fpga_application \
-	    -include $(BUILD)/fpga_application.bit \
+	    -include $(BUILD)/fpga_application.lz4 \
 		$(BUILD)/fpga_application_temp.h
 
 	@sed '1s/^/const /' $(BUILD)/fpga_application_temp.h > fpga_application.h

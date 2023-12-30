@@ -32,6 +32,7 @@ BUILD := ../../build
 C_FILES += \
 	main.c \
 	bluetooth.c \
+	compression.c \
 	flash.c \
 	luaport.c \
 	spi.c \
@@ -80,6 +81,7 @@ C_FILES += \
 	$(LIBRARIES)/lua/lutf8lib.c \
 	$(LIBRARIES)/lua/lvm.c \
 	$(LIBRARIES)/lua/lzio.c \
+	$(LIBRARIES)/lz4/lz4.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_gpiote.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_pdm.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_rtc.c \
@@ -100,6 +102,7 @@ FLAGS += \
 	-I$(LIBRARIES)/cmsis/CMSIS/Core/Include \
 	-I$(LIBRARIES)/littlefs \
 	-I$(LIBRARIES)/lua \
+	-I$(LIBRARIES)/lz4 \
 	-I$(LIBRARIES)/nrfx \
 	-I$(LIBRARIES)/nrfx/drivers/include \
 	-I$(LIBRARIES)/nrfx/hal \

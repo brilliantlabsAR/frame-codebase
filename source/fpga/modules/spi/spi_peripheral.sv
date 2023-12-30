@@ -10,8 +10,8 @@
  */
 
 module spi_peripheral (
-    input logic clock,
-    input logic reset_n,
+    input logic clock_in,
+    input logic reset_n_in,
 
     // External SPI signals
     input logic spi_select_in,
@@ -19,13 +19,19 @@ module spi_peripheral (
     input logic spi_data_in,
     output logic spi_data_out,
 
-    // External subperipheral interface signals
-    output logic [7:0] subperipheral_address_out,
-    output logic subperipheral_address_out_valid,
-    output logic [7:0] subperipheral_data_out,
-    output logic subperipheral_data_out_valid,
-    input logic [7:0] subperipheral_data_in,
-    input logic subperipheral_data_in_valid
+    // Sub-peripheral interface
+    output logic [7:0] opcode_out,
+    output logic [7:0] operand_out,
+    output logic opcode_valid_out,
+    output logic operand_valid_out,
+    output integer operand_count_out,
+
+    input logic [7:0] response_1_in,
+    input logic [7:0] response_2_in,
+    input logic [7:0] response_3_in,
+    input logic response_1_valid_in,
+    input logic response_2_valid_in,
+    input logic response_3_valid_in
 );
 
 logic metastable_spi_select_in;
@@ -35,11 +41,11 @@ logic stable_spi_select_in;
 logic stable_spi_clock_in;
 logic stable_spi_data_in;
 logic last_stable_spi_clock_in;
-logic [7:0] subperipheral_data_in_reg;
+logic [7:0] response_reg;
 
 integer spi_bit_index;
 
-always_ff @(posedge clock) begin
+always_ff @(posedge clock_in) begin
 
     // Synchronizer
     metastable_spi_select_in <= spi_select_in;
@@ -53,24 +59,37 @@ always_ff @(posedge clock) begin
     last_stable_spi_clock_in <= stable_spi_clock_in;
 
     // Reset
-    if (stable_spi_select_in == 1 | reset_n == 0) begin
+    if (stable_spi_select_in == 1 | reset_n_in == 0) begin
         spi_bit_index <= 15;
-        subperipheral_address_out_valid <= 0;
-        subperipheral_data_out_valid <= 0;
-        subperipheral_data_in_reg <= 0;
+        opcode_valid_out <= 0;
+        operand_valid_out <= 0;
+        operand_count_out <= 0;
+        response_reg <= 0;
     end
 
     // Normal operation
     else begin
 
-        // Buffer in data to output
-        if (subperipheral_data_in_valid) begin
-            subperipheral_data_in_reg <= subperipheral_data_in;
+        // Buffer in data to output based on priority
+        if (response_1_valid_in) begin
+            response_reg <= response_1_in;
         end
         
+        else if (response_2_valid_in) begin
+            response_reg <= response_2_in;
+        end
+
+        else if (response_3_valid_in) begin
+            response_reg <= response_3_in;
+        end
+
+        else begin
+            response_reg <= 0;
+        end
+
         // Output data
         if (spi_bit_index < 8) begin
-            spi_data_out <= subperipheral_data_in_reg[spi_bit_index];
+            spi_data_out <= response_reg[spi_bit_index];
         end
 
         else begin
@@ -82,29 +101,30 @@ always_ff @(posedge clock) begin
 
             // If address
             if (spi_bit_index > 7) begin
-                subperipheral_address_out[spi_bit_index - 8] <= stable_spi_data_in;
+                opcode_out[spi_bit_index - 8] <= stable_spi_data_in;
 
                 if (spi_bit_index == 8) begin
-                    subperipheral_address_out_valid <= 1;
+                    opcode_valid_out <= 1;
                 end
             end 
             
             // Otherwise data
             else begin
-                subperipheral_data_out[spi_bit_index] <= stable_spi_data_in;
+                operand_out[spi_bit_index] <= stable_spi_data_in;
                 
                 if (spi_bit_index == 0) begin
-                    subperipheral_data_out_valid <= 1;
+                    operand_valid_out <= 1;
                 end
 
                 else begin
-                    subperipheral_data_out_valid <= 0;
+                    operand_valid_out <= 0;
                 end
             end
 
             // Roll underflows back over to read multiple bytes continiously
             if (spi_bit_index == 0) begin 
                 spi_bit_index <= 7;
+                operand_count_out <= operand_count_out + 1;
             end
 
             else begin

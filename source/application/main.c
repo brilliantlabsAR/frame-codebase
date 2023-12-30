@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include "bluetooth.h"
 #include "camera_configuration.h"
+#include "compression.h"
 #include "display_configuration.h"
 #include "error_logging.h"
 #include "fpga_application.h"
@@ -133,6 +134,13 @@ void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
                                        void *unused_gptiote_context_pointer)
 {
     shutdown(false);
+}
+
+static void fpga_send_bitstream_bytes(void *context,
+                                      void *data,
+                                      size_t data_size)
+{
+    spi_write(FPGA, data, data_size, true);
 }
 
 static void hardware_setup(bool *factory_reset)
@@ -293,33 +301,17 @@ static void hardware_setup(bool *factory_reset)
         uint8_t fpga_bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
         spi_write(FPGA, fpga_bitstream_burst, 4, true);
 
-        size_t chunk_size = 16384;
-        size_t chunks = (size_t)ceilf((float)sizeof(fpga_application) /
-                                      (float)chunk_size);
+        int status = compression_decompress(4096,
+                                            fpga_application,
+                                            sizeof(fpga_application),
+                                            fpga_send_bitstream_bytes,
+                                            NULL);
 
-        uint8_t *fpga_bitstream_buffer = malloc(chunk_size);
-        if (fpga_bitstream_buffer == NULL)
+        if (status)
         {
-            error_with_message("Couldn't allocate FPGA SPI buffer");
+            LOG("%d", status);
+            error_with_message("Error decompressing bitstream");
         }
-
-        for (size_t chunk = 0; chunk < chunks; chunk++)
-        {
-            size_t buffer_size = chunk_size;
-
-            // Buffer size will be smaller for the last payload
-            if (chunk == chunks - 1)
-            {
-                buffer_size = sizeof(fpga_application) % chunk_size;
-            }
-
-            memcpy(fpga_bitstream_buffer,
-                   fpga_application + (chunk * chunk_size),
-                   buffer_size);
-            spi_write(FPGA, fpga_bitstream_buffer, buffer_size, true);
-        }
-
-        free(fpga_bitstream_buffer);
 
         nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
         nrfx_systick_delay_ms(10);
