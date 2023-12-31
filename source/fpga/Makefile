@@ -23,8 +23,13 @@
 #
 
 BUILD := ../../build
+RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
+TOOLCHAIN ?= YOSYS
 
 fpga_application.h: $(shell find . | egrep '.sv|.pdc')
+	@if [ $(TOOLCHAIN) = YOSYS ]; then make yosys; else make radiant; fi
+
+yosys: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
 
 	@iverilog \
@@ -47,15 +52,29 @@ fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 
 	@prjoxide pack $(BUILD)/fpga_application.fasm $(BUILD)/fpga_application.bit
 	
-	@lz4 -9 -f -B4096 $(BUILD)/fpga_application.bit $(BUILD)/fpga_application.lz4
+	@make package
 
-	@xxd \
-		-name fpga_application \
-	    -include $(BUILD)/fpga_application.lz4 \
-		$(BUILD)/fpga_application_temp.h
+radiant:
+	@mkdir -p $(BUILD)
+
+	@$(RADIANT_PATH)/radiantc radiant/run.tcl
+
+	@mv ./radiant/frame/frame_frame.bit $(BUILD)/fpga_application.bit
+
+	@make package
+
+package:
+	@lz4 -9 -f -B4096 $(BUILD)/fpga_application.bit $(BUILD)/fpga_application
+
+	@cd $(BUILD) && \
+        xxd \
+            -include fpga_application \
+            fpga_application_temp.h
 
 	@sed '1s/^/const /' $(BUILD)/fpga_application_temp.h > fpga_application.h
 
 clean:
 	@rm -rf $(BUILD) fpga_application.h
 	@echo Cleaned
+
+.PHONY: radiant clean
