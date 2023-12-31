@@ -69,7 +69,9 @@ PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
     .RESETMODE("SYNC"),
+    `ifndef RADIANT
     .INITVAL_00("0x00000000"),
+    `endif
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_a_top (
@@ -91,7 +93,9 @@ PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
     .RESETMODE("SYNC"),
+    `ifndef RADIANT
     .INITVAL_00("0x00000000"),
+    `endif
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_a_bottom (
@@ -113,7 +117,9 @@ PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
     .RESETMODE("SYNC"),
+    `ifndef RADIANT
     .INITVAL_00("0x00000000"),
+    `endif
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_b_top (
@@ -135,7 +141,9 @@ PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
     .RESETMODE("SYNC"),
+    `ifndef RADIANT
     .INITVAL_00("0x00000000"),
+    `endif
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) display_buffer_b_bottom (
