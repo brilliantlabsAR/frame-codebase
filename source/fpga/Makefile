@@ -41,7 +41,8 @@ yosys:
 	@yosys \
 		-p "synth_nexus \
 		-json $(BUILD)/fpga_application.json" \
-		top.sv
+		top.sv \
+			> $(BUILD)/yosys.log
 
 	@nextpnr-nexus \
 		--seed 12345 \
@@ -50,7 +51,10 @@ yosys:
 		--json $(BUILD)/fpga_application.json \
 		--fasm $(BUILD)/fpga_application.fasm
 
-	@prjoxide pack $(BUILD)/fpga_application.fasm $(BUILD)/fpga_application.bit
+	@prjoxide \
+		pack \
+		$(BUILD)/fpga_application.fasm \
+		$(BUILD)/fpga_application.bit
 	
 	@make package
 
