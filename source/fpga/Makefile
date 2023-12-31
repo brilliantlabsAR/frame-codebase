@@ -23,15 +23,15 @@
 #
 
 BUILD := ../../build
-RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
 TOOLCHAIN ?= YOSYS
+RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
 
 fpga_application.h: $(shell find . | egrep '.sv|.pdc')
-	@if [ $(TOOLCHAIN) = YOSYS ]; then make yosys; else make radiant; fi
-
-yosys: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
 
+	@if [ $(TOOLCHAIN) = YOSYS ]; then make yosys; else make radiant; fi
+
+yosys:
 	@iverilog \
 		-Wall \
 		-g2012 \
@@ -55,8 +55,6 @@ yosys: $(shell find . | egrep '.sv|.pdc')
 	@make package
 
 radiant:
-	@mkdir -p $(BUILD)
-
 	@$(RADIANT_PATH)/radiantc radiant/run.tcl
 
 	@mv ./radiant/frame/frame_frame.bit $(BUILD)/fpga_application.bit
@@ -77,4 +75,4 @@ clean:
 	@rm -rf $(BUILD) fpga_application.h
 	@echo Cleaned
 
-.PHONY: radiant clean
+.PHONY: yosys radiant package clean
