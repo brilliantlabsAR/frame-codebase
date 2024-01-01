@@ -41,15 +41,16 @@ logic [9:0] cursor_x_position_reg; // 0 - 639
 logic [9:0] cursor_y_position_reg; // 0 - 399
 
 logic [9:0] sprite_draw_width_reg = 25; // 0 - 639
-logic [1:0] sprite_color_mode_reg = 16; // 0 = 1 color, 1 = 2 color
-                                   // 2 = 4 color, 3 = 16 color
+logic [1:0] sprite_color_mode_reg = 'b11; // 'b00 = 1 color, 'b01 = 2 color
+                                   // 'b01 = 4 color, 'b11 = 16 color
 logic [3:0] sprite_pallet_offset_reg = 0; // 0 - 15
 
 // Registers to hold the current command operations
 logic clear_buffer_flag;
 logic assign_color_enable_flag;
 logic move_cursor_flag;
-logic sprite_draw_flag;
+logic sprite_enable_flag;
+logic sprite_byte_flag;
 logic show_buffer_flag;
 
 logic clear_buffer_in_progress_flag;
@@ -70,7 +71,8 @@ always_ff @(posedge clock_in) begin
         clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
         move_cursor_flag <= 0;
-        sprite_draw_flag <= 0;
+        sprite_enable_flag <= 0;
+        sprite_byte_flag <= 0;
         show_buffer_flag <= 0; 
     end
 
@@ -128,13 +130,15 @@ always_ff @(posedge clock_in) begin
 
             // Sprite draw pixels
             'h16: begin
+                sprite_enable_flag <= 1;
+
                 if (operand_valid_in) begin
-                    sprite_draw_flag <= 1;
+                    sprite_byte_flag <= 1;
                     sprite_draw_data <= operand_in;
                 end
 
                 else begin
-                    sprite_draw_flag <= 0;
+                    sprite_byte_flag <= 0;
                 end
             end
 
@@ -301,7 +305,8 @@ sprite_engine sprite_engine (
     .color_mode_in(sprite_color_mode_reg),
     .color_pallet_offset_in(sprite_pallet_offset_reg),
 
-    .sprite_draw_valid_in(sprite_draw_flag),
+    .sprite_draw_enable_in(sprite_enable_flag),
+    .sprite_draw_data_valid_in(sprite_byte_flag),
     .sprite_draw_data_in(sprite_draw_data),
 
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),
