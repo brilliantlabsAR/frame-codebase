@@ -24,7 +24,7 @@ logic [9:0] starting_cursor_y = 100;
 
 logic [9:0] cursor_x;
 logic [9:0] cursor_y ;
-logic [9:0] draw_width = 25;
+logic [9:0] draw_width = 5;
 logic [1:0] color_mode = 'b11;
 logic [3:0] pallet_offset = 0;
 
@@ -57,6 +57,20 @@ initial begin
 
     // Send two pixels
     input_data <= 'h83;
+    input_data_valid <= 1;
+    #10
+    input_data_valid <= 0;
+    #100
+
+    // Send two pixels
+    input_data <= 'h56;
+    input_data_valid <= 1;
+    #10
+    input_data_valid <= 0;
+    #100
+
+    // Send two pixels
+    input_data <= 'h56;
     input_data_valid <= 1;
     #10
     input_data_valid <= 0;
@@ -110,9 +124,9 @@ sprite_engine sprite_engine (
     .color_mode_in(color_mode),
     .color_pallet_offset_in(pallet_offset),
 
-    .sprite_draw_enable_in(enable),
-    .sprite_draw_data_valid_in(input_data_valid),
-    .sprite_draw_data_in(input_data),
+    .draw_enable_in(enable),
+    .draw_data_valid_in(input_data_valid),
+    .draw_data_in(input_data),
 
     .pixel_write_enable_out(output_valid),
     .pixel_write_address_out(output_address),

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Jan  1 18:19:03 2024
+[*] Mon Jan  1 19:37:40 2024
 [*]
 [dumpfile] "simulation/sprite_engine_tb.fst"
-[dumpfile_mtime] "Mon Jan  1 18:17:39 2024"
-[dumpfile_size] 1311
+[dumpfile_mtime] "Mon Jan  1 19:33:40 2024"
+[dumpfile_size] 1420
 [savefile] "sprite_engine_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
-*-9.639086 2140 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-10.403419 1767 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -41,9 +41,8 @@
 [signals_width] 318
 [sst_expanded] 1
 [sst_vpaned_height] 247
-@29
-sprite_engine_tb.clock
 @28
+sprite_engine_tb.clock
 sprite_engine_tb.reset_n
 @200
 -
@@ -81,8 +80,10 @@ sprite_engine_tb.output_address[17:0]
 sprite_engine_tb.output_data[3:0]
 @200
 -
-@28
+@25
 sprite_engine_tb.updated_cursor_valid
+sprite_engine_tb.updated_cursor_x[9:0]
+sprite_engine_tb.updated_cursor_y[9:0]
 @200
 -
 @28

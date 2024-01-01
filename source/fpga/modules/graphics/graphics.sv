@@ -305,9 +305,9 @@ sprite_engine sprite_engine (
     .color_mode_in(sprite_color_mode_reg),
     .color_pallet_offset_in(sprite_pallet_offset_reg),
 
-    .sprite_draw_enable_in(sprite_enable_flag),
-    .sprite_draw_data_valid_in(sprite_byte_flag),
-    .sprite_draw_data_in(sprite_draw_data),
+    .draw_enable_in(sprite_enable_flag),
+    .draw_data_valid_in(sprite_byte_flag),
+    .draw_data_in(sprite_draw_data),
 
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),
     .pixel_write_address_out(pixel_write_address_sprite_to_mux_wire),
@@ -319,7 +319,7 @@ sprite_engine sprite_engine (
 );
 
 // Vector engine
-logic vector_update_cursor_flag;
+logic vector_update_cursor_flag = 0;
 logic [9:0] vector_update_cursor_x_reg;
 logic [9:0] vector_update_cursor_y_reg;
 
