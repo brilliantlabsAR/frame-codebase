@@ -32,16 +32,15 @@
     output logic [9:0] cursor_end_y_position_out
  );
 
-// TODO implement cursor output
-initial begin
-    cursor_end_position_valid_out = 0;
-    cursor_end_x_position_out = 0;
-    cursor_end_y_position_out = 0;
-end
-
 logic [1:0] data_valid_edge_monitor;
-logic [17:0] draw_address;
 logic [4:0] pixels_remaining;
+logic done_flag;
+
+logic [9:0] cursor_current_x_position;
+logic [9:0] cursor_current_y_position;
+
+logic [9:0] cursor_left_boundary;
+logic [9:0] cursor_right_boundary;
 
 always_ff @(posedge clock_in) begin
 
@@ -51,10 +50,10 @@ always_ff @(posedge clock_in) begin
     if (sprite_draw_enable_in == 0 || reset_n_in == 0) begin
         pixel_write_enable_out <= 0;
         cursor_end_position_valid_out <= 0;
-
+        
         data_valid_edge_monitor <= 0;
-        draw_address <= 0;
         pixels_remaining <= 0;
+        done_flag <= 0; 
     end
 
     else begin
@@ -62,30 +61,67 @@ always_ff @(posedge clock_in) begin
         // On a new data byte
         if (data_valid_edge_monitor == 'b01) begin
 
-            draw_address <= cursor_start_x_position_in + 
-                            (cursor_start_y_position_in * 640);
+            cursor_current_x_position <= cursor_start_x_position_in;
+            cursor_current_y_position <= cursor_start_y_position_in;
+
+            cursor_left_boundary <= cursor_start_x_position_in;
+            cursor_right_boundary <= cursor_start_x_position_in + draw_width_in;
 
             case (color_mode_in)
-                'b00: pixels_remaining = 8;
-                'b01: pixels_remaining = 8;
-                'b10: pixels_remaining = 4;
-                'b11: pixels_remaining = 2;
+                'b00: pixels_remaining <= 8;
+                'b01: pixels_remaining <= 8;
+                'b10: pixels_remaining <= 4;
+                'b11: pixels_remaining <= 2;
             endcase
         
         end
 
-        else if (pixels_remaining > 0) begin
-            
+        if (pixels_remaining > 0) begin
+                
             pixels_remaining <= pixels_remaining - 1;
 
-            // TODO width
-            draw_address <= draw_address + 1;
+            // Calculate the cursor position and width wrapping
+            if (cursor_current_x_position < cursor_right_boundary) begin
+                cursor_current_x_position <= cursor_current_x_position + 1;
+            end
 
-            // TODO color mode and color offset
-            pixel_write_enable_out <= 1;
-            pixel_write_address_out <= draw_address;
+            else begin
+                cursor_current_x_position <= cursor_left_boundary;
+                cursor_current_y_position <= cursor_current_y_position + 1;
+            end
+
+            // Output the new cursor value when we reach the last pixel
+            if (pixels_remaining == 1) begin
+                done_flag <= 1;
+            end
+
+            // Output the pixel write address
+            pixel_write_address_out <= cursor_current_x_position + 
+                                    (cursor_current_y_position * 640);
+
+            // Draw the pixel TODO color mode and color offset
             pixel_write_data_out <= sprite_draw_data_in[3:0];
 
+            // Enable the output
+            pixel_write_enable_out <= 1;
+
+        end
+
+        // Disable output once done and update new cursor value
+        if (done_flag) begin
+
+            done_flag <= 0;
+            
+            pixel_write_enable_out <= 0;
+
+            cursor_end_x_position_out <= cursor_current_x_position;
+            cursor_end_y_position_out <= cursor_current_y_position;
+            cursor_end_position_valid_out <= 1;
+
+        end
+
+        else begin
+            cursor_end_position_valid_out <= 0;
         end
 
     end

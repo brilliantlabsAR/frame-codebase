@@ -11,9 +11,9 @@
 
 `timescale 10ns / 10ns
 
-`include "../display.sv"
+`include "../display_driver.sv"
 
-module display_tb (
+module display_driver_tb (
     output logic display_clock,
     output logic display_hsync,
     output logic display_vsync,
@@ -30,35 +30,40 @@ module display_tb (
 );
 
 logic clock = 0;
+logic reset_n = 0;
+logic [17:0] address;
+
 initial begin : clock_25MHz
     forever #2 clock <= ~clock;
 end
 
 initial begin
-    $dumpfile("simulation/display_tb.fst");
-    $dumpvars(0, display_tb);
+    $dumpfile("simulation/display_driver_tb.fst");
+    $dumpvars(0, display_driver_tb);
 end
 
 initial begin
+    #10
+    reset_n <= 1;
     #10000000
+    reset_n <= 0;
+    #10
     $finish;
 end
 
-display display (
+display_driver display_driver (
     .clock_in(clock),
-    .clock_out(display_clock),
-    .hsync(display_hsync),
-    .vsync(display_vsync),
-    .y0(display_y0),
-    .y1(display_y1),
-    .y2(display_y2),
-    .y3(display_y3),
-    .cr0(display_cr0),
-    .cr1(display_cr1),
-    .cr2(display_cr2),
-    .cb0(display_cb0),
-    .cb1(display_cb1),
-    .cb2(display_cb2)
+    .reset_n_in(reset_n),
+
+    .pixel_data_address_out(address),
+    .pixel_data_value_in(10'b1010011111),
+
+    .display_clock_out(display_clock),
+    .display_hsync_out(display_hsync),
+    .display_vsync_out(display_vsync),
+    .display_y_out({display_y0, display_y1, display_y2, display_y3}),
+    .display_cb_out({display_cr0, display_cr1, display_cr2}),
+    .display_cr_out({display_cb0, display_cb1, display_cb2})
 );
 
 endmodule
