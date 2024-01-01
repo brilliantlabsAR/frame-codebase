@@ -85,7 +85,7 @@ always_ff @(posedge clock_in) begin
                 clear_buffer_flag <= 1;
             end
 
-            // Assign color pallet
+            // Assign color
             'h11: begin
                 if (operand_valid_in) begin
                     case (operand_count_in)
