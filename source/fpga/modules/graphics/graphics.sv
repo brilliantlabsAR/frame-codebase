@@ -40,10 +40,9 @@ module graphics (
 logic [9:0] cursor_x_position_reg; // 0 - 639
 logic [9:0] cursor_y_position_reg; // 0 - 399
 
-logic [9:0] sprite_draw_width_reg = 25; // 0 - 639
-logic [1:0] sprite_color_mode_reg = 'b11; // 'b00 = 1 color, 'b01 = 2 color
-                                   // 'b01 = 4 color, 'b11 = 16 color
-logic [3:0] sprite_pallet_offset_reg = 0; // 0 - 15
+logic [9:0] sprite_draw_width_reg; // 1 - 640
+logic [1:0] sprite_color_mode_reg; // 'b00 = 1 color, 'b01 = 2 color 'b01 = 4 color, 'b11 = 16 color
+logic [3:0] sprite_pallet_offset_reg; // 0 - 15
 
 // Registers to hold the current command operations
 logic clear_buffer_flag;
@@ -67,13 +66,21 @@ logic [7:0] sprite_draw_data;
 // Handle op-codes as they come in
 always_ff @(posedge clock_in) begin
     
+    // Initial values for the sprite and vector engines
+    if (reset_n_in == 0) begin
+        sprite_draw_width_reg <= 40; // HACK
+        sprite_color_mode_reg <= 'b11;
+        sprite_pallet_offset_reg <= 0;
+    end
+
+    // Always clear flags after the opcode has been handled
     if (op_code_valid_in == 0 || reset_n_in == 0) begin
         clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
         move_cursor_flag <= 0;
         sprite_enable_flag <= 0;
         sprite_byte_flag <= 0;
-        show_buffer_flag <= 0; 
+        show_buffer_flag <= 0;
     end
 
     else begin
@@ -104,9 +111,9 @@ always_ff @(posedge clock_in) begin
                 if (operand_valid_in) begin
                     case (operand_count_in)
                         1: move_cursor_x_reg <= {operand_in[1:0], 8'b0};
-                        2: move_cursor_x_reg <= {move_cursor_x_reg[1:0], operand_in};
+                        2: move_cursor_x_reg <= {move_cursor_x_reg[9:8], operand_in};
                         3: move_cursor_y_reg <= {operand_in[1:0], 8'b0};
-                        4: move_cursor_y_reg <= {move_cursor_x_reg[1:0], operand_in};
+                        4: move_cursor_y_reg <= {move_cursor_y_reg[9:8], operand_in};
                     endcase
 
                     move_cursor_flag = operand_count_in == 4 ? 1 : 0;
@@ -115,7 +122,12 @@ always_ff @(posedge clock_in) begin
 
             // Set sprite draw width
             'h13: begin
-
+                if (operand_valid_in) begin
+                    case (operand_count_in)
+                        1: sprite_draw_width_reg <= {operand_in[1:0], 8'b0};
+                        2: sprite_draw_width_reg <= {sprite_draw_width_reg[9:8], operand_in};
+                    endcase
+                end
             end
 
             // Set sprite color mode

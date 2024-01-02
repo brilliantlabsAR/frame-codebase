@@ -33,11 +33,63 @@ static int lua_display_clear(lua_State *L)
     return 0;
 }
 
-static int lua_display_assign_color(lua_State *L) {}
-static int lua_display_move_cursor(lua_State *L) {}
-static int lua_display_sprite_draw_width(lua_State *L) {}
-static int lua_display_sprite_color_mode(lua_State *L) {}
-static int lua_display_sprite_pallet_offset(lua_State *L) {}
+static int lua_display_assign_color(lua_State *L) { return 0; }
+
+static int lua_display_move_cursor(lua_State *L)
+{
+    uint8_t address = 0x12;
+
+    luaL_checkinteger(L, 1);
+    luaL_checkinteger(L, 2);
+
+    lua_Number x_position = lua_tointeger(L, 1) - 1;
+    lua_Number y_position = lua_tointeger(L, 2) - 1;
+
+    if (x_position < 0 || x_position > 639)
+    {
+        luaL_error(L, "cursor x position must be between 1 and 640 pixels");
+    }
+
+    if (y_position < 0 || y_position > 399)
+    {
+        luaL_error(L, "cursor y position must be between 1 and 400 pixels");
+    }
+
+    uint8_t data[4] = {(uint32_t)x_position >> 8,
+                       (uint32_t)x_position,
+                       (uint32_t)y_position >> 8,
+                       (uint32_t)y_position};
+
+    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)data, 4, false);
+
+    return 0;
+}
+
+static int lua_display_sprite_draw_width(lua_State *L)
+{
+    uint8_t address = 0x13;
+
+    luaL_checkinteger(L, 1);
+
+    lua_Number sprite_width = lua_tointeger(L, 1);
+
+    if (sprite_width < 1 || sprite_width > 640)
+    {
+        luaL_error(L, "sprite width must be between 1 and 640 pixels");
+    }
+
+    uint8_t data[2] = {(uint32_t)sprite_width >> 8,
+                       (uint32_t)sprite_width};
+
+    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)data, 2, false);
+
+    return 0;
+}
+
+static int lua_display_sprite_color_mode(lua_State *L) { return 0; }
+static int lua_display_sprite_pallet_offset(lua_State *L) { return 0; }
 
 static int lua_display_sprite_draw(lua_State *L)
 {

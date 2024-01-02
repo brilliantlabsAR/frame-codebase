@@ -52,6 +52,21 @@ sprite_engine:
 	@gtkwave simulation/sprite_engine_tb.fst \
 			 sprite_engine_tb.gtkw
 
+graphics:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -o simulation/graphics_tb.out \
+			  -i graphics_tb.sv
+	exit
+	@vvp simulation/graphics_tb.out \
+		 -fst
+
+	@gtkwave simulation/graphics_tb.fst \
+			 graphics_tb.gtkw
+
 clean:
 	@rm -rf simulation
 	@echo Cleaned
