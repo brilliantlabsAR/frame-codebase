@@ -118,14 +118,14 @@ logic debayer_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
 
 generate
     if(SIM)
-        debayer #(.HSIZE('d640)) debayer_inst (
+        debayer #(.HSIZE('d1280)) debayer_inst (
             .clock_72MHz(clock_72MHz),
             .clock_36MHz(clock_36MHz),
             .reset_n(reset_n_clock_36MHz),
             .x_offset(10'd0),
             .y_offset(9'd0),
-            .x_size(10'd640),
-            .y_size(9'd2),
+            .x_size(10'd1280),
+            .y_size(9'd4),
             .pixel_data(pixel_data),
             .line_valid(line_valid),
             .frame_valid(frame_valid),
@@ -181,7 +181,10 @@ always_ff @(posedge clock_72MHz) begin : capture_control
     debayer_frame_valid_edge <= {debayer_frame_valid_edge[0], debayer_frame_valid};
     if (capture == 1) begin
         capture_state <= 1;
-        frame_count <= 0;
+        if (debayer_frame_valid == 0) // frame not currently active, capture next frame
+            frame_count <= 'd1;
+        else // frame currently active, overwrite this frame and capture next
+            frame_count <= 'd0; 
     end
     else if (capture_state == 1 && debayer_frame_valid_edge == 2'b10) begin
         if (frame_count == 0) frame_count <= frame_count+1;

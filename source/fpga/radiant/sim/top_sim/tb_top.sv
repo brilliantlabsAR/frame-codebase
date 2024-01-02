@@ -53,8 +53,8 @@ task delay_us(
     end
 endtask
     
-localparam IMG_H_SIZE = 16'd640;
-localparam IMG_V_SIZE = 16'd2;
+localparam IMG_H_SIZE = 16'd1280;
+localparam IMG_V_SIZE = 16'd4;
 localparam WC = IMG_H_SIZE*10/8; // RAW10 to byte
 
 reg CLK_GSR  = 0;
@@ -331,7 +331,7 @@ top #(.SIM(1)) dut (
         $display("Image size: %d x %d", IMG_H_SIZE, IMG_V_SIZE);
         spi_clock_in = 0;
         spi_select_in = 1;
-        delay_us('d2000);
+        delay_us('d50);
         spi_select_in = 0;
         send_byte('hdb);
         read_byte('d1);
@@ -340,16 +340,16 @@ top #(.SIM(1)) dut (
         spi_select_in = 0;
         send_byte('h20);
         spi_select_in = 1;
-        delay_us('d4000);
+        delay_us('d8000);
         $display("reading camera");
         spi_select_in = 0;
         send_byte('h22);
-        read_byte('d160);
+        read_byte('d640);
         spi_select_in = 1;
         delay_us(1);
         spi_select_in = 0;
         send_byte('h22);
-        read_byte('d160);
+        read_byte('d640);
         spi_select_in = 1;
     end
 

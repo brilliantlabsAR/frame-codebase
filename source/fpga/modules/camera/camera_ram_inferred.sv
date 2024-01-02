@@ -20,7 +20,7 @@ module camera_ram_inferred (
 	input logic rd_en
 );
 
-reg [31:0] mem [0:15999];
+reg [31:0] mem [0:16384];
 
 always @(posedge clk) begin
 	if (rst_n & wr_en) begin

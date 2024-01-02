@@ -52,16 +52,6 @@ static int lua_read(lua_State *L) {
     return 1;
 }
 
-static int lua_test(lua_State *L) {
-    luaL_checkinteger(L, 1);
-    lua_Integer num_bytes = lua_tointeger(L, 1);
-
-    char test[15] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o'};
-
-    lua_pushlstring(L, test, num_bytes);
-    return 1;
-}
-
 void lua_open_camera_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -73,9 +63,6 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_read);
     lua_setfield(L, -2, "read");
-
-    lua_pushcfunction(L, lua_test);
-    lua_setfield(L, -2, "test");
 
     lua_setfield(L, -2, "camera");
 
