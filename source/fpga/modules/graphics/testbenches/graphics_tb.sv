@@ -32,7 +32,7 @@ initial begin
     // Clear command
     send_opcode('h10);
     done();
-    #600000
+    #1200000
 
     // Move cursor command
     send_opcode('h12);

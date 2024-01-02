@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Jan  2 11:27:27 2024
+[*] Tue Jan  2 14:17:34 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Tue Jan  2 11:24:31 2024"
-[dumpfile_size] 9080682
+[dumpfile_mtime] "Tue Jan  2 14:16:06 2024"
+[dumpfile_size] 9447608
 [savefile] "graphics_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
-*-24.381506 72800000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-24.481127 43719370 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
