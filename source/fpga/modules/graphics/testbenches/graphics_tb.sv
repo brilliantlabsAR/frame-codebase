@@ -30,53 +30,80 @@ initial begin
     #10000
 
     // Clear command
-    opcode <= 'h10;
-    opcode_valid <= 1;
-    #4
-    opcode_valid <= 0;
+    send_opcode('h10);
+    done();
     #600000
 
     // Move cursor command
-    opcode <= 'h12;
-    opcode_valid <= 1;
-    #4
-    operand <= 'h00;
-    operand_valid <= 1;
-    operand_count <= 1;
-    #4
-    operand <= 'h32;
-    operand_count <= 2;
-    #4
-    operand <= 'h00;
-    operand_count <= 3;
-    #4
-    operand <= 'h64;
-    operand_count <= 4;
-    #4
-    opcode_valid <= 0;
-    operand_valid <= 0;
-    operand_count <= 0;
+    send_opcode('h12);
+    send_operand('h00);
+    send_operand('h32);
+    send_operand('h00);
+    send_operand('h64);
+    done();
     #10000
 
     // Set draw width
-    opcode <= 'h13;
-    opcode_valid <= 1;
-    #4
-    operand <= 'h01;
-    operand_valid <= 1;
-    operand_count <= 1;
-    #4
-    operand <= 'h2C;
-    operand_count <= 2;
-    #4
-    opcode_valid <= 0;
-    operand_valid <= 0;
-    operand_count <= 0;
+    send_opcode('h13);
+    send_operand('h02);
+    send_operand('h2C);
+    done();
     #10000
 
     // Draw pixels
+    send_opcode('h16);
+    send_operand('h12);
+    send_operand('h34);
+    send_operand('h56);
+    send_operand('h78);
+    send_operand('h9A);
+    send_operand('hBC);
+    send_operand('hDE);
+    send_operand('hF0);
+    done();
+    #1000000
 
     // Show command
+    send_opcode('h19);
+    done();
+    #1500000
+
+    // Show command
+    send_opcode('h19);
+    done();
+    #10000
+
+    // Clear command
+    send_opcode('h10);
+    done();
+    #600000
+
+    // Move cursor command
+    send_opcode('h12);
+    send_operand('h00);
+    send_operand('h64);
+    send_operand('h00);
+    send_operand('h32);
+    done();
+    #10000
+
+    // Draw pixels
+    send_opcode('h16);
+    send_operand('h12);
+    send_operand('h34);
+    send_operand('h56);
+    send_operand('h78);
+    send_operand('h9A);
+    send_operand('hBC);
+    send_operand('hDE);
+    send_operand('hF0);
+    done();
+    #600000
+
+    // Show command
+    send_opcode('h19);
+    done();
+    #4000000
 
     reset_n <= 0;
     #20000
@@ -104,6 +131,38 @@ graphics graphics (
 initial begin
     forever #1 clock <= ~clock;
 end
+
+task send_opcode(
+    input logic [7:0] data
+);
+    begin
+        opcode <= data;
+        opcode_valid <= 1;
+        #64;
+    end
+endtask
+
+task send_operand(
+    input logic [7:0] data
+);
+    begin
+        operand <= data;
+        operand_valid <= 1;
+        operand_count <= operand_count + 1;
+        #64;
+        operand_valid <= 0;
+        #8;
+    end
+endtask
+
+task done;
+    begin
+        opcode_valid <= 0;
+        operand_valid <= 0;
+        operand_count <= 0;
+        #8;
+    end
+endtask
 
 initial begin
     $dumpfile("simulation/graphics_tb.fst");

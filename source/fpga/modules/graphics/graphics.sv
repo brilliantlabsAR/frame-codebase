@@ -68,7 +68,7 @@ always_ff @(posedge clock_in) begin
     
     // Initial values for the sprite and vector engines
     if (reset_n_in == 0) begin
-        sprite_draw_width_reg <= 40; // HACK
+        sprite_draw_width_reg <= 640;
         sprite_color_mode_reg <= 'b11;
         sprite_pallet_offset_reg <= 0;
     end
