@@ -36,50 +36,30 @@ module graphics (
 
 // TODO add buffers for metastability to inputs
 
-// Global drawing variables
-logic [9:0] cursor_x_position_reg; // 0 - 639
-logic [9:0] cursor_y_position_reg; // 0 - 399
-
-logic [9:0] sprite_draw_width_reg; // 1 - 640
-logic [1:0] sprite_color_mode_reg; // 'b00 = 1 color, 'b01 = 2 color 'b01 = 4 color, 'b11 = 16 color
-logic [3:0] sprite_pallet_offset_reg; // 0 - 15
-
 // Registers to hold the current command operations
 logic clear_buffer_flag;
-logic assign_color_enable_flag;
-logic move_cursor_flag;
-logic sprite_enable_flag;
-logic sprite_byte_flag;
-logic show_buffer_flag;
-
 logic clear_buffer_in_progress_flag;
 logic [17:0] clear_buffer_address_reg;
 
+logic assign_color_enable_flag;
 logic [3:0] assign_color_index_reg;
 logic [9:0] assign_color_value_reg;
 
-logic [9:0] move_cursor_x_reg;
-logic [9:0] move_cursor_y_reg;
+logic sprite_enable_flag;
+logic sprite_data_flag;
+logic [7:0] sprite_data;
 
-logic [7:0] sprite_draw_data;
+logic show_buffer_flag;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_in) begin
     
-    // Initial values for the sprite and vector engines
-    if (reset_n_in == 0) begin
-        sprite_draw_width_reg <= 640;
-        sprite_color_mode_reg <= 'b11;
-        sprite_pallet_offset_reg <= 0;
-    end
-
     // Always clear flags after the opcode has been handled
     if (op_code_valid_in == 0 || reset_n_in == 0) begin
         clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
-        move_cursor_flag <= 0;
         sprite_enable_flag <= 0;
-        sprite_byte_flag <= 0;
+        sprite_data_flag <= 0;
         show_buffer_flag <= 0;
     end
 
@@ -106,56 +86,37 @@ always_ff @(posedge clock_in) begin
                 end
             end
 
-            // Move cursor
+            // Draw sprite
             'h12: begin
-                if (operand_valid_in) begin
-                    case (operand_count_in)
-                        1: move_cursor_x_reg <= {operand_in[1:0], 8'b0};
-                        2: move_cursor_x_reg <= {move_cursor_x_reg[9:8], operand_in};
-                        3: move_cursor_y_reg <= {operand_in[1:0], 8'b0};
-                        4: move_cursor_y_reg <= {move_cursor_y_reg[9:8], operand_in};
-                    endcase
 
-                    move_cursor_flag = operand_count_in == 4 ? 1 : 0;
-                end
-            end
-
-            // Set sprite draw width
-            'h13: begin
-                if (operand_valid_in) begin
-                    case (operand_count_in)
-                        1: sprite_draw_width_reg <= {operand_in[1:0], 8'b0};
-                        2: sprite_draw_width_reg <= {sprite_draw_width_reg[9:8], operand_in};
-                    endcase
-                end
-            end
-
-            // Set sprite color mode
-            'h14: begin
-
-            end
-
-            // Set sprite color pallet offset
-            'h15: begin
-
-            end
-
-            // Sprite draw pixels
-            'h16: begin
                 sprite_enable_flag <= 1;
-
+                
                 if (operand_valid_in) begin
-                    sprite_byte_flag <= 1;
-                    sprite_draw_data <= operand_in;
+                    case (operand_count_in)
+                        0: begin /* Do nothing */ end
+                        1: sprite_x_position_reg <= {operand_in[1:0], 8'b0};
+                        2: sprite_x_position_reg <= {sprite_x_position_reg[9:8], operand_in};
+                        3: sprite_y_position_reg <= {operand_in[1:0], 8'b0};
+                        4: sprite_y_position_reg <= {sprite_y_position_reg[9:8], operand_in};
+                        5: sprite_width_reg <= {operand_in[1:0], 8'b0};
+                        6: sprite_width_reg <= {sprite_width_reg[9:8], operand_in};
+                        7: sprite_total_colors_reg <= 16;
+                        8: sprite_pallet_offset_reg <= 0;
+                        default begin
+                            sprite_data_flag <= 1;
+                            sprite_data <= operand_in;        
+                        end
+                    endcase
                 end
 
                 else begin
-                    sprite_byte_flag <= 0;
+                    sprite_data_flag <= 0;
                 end
+
             end
 
             // Show buffer
-            'h19: begin
+            'h14: begin
                 show_buffer_flag <= 1;
             end
 
@@ -199,33 +160,6 @@ always_ff @(posedge clock_in) begin
 
         end
         
-    end
-
-end
-
-// State machine to move and update the cursor from opcode, or draw operations
-always_ff @(posedge clock_in) begin
-
-    if (reset_n_in == 0) begin
-        cursor_x_position_reg <= 0;
-        cursor_y_position_reg <= 0;
-    end
-
-    else begin
-        if (move_cursor_flag) begin
-            cursor_x_position_reg <= move_cursor_x_reg;
-            cursor_y_position_reg <= move_cursor_y_reg;
-        end
-
-        else if (sprite_update_cursor_flag) begin
-            cursor_x_position_reg <= sprite_update_cursor_x_reg;
-            cursor_y_position_reg <= sprite_update_cursor_y_reg;
-        end
-
-        else if (vector_update_cursor_flag) begin
-            cursor_x_position_reg <= vector_update_cursor_x_reg;
-            cursor_y_position_reg <= vector_update_cursor_y_reg;
-        end
     end
 
 end
@@ -316,36 +250,32 @@ display_driver display_driver (
 );
 
 // Sprite engine
-logic sprite_update_cursor_flag;
-logic [9:0] sprite_update_cursor_x_reg;
-logic [9:0] sprite_update_cursor_y_reg;
+logic [9:0] sprite_x_position_reg; // 0 - 639
+logic [9:0] sprite_y_position_reg; // 0 - 399
+logic [9:0] sprite_width_reg; // 1 - 640
+logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
+logic [3:0] sprite_pallet_offset_reg; // 0 - 15
 
 sprite_engine sprite_engine (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
+    .enable_in(sprite_enable_flag),
 
-    .cursor_start_x_position_in(cursor_x_position_reg),
-    .cursor_start_y_position_in(cursor_y_position_reg),
-    .draw_width_in(sprite_draw_width_reg),
-    .color_mode_in(sprite_color_mode_reg),
+    .x_position_in(sprite_x_position_reg),
+    .y_position_in(sprite_y_position_reg),
+    .width_in(sprite_width_reg),
+    .total_colors_in(sprite_total_colors_reg),
     .color_pallet_offset_in(sprite_pallet_offset_reg),
 
-    .draw_enable_in(sprite_enable_flag),
-    .draw_data_valid_in(sprite_byte_flag),
-    .draw_data_in(sprite_draw_data),
+    .data_valid_in(sprite_data_flag),
+    .data_in(sprite_data),
 
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),
     .pixel_write_address_out(pixel_write_address_sprite_to_mux_wire),
-    .pixel_write_data_out(pixel_write_data_sprite_to_mux_wire),
-
-    .cursor_end_position_valid_out(sprite_update_cursor_flag),
-    .cursor_end_x_position_out(sprite_update_cursor_x_reg),
-    .cursor_end_y_position_out(sprite_update_cursor_y_reg)
+    .pixel_write_data_out(pixel_write_data_sprite_to_mux_wire)
 );
 
 // Vector engine
-logic vector_update_cursor_flag = 0;
-logic [9:0] vector_update_cursor_x_reg;
-logic [9:0] vector_update_cursor_y_reg;
+// TODO
 
 endmodule

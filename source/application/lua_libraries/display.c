@@ -30,7 +30,6 @@ static int lua_display_clear(lua_State *L)
 {
     uint8_t address = 0x10;
     spi_write(FPGA, &address, 1, false);
-
     return 0;
 }
 
@@ -162,10 +161,10 @@ static int lua_display_sprite_draw(lua_State *L)
                             (uint8_t)offset};
 
     size_t pixel_data_length;
-    const char *pixel_data = lua_tolstring(L, 1, &pixel_data_length);
+    const char *pixel_data = lua_tolstring(L, 6, &pixel_data_length);
 
     spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)meta_data, sizeof(meta_data), false);
+    spi_write(FPGA, (uint8_t *)meta_data, sizeof(meta_data), true);
     spi_write(FPGA, (uint8_t *)pixel_data, pixel_data_length, false);
 
     return 0;
@@ -173,7 +172,7 @@ static int lua_display_sprite_draw(lua_State *L)
 
 static int lua_display_show(lua_State *L)
 {
-    uint8_t address = 0x19;
+    uint8_t address = 0x14;
     spi_write(FPGA, &address, 1, false);
     return 0;
 }

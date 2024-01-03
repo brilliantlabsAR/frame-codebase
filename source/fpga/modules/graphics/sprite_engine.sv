@@ -12,51 +12,41 @@
  module sprite_engine (
     input logic clock_in,
     input logic reset_n_in,
+    input logic enable_in,
 
-    input logic [9:0] cursor_start_x_position_in,
-    input logic [9:0] cursor_start_y_position_in,
-    input logic [9:0] draw_width_in,
-    input logic [1:0] color_mode_in,
+    input logic [9:0] x_position_in,
+    input logic [9:0] y_position_in,
+    input logic [9:0] width_in,
+    input logic [4:0] total_colors_in,
     input logic [3:0] color_pallet_offset_in,
 
-    input logic draw_enable_in,
-    input logic draw_data_valid_in,
-    input logic [7:0] draw_data_in,
+    input logic data_valid_in,
+    input logic [7:0] data_in,
 
     output logic pixel_write_enable_out,
     output logic [17:0] pixel_write_address_out,
-    output logic [3:0] pixel_write_data_out,
-
-    output logic cursor_end_position_valid_out,
-    output logic [9:0] cursor_end_x_position_out,
-    output logic [9:0] cursor_end_y_position_out
+    output logic [3:0] pixel_write_data_out
  );
 
 logic [1:0] pixel_pulse_counter;
-
-logic [1:0] draw_enable_edge_monitor;
+logic [1:0] enable_edge_monitor;
 logic [1:0] data_valid_edge_monitor;
+
 logic [4:0] pixels_remaining;
-logic done_flag;
 
-logic [9:0] cursor_current_x_position;
-logic [9:0] cursor_current_y_position;
-
-logic [9:0] cursor_left_boundary;
-logic [9:0] cursor_right_boundary;
+logic [9:0] current_x_pen_position;
+logic [9:0] current_y_pen_position;
 
 always_ff @(posedge clock_in) begin
 
-    if (draw_enable_in == 0 || reset_n_in == 0) begin
-        pixel_pulse_counter <= 0;
-
+    if (reset_n_in == 0 || enable_in == 0) begin
         pixel_write_enable_out <= 0;
-        cursor_end_position_valid_out <= 0;
-        
-        draw_enable_edge_monitor <= 0;
+
+        pixel_pulse_counter <= 0;
+        enable_edge_monitor <= 0;
         data_valid_edge_monitor <= 0;
+        
         pixels_remaining <= 0;
-        done_flag <= 0; 
     end
 
     else begin
@@ -68,78 +58,55 @@ always_ff @(posedge clock_in) begin
 
             pixel_pulse_counter <= 0;
 
-            draw_enable_edge_monitor <= {draw_enable_edge_monitor[0], 
-                                        draw_enable_in};
+            enable_edge_monitor <= {enable_edge_monitor[0], 
+                                    enable_in};
 
             data_valid_edge_monitor <= {data_valid_edge_monitor[0], 
-                                        draw_data_valid_in};
+                                        data_valid_in};
 
             // On a new draw sequence
-            if (draw_enable_edge_monitor == 'b01) begin
-                cursor_current_x_position <= cursor_start_x_position_in;
-                cursor_current_y_position <= cursor_start_y_position_in;
-
-                cursor_left_boundary <= cursor_start_x_position_in;
-                cursor_right_boundary <= cursor_start_x_position_in + draw_width_in;
+            if (enable_edge_monitor == 'b01) begin
+                current_x_pen_position <= x_position_in;
+                current_y_pen_position <= y_position_in;
             end
 
             // On a new data byte
             if (data_valid_edge_monitor == 'b01) begin
-                case (color_mode_in)
-                    'b00: pixels_remaining <= 8;
-                    'b01: pixels_remaining <= 8;
-                    'b10: pixels_remaining <= 4;
-                    'b11: pixels_remaining <= 2;
+                case (total_colors_in)
+                    1: pixels_remaining <= 8;
+                    4: pixels_remaining <= 4;
+                    16: pixels_remaining <= 2;
                 endcase
             end
 
-            // Pixels drawn
+            // Draw pixels
             if (pixels_remaining > 0) begin
                     
                 pixels_remaining <= pixels_remaining - 1;
 
                 // Calculate the cursor position and width wrapping
-                if (cursor_current_x_position < cursor_right_boundary) begin
-                    cursor_current_x_position <= cursor_current_x_position + 1;
+                if (current_x_pen_position < x_position_in + width_in) begin
+                    current_x_pen_position <= current_x_pen_position + 1;
                 end
 
                 else begin
-                    cursor_current_x_position <= cursor_left_boundary;
-                    cursor_current_y_position <= cursor_current_y_position + 1;
-                end
-
-                // Output the new cursor value when we reach the last pixel
-                if (pixels_remaining == 1) begin
-                    done_flag <= 1;
+                    current_x_pen_position <= x_position_in;
+                    current_y_pen_position <= current_y_pen_position + 1;
                 end
 
                 // Output the pixel write address
-                pixel_write_address_out <= cursor_current_x_position + 
-                                        (cursor_current_y_position * 640);
+                pixel_write_address_out <= current_x_pen_position + 
+                                        (current_y_pen_position * 640);
 
                 // Draw the pixel TODO color mode and color offset
-                pixel_write_data_out <= draw_data_in[3:0];
+                pixel_write_data_out <= data_in[3:0];
 
-                // Enable the output
                 pixel_write_enable_out <= 1;
 
             end
 
-            // Disable output once done and update new cursor value
-            if (done_flag) begin
-
-                done_flag <= 0;
-                
-                pixel_write_enable_out <= 0;
-
-                cursor_end_x_position_out <= cursor_current_x_position;
-                cursor_end_y_position_out <= cursor_current_y_position;
-                cursor_end_position_valid_out <= 1;
-
-            end
-
             else begin
-                cursor_end_position_valid_out <= 0;
+                pixel_write_enable_out <= 0;
             end
 
         end
