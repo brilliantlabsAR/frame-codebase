@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Jan  2 14:17:34 2024
+[*] Wed Jan  3 08:59:08 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Tue Jan  2 14:16:06 2024"
-[dumpfile_size] 9447608
+[dumpfile_mtime] "Wed Jan  3 08:53:13 2024"
+[dumpfile_size] 6525812
 [savefile] "graphics_tb.gtkw"
-[timestart] 0
+[timestart] 8999657
 [size] 1424 852
 [pos] 10 38
-*-24.481127 43719370 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-7.481127 9000030 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -82,6 +82,8 @@ graphics_tb.graphics.show_buffer_flag
 -
 @28
 graphics_tb.graphics.clear_buffer_in_progress_flag
+@29
+graphics_tb.graphics.pixel_pulse_counter[1:0]
 @22
 graphics_tb.graphics.clear_buffer_address_reg[17:0]
 @200
@@ -155,18 +157,13 @@ graphics_tb.graphics.display_buffers.displayed_buffer
 @28
 graphics_tb.graphics.display_buffers.switch_write_buffer_edge_monitor[1:0]
 graphics_tb.graphics.display_buffers.buffer_switch_pending
-@23
-graphics_tb.graphics.display_buffers.display_ram_address_a[13:0]
 @22
+graphics_tb.graphics.display_buffers.display_ram_address_a[13:0]
 graphics_tb.graphics.display_buffers.display_ram_address_b[13:0]
 @28
 graphics_tb.graphics.display_buffers.display_ram_write_enable_a_top
 graphics_tb.graphics.display_buffers.display_ram_write_enable_a_bottom
 graphics_tb.graphics.display_buffers.display_ram_write_enable_b_top
 graphics_tb.graphics.display_buffers.display_ram_write_enable_b_bottom
-graphics_tb.graphics.display_buffers.pixel_write_enable_reg
-@22
-graphics_tb.graphics.display_buffers.pixel_read_address_reg[17:0]
-graphics_tb.graphics.display_buffers.pixel_write_address_reg[17:0]
 [pattern_trace] 1
 [pattern_trace] 0

@@ -166,26 +166,39 @@ always_ff @(posedge clock_in) begin
 end
 
 // State machine to clear the screen
+logic [1:0] pixel_pulse_counter;
+
 always_ff @(posedge clock_in) begin
     
     if (reset_n_in == 0) begin
         clear_buffer_in_progress_flag <= 0;
         clear_buffer_address_reg <= 0;
+        pixel_pulse_counter <= 0;
     end
 
     else begin
+
+        pixel_pulse_counter <= pixel_pulse_counter + 1;
+
         if (clear_buffer_flag) begin
+
             clear_buffer_in_progress_flag <= 1;
             clear_buffer_address_reg <= 0;
+
         end
 
-        else if (clear_buffer_in_progress_flag) begin
+        else if (clear_buffer_in_progress_flag && 
+                 pixel_pulse_counter == 'b01) begin
+
+            pixel_pulse_counter <= 0;
             clear_buffer_address_reg <= clear_buffer_address_reg + 1;
 
             if (clear_buffer_address_reg == 'd256000) begin
                 clear_buffer_in_progress_flag <= 0;
             end
+
         end
+        
     end
 
 end
