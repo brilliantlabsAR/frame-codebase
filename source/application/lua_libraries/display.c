@@ -30,20 +30,102 @@ static int lua_display_clear(lua_State *L)
 {
     uint8_t address = 0x10;
     spi_write(FPGA, &address, 1, false);
+
     return 0;
 }
 
-static int lua_display_assign_color(lua_State *L) { return 0; }
+static int lua_display_assign_color(lua_State *L)
+{
+    uint8_t address = 0x11;
 
-static int lua_display_move_cursor(lua_State *L)
+    luaL_checkinteger(L, 1);
+    luaL_checkinteger(L, 2);
+    luaL_checkinteger(L, 3);
+
+    lua_Number red = lua_tointeger(L, 1);
+    lua_Number green = lua_tointeger(L, 2);
+    lua_Number blue = lua_tointeger(L, 3);
+
+    if (red < 0 || red > 255)
+    {
+        luaL_error(L, "red component must be between 0 and 255");
+    }
+
+    if (green < 0 || green > 255)
+    {
+        luaL_error(L, "green component must be between 0 and 255");
+    }
+
+    if (blue < 0 || blue > 255)
+    {
+        luaL_error(L, "blue component must be between 0 and 255");
+    }
+
+    // TODO convert RGB to Ycbcr
+    uint8_t y = (uint8_t)red;
+    uint8_t cb = (uint8_t)green;
+    uint8_t cr = (uint8_t)blue;
+
+    uint8_t data[3] = {y, cb, cr};
+
+    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
+
+    return 0;
+}
+
+static int lua_display_assign_color_ycbcr(lua_State *L)
+{
+    uint8_t address = 0x11;
+
+    luaL_checkinteger(L, 1);
+    luaL_checkinteger(L, 2);
+    luaL_checkinteger(L, 3);
+
+    lua_Number y = lua_tointeger(L, 1);
+    lua_Number cb = lua_tointeger(L, 2);
+    lua_Number cr = lua_tointeger(L, 3);
+
+    // TODO figure out the scaling and range og Ycbcr
+    if (y < 0 || y > 255)
+    {
+        luaL_error(L, "Y component must be between 0 and 255");
+    }
+
+    if (cb < 0 || cb > 255)
+    {
+        luaL_error(L, "Cb component must be between 0 and 255");
+    }
+
+    if (cr < 0 || cr > 255)
+    {
+        luaL_error(L, "Cr component must be between 0 and 255");
+    }
+
+    uint8_t data[3] = {(uint8_t)y, (uint8_t)cb, (uint8_t)cr};
+
+    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
+
+    return 0;
+}
+
+static int lua_display_sprite_draw(lua_State *L)
 {
     uint8_t address = 0x12;
 
     luaL_checkinteger(L, 1);
     luaL_checkinteger(L, 2);
+    luaL_checkinteger(L, 3);
+    luaL_checkinteger(L, 4);
+    luaL_checkinteger(L, 5);
+    luaL_checkstring(L, 6);
 
     lua_Number x_position = lua_tointeger(L, 1) - 1;
     lua_Number y_position = lua_tointeger(L, 2) - 1;
+    lua_Number width = lua_tointeger(L, 3);
+    lua_Number colors = lua_tointeger(L, 4);
+    lua_Number offset = lua_tointeger(L, 5);
 
     if (x_position < 0 || x_position > 639)
     {
@@ -55,52 +137,36 @@ static int lua_display_move_cursor(lua_State *L)
         luaL_error(L, "cursor y position must be between 1 and 400 pixels");
     }
 
-    uint8_t data[4] = {(uint32_t)x_position >> 8,
-                       (uint32_t)x_position,
-                       (uint32_t)y_position >> 8,
-                       (uint32_t)y_position};
-
-    spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, 4, false);
-
-    return 0;
-}
-
-static int lua_display_sprite_draw_width(lua_State *L)
-{
-    uint8_t address = 0x13;
-
-    luaL_checkinteger(L, 1);
-
-    lua_Number sprite_width = lua_tointeger(L, 1);
-
-    if (sprite_width < 1 || sprite_width > 640)
+    if (width < 1 || width > 640)
     {
         luaL_error(L, "sprite width must be between 1 and 640 pixels");
     }
 
-    uint8_t data[2] = {(uint32_t)sprite_width >> 8,
-                       (uint32_t)sprite_width};
+    if (colors != 1 && colors != 4 && colors != 16)
+    {
+        luaL_error(L, "colors must be either 1, 4 or 16");
+    }
+
+    if (offset < 0 || offset > 15)
+    {
+        luaL_error(L, "offset must be between 0 and 15");
+    }
+
+    uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
+                            (uint32_t)x_position,
+                            (uint32_t)y_position >> 8,
+                            (uint32_t)y_position,
+                            (uint32_t)width >> 8,
+                            (uint32_t)width,
+                            (uint8_t)colors,
+                            (uint8_t)offset};
+
+    size_t pixel_data_length;
+    const char *pixel_data = lua_tolstring(L, 1, &pixel_data_length);
 
     spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, 2, false);
-
-    return 0;
-}
-
-static int lua_display_sprite_color_mode(lua_State *L) { return 0; }
-static int lua_display_sprite_pallet_offset(lua_State *L) { return 0; }
-
-static int lua_display_sprite_draw(lua_State *L)
-{
-    uint8_t address = 0x16;
-
-    luaL_checkstring(L, 1);
-    size_t length;
-    const char *data = lua_tolstring(L, 1, &length);
-
-    spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, length, false);
+    spi_write(FPGA, (uint8_t *)meta_data, sizeof(meta_data), false);
+    spi_write(FPGA, (uint8_t *)pixel_data, pixel_data_length, false);
 
     return 0;
 }
@@ -124,17 +190,8 @@ void lua_open_display_library(lua_State *L)
     lua_pushcfunction(L, lua_display_assign_color);
     lua_setfield(L, -2, "assign_color");
 
-    lua_pushcfunction(L, lua_display_move_cursor);
-    lua_setfield(L, -2, "move_cursor");
-
-    lua_pushcfunction(L, lua_display_sprite_draw_width);
-    lua_setfield(L, -2, "sprite_draw_width");
-
-    lua_pushcfunction(L, lua_display_sprite_color_mode);
-    lua_setfield(L, -2, "sprite_color_mode");
-
-    lua_pushcfunction(L, lua_display_sprite_pallet_offset);
-    lua_setfield(L, -2, "sprite_pallet_offset");
+    lua_pushcfunction(L, lua_display_assign_color_ycbcr);
+    lua_setfield(L, -2, "assign_color_ycbcr");
 
     lua_pushcfunction(L, lua_display_sprite_draw);
     lua_setfield(L, -2, "sprite_draw");
