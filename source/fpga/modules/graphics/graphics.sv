@@ -82,7 +82,7 @@ always_ff @(posedge clock_in) begin
                         4: assign_color_value_reg[2:0] <= operand_in[7:5];
                     endcase
 
-                    assign_color_enable_flag = operand_count_in == 4 ? 1 : 0;
+                    assign_color_enable_flag <= operand_count_in == 4 ? 1 : 0;
                 end
             end
 
