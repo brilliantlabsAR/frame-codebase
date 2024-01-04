@@ -34,25 +34,17 @@ initial begin
     done();
     #1200000
 
-    // Move cursor command
-    send_opcode('h12);
-    send_operand('h00);
-    send_operand('h32);
-    send_operand('h00);
-    send_operand('h64);
-    done();
-    #10000
-
-    // Set draw width
-    send_opcode('h13);
-    send_operand('h02);
-    send_operand('h2C);
-    done();
-    #10000
-
     // Draw pixels
-    send_opcode('h16);
-    send_operand('h12);
+    send_opcode('h12);
+    send_operand('h00); // X pos
+    send_operand('h32);
+    send_operand('h00); // Y pos
+    send_operand('h64);
+    send_operand('h00); // Width
+    send_operand('h14);
+    send_operand('h10); // Total colors
+    send_operand('h00); // Pallet offset
+    send_operand('h12); // Data
     send_operand('h34);
     send_operand('h56);
     send_operand('h78);
@@ -61,49 +53,12 @@ initial begin
     send_operand('hDE);
     send_operand('hF0);
     done();
-    #1000000
+    #30000
 
     // Show command
-    send_opcode('h19);
+    send_opcode('h14);
     done();
-    #1500000
-
-    // Show command
-    send_opcode('h19);
-    done();
-    #10000
-
-    // Clear command
-    send_opcode('h10);
-    done();
-    #600000
-
-    // Move cursor command
-    send_opcode('h12);
-    send_operand('h00);
-    send_operand('h64);
-    send_operand('h00);
-    send_operand('h32);
-    done();
-    #10000
-
-    // Draw pixels
-    send_opcode('h16);
-    send_operand('h12);
-    send_operand('h34);
-    send_operand('h56);
-    send_operand('h78);
-    send_operand('h9A);
-    send_operand('hBC);
-    send_operand('hDE);
-    send_operand('hF0);
-    done();
-    #600000
-
-    // Show command
-    send_opcode('h19);
-    done();
-    #4000000
+    #2000000
 
     reset_n <= 0;
     #20000

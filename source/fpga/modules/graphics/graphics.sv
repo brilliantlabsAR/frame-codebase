@@ -88,8 +88,6 @@ always_ff @(posedge clock_in) begin
 
             // Draw sprite
             'h12: begin
-
-                sprite_enable_flag <= 1;
                 
                 if (operand_valid_in) begin
                     case (operand_count_in)
@@ -103,6 +101,7 @@ always_ff @(posedge clock_in) begin
                         7: sprite_total_colors_reg <= 16;
                         8: sprite_pallet_offset_reg <= 0;
                         default begin
+                            sprite_enable_flag <= 1;
                             sprite_data_flag <= 1;
                             sprite_data <= operand_in;        
                         end
