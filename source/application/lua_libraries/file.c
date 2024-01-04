@@ -458,10 +458,10 @@ static int lua_file_require(lua_State *L)
     int status = luaL_loadbuffer(L, buffer, size, filename);
     free(buffer);
 
-    if (status || lua_pcall(L, 0, 1, 0))
+    if (status || lua_pcall(L, 0, LUA_MULTRET, 0))
     {
         luaL_error(L,
-                   "Error loading module '%s': %s",
+                   "exiting module '%s': %s",
                    module_name,
                    lua_tostring(L, -1));
     }
