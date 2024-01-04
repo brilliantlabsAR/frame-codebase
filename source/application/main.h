@@ -24,6 +24,8 @@
 
 #pragma once
 
+#include <stdbool.h>
+
 extern bool not_real_hardware;
 extern bool stay_awake;
 extern bool force_sleep;

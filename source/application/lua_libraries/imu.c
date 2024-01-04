@@ -28,6 +28,7 @@
 #include "i2c.h"
 #include "lauxlib.h"
 #include "lua.h"
+#include "main.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_systick.h"
 #include "pinout.h"
@@ -89,12 +90,16 @@ static int lua_imu_direction(lua_State *L)
     // Wait until data is ready
     while (true)
     {
+        if (not_real_hardware)
+        {
+            break;
+        }
+
         if (i2c_read(MAGNETOMETER, 0x18, 0x40).value)
         {
             break;
         }
 
-        // TODO this hangs on the devkit
         nrfx_systick_delay_ms(1);
     }
 
