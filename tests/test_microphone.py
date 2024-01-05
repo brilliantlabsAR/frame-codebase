@@ -4,93 +4,71 @@ Tests the Frame specific Lua libraries over Bluetooth.
 
 import asyncio, sys
 from frameutils import Bluetooth
+import sounddevice as sd
+import numpy as np
+
+audio_buffer = b""
+expected_samples = 0
 
 
-class TestBluetooth(Bluetooth):
-    def __init__(self):
-        self._passed_tests = 0
-        self._failed_tests = 0
+def receive_data(data):
+    global audio_buffer
+    global expected_samples
+    audio_buffer += data
+    print(
+        f"Received {str(len(audio_buffer))} / {str(int(expected_samples))} bytes",
+        end="\r",
+    )
 
-    def _log_passed(self, sent, responded):
-        self._passed_tests += 1
-        if responded == None:
-            print(f"\033[92mPassed: {sent}")
-        else:
-            print(f"\033[92mPassed: {sent} => {responded}")
 
-    def _log_failed(self, sent, responded, expected):
-        self._failed_tests += 1
-        if expected == None:
-            print(f"\033[91mFAILED: {sent} => {responded}")
-        else:
-            print(f"\033[91mFAILED: {sent} => {responded} != {expected}")
+async def record_and_play(b: Bluetooth, seconds, sample_rate, bit_depth):
+    global audio_buffer
+    global expected_samples
 
-    async def initialize(self):
-        await self.connect(print_response_handler=lambda s: print(s))
+    print(f"Recording {seconds} seconds at {sample_rate/1000}kHz {bit_depth}bit")
+    await b.send_lua(f"frame.microphone.record({seconds}, {sample_rate}, {bit_depth})")
+    await asyncio.sleep(0.5)
 
-    async def end(self):
-        passed_tests = self._passed_tests
-        total_tests = self._passed_tests + self._failed_tests
-        print("\033[0m")
-        print(f"Done! Passed {passed_tests} of {total_tests} tests")
-        await self.disconnect()
+    expected_samples = seconds * sample_rate * (bit_depth / 8)
 
-    async def lua_equals(self, send: str, expect):
-        response = await self.send_lua(f"print({send})", await_print=True)
-        if response == str(expect):
-            self._log_passed(send, response)
-        else:
-            self._log_failed(send, response, expect)
+    audio_buffer = b""
 
-    async def lua_is_type(self, send: str, expect):
-        response = await self.send_lua(f"print(type({send}))", await_print=True)
-        if response == str(expect):
-            self._log_passed(send, response)
-        else:
-            self._log_failed(send, response, expect)
+    mtu = b.max_data_payload()
 
-    async def lua_has_length(self, send: str, length: int):
-        response = await self.send_lua(f"print({send})", await_print=True)
-        if len(response) == length:
-            self._log_passed(send, response)
-        else:
-            self._log_failed(send, f"len({len(response)})", f"len({length})")
+    while len(audio_buffer) < expected_samples:
+        await b.send_lua(f"frame.bluetooth.send(frame.microphone.read({mtu}))")
 
-    async def lua_send(self, send: str):
-        response = await self.send_lua(send + ";print(nil)", await_print=True)
-        if response == "nil":
-            self._log_passed(send, None)
-        else:
-            self._log_failed(send, response, None)
+    print("\nConverting to audio")
 
-    async def lua_error(self, send: str):
-        response = await self.send_lua(send + ";print(nil)", await_print=True)
-        if response != "nil":
-            self._log_passed(send, response.partition(":1: ")[2])
-        else:
-            self._log_failed(send, response, None)
+    # Convert audio bytes to a NumPy array of type int8
+    if bit_depth == 16:
+        audio_data = np.frombuffer(audio_buffer, dtype=np.int16)
+    if bit_depth == 8:
+        audio_data = np.frombuffer(audio_buffer, dtype=np.int8)
+    if bit_depth == 4:
+        raise NotImplementedError("TODO")
 
-    async def data_equal(self, send: bytearray, expect: bytearray):
-        response = await self.send_data(send, await_data=True)
-        if response == expect:
-            self._log_passed(send, response)
-        else:
-            self._log_failed(send, response, expect)
+    # Convert it to float32 which is what sounddevice expects for playback
+    audio_data = audio_data.astype(np.float32)
+
+    # Normalize the 8-bit data range (-128 to 127) to (-1, 1) for playback
+    audio_data /= np.iinfo(np.int8).max
+
+    sd.play(audio_data, sample_rate)
+
+    sd.wait()
 
 
 async def main():
     b = Bluetooth()
 
-    await b.connect(data_response_handler=lambda s: print(s))
+    await b.connect(data_response_handler=receive_data)
 
-    await b.send_lua("frame.microphone.record(5, 8000, 8)")
-    await asyncio.sleep(2)
+    await record_and_play(b, 5, 8000, 8)
 
-    for _ in range(180):
-        await b.send_lua(
-            f"frame.bluetooth.send(frame.microphone.read({b.max_data_payload()}))"
-        )
-        await asyncio.sleep(0.01)
+    await record_and_play(b, 2.5, 16000, 8)
+
+    await record_and_play(b, 2.5, 16000, 16)
 
     await b.disconnect()
 
