@@ -89,7 +89,7 @@ graphics_tb.graphics.sprite_x_position_reg[9:0]
 graphics_tb.graphics.sprite_y_position_reg[9:0]
 graphics_tb.graphics.sprite_width_reg[9:0]
 graphics_tb.graphics.sprite_total_colors_reg[4:0]
-graphics_tb.graphics.sprite_pallet_offset_reg[3:0]
+graphics_tb.graphics.sprite_palette_offset_reg[3:0]
 @28
 graphics_tb.graphics.sprite_data_flag
 @22

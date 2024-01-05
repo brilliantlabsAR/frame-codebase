@@ -123,32 +123,32 @@ static int lua_display_sprite_draw(lua_State *L)
     lua_Number x_position = lua_tointeger(L, 1) - 1;
     lua_Number y_position = lua_tointeger(L, 2) - 1;
     lua_Number width = lua_tointeger(L, 3);
-    lua_Number colors = lua_tointeger(L, 4);
-    lua_Number offset = lua_tointeger(L, 5);
+    lua_Number total_colors = lua_tointeger(L, 4);
+    lua_Number palette_offset = lua_tointeger(L, 5);
 
     if (x_position < 0 || x_position > 639)
     {
-        luaL_error(L, "cursor x position must be between 1 and 640 pixels");
+        luaL_error(L, "x_position must be between 1 and 640 pixels");
     }
 
     if (y_position < 0 || y_position > 399)
     {
-        luaL_error(L, "cursor y position must be between 1 and 400 pixels");
+        luaL_error(L, "y_position must be between 1 and 400 pixels");
     }
 
     if (width < 1 || width > 640)
     {
-        luaL_error(L, "sprite width must be between 1 and 640 pixels");
+        luaL_error(L, "width must be between 1 and 640 pixels");
     }
 
-    if (colors != 1 && colors != 4 && colors != 16)
+    if (total_colors != 1 && total_colors != 4 && total_colors != 16)
     {
-        luaL_error(L, "colors must be either 1, 4 or 16");
+        luaL_error(L, "total_colors must be either 1, 4 or 16");
     }
 
-    if (offset < 0 || offset > 15)
+    if (palette_offset < 0 || palette_offset > 15)
     {
-        luaL_error(L, "offset must be between 0 and 15");
+        luaL_error(L, "palette_offset must be between 0 and 15");
     }
 
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
@@ -157,8 +157,8 @@ static int lua_display_sprite_draw(lua_State *L)
                             (uint32_t)y_position,
                             (uint32_t)width >> 8,
                             (uint32_t)width,
-                            (uint8_t)colors,
-                            (uint8_t)offset};
+                            (uint8_t)total_colors,
+                            (uint8_t)palette_offset};
 
     size_t pixel_data_length;
     const char *pixel_data = lua_tolstring(L, 6, &pixel_data_length);

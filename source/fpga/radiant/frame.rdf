@@ -21,7 +21,7 @@
         <Source name="../modules/spi/spi_register.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/graphics/color_pallet.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/graphics/color_palette.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/graphics/display_buffers.sv" type="Verilog" type_short="Verilog">

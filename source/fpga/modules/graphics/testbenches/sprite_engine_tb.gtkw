@@ -63,7 +63,7 @@ sprite_engine_tb.draw_width[9:0]
 @28
 sprite_engine_tb.color_mode[1:0]
 @24
-sprite_engine_tb.pallet_offset[3:0]
+sprite_engine_tb.palette_offset[3:0]
 @200
 -
 @28

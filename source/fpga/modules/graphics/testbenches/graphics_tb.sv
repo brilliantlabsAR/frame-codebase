@@ -43,7 +43,7 @@ initial begin
     send_operand('h00); // Width
     send_operand('h14);
     send_operand('h10); // Total colors
-    send_operand('h00); // Pallet offset
+    send_operand('h00); // palette offset
     send_operand('h12); // Data
     send_operand('h34);
     send_operand('h56);

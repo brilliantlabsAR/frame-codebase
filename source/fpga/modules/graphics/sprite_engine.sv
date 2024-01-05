@@ -18,7 +18,7 @@
     input logic [9:0] y_position_in,
     input logic [9:0] width_in,
     input logic [4:0] total_colors_in,
-    input logic [3:0] color_pallet_offset_in,
+    input logic [3:0] color_palette_offset_in,
 
     input logic data_valid_in,
     input logic [7:0] data_in,

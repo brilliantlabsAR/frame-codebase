@@ -26,7 +26,7 @@ logic [9:0] cursor_x;
 logic [9:0] cursor_y ;
 logic [9:0] draw_width = 5;
 logic [1:0] color_mode = 'b11;
-logic [3:0] pallet_offset = 0;
+logic [3:0] palette_offset = 0;
 
 logic enable = 0;
 logic input_data_valid = 0;
@@ -122,7 +122,7 @@ sprite_engine sprite_engine (
     .cursor_start_y_position_in(cursor_y),
     .draw_width_in(draw_width),
     .color_mode_in(color_mode),
-    .color_pallet_offset_in(pallet_offset),
+    .color_palette_offset_in(palette_offset),
 
     .draw_enable_in(enable),
     .draw_data_valid_in(input_data_valid),
