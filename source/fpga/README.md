@@ -50,7 +50,7 @@ Bitmap sprites can be drawn using the `GRAPHICS_DRAW_SPRITE` command.
 
 Sprites can be position anywhere on the screen and will render from the top left corner of the sprite origin. The `width` parameter determines how many pixels the sprite engine will print on a line before automatically returning to the first column, one row of pixels down.
 
-Sprite data can be in one of three color formats. 1bit color, 2bit color and 4bit color. Each format allows for 2, 4 and 16 colors respectively, including the transparent (black) background color. The benefit of the lower color formats is that more pixels can be included per byte of transfer to the FPGA, and allow for faster rendering and a reduced storage requirement on the nRF52 main processor. 
+Sprite data can be in one of three color formats. 1bit color, 2bit color and 4bit color. Each format allows for 2, 4 and 16 colors respectively, including the transparent (black) background color. The benefit of the lower color formats is that more pixels can be included per byte of transfer to the FPGA. This allows for faster rendering and a reduced storage requirement on the nRF52 main processor. 
 
 When printing a single sprite, the `pallet_offset` parameter can be provided to shift which colors are used. This allows for a 1bit font sprite to take on a different color from anywhere in the pallet. This option can be changed on a sprite by sprite basis.
 
