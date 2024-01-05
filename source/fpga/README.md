@@ -18,8 +18,8 @@ Each function is accessed through a register. Registers are always addressed by 
 |:-------:|--------------------------|-------------|
 | 0x10    | `GRAPHICS_CLEAR`         | Clears the background frame buffer.
 | 0x11    | `GRAPHICS_ASSIGN_COLOR`  | Assigns a color to one of the 16 color palette slots. Color should be provided in YCbCr format.<br>**Write: `palette_index[7:0]`**<br>**Write: `y[7:0]`**<br>**Write: `cb[7:0]`**<br>**Write: `cr[7:0]`**
-| 0x12    | `GRAPHICS_DRAW_SPRITE`   | Draws a sprite on the screen. The first two arguments specify an absolute x and y position to print the sprite. The sprite will be printed from its top left corner. The third argument determines the width of the sprite in pixels. The fourth argument determines the number of colors contained in the sprite. This value may be 2, 4, or 16. The final argument specifies the color pallet offset for assigning the color values held in the sprite against the stored colors in the pallet. Following bytes will then be printed on the background frame buffer.<br>**Write: `x_position[15:0]`**<br>**Write: `y_position[15:0]`**<br>**Write: `width[15:0]`**<br>**Write: `total_colors[7:0]`**<br>**Write: `pallet_offset[7:0]`**<br>**Write: `pixel_data[7:0]`**<br>**...**<br>**Write: `pixel_data[7:0]`**<br>
-| 0x13    | `GRAPHICS_DRAW_VECTOR`   | Draws a cubic Bézier curve from the start position to the end position. Control points 1 and 2 are relative to the start and end positions respectively, and are used to determine the shape of the curve. The final argument determines the color used from the current pallet, and can be between 0 and 15.<br>**Write: `x_start_position[15:0]`**<br>**Write: `y_start_position[15:0]`**<br>**Write: `x_end_position[15:0]`**<br>**Write: `y_end_position[15:0]`**<br>**Write: `ctrl_1_x_position[15:0]`**<br>**Write: `ctrl_1_y_position[15:0]`**<br>**Write: `ctrl_2_x_position[15:0]`**<br>**Write: `ctrl_2_y_position[15:0]`**<br>**Write: `color[7:0]`**
+| 0x12    | `GRAPHICS_DRAW_SPRITE`   | Draws a sprite on the screen. The first two arguments specify an absolute x and y position to print the sprite. The sprite will be printed from its top left corner. The third argument determines the width of the sprite in pixels. The fourth argument determines the number of colors contained in the sprite. This value may be 2, 4, or 16. The final argument specifies the color palette offset for assigning the color values held in the sprite against the stored colors in the palette. Following bytes will then be printed on the background frame buffer.<br>**Write: `x_position[15:0]`**<br>**Write: `y_position[15:0]`**<br>**Write: `width[15:0]`**<br>**Write: `total_colors[7:0]`**<br>**Write: `palette_offset[7:0]`**<br>**Write: `pixel_data[7:0]`**<br>**...**<br>**Write: `pixel_data[7:0]`**<br>
+| 0x13    | `GRAPHICS_DRAW_VECTOR`   | Draws a cubic Bézier curve from the start position to the end position. Control points 1 and 2 are relative to the start and end positions respectively, and are used to determine the shape of the curve. The final argument determines the color used from the current palette, and can be between 0 and 15.<br>**Write: `x_start_position[15:0]`**<br>**Write: `y_start_position[15:0]`**<br>**Write: `x_end_position[15:0]`**<br>**Write: `y_end_position[15:0]`**<br>**Write: `ctrl_1_x_position[15:0]`**<br>**Write: `ctrl_1_y_position[15:0]`**<br>**Write: `ctrl_2_x_position[15:0]`**<br>**Write: `ctrl_2_y_position[15:0]`**<br>**Write: `color[7:0]`**
 | 0x14    | `GRAPHICS_BUFFER_SHOW`   | The foreground and background buffers are switched. The new foreground buffer is continuously rendered to the display, and the background buffer can be used to load new draw commands.
 | 0x20    | `CAMERA_CAPTURE`         | Starts a new image capture.
 | 0x21    | `CAMERA_BYTES_AVAILABLE` | Returns how many bytes are available in the capture memory. Returns -1 once all bytes have been read for the current capture, or no capture has been started<br>**Read: `bytes_available[23:0]`**
@@ -34,7 +34,7 @@ Two types of graphics may be drawn. Sprites, such as text, or vectors such as li
 
 ![Graphics pipeline for Frame](docs/graphics-pipeline-architecture.drawio.png)
 
-### 16 Color Pallet
+### 16 Color Palette
 
 The display connected to Frame is a 640x400 color display. With a color depth of 4 bits per pixel (i.e. 16 colors), four of the five 512kb on chip RAM blocks can be used to create two frame buffers. While one frame buffer is being rendered onto the display, the other is used to assemble graphics. Once this buffer is ready, they are swapped.
 
@@ -42,7 +42,7 @@ Rather than limiting the graphics to 16 fixed colors, each color index is mapped
 
 The color at index 0, is always expected to be the transparent (black) background color. This can be overridden if a transparent background isn't needed.
 
-![Graphics color pallet on Frame](docs/graphics-color-pallet.drawio.png)
+![Graphics color palette on Frame](docs/graphics-color-palette.drawio.png)
 
 ### Sprite Graphics
 
@@ -52,7 +52,7 @@ Sprites can be position anywhere on the screen and will render from the top left
 
 Sprite data can be in one of three color formats. 1bit color, 2bit color and 4bit color. Each format allows for 2, 4 and 16 colors respectively, including the transparent (black) background color. The benefit of the lower color formats is that more pixels can be included per byte of transfer to the FPGA. This allows for faster rendering and a reduced storage requirement on the nRF52 main processor. 
 
-When printing a single sprite, the `pallet_offset` parameter can be provided to shift which colors are used. This allows for a 1bit font sprite to take on a different color from anywhere in the pallet. This option can be changed on a sprite by sprite basis.
+When printing a single sprite, the `palette_offset` parameter can be provided to shift which colors are used. This allows for a 1bit font sprite to take on a different color from anywhere in the palette. This option can be changed on a sprite by sprite basis.
 
 ![Sprite graphics on Frame](docs/graphics-sprite-engine.drawio.png)
 
