@@ -50,50 +50,6 @@ logic clock_36MHz;
 logic clock_24MHz;
 logic pll_locked;
 
-`ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
-
-logic [31:0] clock_osc_counter;
-
-initial begin
-    clock_72MHz = 0;
-    clock_50MHz = 0;
-    clock_24MHz = 0;
-    clock_osc_counter = 0; 
-    pll_locked = 0;
-end
-
-OSCA #(
-    .HF_CLK_DIV("2"), 
-    .HF_OSC_EN("ENABLED")
-    ) osc (
-    .HFOUTEN(1'b1),
-    .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
-);
-
-always_ff @(posedge clock_osc) begin
-
-    // clock_osc_counter increments at half the clock_osc frequency
-    clock_osc_counter <= clock_osc_counter + 1;
-
-    // 75MHz
-    if (clock_osc_counter[0]) clock_72MHz <= 1;
-    else                      clock_72MHz <= 0;
-    
-    // 37.5MHz
-    if (clock_osc_counter[1]) clock_50MHz <= 1;
-    else                      clock_50MHz <= 0;
-
-    // 25MHz
-    if (clock_osc_counter[2]) clock_24MHz <= 1;
-    else                      clock_24MHz <= 0;
-
-    // Release reset after some time
-    if (clock_osc_counter[3]) pll_locked <= 1;
-
-end
-
-`else
-
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -111,8 +67,6 @@ pll_wrapper pll_wrapper (
     .clkos3_o(clock_50MHz),
     .lock_o(pll_locked)
 );
-
-`endif // TODO remove this line once gatecat/prjoxide#44 is solved
 
 // Reset
 logic global_reset_n;
