@@ -3,30 +3,30 @@
 
 typedef enum sprite_colors_t
 {
-    SPRITE_2_COLORS,
-    SPRITE_4_COLORS,
-    SPRITE_16_COLORS,
+    SPRITE_2_COLORS = 2,
+    SPRITE_4_COLORS = 4,
+    SPRITE_16_COLORS = 16,
 } sprite_colors_t;
 
 typedef struct sprite_metadata_t
 {
-    uint16_t utf8_code;
-    uint16_t height;
+    uint32_t utf8_codepoint;
     uint16_t width;
+    uint16_t height;
     sprite_colors_t colors;
     size_t data_offset;
 } sprite_metadata_t;
 
-const sprite_metadata_t sprite_metadata[6] = {
-    {0x0041, 22, 48, SPRITE_2_COLORS, 0x00000000},
-    {0x0042, 17, 48, SPRITE_2_COLORS, 0x00000083},
-    {0x0043, 15, 48, SPRITE_2_COLORS, 0x000000E8},
-    {0x0061, 19, 48, SPRITE_2_COLORS, 0x00000141},
-    {0x0063, 14, 48, SPRITE_2_COLORS, 0x000001B2},
-    {0x0062, 17, 48, SPRITE_2_COLORS, 0x00000205},
+const sprite_metadata_t sprite_metadata[] = {
+    {0x000041, 22, 48, SPRITE_2_COLORS, 0x00000000},
+    {0x000042, 17, 48, SPRITE_2_COLORS, 0x00000083},
+    {0x000043, 15, 48, SPRITE_2_COLORS, 0x000000E8},
+    {0x000061, 19, 48, SPRITE_2_COLORS, 0x00000141},
+    {0x000063, 14, 48, SPRITE_2_COLORS, 0x000001B2},
+    {0x000062, 17, 48, SPRITE_2_COLORS, 0x00000205},
 };
 
-const uint8_t sprite_data[618] = {
+const uint8_t sprite_data[] = {
     0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00, 0x00, 0x0F, 0x80, 0x00, 0x3F, 0x00, 0x00, 0xBC, 
     0x00, 0x07, 0xB8, 0x00, 0x1F, 0xA0, 0x00, 0x7F, 0x40, 0x01, 0x8E, 0x00, 
