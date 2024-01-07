@@ -26,6 +26,55 @@
 #include "lua.h"
 #include "spi.h"
 #include "system_font.h"
+#include "error_logging.h"
+
+static size_t utf8_decode(const char *string, sprite_metadata_t *glyph_table)
+{
+    size_t number_of_glyphs = 0;
+
+    for (size_t i = 0; i < strlen(string);)
+    {
+        uint32_t codepoint = 0;
+
+        // If ASCII
+        if ((string[i] & 0b10000000) == 0)
+        {
+            codepoint = string[i] & 0b01111111;
+            i++;
+        }
+        // TODO others
+
+        if (codepoint != 0)
+        {
+            // Search for the codepoint in the font table
+            for (size_t j = 0;
+                 j < sizeof(sprite_metadata) / sizeof(sprite_metadata_t);
+                 j++)
+            {
+                if (codepoint == sprite_metadata[j].utf8_code)
+                {
+                    LOG("Found codepoint");
+                    number_of_glyphs++;
+
+                    sprite_metadata_t *temp_glyph_table =
+                        realloc(glyph_table,
+                                number_of_glyphs * sizeof(sprite_metadata_t));
+                    if (temp_glyph_table == NULL)
+                    {
+                        error();
+                    }
+                    glyph_table = temp_glyph_table;
+
+                    memcpy(glyph_table + number_of_glyphs,
+                           sprite_metadata + j,
+                           sizeof(sprite_metadata_t));
+                }
+            }
+        }
+    }
+
+    return number_of_glyphs;
+}
 
 static int lua_display_clear(lua_State *L)
 {
@@ -110,7 +159,7 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
     return 0;
 }
 
-static int lua_display_sprite_draw(lua_State *L)
+static int lua_display_bitmap(lua_State *L)
 {
     uint8_t address = 0x12;
 
@@ -171,6 +220,36 @@ static int lua_display_sprite_draw(lua_State *L)
     return 0;
 }
 
+static int lua_display_text(lua_State *L)
+{
+    luaL_checkstring(L, 1);
+    luaL_checkinteger(L, 2);
+    luaL_checkinteger(L, 3);
+    // TODO color options
+    // TODO justification options
+
+    const char *string = lua_tostring(L, 1);
+    lua_Integer x_position = lua_tointeger(L, 2) - 1;
+    lua_Integer y_position = lua_tointeger(L, 3) - 1;
+
+    LOG("Printing: '%s' at %llu, %llu", string, x_position, y_position);
+
+    // Decode UTF8 string into a table of characters
+    sprite_metadata_t *glyph_table = malloc(0);
+    if (glyph_table == NULL)
+    {
+        error();
+    }
+    size_t number_of_glyphs = utf8_decode(string, glyph_table);
+
+    if (number_of_glyphs == 0)
+    {
+        return 0;
+    }
+
+    return 0;
+}
+
 static int lua_display_show(lua_State *L)
 {
     uint8_t address = 0x14;
@@ -193,8 +272,11 @@ void lua_open_display_library(lua_State *L)
     lua_pushcfunction(L, lua_display_assign_color_ycbcr);
     lua_setfield(L, -2, "assign_color_ycbcr");
 
-    lua_pushcfunction(L, lua_display_sprite_draw);
-    lua_setfield(L, -2, "sprite_draw");
+    lua_pushcfunction(L, lua_display_bitmap);
+    lua_setfield(L, -2, "bitmap");
+
+    lua_pushcfunction(L, lua_display_text);
+    lua_setfield(L, -2, "text");
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");
