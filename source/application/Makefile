@@ -99,6 +99,7 @@ FLAGS += \
 	-I.. \
 	-I../fpga \
 	-Ilua_libraries \
+	-Ilua_libraries/graphical_assets \
 	-I$(LIBRARIES)/cmsis/CMSIS/Core/Include \
 	-I$(LIBRARIES)/littlefs \
 	-I$(LIBRARIES)/lua \

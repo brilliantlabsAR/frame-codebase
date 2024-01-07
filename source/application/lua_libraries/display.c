@@ -25,6 +25,7 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "spi.h"
+#include "system_font.h"
 
 static int lua_display_clear(lua_State *L)
 {
