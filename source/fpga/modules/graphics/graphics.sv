@@ -51,12 +51,12 @@ logic [7:0] sprite_data;
 
 logic show_buffer_flag;
 
-// Sprite engine
+// Sprite engine related registers
 logic [9:0] sprite_x_position_reg; // 0 - 639
 logic [9:0] sprite_y_position_reg; // 0 - 399
 logic [9:0] sprite_width_reg; // 1 - 640
 logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
-logic [3:0] sprite_pallet_offset_reg; // 0 - 15
+logic [3:0] sprite_palette_offset_reg; // 0 - 15
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_in) begin
