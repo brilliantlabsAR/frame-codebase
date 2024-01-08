@@ -51,6 +51,13 @@ logic [7:0] sprite_data;
 
 logic show_buffer_flag;
 
+// Sprite engine
+logic [9:0] sprite_x_position_reg; // 0 - 639
+logic [9:0] sprite_y_position_reg; // 0 - 399
+logic [9:0] sprite_width_reg; // 1 - 640
+logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
+logic [3:0] sprite_pallet_offset_reg; // 0 - 15
+
 // Handle op-codes as they come in
 always_ff @(posedge clock_in) begin
     
@@ -247,13 +254,6 @@ display_driver display_driver (
     .display_cb_out(display_cb_out),
     .display_cr_out(display_cr_out)
 );
-
-// Sprite engine
-logic [9:0] sprite_x_position_reg; // 0 - 639
-logic [9:0] sprite_y_position_reg; // 0 - 399
-logic [9:0] sprite_width_reg; // 1 - 640
-logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
-logic [3:0] sprite_pallet_offset_reg; // 0 - 15
 
 sprite_engine sprite_engine (
     .clock_in(clock_in),
