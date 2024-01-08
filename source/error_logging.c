@@ -157,11 +157,11 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
     }
 }
 
-void _error_with_message(const char *message, const char *file, const int line)
+void _error(const char *message, const char *file, const int line)
 {
     if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
     {
-        LOG("Crashed at %s:%u - %s", file, line, message);
+        LOG("Crashed at %s:%u%s", file, line, message);
 
         __BKPT();
     }

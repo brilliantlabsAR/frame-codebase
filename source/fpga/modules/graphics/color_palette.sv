@@ -9,7 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module color_pallet (
+module color_palette (
     input logic clock_in,
     input logic reset_n_in,
 
@@ -64,7 +64,7 @@ module color_pallet (
 
     always_ff @(posedge clock_in) begin
         
-        // Default color pallet
+        // Default color palette
         if (reset_n_in == 0) begin
 
             color_table[0]  <= VOID;

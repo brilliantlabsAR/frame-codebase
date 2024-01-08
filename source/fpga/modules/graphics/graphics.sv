@@ -10,7 +10,7 @@
  */
 
 `ifndef RADIANT
-`include "modules/graphics/color_pallet.sv"
+`include "modules/graphics/color_palette.sv"
 `include "modules/graphics/display_buffers.sv"
 `include "modules/graphics/display_driver.sv"
 `include "modules/graphics/sprite_engine.sv"
@@ -106,7 +106,7 @@ always_ff @(posedge clock_in) begin
                         5: sprite_width_reg <= {operand_in[1:0], 8'b0};
                         6: sprite_width_reg <= {sprite_width_reg[9:8], operand_in};
                         7: sprite_total_colors_reg <= 16;
-                        8: sprite_pallet_offset_reg <= 0;
+                        8: sprite_palette_offset_reg <= 0;
                         default begin
                             sprite_enable_flag <= 1;
                             sprite_data_flag <= 1;
@@ -209,10 +209,10 @@ always_comb begin
     end
 end
 
-// Wire address from driver to buffer, with return data going through the pallet
+// Wire address from driver to buffer, with return data going through the palette
 logic [17:0] read_address_driver_to_buffer_wire;
-logic [3:0] color_data_buffer_to_pallet_wire;
-logic [9:0] color_data_pallet_to_driver_wire;
+logic [3:0] color_data_buffer_to_palette_wire;
+logic [9:0] color_data_palette_to_driver_wire;
 
 display_buffers display_buffers (
     .clock_in(clock_in),
@@ -223,17 +223,17 @@ display_buffers display_buffers (
     .pixel_write_data_in(pixel_write_data_mux_to_buffer_wire),
 
     .pixel_read_address_in(read_address_driver_to_buffer_wire),
-    .pixel_read_data_out(color_data_buffer_to_pallet_wire),
+    .pixel_read_data_out(color_data_buffer_to_palette_wire),
 
     .switch_write_buffer_in(show_buffer_flag)
 );
 
-color_pallet color_pallet (
+color_palette color_palette (
     .clock_in(clock_in),
     .reset_n_in(reset_n_in),
 
-    .pixel_index_in(color_data_buffer_to_pallet_wire),
-    .yuv_color_out(color_data_pallet_to_driver_wire),
+    .pixel_index_in(color_data_buffer_to_palette_wire),
+    .yuv_color_out(color_data_palette_to_driver_wire),
 
     .assign_color_enable_in(assign_color_enable_flag),
     .assign_color_index_in(assign_color_index_reg),
@@ -245,7 +245,7 @@ display_driver display_driver (
     .reset_n_in(reset_n_in),
 
     .pixel_data_address_out(read_address_driver_to_buffer_wire),
-    .pixel_data_value_in(color_data_pallet_to_driver_wire),
+    .pixel_data_value_in(color_data_palette_to_driver_wire),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
@@ -264,7 +264,7 @@ sprite_engine sprite_engine (
     .y_position_in(sprite_y_position_reg),
     .width_in(sprite_width_reg),
     .total_colors_in(sprite_total_colors_reg),
-    .color_pallet_offset_in(sprite_pallet_offset_reg),
+    .color_palette_offset_in(sprite_palette_offset_reg),
 
     .data_valid_in(sprite_data_flag),
     .data_in(sprite_data),

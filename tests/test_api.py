@@ -245,27 +245,21 @@ async def main():
     ## Battery level
     await test.lua_is_type("frame.battery_level()", "number")
 
-    ## Cancelling sleep
-    await test.lua_is_type("frame.sleep", "function")
-    await test.send_lua("frame.sleep()")
-    await asyncio.sleep(1)
-    await test.send_break_signal()
-
-    ## TODO remove delay?
     ## Preventing sleep
     await test.lua_equals("frame.stay_awake()", "false")
     await test.lua_send("frame.stay_awake(true)")
     await test.send_lua("frame.sleep()")
-    await asyncio.sleep(4)
+    await asyncio.sleep(1)
     await test.lua_equals("frame.stay_awake()", "true")
     await test.lua_send("frame.stay_awake(false)")
 
-    ## TODO remove delay?
-    ## Cancelling update
-    await test.lua_is_type("frame.update", "function")
-    await test.send_lua("frame.update()")
+    ## Break from sleep early
+    await test.send_lua("frame.sleep(100)")
     await asyncio.sleep(1)
     await test.send_break_signal()
+
+    ## Update function exists
+    await test.lua_is_type("frame.update", "function")
 
     ## FPGA IO
     await test.lua_equals("string.byte(frame.fpga.read(0xDB, 1))", "129")

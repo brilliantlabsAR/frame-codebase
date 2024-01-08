@@ -34,23 +34,31 @@
 #include "pinout.h"
 #include "spi.h"
 
-static int wait_for(lua_State *L, lua_Number seconds)
+static int lua_update(lua_State *L)
 {
+    check_error(sd_power_gpregret_set(0, 0xB1));
+    NVIC_SystemReset();
+    return 0;
+}
+
+static int lua_sleep(lua_State *L)
+{
+    if (lua_gettop(L) == 0)
+    {
+        shutdown(true);
+        return 0;
+    }
+
+    luaL_checknumber(L, 1);
+    lua_Number seconds = lua_tonumber(L, 1);
+    lua_pop(L, 1);
+
     // Get the current time
     int status = luaL_dostring(L, "return frame.time.utc()");
-
-    switch (status)
+    if (status != LUA_OK)
     {
-    case LUA_OK:
-        break;
-
-    case LUA_YIELD:
-        return LUA_YIELD;
-        break;
-
-    default:
-        error_with_message("lua error");
-        break;
+        const char *lua_error = lua_tostring(L, -1);
+        luaL_error(L, "%s", lua_error);
     }
 
     // Add the current time to the wait time
@@ -60,19 +68,10 @@ static int wait_for(lua_State *L, lua_Number seconds)
     {
         // Keep getting the current time
         status = luaL_dostring(L, "return frame.time.utc()");
-
-        switch (status)
+        if (status != LUA_OK)
         {
-        case LUA_OK:
-            break;
-
-        case LUA_YIELD:
-            return LUA_YIELD;
-            break;
-
-        default:
-            error_with_message("lua error");
-            break;
+            const char *lua_error = lua_tostring(L, -1);
+            luaL_error(L, "%s", lua_error);
         }
 
         lua_Number current_time = lua_tonumber(L, 2);
@@ -83,7 +82,7 @@ static int wait_for(lua_State *L, lua_Number seconds)
             break;
         }
 
-        // Clear exceptions
+        // Clear exceptions and sleep
         __set_FPSCR(__get_FPSCR() & ~(0x0000009F));
         (void)__get_FPSCR();
 
@@ -92,37 +91,6 @@ static int wait_for(lua_State *L, lua_Number seconds)
         check_error(sd_app_evt_wait());
     }
 
-    return LUA_OK;
-}
-
-static int lua_update(lua_State *L)
-{
-    if (wait_for(L, 3) == LUA_OK)
-    {
-        check_error(sd_power_gpregret_set(0, 0xB1));
-
-        NVIC_SystemReset();
-    }
-
-    return 0;
-}
-
-static int lua_sleep(lua_State *L)
-{
-    if (lua_gettop(L) == 0)
-    {
-        if (wait_for(L, 3) == LUA_OK)
-        {
-            shutdown(true);
-        }
-
-        return 0;
-    }
-
-    lua_Number seconds = lua_tonumber(L, 1);
-    lua_pop(L, 1);
-
-    wait_for(L, seconds);
     return 0;
 }
 

@@ -13,4 +13,4 @@ abc.history
 *.dtmp
 
 # Temp test files
-test_api_scratch_pad.py
+test_scratch_pad*.py

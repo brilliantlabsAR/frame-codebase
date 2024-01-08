@@ -269,8 +269,12 @@ static int lua_microphone_read(lua_State *L)
         return 1;
     }
 
-    lua_newtable(L);
-    lua_Integer i = 1;
+    size_t i = 0;
+    char *samples = malloc(bytes);
+    if (samples == NULL)
+    {
+        luaL_error(L, "not enough heap memory");
+    }
 
     while (true)
     {
@@ -283,24 +287,20 @@ static int lua_microphone_read(lua_State *L)
         {
         case 16:
             int16_t sample16 = averaged_sample();
-            lua_pushinteger(L, sample16 >> 8);
-            lua_seti(L, -2, i++);
-            lua_pushinteger(L, sample16 & 0xFF);
-            lua_seti(L, -2, i++);
+            samples[i++] = sample16 >> 8;
+            samples[i++] = sample16 & 0xFF;
             break;
 
         case 8:
             int16_t sample8 = averaged_sample() >> 8;
-            lua_pushinteger(L, sample8);
-            lua_seti(L, -2, i++);
+            samples[i++] = sample8;
             break;
 
         case 4:
             int16_t sample4_top = (averaged_sample() >> 12) & 0x0F;
             int16_t sample4_bot = (averaged_sample() >> 12) & 0x0F;
             int8_t combined_sample = (sample4_top << 4) | sample4_bot;
-            lua_pushinteger(L, combined_sample);
-            lua_seti(L, -2, i++);
+            samples[i++] = combined_sample;
             break;
         }
 
@@ -309,6 +309,9 @@ static int lua_microphone_read(lua_State *L)
             break;
         }
     }
+
+    lua_pushlstring(L, samples, i);
+    free(samples);
 
     return 1;
 }
