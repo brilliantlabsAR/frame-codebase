@@ -40,7 +40,7 @@ static int lua_capture(lua_State *L) {
 
 static int lua_read(lua_State *L) {
     luaL_checkinteger(L, 1);
-    lua_Integer num_bytes = lua_tointeger(L, 1);
+    uint8_t num_bytes = (uint8_t)(lua_tointeger(L, 1));
 
     uint8_t txbuf = 0x22;
     uint8_t rxbuf[128];
@@ -48,7 +48,7 @@ static int lua_read(lua_State *L) {
     spi_read(FPGA, &rxbuf[0], num_bytes, false);
 
     lua_pushlstring(L, (char *)rxbuf, num_bytes);
-    LOG("%d", strlen((char *)rxbuf));
+    LOG("read %d", strlen((char *)rxbuf));
     return 1;
 }
 

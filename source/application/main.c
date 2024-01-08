@@ -44,7 +44,7 @@
 #include "spi.h"
 
 bool not_real_hardware = false;
-bool stay_awake = false;
+bool stay_awake = true;
 bool force_sleep = false;
 
 static void set_power_rails(bool enable)

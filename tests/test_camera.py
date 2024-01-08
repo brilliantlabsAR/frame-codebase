@@ -4,25 +4,27 @@ Tests the camera over Bluetooth.
 
 import asyncio
 from frameutils import Bluetooth
-from time import sleep
+import sys
 
 ints = []
 def add_to_log(response):
     global ints
     ints.extend([x for x in response])
+    print(f"got {len(response)}")
 
 async def main():
     dev = Bluetooth()
     await dev.connect (
         data_response_handler=add_to_log,
     )
-    await dev.send_reset_signal()
-    await asyncio.sleep(0.1)
-    await dev.send_lua("frame.camera.capture()")
-    await asyncio.sleep(1)
+    response = await dev.send_lua("print(frame.camera.capture())", await_print=True)
+    print(response)
+    await asyncio.sleep(0.5)
     for i in range(625):
-        await dev.send_lua("frame.bluetooth.send(frame.camera.read(64))", await_print=True)
+        await dev.send_lua("frame.bluetooth.send(frame.camera.read(64))")
+        await asyncio.sleep(0.05)
         print(i)
+    await asyncio.sleep(1)
     with open('log.txt', 'w') as f:
         for x in ints:
             f.write(str(x)+'\n')
