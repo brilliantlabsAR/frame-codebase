@@ -59,10 +59,17 @@ static int lua_display_assign_color(lua_State *L)
     luaL_checkinteger(L, 1);
     luaL_checkinteger(L, 2);
     luaL_checkinteger(L, 3);
+    luaL_checkinteger(L, 4);
 
-    lua_Number red = lua_tointeger(L, 1);
-    lua_Number green = lua_tointeger(L, 2);
-    lua_Number blue = lua_tointeger(L, 3);
+    lua_Integer pallet_index = lua_tointeger(L, 1);
+    lua_Integer red = lua_tointeger(L, 2);
+    lua_Integer green = lua_tointeger(L, 3);
+    lua_Integer blue = lua_tointeger(L, 4);
+
+    if (pallet_index < 0 || pallet_index > 15)
+    {
+        luaL_error(L, "pallet_index must be between 1 and 16");
+    }
 
     if (red < 0 || red > 255)
     {
@@ -84,7 +91,10 @@ static int lua_display_assign_color(lua_State *L)
     uint8_t cb = (uint8_t)green;
     uint8_t cr = (uint8_t)blue;
 
-    uint8_t data[3] = {y, cb, cr};
+    uint8_t data[4] = {(uint8_t)pallet_index,
+                       y,
+                       cb,
+                       cr};
 
     spi_write(FPGA, &address, 1, true);
     spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
@@ -99,12 +109,19 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
     luaL_checkinteger(L, 1);
     luaL_checkinteger(L, 2);
     luaL_checkinteger(L, 3);
+    luaL_checkinteger(L, 4);
 
-    lua_Number y = lua_tointeger(L, 1);
-    lua_Number cb = lua_tointeger(L, 2);
-    lua_Number cr = lua_tointeger(L, 3);
+    lua_Integer pallet_index = lua_tointeger(L, 1) - 1;
+    lua_Integer y = lua_tointeger(L, 2);
+    lua_Integer cb = lua_tointeger(L, 3);
+    lua_Integer cr = lua_tointeger(L, 4);
 
     // TODO figure out the scaling and range og Ycbcr
+    if (pallet_index < 0 || pallet_index > 15)
+    {
+        luaL_error(L, "pallet_index must be between 1 and 16");
+    }
+
     if (y < 0 || y > 255)
     {
         luaL_error(L, "Y component must be between 0 and 255");
@@ -120,7 +137,10 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
         luaL_error(L, "Cr component must be between 0 and 255");
     }
 
-    uint8_t data[3] = {(uint8_t)y, (uint8_t)cb, (uint8_t)cr};
+    uint8_t data[4] = {(uint8_t)pallet_index,
+                       (uint8_t)y,
+                       (uint8_t)cb,
+                       (uint8_t)cr};
 
     spi_write(FPGA, &address, 1, true);
     spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
