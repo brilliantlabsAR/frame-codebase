@@ -25,30 +25,34 @@ module top (
     input logic spi_data_in,
     output logic spi_data_out,
 
-    output logic display_clock,
-    output logic display_hsync,
-    output logic display_vsync,
-    output logic display_y0,
-    output logic display_y1,
-    output logic display_y2,
-    output logic display_y3,
-    output logic display_cr0,
-    output logic display_cr1,
-    output logic display_cr2,
-    output logic display_cb0,
-    output logic display_cb1,
-    output logic display_cb2,
+    output logic display_clock_out,
+    output logic display_hsync_out,
+    output logic display_vsync_out,
+    output logic display_y0_out,
+    output logic display_y1_out,
+    output logic display_y2_out,
+    output logic display_y3_out,
+    output logic display_cr0_out,
+    output logic display_cr1_out,
+    output logic display_cr2_out,
+    output logic display_cb0_out,
+    output logic display_cb1_out,
+    output logic display_cb2_out,
 
-    output logic camera_clock
+    // inout wire mipi_clock_in,
+	// inout wire mipi_clock_in,
+	// inout wire mipi_data_in,
+	// inout wire mipi_data_in,
+
+    output logic camera_clock_out
 );
 
 // Clocking
 logic clock_osc;
-logic clock_spi;
-logic clock_display;
-logic clock_byte_to_pixel;
 logic clock_camera;
-logic clock_camera_buffer;
+logic clock_camera_pixel;
+logic clock_display;
+logic clock_spi;
 logic pll_locked;
 
 OSCA #(
@@ -63,17 +67,18 @@ OSCA #(
 pll_wrapper pll_wrapper (
     .clki_i(clock_osc),
     .clkop_o(clock_camera),
-    .clkos_o(clock_byte_to_pixel),
+    .clkos_o(clock_camera_pixel),
     .clkos2_o(clock_display),
     .clkos3_o(clock_spi),
-	.clkos4_o(clock_camera_buffer),
+	.clkos4_o(),
     .lock_o(pll_locked)
 );
 
 // Reset
 logic global_reset_n;
-logic reset_n_clock_spi;
-logic reset_n_clock_display;
+logic reset_spi_n;
+logic reset_display_n;
+logic reset_camera_pixel_n;
 
 reset_global reset_global (
     .clock_in(clock_osc),
@@ -81,16 +86,22 @@ reset_global reset_global (
     .global_reset_n_out(global_reset_n)
 );
 
-reset_sync reset_sync_clock_spi (
-    .clock_in(clock_spi),
+reset_sync reset_sync_clock_camera_pixel (
+    .clock_in(clock_camera_pixel),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_spi)
+    .sync_reset_n_out(reset_camera_pixel_n)
 );
 
 reset_sync reset_sync_clock_display (
     .clock_in(clock_display),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_display)
+    .sync_reset_n_out(reset_display_n)
+);
+
+reset_sync reset_sync_clock_spi (
+    .clock_in(clock_spi),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(reset_spi_n)
 );
 
 // SPI
@@ -104,14 +115,14 @@ logic [7:0] response_1;
 logic response_1_valid = 0;
 
 logic [7:0] response_2;
-logic response_2_valid = 0;
+logic response_2_valid;
 
 logic [7:0] response_3;
 logic response_3_valid;
 
 spi_peripheral spi_peripheral (
     .clock_in(clock_spi),
-    .reset_n_in(reset_n_clock_spi),
+    .reset_n_in(reset_spi_n),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -135,7 +146,7 @@ spi_peripheral spi_peripheral (
 // Graphics
 graphics graphics (
     .clock_in(clock_display),
-    .reset_n_in(reset_n_clock_display),
+    .reset_n_in(reset_display_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -143,16 +154,37 @@ graphics graphics (
     .operand_valid_in(operand_valid),
     .operand_count_in(operand_count),
 
-    .display_clock_out(display_clock),
-    .display_hsync_out(display_hsync),
-    .display_vsync_out(display_vsync),
-    .display_y_out({display_y3, display_y2, display_y1, display_y0}),
-    .display_cb_out({display_cb2, display_cb1, display_cb0}),
-    .display_cr_out({display_cr2, display_cr1, display_cr0})
+    .display_clock_out(display_clock_out),
+    .display_hsync_out(display_hsync_out),
+    .display_vsync_out(display_vsync_out),
+    .display_y_out({display_y3_out, display_y2_out, display_y1_out, display_y0_out}),
+    .display_cb_out({display_cb2_out, display_cb1_out, display_cb0_out}),
+    .display_cr_out({display_cr2_out, display_cr1_out, display_cr0_out})
 );
 
 // Camera
-assign camera_clock = clock_camera;
+assign camera_clock_out = clock_camera;
+
+camera camera (
+    .clock_spi_in(clock_spi),
+    .reset_spi_n_in(reset_spi_n),
+
+    .clock_pixel_in(clock_camera_pixel),
+    .reset_pixel_n_in(reset_camera_pixel_n),
+
+    // .mipi_clock_p_in(mipi_clock_p_in),
+    // .mipi_clock_n_in(mipi_clock_n_in),
+    // .mipi_data_p_in(mipi_data_p_in),
+    // .mipi_data_n_in(mipi_data_n_in),
+
+    .op_code_in(opcode),
+    .op_code_valid_in(opcode_valid),
+    .operand_in(operand),
+    .operand_valid_in(operand_valid),
+    .operand_count_in(operand_count),
+    .response_out(response_2),
+    .response_valid_out(response_2_valid)
+);
 
 // Chip ID register
 spi_register #(
@@ -160,7 +192,7 @@ spi_register #(
     .REGISTER_VALUE('h81)
 ) chip_id_1 (
     .clock_in(clock_spi),
-    .reset_n_in(reset_n_clock_spi),
+    .reset_n_in(reset_spi_n),
 
     .opcode_in(opcode),
     .opcode_valid_in(opcode_valid),
