@@ -40,9 +40,9 @@ module top (
     output logic display_cb2_out,
 
     // inout wire mipi_clock_in,
-	// inout wire mipi_clock_in,
-	// inout wire mipi_data_in,
-	// inout wire mipi_data_in,
+    // inout wire mipi_clock_in,
+    // inout wire mipi_data_in,
+    // inout wire mipi_data_in,
 
     output logic camera_clock_out
 );
