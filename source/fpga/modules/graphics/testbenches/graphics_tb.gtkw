@@ -1,0 +1,148 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Thu Jan  4 09:52:46 2024
+[*]
+[dumpfile] "simulation/graphics_tb.fst"
+[dumpfile_mtime] "Thu Jan  4 09:50:44 2024"
+[dumpfile_size] 2743044
+[savefile] "graphics_tb.gtkw"
+[timestart] 12307645
+[size] 2032 1104
+[pos] 10 38
+*-8.378506 12308770 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] graphics_tb.
+[treeopen] graphics_tb.graphics.
+[sst_width] 253
+[signals_width] 383
+[sst_expanded] 1
+[sst_vpaned_height] 335
+@28
+graphics_tb.clock
+graphics_tb.reset_n
+@200
+-
+@22
+graphics_tb.graphics.op_code_in[7:0]
+@28
+graphics_tb.opcode_valid
+@22
+graphics_tb.graphics.operand_in[7:0]
+@28
+graphics_tb.operand_valid
+@24
+graphics_tb.operand_count
+@200
+-
+-Operation registers
+@28
+graphics_tb.graphics.assign_color_enable_flag
+@24
+graphics_tb.graphics.assign_color_index_reg[3:0]
+@22
+graphics_tb.graphics.assign_color_value_reg[9:0]
+@200
+-
+@28
+graphics_tb.graphics.show_buffer_flag
+@200
+-
+-Screen clearing
+@28
+graphics_tb.graphics.clear_buffer_flag
+graphics_tb.graphics.clear_buffer_in_progress_flag
+graphics_tb.graphics.pixel_pulse_counter[1:0]
+@22
+graphics_tb.graphics.clear_buffer_address_reg[17:0]
+@200
+-
+-Sprite engine
+@28
+graphics_tb.graphics.sprite_enable_flag
+@24
+graphics_tb.graphics.sprite_x_position_reg[9:0]
+graphics_tb.graphics.sprite_y_position_reg[9:0]
+graphics_tb.graphics.sprite_width_reg[9:0]
+graphics_tb.graphics.sprite_total_colors_reg[4:0]
+graphics_tb.graphics.sprite_palette_offset_reg[3:0]
+@28
+graphics_tb.graphics.sprite_data_flag
+@22
+graphics_tb.graphics.sprite_data[7:0]
+@200
+-
+@28
+graphics_tb.graphics.sprite_engine.pixel_write_enable_out
+@22
+graphics_tb.graphics.sprite_engine.pixel_write_address_out[17:0]
+graphics_tb.graphics.sprite_engine.pixel_write_data_out[3:0]
+@200
+-
+-Sprite engine internals
+@28
+graphics_tb.graphics.sprite_engine.enable_edge_monitor[1:0]
+graphics_tb.graphics.sprite_engine.data_valid_edge_monitor[1:0]
+graphics_tb.graphics.sprite_engine.pixel_pulse_counter[1:0]
+@22
+graphics_tb.graphics.sprite_engine.pixels_remaining[4:0]
+@24
+graphics_tb.graphics.sprite_engine.current_x_pen_position[9:0]
+graphics_tb.graphics.sprite_engine.current_y_pen_position[9:0]
+@200
+-
+-Display buffer
+@28
+graphics_tb.graphics.display_buffers.pixel_write_enable_in
+@22
+graphics_tb.graphics.display_buffers.pixel_write_address_in[17:0]
+graphics_tb.graphics.display_buffers.pixel_write_data_in[3:0]
+@200
+-
+@28
+graphics_tb.graphics.display_buffers.switch_write_buffer_in
+@200
+-
+@24
+graphics_tb.graphics.display_buffers.displayed_buffer
+@200
+-
+@22
+graphics_tb.graphics.display_buffers.display_ram_address_a[13:0]
+@23
+graphics_tb.graphics.display_buffers.display_ram_address_b[13:0]
+@22
+graphics_tb.graphics.display_buffers.pixel_read_address_in[17:0]
+@200
+-
+@28
+graphics_tb.graphics.display_buffers.display_ram_write_enable_a_top
+graphics_tb.graphics.display_buffers.display_ram_write_enable_a_bottom
+graphics_tb.graphics.display_buffers.display_ram_write_enable_b_top
+graphics_tb.graphics.display_buffers.display_ram_write_enable_b_bottom
+[pattern_trace] 1
+[pattern_trace] 0

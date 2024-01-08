@@ -29,12 +29,15 @@
 
 void _check_error(nrfx_err_t error_code, const char *file, const int line);
 
-void _error_with_message(const char *message, const char *file, const int line);
+void _error(const char *message, const char *file, const int line);
 
 #define check_error(error_code) \
     _check_error(error_code, __FILE__, __LINE__)
 
+#define error() \
+    _error("", __FILE__, __LINE__)
+
 #define error_with_message(message) \
-    _error_with_message(message, __FILE__, __LINE__)
+    _error(" - " message, __FILE__, __LINE__)
 
 void HardFault_Handler(void) __attribute__((naked));

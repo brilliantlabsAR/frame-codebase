@@ -1,0 +1,108 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Mon Jan  1 19:37:40 2024
+[*]
+[dumpfile] "simulation/sprite_engine_tb.fst"
+[dumpfile_mtime] "Mon Jan  1 19:33:40 2024"
+[dumpfile_size] 1420
+[savefile] "sprite_engine_tb.gtkw"
+[timestart] 0
+[size] 1424 852
+[pos] 10 38
+*-10.403419 1767 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] sprite_engine_tb.
+[sst_width] 253
+[signals_width] 318
+[sst_expanded] 1
+[sst_vpaned_height] 247
+@28
+sprite_engine_tb.clock
+sprite_engine_tb.reset_n
+@200
+-
+@24
+sprite_engine_tb.starting_cursor_x[9:0]
+sprite_engine_tb.starting_cursor_y[9:0]
+@28
+sprite_engine_tb.starting_cursor_valid
+@24
+sprite_engine_tb.cursor_x[9:0]
+sprite_engine_tb.cursor_y[9:0]
+@200
+-
+@24
+sprite_engine_tb.sprite_engine.cursor_start_x_position_in[9:0]
+sprite_engine_tb.sprite_engine.cursor_start_y_position_in[9:0]
+sprite_engine_tb.draw_width[9:0]
+@28
+sprite_engine_tb.color_mode[1:0]
+@24
+sprite_engine_tb.palette_offset[3:0]
+@200
+-
+@28
+sprite_engine_tb.enable
+sprite_engine_tb.input_data_valid
+@22
+sprite_engine_tb.input_data[7:0]
+@200
+-
+@28
+sprite_engine_tb.output_valid
+@22
+sprite_engine_tb.output_address[17:0]
+sprite_engine_tb.output_data[3:0]
+@200
+-
+@25
+sprite_engine_tb.updated_cursor_valid
+sprite_engine_tb.updated_cursor_x[9:0]
+sprite_engine_tb.updated_cursor_y[9:0]
+@200
+-
+@28
+[color] 6
+sprite_engine_tb.sprite_engine.data_valid_edge_monitor[1:0]
+@24
+[color] 6
+sprite_engine_tb.sprite_engine.pixels_remaining[4:0]
+@28
+[color] 6
+sprite_engine_tb.sprite_engine.done_flag
+@24
+[color] 6
+sprite_engine_tb.sprite_engine.cursor_left_boundary[9:0]
+[color] 6
+sprite_engine_tb.sprite_engine.cursor_right_boundary[9:0]
+[color] 6
+sprite_engine_tb.sprite_engine.cursor_current_x_position[9:0]
+[color] 6
+sprite_engine_tb.sprite_engine.cursor_current_y_position[9:0]
+[pattern_trace] 1
+[pattern_trace] 0
