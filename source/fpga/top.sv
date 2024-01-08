@@ -48,7 +48,7 @@ logic clock_spi;
 logic clock_display;
 logic clock_byte_to_pixel;
 logic clock_camera;
-logic clock_ram;
+logic clock_camera_buffer;
 logic pll_locked;
 
 OSCA #(
@@ -66,7 +66,7 @@ pll_wrapper pll_wrapper (
     .clkos_o(clock_byte_to_pixel),
     .clkos2_o(clock_display),
     .clkos3_o(clock_spi),
-	.clkos4_o(clock_ram),
+	.clkos4_o(clock_camera_buffer),
     .lock_o(pll_locked)
 );
 
