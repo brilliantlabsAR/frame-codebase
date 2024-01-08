@@ -44,55 +44,12 @@ module top (
 
 // Clocking
 logic clock_osc;
-logic clock_72MHz;
-logic clock_50MHz;
-logic clock_36MHz;
-logic clock_24MHz;
+logic clock_spi;
+logic clock_display;
+logic clock_byte_to_pixel;
+logic clock_camera;
+logic clock_camera_buffer;
 logic pll_locked;
-
-`ifndef RADIANT // TODO remove this section once gatecat/prjoxide#44 is solved
-
-logic [31:0] clock_osc_counter;
-
-initial begin
-    clock_72MHz = 0;
-    clock_50MHz = 0;
-    clock_24MHz = 0;
-    clock_osc_counter = 0; 
-    pll_locked = 0;
-end
-
-OSCA #(
-    .HF_CLK_DIV("2"), 
-    .HF_OSC_EN("ENABLED")
-    ) osc (
-    .HFOUTEN(1'b1),
-    .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
-);
-
-always_ff @(posedge clock_osc) begin
-
-    // clock_osc_counter increments at half the clock_osc frequency
-    clock_osc_counter <= clock_osc_counter + 1;
-
-    // 75MHz
-    if (clock_osc_counter[0]) clock_72MHz <= 1;
-    else                      clock_72MHz <= 0;
-    
-    // 37.5MHz
-    if (clock_osc_counter[1]) clock_50MHz <= 1;
-    else                      clock_50MHz <= 0;
-
-    // 25MHz
-    if (clock_osc_counter[2]) clock_24MHz <= 1;
-    else                      clock_24MHz <= 0;
-
-    // Release reset after some time
-    if (clock_osc_counter[3]) pll_locked <= 1;
-
-end
-
-`else
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -105,20 +62,18 @@ OSCA #(
 
 pll_wrapper pll_wrapper (
     .clki_i(clock_osc),
-    .clkop_o(clock_24MHz),
-    .clkos_o(clock_36MHz),
-    .clkos2_o(clock_72MHz),
-    .clkos3_o(clock_50MHz),
+    .clkop_o(clock_camera),
+    .clkos_o(clock_byte_to_pixel),
+    .clkos2_o(clock_display),
+    .clkos3_o(clock_spi),
+	.clkos4_o(clock_camera_buffer),
     .lock_o(pll_locked)
 );
 
-`endif // TODO remove this line once gatecat/prjoxide#44 is solved
-
 // Reset
 logic global_reset_n;
-logic reset_n_clock_72MHz;
-logic reset_n_clock_50MHz;
-logic reset_n_clock_24MHz;
+logic reset_n_clock_spi;
+logic reset_n_clock_display;
 
 reset_global reset_global (
     .clock_in(clock_osc),
@@ -126,22 +81,16 @@ reset_global reset_global (
     .global_reset_n_out(global_reset_n)
 );
 
-reset_sync reset_sync_clock_72MHz (
-    .clock_in(clock_72MHz),
+reset_sync reset_sync_clock_spi (
+    .clock_in(clock_spi),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_72MHz)
+    .sync_reset_n_out(reset_n_clock_spi)
 );
 
-reset_sync reset_sync_clock_50MHz (
-    .clock_in(clock_50MHz),
+reset_sync reset_sync_clock_display (
+    .clock_in(clock_display),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_50MHz)
-);
-
-reset_sync reset_sync_clock_24MHz (
-    .clock_in(clock_24MHz),
-    .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_n_clock_24MHz)
+    .sync_reset_n_out(reset_n_clock_display)
 );
 
 // SPI
@@ -161,8 +110,8 @@ logic [7:0] response_3;
 logic response_3_valid;
 
 spi_peripheral spi_peripheral (
-    .clock_in(clock_72MHz),
-    .reset_n_in(reset_n_clock_72MHz),
+    .clock_in(clock_spi),
+    .reset_n_in(reset_n_clock_spi),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -185,8 +134,8 @@ spi_peripheral spi_peripheral (
 
 // Graphics
 graphics graphics (
-    .clock_in(clock_50MHz),
-    .reset_n_in(reset_n_clock_50MHz),
+    .clock_in(clock_display),
+    .reset_n_in(reset_n_clock_display),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -203,15 +152,15 @@ graphics graphics (
 );
 
 // Camera
-assign camera_clock = clock_24MHz;
+assign camera_clock = clock_camera;
 
 // Chip ID register
 spi_register #(
     .REGISTER_ADDRESS('hDB),
     .REGISTER_VALUE('h81)
 ) chip_id_1 (
-    .clock_in(clock_72MHz),
-    .reset_n_in(reset_n_clock_72MHz),
+    .clock_in(clock_spi),
+    .reset_n_in(reset_n_clock_spi),
 
     .opcode_in(opcode),
     .opcode_valid_in(opcode_valid),
