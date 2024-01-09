@@ -13,7 +13,7 @@
 
 `include "../camera.sv"
 
-module camera_tb;
+module camera_spi_tb;
 
 logic clock_spi = 0;
 logic clock_camera_pixel = 0;
@@ -128,8 +128,8 @@ task done;
 endtask
 
 initial begin
-    $dumpfile("simulation/camera_tb.fst");
-    $dumpvars(0, camera_tb);
+    $dumpfile("simulation/camera_spi_tb.fst");
+    $dumpvars(0, camera_spi_tb);
 end
 
 endmodule

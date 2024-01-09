@@ -28,14 +28,14 @@ camera:
 	@iverilog -Wall \
 			  -g2012 \
 			  -I ../../.. \
-			  -o simulation/camera_tb.out \
-			  -i camera_tb.sv
+			  -o simulation/camera_spi_tb.out \
+			  -i camera_spi_tb.sv
 	exit
-	@vvp simulation/camera_tb.out \
+	@vvp simulation/camera_spi_tb.out \
 		 -fst
 
-	@gtkwave simulation/camera_tb.fst \
-			 camera_tb.gtkw
+	@gtkwave simulation/camera_spi_tb.fst \
+			 camera_spi_tb.gtkw
 
 clean:
 	@rm -rf simulation
