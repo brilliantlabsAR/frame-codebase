@@ -158,6 +158,8 @@ always_comb begin
     endcase
 end
 
+`ifdef RADIANT
+
 // logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
 // logic [7:0] payload /* synthesis syn_keep=1 nomerge=""*/;
 // logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
@@ -302,7 +304,7 @@ PDPSC512K #(
     .DI(),
     .ADW(),
     .ADR(buffer_read_address),
-    .CLK(/*clock_spi_in*/),
+    .CLK(clock_spi_in),
     .CEW('b1),
     .CER('b1),
     .WE(camera_ram_write_enable & capture_in_progress_flag),
@@ -312,6 +314,7 @@ PDPSC512K #(
     .BYTEEN_N('b0000),
     .DO(buffer_read_data)
 );
+`endif
 
 
 endmodule
