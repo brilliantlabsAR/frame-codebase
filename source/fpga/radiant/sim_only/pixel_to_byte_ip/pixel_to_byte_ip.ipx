@@ -1,0 +1,26 @@
+<?xml version="1.0" ?>
+<RadiantModule architecture="LIFCL" date="2023 12 19 15:43:20" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="ip" module="pixel2byte" name="pixel_to_byte_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.5.0">
+ <Package>
+  <File modified="2023 12 19 15:43:20" name="rtl/pixel_to_byte_ip_bb.v" type="black_box_verilog"/>
+  <File modified="2023 12 19 15:43:20" name="pixel_to_byte_ip.cfg" type="cfg"/>
+  <File modified="2023 12 19 15:43:20" name="misc/pixel_to_byte_ip_tmpl.v" type="template_verilog"/>
+  <File modified="2023 12 19 15:43:20" name="misc/pixel_to_byte_ip_tmpl.vhd" type="template_vhdl"/>
+  <File modified="2023 12 19 15:43:20" name="rtl/pixel_to_byte_ip.v" type="top_level_verilog"/>
+  <File modified="2023 12 19 15:43:20" name="constraints/pixel_to_byte_ip.ldc" type="timing_constraints"/>
+  <File modified="2023 12 19 15:43:20" name="testbench/dut_params.v" type="dependency_file"/>
+  <File modified="2023 12 19 15:43:20" name="testbench/dut_inst.v" type="dependency_file"/>
+  <File modified="2023 12 19 15:43:20" name="component.xml" type="IP-XACT_component"/>
+  <File modified="2023 12 19 15:43:20" name="design.xml" type="IP-XACT_design"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_top.v" type="testbench_verilog"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/create_defines.py" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/test_snow_pixel2byte_dsi_reset.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/test_snow_pixel2byte_apb_reset.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/tb_params.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/test_snow_pixel2byte_csi2_reset.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/test_snow_pixel2byte_csi2_trans.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/tb_include/test_snow_pixel2byte_dsi_trans.vh" type="testbench"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/vid_timing_gen_driver.v" type="testbench_verilog"/>
+  <File modified="2023 02 21 10:56:05" name="testbench/byte_out_monitor.v" type="testbench_verilog"/>
+  <File modified="2023 12 19 14:43:20" name="testbench/dut_defines.v" type="testbench_verilog"/>
+ </Package>
+</RadiantModule>

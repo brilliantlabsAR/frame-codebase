@@ -300,6 +300,7 @@ fifo fifo (
     .ram_address(buffer_write_address)
 );
 
+`ifndef SIM
 PDPSC512K #(
     .OUTREG("NO_REG"),
     .GSR("DISABLED"),
@@ -320,6 +321,18 @@ PDPSC512K #(
     .BYTEEN_N('b0000),
     .DO(buffer_read_data)
 );
+`else
+camera_ram_inferred camera_buffer (
+    .clk(clock_spi_in),
+    .rst_n(reset_spi_n_in),
+    .wr_addr(buffer_write_address),
+    .rd_addr(buffer_read_address),
+    .wr_data(buffer_write_data),
+    .rd_data(buffer_read_data),
+    .wr_en(buffer_write_enable & capture_state),
+    .rd_en(buffer_read_enable)
+);
+`endif
 
 `endif
 
