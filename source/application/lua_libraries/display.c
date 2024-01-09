@@ -51,7 +51,7 @@ static int lua_display_clear(lua_State *L)
     spi_write(FPGA, &address, 1, false);
     return 0;
 }
- 
+
 static int lua_display_assign_color(lua_State *L)
 {
     uint8_t address = 0x11;
@@ -88,9 +88,9 @@ static int lua_display_assign_color(lua_State *L)
 
     // TODO convert RGB to Ycbcr
     double y = floor(0.299 * red + 0.587 * green + 0.114 * blue);
-    double cb = floor( -0.169 * red - 0.331 * green + 0.5 * blue + 128);
+    double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
-    
+
     uint8_t data[4] = {(uint8_t)pallet_index,
                        (uint8_t)y,
                        (uint8_t)cb,
