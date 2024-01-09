@@ -91,40 +91,31 @@ always_ff @(posedge clock_spi_in) begin
 
                 // Bytes available
                 'h21: begin
-                    if (operand_valid_in) begin
-                        case (operand_count_in)
-                            1: response_out <= bytes_remaining[15:8];
-                            2: response_out <= bytes_remaining[7:0];
-                        endcase
+                    case (operand_count_in)
+                        0: response_out <= bytes_remaining[15:8];
+                        1: response_out <= bytes_remaining[7:0];
+                    endcase
 
-                        response_valid_out <= 1;
-                    end
-
-                    else begin
-                        response_valid_out <= 0;
-                    end
+                    response_valid_out <= 1;
                 end
 
                 // Read data
                 'h22: begin
-                    if (operand_valid_in) begin
-                        response_out <= buffer_read_byte_data;
-                        response_valid_out <= 1;
+                    response_out <= buffer_read_byte_data;
+                    response_valid_out <= 1;
 
-                        if (operand_valid_in_edge_monitor == 'b01) begin
-                            bytes_read <= bytes_read + 1;
-                            buffer_read_address <= bytes_read[15:2];
-                        end
+                    if (operand_valid_in_edge_monitor == 'b01) begin
+                        bytes_read <= bytes_read + 1;
+                        buffer_read_address <= bytes_read[15:2];
                     end
-
-                    else begin
-                        response_valid_out <= 0;
-                    end
-
                 end
 
             endcase
 
+        end
+
+        else begin
+            response_valid_out <= 0;
         end
 
     end

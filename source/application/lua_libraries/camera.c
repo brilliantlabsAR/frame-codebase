@@ -55,8 +55,6 @@ static uint16_t get_bytes_available(void)
     uint16_t bytes_available = (uint16_t)data[0] << 8 |
                                (uint16_t)data[1];
 
-    LOG("Bytes available = %u", bytes_available);
-
     return bytes_available;
 }
 
@@ -83,8 +81,6 @@ static int lua_camera_read(lua_State *L)
     uint16_t length = bytes_available < bytes_requested
                           ? bytes_available
                           : bytes_requested;
-
-    LOG("Reading %u bytes from camera", length);
 
     uint8_t *data = malloc(length);
     if (data == NULL)

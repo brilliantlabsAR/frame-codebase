@@ -75,7 +75,7 @@ always_ff @(posedge clock_in) begin
             'b100: response_reg <= response_1_in;
             'b010: response_reg <= response_2_in;
             'b001: response_reg <= response_3_in;
-            default: response_reg <= 'hAF;
+            default: response_reg <= 'h0;
         endcase
 
         // Output data
