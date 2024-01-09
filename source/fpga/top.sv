@@ -111,9 +111,6 @@ logic [7:0] operand;
 logic operand_valid;
 integer operand_count;
 
-logic [7:0] response_1;
-logic response_1_valid = 0;
-
 logic [7:0] response_2;
 logic response_2_valid;
 
@@ -135,10 +132,10 @@ spi_peripheral spi_peripheral (
     .operand_valid_out(operand_valid),
     .operand_count_out(operand_count),
 
-    .response_1_in(response_1),
+    .response_1_in(8'b0),
     .response_2_in(response_2),
     .response_3_in(response_3),
-    .response_1_valid_in(response_1_valid),
+    .response_1_valid_in(1'b0),
     .response_2_valid_in(response_2_valid),
     .response_3_valid_in(response_3_valid)
 );

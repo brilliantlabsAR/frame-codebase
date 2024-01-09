@@ -70,22 +70,13 @@ always_ff @(posedge clock_in) begin
     // Normal operation
     else begin
 
-        // Buffer in data to output based on priority
-        if (response_1_valid_in) begin
-            response_reg <= response_1_in;
-        end
-        
-        else if (response_2_valid_in) begin
-            response_reg <= response_2_in;
-        end
-
-        else if (response_3_valid_in) begin
-            response_reg <= response_3_in;
-        end
-
-        else begin
-            response_reg <= 0;
-        end
+        // Choose output data based on valid response
+        case ({response_1_valid_in, response_2_valid_in, response_3_valid_in})
+            'b100: response_reg <= response_1_in;
+            'b010: response_reg <= response_2_in;
+            'b001: response_reg <= response_3_in;
+            default: response_reg <= 'hAF;
+        endcase
 
         // Output data
         if (spi_bit_index < 8) begin
