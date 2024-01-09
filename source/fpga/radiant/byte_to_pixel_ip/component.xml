@@ -3,7 +3,7 @@
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>ip</ipxact:library>
     <ipxact:name>byte_to_pixel_ip</ipxact:name>
-    <ipxact:version>1.6.0</ipxact:version>
+    <ipxact:version>1.6.1</ipxact:version>
     <ipxact:model>
         <ipxact:instantiations>
             <ipxact:componentInstantiation>
@@ -11,7 +11,7 @@
             </ipxact:componentInstantiation>
             <ipxact:designInstantiation>
                 <ipxact:name>byte_to_pixel_ip_design</ipxact:name>
-                <ipxact:designRef library="ip" name="byte_to_pixel_ip" vendor="latticesemi.com" version="1.6.0"/>
+                <ipxact:designRef library="ip" name="byte_to_pixel_ip" vendor="latticesemi.com" version="1.6.1"/>
             </ipxact:designInstantiation>
         </ipxact:instantiations>
         <ipxact:ports>
@@ -236,37 +236,17 @@
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_top.v</ipxact:name>
-                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
                 <ipxact:name>testbench/byte_driver.v</ipxact:name>
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_include/csi2_tasks.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
-                <ipxact:name>testbench/tb_include/dsi_tasks.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
-                <ipxact:name>testbench/tb_include/test_dsi_reset.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
-                <ipxact:name>testbench/tb_include/tb_params.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
-                <ipxact:name>testbench/tb_include/test_csi2_reset.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
+                <ipxact:name>testbench/tb_top.v</ipxact:name>
+                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
         </ipxact:fileSet>
     </ipxact:fileSets>
     <ipxact:vendorExtensions>
-        <lsccip:moduleRef lsccip:library="ip" lsccip:name="byte2pixel" lsccip:vendor="latticesemi.com" lsccip:version="1.6.0"/>
+        <lsccip:moduleRef lsccip:library="ip" lsccip:name="byte2pixel" lsccip:vendor="latticesemi.com" lsccip:version="1.6.1"/>
         <lsccip:deviceInfo>
             <lsccip:architecture>LIFCL</lsccip:architecture>
             <lsccip:device>LIFCL-17</lsccip:device>
@@ -275,8 +255,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2023 12 18 14:02:26</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 01 09 13:52:45</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

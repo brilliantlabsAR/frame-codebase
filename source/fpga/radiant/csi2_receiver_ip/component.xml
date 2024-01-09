@@ -3,7 +3,7 @@
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>ip</ipxact:library>
     <ipxact:name>csi2_receiver_ip</ipxact:name>
-    <ipxact:version>1.5.0</ipxact:version>
+    <ipxact:version>1.6.1</ipxact:version>
     <ipxact:model>
         <ipxact:instantiations>
             <ipxact:componentInstantiation>
@@ -11,10 +11,24 @@
             </ipxact:componentInstantiation>
             <ipxact:designInstantiation>
                 <ipxact:name>csi2_receiver_ip_design</ipxact:name>
-                <ipxact:designRef library="ip" name="csi2_receiver_ip" vendor="latticesemi.com" version="1.5.0"/>
+                <ipxact:designRef library="ip" name="csi2_receiver_ip" vendor="latticesemi.com" version="1.6.1"/>
             </ipxact:designInstantiation>
         </ipxact:instantiations>
         <ipxact:ports>
+            <ipxact:port>
+                <ipxact:name>rxcsr_vcx_on_i</ipxact:name>
+                <ipxact:displayName>rxcsr_vcx_on_i</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>in</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxcsr_dropnull_i</ipxact:name>
+                <ipxact:displayName>rxcsr_dropnull_i</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>in</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
             <ipxact:port>
                 <ipxact:name>clk_byte_o</ipxact:name>
                 <ipxact:displayName>clk_byte_o</ipxact:displayName>
@@ -183,6 +197,19 @@
                 </ipxact:wire>
             </ipxact:port>
             <ipxact:port>
+                <ipxact:name>vcx_o</ipxact:name>
+                <ipxact:displayName>vcx_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
                 <ipxact:name>wc_o</ipxact:name>
                 <ipxact:displayName>wc_o</ipxact:displayName>
                 <ipxact:wire>
@@ -202,7 +229,94 @@
                     <ipxact:direction>out</ipxact:direction>
                     <ipxact:vectors>
                         <ipxact:vector>
+                            <ipxact:left>5</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>payload_bytevld_o</ipxact:name>
+                <ipxact:displayName>payload_bytevld_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
                             <ipxact:left>7</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>payload_crc_o</ipxact:name>
+                <ipxact:displayName>payload_crc_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>15</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>payload_crcvld_o</ipxact:name>
+                <ipxact:displayName>payload_crcvld_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>ecc_check_o</ipxact:name>
+                <ipxact:displayName>ecc_check_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>ecc_byte_error_o</ipxact:name>
+                <ipxact:displayName>ecc_byte_error_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>ecc_1bit_error_o</ipxact:name>
+                <ipxact:displayName>ecc_1bit_error_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>ecc_2bit_error_o</ipxact:name>
+                <ipxact:displayName>ecc_2bit_error_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>dphy_rxdatawidth_hs</ipxact:name>
+                <ipxact:displayName>dphy_rxdatawidth_hs</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>dphy_cfg_num_lanes</ipxact:name>
+                <ipxact:displayName>dphy_cfg_num_lanes</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>1</ipxact:left>
                             <ipxact:right>0</ipxact:right>
                         </ipxact:vector>
                     </ipxact:vectors>
@@ -306,12 +420,28 @@
                 <ipxact:fileType user="IP-XACT_design">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_top.v</ipxact:name>
-                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+                <ipxact:name>testbench/csi2_model.sv</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
                 <ipxact:name>testbench/bus_driver.v</ipxact:name>
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/tb_top.sv</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/csi2_model.v</ipxact:name>
+                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/clk_driver.sv</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/bus_driver.sv</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
                 <ipxact:name>testbench/dsi_model.v</ipxact:name>
@@ -322,13 +452,13 @@
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/csi2_model.v</ipxact:name>
-                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+                <ipxact:name>testbench/dsi_model.sv</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
         </ipxact:fileSet>
     </ipxact:fileSets>
     <ipxact:vendorExtensions>
-        <lsccip:moduleRef lsccip:library="ip" lsccip:name="dphy_rx" lsccip:vendor="latticesemi.com" lsccip:version="1.5.0"/>
+        <lsccip:moduleRef lsccip:library="ip" lsccip:name="dphy_rx" lsccip:vendor="latticesemi.com" lsccip:version="1.6.1"/>
         <lsccip:deviceInfo>
             <lsccip:architecture>LIFCL</lsccip:architecture>
             <lsccip:device>LIFCL-17</lsccip:device>
@@ -337,8 +467,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2023 12 18 14:02:26</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 01 09 13:53:44</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

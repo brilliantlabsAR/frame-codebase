@@ -3,23 +3,24 @@
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>ip</ipxact:library>
     <ipxact:name>byte_to_pixel_ip</ipxact:name>
-    <ipxact:version>1.6.0</ipxact:version>
+    <ipxact:version>1.6.1</ipxact:version>
     <ipxact:componentInstances>
         <ipxact:componentInstance>
             <ipxact:instanceName>lscc_byte2pixel_inst</ipxact:instanceName>
-            <ipxact:componentRef library="ip" name="byte2pixel" vendor="latticesemi.com" version="1.6.0">
+            <ipxact:componentRef library="ip" name="byte2pixel" vendor="latticesemi.com" version="1.6.1">
                 <ipxact:configurableElementValues>
+                    <ipxact:configurableElementValue referenceId="DATA_TYPE">RAW10</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FAMILY">LIFCL</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PCLK_MAX">200</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_TYPE">CSI-2</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DSI_MODE">NONBURST_PULSES</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_RX_LANE">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_GEAR">8</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="BYTE_CLK_FREQ">45.0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="AXI_SLAVE">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="AXI4_RX">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_RATE">360.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_TX_CH_INPUT">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_TX_CH">1</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="DATA_TYPE">RAW10</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DT">6'h2B</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PD_BUS_WIDTH">10</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CTRL_POL">POSITIVE</ipxact:configurableElementValue>
@@ -28,12 +29,14 @@
                     <ipxact:configurableElementValue referenceId="SYNC_DELAY">5</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="SYNC_DELAY_CNTR_W">3</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PIX_CLK_FREQ">36.0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="AXI_MASTER">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="AXI4_TX">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="TX_RATE">360.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="MAN_ADJ">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="THRESHOLD">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PIX_FIFO_DEPTH">16</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PIX_FIFO_ADDR_WIDTH">4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FIFO_IMPL">EBR</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="WORD_CNT_MIN">5</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="WORD_CNT">1610</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DEBUG_EN">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_PIXELS">1</ipxact:configurableElementValue>
