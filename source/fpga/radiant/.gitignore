@@ -13,6 +13,7 @@ reportview.xml
 !/pll_ip/*.ipx
 
 # Logs and reports
+radiantc.*
 *.log
 *.html
 
