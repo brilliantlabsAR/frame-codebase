@@ -35,6 +35,9 @@ module spi_register #(
                 response_out <= REGISTER_VALUE;
                 response_valid_out <= 1;
             end
+            else begin
+                response_valid_out <= 0;
+            end
         end
 
     end

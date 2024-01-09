@@ -44,20 +44,16 @@ static int lua_camera_capture(lua_State *L)
     return 0;
 }
 
-static uint32_t get_bytes_available(void)
+static uint16_t get_bytes_available(void)
 {
     uint8_t address = 0x21;
-    uint8_t data[4] = {0, 0, 0, 0};
+    uint8_t data[2] = {0, 0};
 
     spi_write(FPGA, &address, 1, true);
     spi_read(FPGA, (uint8_t *)data, sizeof(data), false);
 
-    uint32_t bytes_available = (uint32_t)data[0] << 24 |
-                               (uint32_t)data[1] << 16 |
-                               (uint32_t)data[2] << 8 |
-                               (uint32_t)data[3];
-
-    LOG("Bytes available = %lu", bytes_available);
+    uint16_t bytes_available = (uint16_t)data[0] << 8 |
+                               (uint16_t)data[1];
 
     return bytes_available;
 }
@@ -67,7 +63,7 @@ static int lua_camera_read(lua_State *L)
     luaL_checkinteger(L, 1);
 
     lua_Integer bytes_requested = lua_tointeger(L, 1);
-    uint32_t bytes_available = get_bytes_available();
+    uint16_t bytes_available = get_bytes_available();
 
     if (bytes_requested <= 0)
     {
@@ -82,11 +78,9 @@ static int lua_camera_read(lua_State *L)
 
     uint8_t address = 0x22;
 
-    uint32_t length = bytes_available < bytes_requested
+    uint16_t length = bytes_available < bytes_requested
                           ? bytes_available
                           : bytes_requested;
-
-    LOG("Reading %lu bytes from camera", length);
 
     uint8_t *data = malloc(length);
     if (data == NULL)

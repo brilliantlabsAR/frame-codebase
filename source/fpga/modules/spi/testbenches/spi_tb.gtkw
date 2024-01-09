@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Sat Dec 23 15:12:29 2023
+[*] Tue Jan  9 10:12:31 2024
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Sat Dec 23 15:11:39 2023"
-[dumpfile_size] 1699
+[dumpfile_mtime] "Tue Jan  9 10:08:14 2024"
+[dumpfile_size] 1708
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 1424 852
+[size] 2032 1104
 [pos] 10 38
-*-10.193202 942 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-9.271514 4480 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,7 +40,7 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 432
+[sst_vpaned_height] 586
 @28
 spi_tb.system_clock
 spi_tb.reset
@@ -96,6 +96,7 @@ spi_tb.chip_id_2.opcode_in[7:0]
 spi_tb.chip_id_2.opcode_valid_in
 @22
 spi_tb.chip_id_2.response_out[7:0]
-spi_tb.chip_id_2.response_out[7:0]
+@29
+spi_tb.chip_id_2.response_valid_out
 [pattern_trace] 1
 [pattern_trace] 0
