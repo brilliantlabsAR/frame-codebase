@@ -61,7 +61,7 @@ static int lua_display_assign_color(lua_State *L)
     luaL_checkinteger(L, 3);
     luaL_checkinteger(L, 4);
 
-    lua_Integer pallet_index = lua_tointeger(L, 1);
+    lua_Integer pallet_index = lua_tointeger(L, 1) - 1;
     lua_Integer red = lua_tointeger(L, 2);
     lua_Integer green = lua_tointeger(L, 3);
     lua_Integer blue = lua_tointeger(L, 4);
@@ -87,14 +87,14 @@ static int lua_display_assign_color(lua_State *L)
     }
 
     // TODO convert RGB to Ycbcr
-    uint8_t y = (uint8_t)red;
-    uint8_t cb = (uint8_t)green;
-    uint8_t cr = (uint8_t)blue;
+    double y = floor(0.299 * red + 0.587 * green + 0.114 * blue);
+    double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
+    double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
 
     uint8_t data[4] = {(uint8_t)pallet_index,
-                       y,
-                       cb,
-                       cr};
+                       (uint8_t)y,
+                       (uint8_t)cb,
+                       (uint8_t)cr};
 
     spi_write(FPGA, &address, 1, true);
     spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
