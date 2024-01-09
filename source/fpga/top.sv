@@ -39,10 +39,12 @@ module top (
     output logic display_cb1_out,
     output logic display_cb2_out,
 
-    // inout wire mipi_clock_in,
-    // inout wire mipi_clock_in,
-    // inout wire mipi_data_in,
-    // inout wire mipi_data_in,
+    `ifdef RADIANT
+    inout wire mipi_clock_p_in,
+    inout wire mipi_clock_n_in,
+    inout wire mipi_data_p_in,
+    inout wire mipi_data_n_in,
+    `endif
 
     output logic camera_clock_out
 );
@@ -163,17 +165,21 @@ graphics graphics (
 assign camera_clock_out = clock_camera;
 
 camera camera (
+    .global_reset_n_in(global_reset_n),
+
     .clock_spi_in(clock_spi),
     .reset_spi_n_in(reset_spi_n),
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
-
-    // .mipi_clock_p_in(mipi_clock_p_in),
-    // .mipi_clock_n_in(mipi_clock_n_in),
-    // .mipi_data_p_in(mipi_data_p_in),
-    // .mipi_data_n_in(mipi_data_n_in),
-
+    
+    `ifdef RADIANT
+    .mipi_clock_p_in(mipi_clock_p_in),
+    .mipi_clock_n_in(mipi_clock_n_in),
+    .mipi_data_p_in(mipi_data_p_in),
+    .mipi_data_n_in(mipi_data_n_in),
+    `endif
+    
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
     .operand_in(operand),

@@ -11,20 +11,22 @@
 
 `ifndef RADIANT
 // `include "modules/camera/debayer.sv"
-// `include "modules/camera/packing_fifo.sv"
+// `include "modules/camera/fifo.sv"
 `endif
 
 module camera (
+    input logic global_reset_n_in,
+    
     input logic clock_spi_in, // 72MHz
     input logic reset_spi_n_in,
 
     input logic clock_pixel_in, // 36MHz
     input logic reset_pixel_n_in,
 
-    inout wire mipi_clock_p_out,
-    inout wire mipi_clock_n_out,
-    inout wire mipi_data_p_out,
-    inout wire mipi_data_n_out,
+    inout wire mipi_clock_p_in,
+    inout wire mipi_clock_n_in,
+    inout wire mipi_data_p_in,
+    inout wire mipi_data_n_in,
 
     input logic [7:0] op_code_in,
     input logic op_code_valid_in,
@@ -160,139 +162,143 @@ end
 
 `ifdef RADIANT
 
-// logic payload_en, sp_en, sp_en_d, lp_av_en, lp_en, lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
-// logic [7:0] payload /* synthesis syn_keep=1 nomerge=""*/;
-// logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
-// logic [5:0] datatype;
+logic payload_en /* synthesis syn_keep=1 nomerge=""*/;
+logic sp_en /* synthesis syn_keep=1 nomerge=""*/;
+logic sp_en_d /* synthesis syn_keep=1 nomerge=""*/;
+logic lp_av_en /* synthesis syn_keep=1 nomerge=""*/;
+logic lp_en /* synthesis syn_keep=1 nomerge=""*/;
+logic lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload /* synthesis syn_keep=1 nomerge=""*/;
+logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
+logic [5:0] datatype;
 
-// logic reset_n_clock_byte;
+logic clock_byte;
+logic reset_byte_n;
 
-// reset_sync reset_sync_clock_byte (
-//     .clock_in(byte_clk_hs),
-//     .async_reset_n_in(global_reset_n),
-//     .sync_reset_n_out(reset_n_clock_byte)
-// );
+reset_sync reset_sync_clock_byte (
+    .clock_in(clock_byte),
+    .async_reset_n_in(global_reset_n_in),
+    .sync_reset_n_out(reset_byte_n)
+);
 
-// csi2_receiver_ip csi2_receiver_ip (
-//     .clk_byte_o( ),
-//     .clk_byte_hs_o(byte_clk_hs),
-//     .clk_byte_fr_i(byte_clk_hs),
-//     .reset_n_i(global_reset_n),
-//     .reset_byte_fr_n_i(reset_n_clock_byte),
-//     .clk_p_io(mipi_clock_p),
-//     .clk_n_io(mipi_clock_n),
-//     .d_p_io(mipi_data_p),
-//     .d_n_io(mipi_data_n),
-//     .payload_en_o(payload_en),
-//     .payload_o(payload),
-//     .tx_rdy_i(1'b1),
-//     .pd_dphy_i(~global_reset_n),
-//     .dt_o(datatype),
-//     .wc_o(word_count),
-//     .ref_dt_i(6'h2B), // RAW10 packet code
-//     .sp_en_o(sp_en),
-//     .lp_en_o(lp_en),
-//     .lp_av_en_o(lp_av_en)
-// );
+csi2_receiver_ip csi2_receiver_ip (
+    .clk_byte_o( ),
+    .clk_byte_hs_o(clock_byte),
+    .clk_byte_fr_i(clock_byte),
+    .reset_n_i(global_reset_n_in),
+    .reset_byte_fr_n_i(reset_byte_n),
+    .clk_p_io(mipi_clock_p_in),
+    .clk_n_io(mipi_clock_n_in),
+    .d_p_io(mipi_data_p_in),
+    .d_n_io(mipi_data_n_in),
+    .payload_en_o(payload_en),
+    .payload_o(payload),
+    .tx_rdy_i(1'b1),
+    .pd_dphy_i(~global_reset_n_in),
+    .dt_o(datatype),
+    .wc_o(word_count),
+    .ref_dt_i(6'h2B), // RAW10 packet code
+    .sp_en_o(sp_en),
+    .lp_en_o(lp_en),
+    .lp_av_en_o(lp_av_en)
+);
 
-// always @(posedge byte_clk_hs or negedge reset_n_clock_byte) begin
-//     if (!reset_n_clock_byte) begin
-//         lp_av_en_d <= 0;
-//         sp_en_d <= 0;
-//     end
-//     else begin
-//         lp_av_en_d <= lp_av_en;
-//         sp_en_d <= sp_en;
-//     end
-// end
+always @(posedge clock_byte or negedge reset_byte_n) begin
+    if (!reset_byte_n) begin
+        lp_av_en_d <= 0;
+        sp_en_d <= 0;
+    end
+    else begin
+        lp_av_en_d <= lp_av_en;
+        sp_en_d <= sp_en;
+    end
+end
 
-// logic payload_en_1d, payload_en_2d, payload_en_3d /* synthesis syn_keep=1 nomerge=""*/;
-// logic [7:0] payload_1d /* synthesis syn_keep=1 nomerge=""*/;
-// logic [7:0] payload_2d /* synthesis syn_keep=1 nomerge=""*/;
-// logic [7:0] payload_3d /* synthesis syn_keep=1 nomerge=""*/;
-// always @(posedge byte_clk_hs or negedge reset_n_clock_byte) begin
-//     if (!reset_n_clock_byte) begin
-//         payload_en_1d <= 0;
-//         payload_en_2d <= 0;
-//         payload_en_3d <= 0;
+logic payload_en_1d, payload_en_2d, payload_en_3d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_1d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_2d /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] payload_3d /* synthesis syn_keep=1 nomerge=""*/;
+always @(posedge clock_byte or negedge reset_byte_n) begin
+    if (!reset_byte_n) begin
+        payload_en_1d <= 0;
+        payload_en_2d <= 0;
+        payload_en_3d <= 0;
 
-//         payload_1d <= 0;
-//         payload_2d <= 0;
-//         payload_3d <= 0;
-//     end
-//     else begin
-//         payload_en_1d <= payload_en;
-//         payload_en_2d <= payload_en_1d;
-//         payload_en_3d <= payload_en_2d;
+        payload_1d <= 0;
+        payload_2d <= 0;
+        payload_3d <= 0;
+    end
+    else begin
+        payload_en_1d <= payload_en;
+        payload_en_2d <= payload_en_1d;
+        payload_en_3d <= payload_en_2d;
 
-//         payload_1d <= payload;
-//         payload_2d <= payload_1d;
-//         payload_3d <= payload_2d;
-//     end
-// end
+        payload_1d <= payload;
+        payload_2d <= payload_1d;
+        payload_3d <= payload_2d;
+    end
+end
 
-// logic [9:0] pixel_data /* synthesis syn_keep=1 nomerge=""*/;
-// logic frame_valid /* synthesis syn_keep=1 nomerge=""*/;
-// logic line_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic frame_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic line_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] pixel_data /* synthesis syn_keep=1 nomerge=""*/;
 
-// byte_to_pixel_ip byte_to_pixel_ip (
-//     .reset_byte_n_i(reset_n_clock_byte),
-//     .clk_byte_i(byte_clk_hs),
-//     .sp_en_i(sp_en_d),
-//     .dt_i(datatype),
-//     .lp_av_en_i(lp_av_en_d),
-//     .payload_en_i(payload_en_3d),
-//     .payload_i(payload_3d),
-//     .wc_i(word_count),
-//     .reset_pixel_n_i(reset_n_clock),
-//     .clk_pixel_i(clock),
-//     .fv_o(frame_valid),
-//     .lv_o(line_valid),
-//     .pd_o(pixel_data)
-// );
+byte_to_pixel_ip byte_to_pixel_ip (
+    .reset_byte_n_i(reset_byte_n),
+    .clk_byte_i(clock_byte),
+    .sp_en_i(sp_en_d),
+    .dt_i(datatype),
+    .lp_av_en_i(lp_av_en_d),
+    .payload_en_i(payload_en_3d),
+    .payload_i(payload_3d),
+    .wc_i(word_count),
+    .reset_pixel_n_i(reset_pixel_n_in),
+    .clk_pixel_i(clock_pixel_in),
+    .fv_o(frame_valid),
+    .lv_o(line_valid),
+    .pd_o(pixel_data)
+);
 
-// logic [29:0] rgb30 /* synthesis syn_keep=1 nomerge=""*/;
-// logic [9:0] rgb10 /* synthesis syn_keep=1 nomerge=""*/;
-// logic [7:0] rgb8 /* synthesis syn_keep=1 nomerge=""*/;
-// logic [3:0] gray4 /* synthesis syn_keep=1 nomerge=""*/;
-// logic camera_fifo_write_enable /* synthesis syn_keep=1 nomerge=""*/;
-// logic debayer_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] rgb10 /* synthesis syn_keep=1 nomerge=""*/;
+logic [7:0] rgb8 /* synthesis syn_keep=1 nomerge=""*/;
+logic [3:0] gray4 /* synthesis syn_keep=1 nomerge=""*/;
+logic fifo_write_enable /* synthesis syn_keep=1 nomerge=""*/;
 
-// debayer debayer_inst (
-//     .clock_2x(clock_2x),
-//     .clock(clock),
-//     .reset_n(reset_n_clock),
-//     .x_offset(10'd440),
-//     .y_offset(9'd200),
-//     .x_size(CAPTURE_X_RESOLUTION * 2),
-//     .y_size(CAPTURE_Y_RESOLUTION * 2),
-//     .pixel_data(pixel_data),
-//     .line_valid(line_valid),
-//     .frame_valid(frame_valid),
-//     .rgb10(rgb10),
-//     .rgb8(rgb8),
-//     .gray4(gray4),
-//     .camera_fifo_write_enable(camera_fifo_write_enable),
-//     .frame_valid_o(debayer_frame_valid)
-// ) /* synthesis syn_keep=1 */;
+debayer debayer (
+    .clock_72MHz(clock_spi_in),
+    .clock_36MHz(clock_pixel_in),
+    .reset_n(reset_pixel_n_in),
+    .x_offset(10'd440),
+    .y_offset(9'd200),
+    .x_size(CAPTURE_X_RESOLUTION * 2),
+    .y_size(CAPTURE_Y_RESOLUTION * 2),
+    .pixel_data(pixel_data),
+    .line_valid(line_valid),
+    .frame_valid(frame_valid),
+    .rgb10(rgb10),
+    .rgb8(rgb8),
+    .gray4(gray4),
+    .camera_fifo_write_enable(fifo_write_enable),
+    .frame_valid_o(debayer_frame_valid)
+) /* synthesis syn_keep=1 */;
 
-// logic [15:0] camera_ram_write_address /* synthesis syn_keep=1 nomerge=""*/;
-logic camera_ram_write_enable /* synthesis syn_keep=1 nomerge=""*/;
-// logic [31:0] camera_ram_write_data /* synthesis syn_keep=1 nomerge=""*/;
+logic buffer_write_enable /* synthesis syn_keep=1 nomerge=""*/;
+logic [13:0] buffer_write_address /* synthesis syn_keep=1 nomerge=""*/;
+logic [31:0] buffer_write_data /* synthesis syn_keep=1 nomerge=""*/;
 
-// packing_fifo packing_fifo (
-//     .clock(clock_2x),
-//     .reset_n(reset_n_clock),
-//     .rgb10(rgb10),
-//     .rgb8(rgb8),
-//     .gray4(gray4),
-//     .pixel_width(4'd8),
-//     .write_enable(camera_fifo_write_enable),
-//     .frame_valid(debayer_frame_valid),
-//     .write_enable_frame_buffer(camera_ram_write_enable),
-//     .pixel_data_to_ram(camera_ram_write_data),
-//     .ram_address(camera_ram_write_address)
-// );
+fifo fifo (
+    .clock(clock_spi_in),
+    .reset_n(reset_spi_n_in),
+    .rgb10(rgb10),
+    .rgb8(rgb8),
+    .gray4(gray4),
+    .pixel_width(4'd8),
+    .write_enable(fifo_write_enable),
+    .frame_valid(debayer_frame_valid),
+    .write_enable_frame_buffer(buffer_write_enable),
+    .pixel_data_to_ram(buffer_write_data),
+    .ram_address(buffer_write_address)
+);
 
 PDPSC512K #(
     .OUTREG("NO_REG"),
@@ -301,19 +307,20 @@ PDPSC512K #(
     .ASYNC_RESET_RELEASE("SYNC"),
     .ECC_BYTE_SEL("BYTE_EN")
 ) camera_buffer (
-    .DI(),
-    .ADW(),
+    .DI(buffer_write_data),
+    .ADW(buffer_write_address),
     .ADR(buffer_read_address),
     .CLK(clock_spi_in),
     .CEW('b1),
     .CER('b1),
-    .WE(camera_ram_write_enable & capture_in_progress_flag),
+    .WE(buffer_write_enable & capture_in_progress_flag),
     .CSW('b1),
     .CSR('b1),
     .RSTR('b0),
     .BYTEEN_N('b0000),
     .DO(buffer_read_data)
 );
+
 `endif
 
 

@@ -78,11 +78,6 @@ camera camera (
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
 
-    // .mipi_clock_p_in(mipi_clock_p_in),
-    // .mipi_clock_n_in(mipi_clock_n_in),
-    // .mipi_data_p_in(mipi_data_p_in),
-    // .mipi_data_n_in(mipi_data_n_in),
-
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
     .operand_in(operand),
