@@ -59,7 +59,7 @@ yosys:
 	@make package
 
 radiant:
-	@$(RADIANT_PATH)/radiantc radiant/run.tcl
+	@cd ./radiant && $(RADIANT_PATH)/radiantc run.tcl
 
 	@mv ./radiant/frame/frame_frame.bit $(BUILD)/fpga_application.bit
 

@@ -1,0 +1,440 @@
+; Copyright 1991-2020 Mentor Graphics Corporation
+;
+; All Rights Reserved.
+;
+; THIS WORK CONTAINS TRADE SECRET AND PROPRIETARY INFORMATION WHICH IS THE PROPERTY OF 
+; MENTOR GRAPHICS CORPORATION OR ITS LICENSORS AND IS SUBJECT TO LICENSE TERMS.
+;   
+
+[Library]
+std = $MODEL_TECH/../std
+ieee = $MODEL_TECH/../ieee
+vital2000 = $MODEL_TECH/../vital2000
+verilog = $MODEL_TECH/../verilog
+std_developerskit = $MODEL_TECH/../std_developerskit
+synopsys = $MODEL_TECH/../synopsys
+modelsim_lib = $MODEL_TECH/../modelsim_lib
+sv_std = $MODEL_TECH/../sv_std
+floatfixlib = $MODEL_TECH/../floatfixlib
+; Lattice Primitive Libraries
+;
+ovi_lifcl = $MODEL_TECH/../lib/ovi_lifcl
+ovi_lfd2nx = $MODEL_TECH/../lib/ovi_lfd2nx
+ovi_iCE40UP = $MODEL_TECH/../lib/ovi_iCE40UP
+ovi_lfcpnx = $MODEL_TECH/../lib/ovi_lfcpnx
+ovi_ap6a00 = $MODEL_TECH/../lib/ovi_ap6a00
+ovi_ap6a00b = $MODEL_TECH/../lib/ovi_ap6a00b
+ovi_lfmxo5 = $MODEL_TECH/../lib/ovi_lfmxo5
+ovi_ut24c = $MODEL_TECH/../lib/ovi_lfd2nx
+ovi_ut24cp = $MODEL_TECH/../lib/ovi_lfcpnx
+ovi_lavat = $MODEL_TECH/../lib/ovi_ap6a00
+pmi_work = $MODEL_TECH/../lib/pmi_work
+ovi_lfmxo5t = $MODEL_TECH/../lib/ovi_lfmxo5t
+; VHDL Section
+;
+lifcl = $MODEL_TECH/../lib/lifcl
+lfd2nx = $MODEL_TECH/../lib/lfd2nx
+iCE40UP = $MODEL_TECH/../lib/iCE40UP
+lfcpnx = $MODEL_TECH/../lib/lfcpnx
+lfmxo5 = $MODEL_TECH/../lib/lfmxo5
+ut24c = $MODEL_TECH/../lib/lfd2nx
+ut24cp = $MODEL_TECH/../lib/lfcpnx
+lfmxo5t = $MODEL_TECH/../lib/lfmxo5t
+mach = $MODEL_TECH/../lattice/vhdl/mach
+vf1 = $MODEL_TECH/../lattice/vhdl/vf1
+lat_vhd = $MODEL_TECH/../lattice/vhdl/lat_vhd
+lat_vitl = $MODEL_TECH/../lattice/vhdl/lat_vitl
+;
+; Verilog Section
+;
+vf1_vlog = $MODEL_TECH/../lattice/verilog/vf1
+mach_vlog = $MODEL_TECH/../lattice/verilog/mach
+lsc_vlg = $MODEL_TECH/../lattice/verilog/lsc
+lscsub_vlg = $MODEL_TECH/../lattice/verilog/lscsub
+
+work = work
+[vcom]
+; VHDL93 variable selects language version as the default. 
+; Default is VHDL-2002.
+; Value of 0 or 1987 for VHDL-1987.
+; Value of 1 or 1993 for VHDL-1993.
+; Default or value of 2 or 2002 for VHDL-2002.
+; Value of 3 or 2008 for VHDL-2008
+VHDL93 = 2002
+
+; Show source line containing error. Default is off.
+; Show_source = 1
+
+; Turn off unbound-component warnings. Default is on.
+; Show_Warning1 = 0
+
+; Turn off process-without-a-wait-statement warnings. Default is on.
+; Show_Warning2 = 0
+
+; Turn off null-range warnings. Default is on.
+; Show_Warning3 = 0
+
+; Turn off no-space-in-time-literal warnings. Default is on.
+; Show_Warning4 = 0
+
+; Turn off multiple-drivers-on-unresolved-signal warnings. Default is on.
+; Show_Warning5 = 0
+
+; Turn off optimization for IEEE std_logic_1164 package. Default is on.
+; Optimize_1164 = 0
+
+; Turn on resolving of ambiguous function overloading in favor of the
+; "explicit" function declaration (not the one automatically created by
+; the compiler for each type declaration). Default is off.
+; The .ini file has Explicit enabled so that std_logic_signed/unsigned
+; will match the behavior of synthesis tools.
+Explicit = 1
+
+; Turn off acceleration of the VITAL packages. Default is to accelerate.
+; NoVital = 1
+
+; Turn off VITAL compliance checking. Default is checking on.
+; NoVitalCheck = 1
+
+; Ignore VITAL compliance checking errors. Default is to not ignore.
+; IgnoreVitalErrors = 1
+
+; Turn off VITAL compliance checking warnings. Default is to show warnings.
+; Show_VitalChecksWarnings = 0
+
+; Keep silent about case statement static warnings.
+; Default is to give a warning.
+; NoCaseStaticError = 1
+
+; Keep silent about warnings caused by aggregates that are not locally static.
+; Default is to give a warning.
+; NoOthersStaticError = 1
+
+; Turn off inclusion of debugging info within design units.
+; Default is to include debugging info.
+; NoDebug = 1
+
+; Turn off "Loading..." messages. Default is messages on.
+; Quiet = 1
+
+; Turn on some limited synthesis rule compliance checking. Checks only:
+;    -- signals used (read) by a process must be in the sensitivity list
+; CheckSynthesis = 1
+
+; Activate optimizations on expressions that do not involve signals,
+; waits, or function/procedure/task invocations. Default is off.
+; ScalarOpts = 1
+
+; Require the user to specify a configuration for all bindings,
+; and do not generate a compile time default binding for the
+; component. This will result in an elaboration error of
+; 'component not bound' if the user fails to do so. Avoids the rare
+; issue of a false dependency upon the unused default binding.
+; RequireConfigForAllDefaultBinding = 1
+
+; Inhibit range checking on subscripts of arrays. Range checking on
+; scalars defined with subtypes is inhibited by default.
+; NoIndexCheck = 1
+
+; Inhibit range checks on all (implicit and explicit) assignments to
+; scalar objects defined with subtypes.
+; NoRangeCheck = 1
+
+[vlog]
+
+; Turn off inclusion of debugging info within design units.
+; Default is to include debugging info.
+; NoDebug = 1
+
+; Turn off "loading..." messages. Default is messages on.
+; Quiet = 1
+
+; Turn on Verilog hazard checking (order-dependent accessing of global vars).
+; Default is off.
+; Hazard = 1
+
+; Turn on converting regular Verilog identifiers to uppercase. Allows case
+; insensitivity for module names. Default is no conversion.
+; UpCase = 1
+
+; Turn on incremental compilation of modules. Default is off.
+; Incremental = 1
+
+; Turns on lint-style checking.
+; Show_Lint = 1
+
+[vsim]
+; Simulator resolution
+; Set to fs, ps, ns, us, ms, or sec with optional prefix of 1, 10, or 100.
+Resolution = ps
+
+; User time unit for run commands
+; Set to default, fs, ps, ns, us, ms, or sec. The default is to use the
+; unit specified for Resolution. For example, if Resolution is 100ps,
+; then UserTimeUnit defaults to ps.
+; Should generally be set to default.
+UserTimeUnit = default
+
+; Default run length
+RunLength = 1500 us
+
+; Maximum iterations that can be run without advancing simulation time
+IterationLimit = 512000
+
+; Directive to license manager:
+; vhdl          Immediately reserve a VHDL license
+; vlog          Immediately reserve a Verilog license
+; plus          Immediately reserve a VHDL and Verilog license
+; nomgc         Do not look for Mentor Graphics Licenses
+; nomti         Do not look for Model Technology Licenses
+; noqueue       Do not wait in the license queue when a license isn't available
+; viewsim	Try for viewer license but accept simulator license(s) instead
+;		of queuing for viewer license
+; License = plus
+
+; Stop the simulator after a VHDL/Verilog assertion message
+; 0 = Note  1 = Warning  2 = Error  3 = Failure  4 = Fatal
+BreakOnAssertion = 3
+
+; Assertion Message Format
+; %S - Severity Level 
+; %R - Report Message
+; %T - Time of assertion
+; %D - Delta
+; %I - Instance or Region pathname (if available)
+; %% - print '%' character
+; AssertionFormat = "** %S: %R\n   Time: %T  Iteration: %D%I\n"
+
+; Assertion File - alternate file for storing VHDL/Verilog assertion messages
+; AssertFile = assert.log
+
+; Default radix for all windows and commands...
+; Set to symbolic, ascii, binary, octal, decimal, hex, unsigned
+DefaultRadix = symbolic
+
+; VSIM Startup command
+; Startup = do startup.do
+
+; File for saving command transcript
+TranscriptFile = transcript
+
+; File for saving command history
+; CommandHistory = cmdhist.log
+
+; Specify whether paths in simulator commands should be described
+; in VHDL or Verilog format.
+; For VHDL, PathSeparator = /
+; For Verilog, PathSeparator = .
+; Must not be the same character as DatasetSeparator.
+PathSeparator = /
+
+; Specify the dataset separator for fully rooted contexts.
+; The default is ':'. For example, sim:/top
+; Must not be the same character as PathSeparator.
+DatasetSeparator = :
+
+; Disable VHDL assertion messages
+; IgnoreNote = 1
+; IgnoreWarning = 1
+; IgnoreError = 1
+; IgnoreFailure = 1
+
+; Default force kind. May be freeze, drive, deposit, or default
+; or in other terms, fixed, wired, or charged.
+; A value of "default" will use the signal kind to determine the
+; force kind, drive for resolved signals, freeze for unresolved signals
+; DefaultForceKind = freeze
+
+; If zero, open files when elaborated; otherwise, open files on
+; first read or write.  Default is 0.
+; DelayFileOpen = 1
+
+; Control VHDL files opened for write.
+;   0 = Buffered, 1 = Unbuffered
+UnbufferedOutput = 0
+
+; Control the number of VHDL files open concurrently.
+; This number should always be less than the current ulimit
+; setting for max file descriptors.
+;   0 = unlimited
+ConcurrentFileLimit = 40
+
+; Control the number of hierarchical regions displayed as
+; part of a signal name shown in the Wave window.
+; A value of zero tells VSIM to display the full name.
+; The default is 0.
+; WaveSignalNameWidth = 0
+
+; Turn off warnings from the std_logic_arith, std_logic_unsigned
+; and std_logic_signed packages.
+; StdArithNoWarnings = 1
+
+; Turn off warnings from the IEEE numeric_std and numeric_bit packages.
+; NumericStdNoWarnings = 1
+
+; Control the format of the (VHDL) FOR generate statement label
+; for each iteration.  Do not quote it.
+; The format string here must contain the conversion codes %s and %d,
+; in that order, and no other conversion codes.  The %s represents
+; the generate_label; the %d represents the generate parameter value
+; at a particular generate iteration (this is the position number if
+; the generate parameter is of an enumeration type).  Embedded whitespace
+; is allowed (but discouraged); leading and trailing whitespace is ignored.
+; Application of the format must result in a unique scope name over all
+; such names in the design so that name lookup can function properly.
+; GenerateFormat = %s__%d
+
+; Specify whether checkpoint files should be compressed.
+; The default is 1 (compressed).
+; CheckpointCompressMode = 0
+
+; List of dynamically loaded objects for Verilog PLI applications
+; Veriuser = veriuser.sl
+
+; Specify default options for the restart command. Options can be one
+; or more of: -force -nobreakpoint -nolist -nolog -nowave
+; DefaultRestartOptions = -force
+
+; HP-UX 10.20 ONLY - Enable memory locking to speed up large designs
+; (> 500 megabyte memory footprint). Default is disabled.
+; Specify number of megabytes to lock.
+; LockedMemory = 1000
+
+; Turn on (1) or off (0) WLF file compression.
+; The default is 1 (compress WLF file).
+; WLFCompress = 0
+
+; Specify whether to save all design hierarchy (1) in the WLF file
+; or only regions containing logged signals (0).
+; The default is 0 (save only regions with logged signals).
+; WLFSaveAllRegions = 1
+
+; WLF file time limit.  Limit WLF file by time, as closely as possible,
+; to the specified amount of simulation time.  When the limit is exceeded
+; the earliest times get truncated from the file.
+; If both time and size limits are specified the most restrictive is used.
+; UserTimeUnits are used if time units are not specified.
+; The default is 0 (no limit).  Example: WLFTimeLimit = {100 ms}
+; WLFTimeLimit = 0
+
+; WLF file size limit.  Limit WLF file size, as closely as possible,
+; to the specified number of megabytes.  If both time and size limits
+; are specified then the most restrictive is used.
+; The default is 0 (no limit).
+; WLFSizeLimit = 1000
+
+; Specify whether or not a WLF file should be deleted when the
+; simulation ends.  A value of 1 will cause the WLF file to be deleted.
+; The default is 0 (do not delete WLF file when simulation ends).
+; WLFDeleteOnQuit = 1
+
+; Automatic SDF compilation
+; Disables automatic compilation of SDF files in flows that support it.
+; Default is on, uncomment to turn off.
+; NoAutoSDFCompile = 1
+
+[lmc]
+
+[msg_system]
+; Change a message severity or suppress a message.
+; The format is: <msg directive> = <msg number>[,<msg number>...]
+; Examples:
+;   note = 3009
+;   warning = 3033
+;   error = 3010,3016
+;   fatal = 3016,3033
+;   suppress = 3009,3016,3043
+; The command verror <msg number> can be used to get the complete
+; description of a message.
+
+; Control transcripting of elaboration/runtime messages.
+; The default is to have messages appear in the transcript and 
+; recorded in the wlf file (messages that are recorded in the
+; wlf file can be viewed in the MsgViewer).  The other settings
+; are to send messages only to the transcript or only to the 
+; wlf file.  The valid values are
+;    both  {default}
+;    tran  {transcript only}
+;    wlf   {wlf file only}
+; msgmode = both
+[Project]
+** Warning: ; Warning -- Do not edit the project properties directly.
+;            Property names are dynamic in nature and property
+;            values have special syntax.  Changing property data directly
+;            can result in a corrupt MPF file.  All project properties
+;            can be modified through project window dialogs.
+Project_Version = 6
+Project_DefaultLib = work
+Project_SortMethod = unused
+Project_Files_Count = 11
+Project_File_0 = /home/rohit/Documents/frame-codebase/source/fpga/modules/camera/testbenches/camera_pipeline_tb.sv
+Project_File_P_0 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} last_compile 1704884466 vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 0 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_1 = /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/csi2_transmitter_ip/rtl/csi2_transmitter_ip.v
+Project_File_P_1 = cover_toggle 0 file_type verilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat 0 vlog_nodebug 0 folder {Top Level} last_compile 1704820392 cover_fsm 0 cover_branch 0 vlog_noload 0 cover_excludedefault 0 vlog_enable0In 0 vlog_disableopt 0 cover_covercells 0 voptflow 1 vlog_showsource 0 vlog_hazard 0 cover_optlevel 3 toggle - vlog_0InOptions {} ood 0 cover_noshort 0 vlog_upper 0 compile_to work vlog_options {} compile_order 5 cover_expr 0 dont_compile 0 cover_stmt 0
+Project_File_2 = /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/pixel_to_byte_ip/rtl/pixel_to_byte_ip.v
+Project_File_P_2 = cover_toggle 0 file_type verilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat 0 vlog_nodebug 0 last_compile 1704820392 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 6 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_3 = /home/rohit/Documents/frame-codebase/source/fpga/radiant/pll_ip/rtl/pll_ip.v
+Project_File_P_3 = cover_toggle 0 file_type verilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat 0 vlog_nodebug 0 last_compile 1704820393 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 7 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_4 = /home/rohit/Documents/frame-codebase/source/fpga/modules/camera/fifo.sv
+Project_File_P_4 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 folder {Top Level} last_compile 1704888432 cover_fsm 0 cover_branch 0 vlog_noload 0 cover_excludedefault 0 vlog_enable0In 0 vlog_disableopt 0 cover_covercells 0 voptflow 1 vlog_showsource 0 vlog_hazard 0 cover_optlevel 3 toggle - vlog_0InOptions {} ood 0 cover_noshort 0 vlog_upper 0 compile_to work vlog_options {} compile_order 10 cover_expr 0 dont_compile 0 cover_stmt 0
+Project_File_5 = /home/rohit/Documents/frame-codebase/source/fpga/modules/camera/debayer.sv
+Project_File_P_5 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 last_compile 1704885303 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} cover_excludedefault 0 vlog_enable0In 0 vlog_disableopt 0 cover_covercells 0 voptflow 1 vlog_showsource 0 vlog_hazard 0 cover_optlevel 3 toggle - vlog_0InOptions {} ood 0 cover_noshort 0 vlog_upper 0 compile_to work vlog_options {} compile_order 2 cover_expr 0 dont_compile 0 cover_stmt 0
+Project_File_6 = /home/rohit/Documents/frame-codebase/source/fpga/modules/camera/camera.sv
+Project_File_P_6 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} last_compile 1704888395 vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options +define+RADIANT=1+define+SIM=1 compile_to work vlog_upper 0 cover_noshort 0 compile_order 1 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_7 = /home/rohit/Documents/frame-codebase/source/fpga/radiant/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v
+Project_File_P_7 = cover_toggle 0 file_type verilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat 0 vlog_nodebug 0 last_compile 1704820391 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} cover_excludedefault 0 vlog_enable0In 0 vlog_disableopt 0 cover_covercells 0 voptflow 1 vlog_showsource 0 vlog_hazard 0 cover_optlevel 3 toggle - vlog_0InOptions {} ood 0 cover_noshort 0 vlog_upper 0 compile_to work vlog_options {} compile_order 3 cover_expr 0 dont_compile 0 cover_stmt 0
+Project_File_8 = /home/rohit/Documents/frame-codebase/source/fpga/radiant/csi2_receiver_ip/rtl/csi2_receiver_ip.v
+Project_File_P_8 = cover_toggle 0 file_type verilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat 0 vlog_nodebug 0 cover_fsm 0 cover_branch 0 vlog_noload 0 folder {Top Level} last_compile 1704820392 vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 4 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_9 = /home/rohit/Documents/frame-codebase/source/fpga/modules/reset/reset_global.sv
+Project_File_P_9 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 cover_branch 0 vlog_noload 0 folder {Top Level} last_compile 1704819014 cover_fsm 0 vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 8 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_File_10 = /home/rohit/Documents/frame-codebase/source/fpga/modules/reset/reset_sync.sv
+Project_File_P_10 = cover_toggle 0 file_type systemverilog group_id 0 cover_exttoggle 0 cover_nofec 0 cover_cond 0 vlog_1995compat SV vlog_nodebug 0 cover_branch 0 vlog_noload 0 folder {Top Level} last_compile 1702481067 cover_fsm 0 vlog_enable0In 0 cover_excludedefault 0 vlog_disableopt 0 cover_covercells 0 cover_optlevel 3 vlog_hazard 0 vlog_showsource 0 voptflow 1 ood 0 vlog_0InOptions {} toggle - vlog_options {} compile_to work vlog_upper 0 cover_noshort 0 compile_order 9 dont_compile 0 cover_expr 0 cover_stmt 0
+Project_Sim_Count = 0
+Project_Folder_Count = 0
+Echo_Compile_Output = 0
+Save_Compile_Report = 1
+Project_Opt_Count = 0
+ForceSoftPaths = 0
+ProjectStatusDelay = 5000
+VERILOG_DoubleClick = Edit
+VERILOG_CustomDoubleClick = 
+SYSTEMVERILOG_DoubleClick = Edit
+SYSTEMVERILOG_CustomDoubleClick = 
+VHDL_DoubleClick = Edit
+VHDL_CustomDoubleClick = 
+PSL_DoubleClick = Edit
+PSL_CustomDoubleClick = 
+TEXT_DoubleClick = Edit
+TEXT_CustomDoubleClick = 
+SYSTEMC_DoubleClick = Edit
+SYSTEMC_CustomDoubleClick = 
+TCL_DoubleClick = Edit
+TCL_CustomDoubleClick = 
+MACRO_DoubleClick = Edit
+MACRO_CustomDoubleClick = 
+VCD_DoubleClick = Edit
+VCD_CustomDoubleClick = 
+SDF_DoubleClick = Edit
+SDF_CustomDoubleClick = 
+XML_DoubleClick = Edit
+XML_CustomDoubleClick = 
+LOGFILE_DoubleClick = Edit
+LOGFILE_CustomDoubleClick = 
+UCDB_DoubleClick = Edit
+UCDB_CustomDoubleClick = 
+TDB_DoubleClick = Edit
+TDB_CustomDoubleClick = 
+UPF_DoubleClick = Edit
+UPF_CustomDoubleClick = 
+PCF_DoubleClick = Edit
+PCF_CustomDoubleClick = 
+PROJECT_DoubleClick = Edit
+PROJECT_CustomDoubleClick = 
+VRM_DoubleClick = Edit
+VRM_CustomDoubleClick = 
+DEBUGDATABASE_DoubleClick = Edit
+DEBUGDATABASE_CustomDoubleClick = 
+DEBUGARCHIVE_DoubleClick = Edit
+DEBUGARCHIVE_CustomDoubleClick = 
+Project_Major_Version = 2021
+Project_Minor_Version = 4

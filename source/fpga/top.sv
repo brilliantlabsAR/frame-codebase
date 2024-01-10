@@ -39,10 +39,12 @@ module top (
     output logic display_cb1_out,
     output logic display_cb2_out,
 
-    // inout wire mipi_clock_in,
-    // inout wire mipi_clock_in,
-    // inout wire mipi_data_in,
-    // inout wire mipi_data_in,
+    `ifdef RADIANT
+    inout wire mipi_clock_p_in,
+    inout wire mipi_clock_n_in,
+    inout wire mipi_data_p_in,
+    inout wire mipi_data_n_in,
+    `endif
 
     output logic camera_clock_out
 );
@@ -53,6 +55,7 @@ logic clock_camera;
 logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
+logic clock_camera_sync;
 logic pll_locked;
 
 OSCA #(
@@ -65,12 +68,12 @@ OSCA #(
 );
 
 pll_wrapper pll_wrapper (
-    .clki_i(clock_osc),
-    .clkop_o(clock_camera),
-    .clkos_o(clock_camera_pixel),
-    .clkos2_o(clock_display),
-    .clkos3_o(clock_spi),
-	.clkos4_o(),
+    .clki_i(clock_osc),             // 18MHz
+    .clkop_o(clock_camera),         // 24MHz
+    .clkos_o(clock_camera_pixel),   // 36MHz
+    .clkos2_o(clock_display),       // 36MHz
+    .clkos3_o(clock_spi),           // 72MHz
+	.clkos4_o(clock_camera_sync),          // 96MHz
     .lock_o(pll_locked)
 );
 
@@ -163,17 +166,23 @@ graphics graphics (
 assign camera_clock_out = clock_camera;
 
 camera camera (
+    .global_reset_n_in(global_reset_n),
+
     .clock_spi_in(clock_spi),
     .reset_spi_n_in(reset_spi_n),
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
 
-    // .mipi_clock_p_in(mipi_clock_p_in),
-    // .mipi_clock_n_in(mipi_clock_n_in),
-    // .mipi_data_p_in(mipi_data_p_in),
-    // .mipi_data_n_in(mipi_data_n_in),
-
+    .clock_sync_in(clock_camera_sync),
+    
+    `ifdef RADIANT
+    .mipi_clock_p_in(mipi_clock_p_in),
+    .mipi_clock_n_in(mipi_clock_n_in),
+    .mipi_data_p_in(mipi_data_p_in),
+    .mipi_data_n_in(mipi_data_n_in),
+    `endif
+    
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
     .operand_in(operand),

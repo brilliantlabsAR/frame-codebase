@@ -1,0 +1,9 @@
+# Modelsim
+transcript
+*.bak
+*.log
+*.html
+*.wlf
+*.mti
+
+modelsim/work

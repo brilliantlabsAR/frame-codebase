@@ -10,7 +10,7 @@
             <ipxact:componentRef library="module" name="pll" vendor="latticesemi.com" version="1.8.0">
                 <ipxact:configurableElementValues>
                     <ipxact:configurableElementValue referenceId="set_attributes">set_attr: done</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_clkout">{'CLKOP': {'EN': 1, 'BYP': False, 'FREQ': 24.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'TRIM_EN': False, 'TRIM_MODE': 'Falling', 'TRIM_MULT': '000', 'CLKEN': 0}, 'CLKOS': {'EN': True, 'BYP': False, 'FREQ': 36.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'TRIM_EN': 0, 'TRIM_MODE': 'Falling', 'TRIM_MULT': '000', 'CLKEN': 0}, 'CLKOS2': {'EN': True, 'BYP': False, 'FREQ': 36.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS3': {'EN': True, 'BYP': False, 'FREQ': 72.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS4': {'EN': True, 'BYP': False, 'FREQ': 144.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS5': {'EN': 1, 'BYP': 0, 'FREQ': 360.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.0, 'CLKEN': 0}}</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_clkout">{'CLKOP': {'EN': 1, 'BYP': False, 'FREQ': 24.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'TRIM_EN': False, 'TRIM_MODE': 'Falling', 'TRIM_MULT': '000', 'CLKEN': 0}, 'CLKOS': {'EN': True, 'BYP': False, 'FREQ': 36.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'TRIM_EN': 0, 'TRIM_MODE': 'Falling', 'TRIM_MULT': '000', 'CLKEN': 0}, 'CLKOS2': {'EN': True, 'BYP': False, 'FREQ': 36.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS3': {'EN': True, 'BYP': False, 'FREQ': 72.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS4': {'EN': True, 'BYP': False, 'FREQ': 96.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.1, 'CLKEN': 0}, 'CLKOS5': {'EN': 1, 'BYP': 0, 'FREQ': 360.0, 'DIV': 8, 'PHASE': 0, 'TOL': 0.0, 'CLKEN': 0}}</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="print_attributes">print_attr: done</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_config_mode">FREQUENCY</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_optim_prio">JITTER</ipxact:configurableElementValue>
@@ -79,10 +79,10 @@
                     <ipxact:configurableElementValue referenceId="gui_clk_s3_phase">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_en">True</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_byp">False</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_clk_s4_freq">144.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_clk_s4_freq">96.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_div">8</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_clk_s4_freq_disp">144.0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_clk_s4_div_disp">10</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_clk_s4_freq_disp">96.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_clk_s4_div_disp">15</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_tol">0.1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_ppm">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s4_phase">0</ipxact:configurableElementValue>
@@ -168,10 +168,10 @@
                     <ipxact:configurableElementValue referenceId="CLKOS4_EN">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CLKOS4_BYPASS">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="ENCLKOS4_EN">0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="CLKOS4_FREQ_ACTUAL">144.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="CLKOS4_FREQ_ACTUAL">96.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CLKOS4_PHASE_ACTUAL">0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="DIVOS4_ACTUAL_STR">9</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="DELE">9</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="DIVOS4_ACTUAL_STR">14</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="DELE">14</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PHIE">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CLKOS5_EN">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="CLKOS5_BYPASS">0</ipxact:configurableElementValue>

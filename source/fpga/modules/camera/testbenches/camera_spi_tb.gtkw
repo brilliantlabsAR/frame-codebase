@@ -2,10 +2,10 @@
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
 [*] Mon Jan  8 19:40:28 2024
 [*]
-[dumpfile] "simulation/camera_tb.fst"
+[dumpfile] "simulation/camera_spi_tb.fst"
 [dumpfile_mtime] "Mon Jan  8 19:39:00 2024"
 [dumpfile_size] 1491
-[savefile] "camera_tb.gtkw"
+[savefile] "camera_spi_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
@@ -36,47 +36,47 @@
 [markername] XX
 [markername] YY
 [markername] ZZ
-[treeopen] camera_tb.
+[treeopen] camera_spi_tb.
 [sst_width] 253
 [signals_width] 279
 [sst_expanded] 1
 [sst_vpaned_height] 247
 @28
-camera_tb.clock_spi
-camera_tb.reset_spi_n
-camera_tb.clock_camera_pixel
-camera_tb.reset_camera_pixel_n
+camera_spi_tb.clock_spi
+camera_spi_tb.reset_spi_n
+camera_spi_tb.clock_camera_pixel
+camera_spi_tb.reset_camera_pixel_n
 @200
 -
 @22
-camera_tb.opcode[7:0]
+camera_spi_tb.opcode[7:0]
 @28
-camera_tb.opcode_valid
+camera_spi_tb.opcode_valid
 @22
-camera_tb.operand[7:0]
+camera_spi_tb.operand[7:0]
 @28
-camera_tb.operand_valid
+camera_spi_tb.operand_valid
 @420
-camera_tb.operand_count
+camera_spi_tb.operand_count
 @22
-camera_tb.response[7:0]
+camera_spi_tb.response[7:0]
 @28
-camera_tb.response_valid
+camera_spi_tb.response_valid
 @200
 -
 -Camera pipeline
 @28
-camera_tb.camera.capture_flag
-camera_tb.camera.capture_in_progress_flag
+camera_spi_tb.camera.capture_flag
+camera_spi_tb.camera.capture_in_progress_flag
 @200
 -
 @24
-camera_tb.camera.capture_size[15:0]
-camera_tb.camera.bytes_read_reg[15:0]
-camera_tb.camera.bytes_remaining[15:0]
+camera_spi_tb.camera.capture_size[15:0]
+camera_spi_tb.camera.bytes_read_reg[15:0]
+camera_spi_tb.camera.bytes_remaining[15:0]
 @200
 -
 @22
-camera_tb.camera.buffer_read_address[13:0]
+camera_spi_tb.camera.buffer_read_address[13:0]
 [pattern_trace] 1
 [pattern_trace] 0

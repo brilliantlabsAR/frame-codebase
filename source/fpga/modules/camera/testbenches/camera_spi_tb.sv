@@ -13,7 +13,7 @@
 
 `include "../camera.sv"
 
-module camera_tb;
+module camera_spi_tb;
 
 logic clock_spi = 0;
 logic clock_camera_pixel = 0;
@@ -78,11 +78,6 @@ camera camera (
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
 
-    // .mipi_clock_p_in(mipi_clock_p_in),
-    // .mipi_clock_n_in(mipi_clock_n_in),
-    // .mipi_data_p_in(mipi_data_p_in),
-    // .mipi_data_n_in(mipi_data_n_in),
-
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
     .operand_in(operand),
@@ -133,8 +128,8 @@ task done;
 endtask
 
 initial begin
-    $dumpfile("simulation/camera_tb.fst");
-    $dumpvars(0, camera_tb);
+    $dumpfile("simulation/camera_spi_tb.fst");
+    $dumpvars(0, camera_spi_tb);
 end
 
 endmodule
