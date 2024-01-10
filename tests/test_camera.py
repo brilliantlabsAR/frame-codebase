@@ -4,7 +4,8 @@ Tests the Frame specific Lua libraries over Bluetooth.
 
 import asyncio
 from frameutils import Bluetooth
-
+from PIL import Image, ImageDraw
+import numpy as np
 
 image_buffer = b""
 expected_length = 0
@@ -20,7 +21,7 @@ def receive_data(data):
     )
 
 
-async def capture_and_download(b: Bluetooth):
+async def capture_and_download(b: Bluetooth, height, width):
     global image_buffer
     global expected_length
 
@@ -28,7 +29,7 @@ async def capture_and_download(b: Bluetooth):
     await b.send_lua(f"frame.camera.capture()")
     await asyncio.sleep(0.5)
 
-    expected_length = 200 * 200
+    expected_length = height * width
 
     image_buffer = b""
 
@@ -39,7 +40,25 @@ async def capture_and_download(b: Bluetooth):
 
     print("\nConverting to image")
 
-    raise NotImplementedError("TODO")
+    image_data = np.frombuffer(image_buffer, dtype=np.uint8)
+    rgb_array = np.zeros((height, width, 3), dtype=np.uint8)
+
+    for y in range(height):
+        for x in range(width):
+            pixel = image_data[y * width + x]
+
+            red = (pixel & 0b11100000) >> 5
+            green = (pixel & 0b00011100) >> 2
+            blue = pixel & 0b00000011
+
+            red = (0b11111111 / 0b111) * red
+            green = (0b11111111 / 0b111) * green
+            blue = (0b11111111 / 0b11) * blue
+
+            rgb_array[y, x] = [red, green, blue]
+
+    image = Image.fromarray(rgb_array)
+    image.show()
 
 
 async def main():
@@ -47,7 +66,7 @@ async def main():
 
     await b.connect(data_response_handler=receive_data)
 
-    await capture_and_download(b)
+    await capture_and_download(b, 200, 200)
 
     await b.disconnect()
 
