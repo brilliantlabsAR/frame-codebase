@@ -24,7 +24,7 @@ module color_palette (
     logic [9:0] color_table [0:15];
     
     // https://androidarts.com/palette/16pal.htm
-    parameter VOID       = 10'b0000_011_011;
+    parameter VOID       = 10'b0000_100_100;
     parameter GREY       = 10'b1001_100_100;
     parameter WHITE      = 10'b1111_011_011;
     parameter RED        = 10'b0101_011_110;
