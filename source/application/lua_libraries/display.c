@@ -86,7 +86,6 @@ static int lua_display_assign_color(lua_State *L)
         luaL_error(L, "blue component must be between 0 and 255");
     }
 
-    // TODO convert RGB to Ycbcr
     double y = floor(0.299 * red + 0.587 * green + 0.114 * blue);
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
@@ -116,7 +115,6 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
     lua_Integer cb = lua_tointeger(L, 3);
     lua_Integer cr = lua_tointeger(L, 4);
 
-    // TODO figure out the scaling and range og Ycbcr
     if (pallet_index < 0 || pallet_index > 15)
     {
         luaL_error(L, "pallet_index must be between 1 and 16");

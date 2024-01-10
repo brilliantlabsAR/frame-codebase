@@ -105,8 +105,8 @@ always_ff @(posedge clock_in) begin
                         4: sprite_y_position_reg <= {sprite_y_position_reg[9:8], operand_in};
                         5: sprite_width_reg <= {operand_in[1:0], 8'b0};
                         6: sprite_width_reg <= {sprite_width_reg[9:8], operand_in};
-                        7: sprite_total_colors_reg <= 16;
-                        8: sprite_palette_offset_reg <= 0;
+                        7: sprite_total_colors_reg <= operand_in[4:0];
+                        8: sprite_palette_offset_reg <= operand_in[3:0];
                         default begin
                             sprite_enable_flag <= 1;
                             sprite_data_flag <= 1;

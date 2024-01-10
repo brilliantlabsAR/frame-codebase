@@ -73,7 +73,7 @@ always_ff @(posedge clock_in) begin
             // On a new data byte
             if (data_valid_edge_monitor == 'b01) begin
                 case (total_colors_in)
-                    1: pixels_remaining <= 8;
+                    2: pixels_remaining <= 8;
                     4: pixels_remaining <= 4;
                     16: pixels_remaining <= 2;
                 endcase
@@ -98,8 +98,37 @@ always_ff @(posedge clock_in) begin
                 pixel_write_address_out <= current_x_pen_position + 
                                         (current_y_pen_position * 640);
 
-                // Draw the pixel TODO color mode and color offset
-                pixel_write_data_out <= data_in[3:0];
+                // Draw the pixel TODO color offset
+                case (total_colors_in)
+                    2: begin
+                        case (pixels_remaining[2:0])
+                            'b000: pixel_write_data_out <= data_in[0] + color_palette_offset_in;
+                            'b001: pixel_write_data_out <= data_in[1] + color_palette_offset_in;
+                            'b010: pixel_write_data_out <= data_in[2] + color_palette_offset_in;
+                            'b011: pixel_write_data_out <= data_in[3] + color_palette_offset_in;
+                            'b100: pixel_write_data_out <= data_in[4] + color_palette_offset_in;
+                            'b101: pixel_write_data_out <= data_in[5] + color_palette_offset_in;
+                            'b110: pixel_write_data_out <= data_in[6] + color_palette_offset_in;
+                            'b111: pixel_write_data_out <= data_in[7] + color_palette_offset_in;
+                        endcase
+                    end
+
+                    4: begin
+                        case (pixels_remaining[1:0])
+                            'b00: pixel_write_data_out <= data_in[1:0] + color_palette_offset_in;
+                            'b01: pixel_write_data_out <= data_in[3:2] + color_palette_offset_in;
+                            'b10: pixel_write_data_out <= data_in[5:4] + color_palette_offset_in;
+                            'b11: pixel_write_data_out <= data_in[7:6] + color_palette_offset_in;
+                        endcase
+                    end
+
+                    16: begin
+                        case (pixels_remaining[0])
+                            'b0: pixel_write_data_out <= data_in[3:0] + color_palette_offset_in;
+                            'b1: pixel_write_data_out <= data_in[7:4] + color_palette_offset_in;
+                        endcase
+                    end
+                endcase
 
                 pixel_write_enable_out <= 1;
 

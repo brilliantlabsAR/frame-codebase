@@ -25,18 +25,18 @@ module color_palette (
     
     // https://androidarts.com/palette/16pal.htm
     parameter VOID       = 10'b0000_100_100;
+    parameter WHITE      = 10'b1111_100_100;
     parameter GREY       = 10'b1001_100_100;
-    parameter WHITE      = 10'b1111_011_011;
     parameter RED        = 10'b0101_011_110;
     parameter PINK       = 10'b1001_011_101;
-    parameter DARKBROWN  = 10'b0011_011_100;
-    parameter BROWN      = 10'b0110_010_101;
+    parameter DARKBROWN  = 10'b0011_011_100; // Looks green
+    parameter BROWN      = 10'b0110_010_101; // Looks orange
     parameter ORANGE     = 10'b1001_010_101;
     parameter YELLOW     = 10'b1101_010_100;
     parameter DARKGREEN  = 10'b0100_100_011;
     parameter GREEN      = 10'b0110_010_011;
     parameter LIGHTGREEN = 10'b1010_001_011;
-    parameter NIGHTBLUE  = 10'b0010_100_011;
+    parameter NIGHTBLUE  = 10'b0010_100_011; // Looks green
     parameter SEABLUE    = 10'b0100_101_010;
     parameter SKYBLUE    = 10'b1000_101_010;
     parameter CLOUDBLUE  = 10'b1101_100_011;
@@ -44,8 +44,8 @@ module color_palette (
     initial begin
 
         color_table[0]  = VOID;
-        color_table[1]  = GREY;
-        color_table[2]  = WHITE;
+        color_table[1]  = WHITE;
+        color_table[2]  = GREY;
         color_table[3]  = RED;
         color_table[4]  = PINK;
         color_table[5]  = DARKBROWN;
@@ -68,8 +68,8 @@ module color_palette (
         if (reset_n_in == 0) begin
 
             color_table[0]  <= VOID;
-            color_table[1]  <= GREY;
-            color_table[2]  <= WHITE;
+            color_table[1]  <= WHITE;
+            color_table[2]  <= GREY;
             color_table[3]  <= RED;
             color_table[4]  <= PINK;
             color_table[5]  <= DARKBROWN;
