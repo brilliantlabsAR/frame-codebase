@@ -55,6 +55,7 @@ logic clock_camera;
 logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
+logic clock_camera_sync;
 logic pll_locked;
 
 OSCA #(
@@ -67,12 +68,12 @@ OSCA #(
 );
 
 pll_wrapper pll_wrapper (
-    .clki_i(clock_osc),
-    .clkop_o(clock_camera),
-    .clkos_o(clock_camera_pixel),
-    .clkos2_o(clock_display),
-    .clkos3_o(clock_spi),
-	.clkos4_o(),
+    .clki_i(clock_osc),             // 18MHz
+    .clkop_o(clock_camera),         // 24MHz
+    .clkos_o(clock_camera_pixel),   // 36MHz
+    .clkos2_o(clock_display),       // 36MHz
+    .clkos3_o(clock_spi),           // 72MHz
+	.clkos4_o(clock_camera_sync),          // 96MHz
     .lock_o(pll_locked)
 );
 
@@ -172,6 +173,8 @@ camera camera (
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
+
+    .clock_sync_in(clock_camera_sync),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
