@@ -182,6 +182,7 @@ static void draw_sprite(lua_State *L,
     // Remove Lua 1 based offset before sending
     x_position--;
     y_position--;
+    width--; // TODO this shouldn't be needed, but there's a bug somewhere
 
     uint8_t address = 0x12;
 
@@ -241,7 +242,7 @@ static int lua_display_text(lua_State *L)
     const char *string = lua_tostring(L, 1);
     lua_Integer x_position = lua_tointeger(L, 2);
     lua_Integer y_position = lua_tointeger(L, 3);
-    lua_Integer character_spacing = 2;
+    lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
     {

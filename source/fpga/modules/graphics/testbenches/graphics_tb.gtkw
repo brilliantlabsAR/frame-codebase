@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Jan 11 15:50:05 2024
+[*] Thu Jan 11 15:57:18 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Thu Jan 11 15:48:00 2024"
-[dumpfile_size] 3732110
+[dumpfile_mtime] "Thu Jan 11 15:56:46 2024"
+[dumpfile_size] 3732059
 [savefile] "graphics_tb.gtkw"
 [timestart] 12306207
 [size] 2032 1104
 [pos] 10 38
-*-8.185387 12307486 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-8.185387 12307205 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -100,13 +100,14 @@ graphics_tb.graphics.sprite_engine.data_in[7:0]
 -
 @28
 graphics_tb.graphics.sprite_engine.pixel_write_enable_out
-@22
+@24
 graphics_tb.graphics.sprite_engine.pixel_write_address_out[17:0]
+@22
 graphics_tb.graphics.sprite_engine.pixel_write_data_out[3:0]
 @200
 -
 -Sprite engine internals
-@421
+@420
 graphics_tb.graphics.sprite_engine.state
 @24
 graphics_tb.graphics.sprite_engine.current_x_pen_position[9:0]
@@ -117,8 +118,9 @@ graphics_tb.graphics.sprite_engine.pixels_remaining[4:0]
 -Display buffer
 @28
 graphics_tb.graphics.display_buffers.pixel_write_enable_in
-@22
+@25
 graphics_tb.graphics.display_buffers.pixel_write_address_in[17:0]
+@22
 graphics_tb.graphics.display_buffers.pixel_write_data_in[3:0]
 @200
 -
