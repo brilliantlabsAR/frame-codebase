@@ -41,7 +41,6 @@ static uint32_t utf8_decode(const char *string, size_t *index)
     }
     // TODO others
 
-    LOG("Codepoint = U+%06lx", codepoint);
     return codepoint;
 }
 
@@ -86,7 +85,6 @@ static int lua_display_assign_color(lua_State *L)
         luaL_error(L, "blue component must be between 0 and 255");
     }
 
-    // TODO convert RGB to Ycbcr
     double y = floor(0.299 * red + 0.587 * green + 0.114 * blue);
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
@@ -116,7 +114,6 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
     lua_Integer cb = lua_tointeger(L, 3);
     lua_Integer cr = lua_tointeger(L, 4);
 
-    // TODO figure out the scaling and range og Ycbcr
     if (pallet_index < 0 || pallet_index > 15)
     {
         luaL_error(L, "pallet_index must be between 1 and 16");
@@ -157,12 +154,12 @@ static void draw_sprite(lua_State *L,
                         const uint8_t *pixel_data,
                         size_t pixel_data_length)
 {
-    if (x_position < 0 || x_position > 639)
+    if (x_position < 1 || x_position > 640)
     {
         luaL_error(L, "x_position must be between 1 and 640 pixels");
     }
 
-    if (y_position < 0 || y_position > 399)
+    if (y_position < 1 || y_position > 400)
     {
         luaL_error(L, "y_position must be between 1 and 400 pixels");
     }
@@ -182,13 +179,10 @@ static void draw_sprite(lua_State *L,
         luaL_error(L, "palette_offset must be between 0 and 15");
     }
 
-    LOG("Printing %llu color sprite at (%llu, %llu) with %llu width, from sprite_data[%u:%u]. ",
-        total_colors,
-        x_position,
-        y_position,
-        width,
-        pixel_data - sprite_data,
-        pixel_data - sprite_data + pixel_data_length);
+    // Remove Lua 1 based offset before sending
+    x_position--;
+    y_position--;
+    width--; // TODO this shouldn't be needed, but there's a bug somewhere
 
     uint8_t address = 0x12;
 
@@ -219,8 +213,8 @@ static int lua_display_bitmap(lua_State *L)
     const char *pixel_data = lua_tolstring(L, 6, &pixel_data_length);
 
     draw_sprite(L,
-                lua_tointeger(L, 1) - 1,
-                lua_tointeger(L, 2) - 1,
+                lua_tointeger(L, 1),
+                lua_tointeger(L, 2),
                 lua_tointeger(L, 3),
                 lua_tointeger(L, 4),
                 lua_tointeger(L, 5),
@@ -240,11 +234,9 @@ static int lua_display_text(lua_State *L)
     // TODO character spacing
 
     const char *string = lua_tostring(L, 1);
-    lua_Integer x_position = lua_tointeger(L, 2) - 1;
-    lua_Integer y_position = lua_tointeger(L, 3) - 1;
-    lua_Integer character_spacing = 2;
-
-    LOG("Printing: '%s' at %llu, %llu", string, x_position, y_position);
+    lua_Integer x_position = lua_tointeger(L, 2);
+    lua_Integer y_position = lua_tointeger(L, 3);
+    lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
     {
@@ -260,8 +252,8 @@ static int lua_display_text(lua_State *L)
                 if (codepoint == sprite_metadata[entry].utf8_codepoint)
                 {
                     // Check if the glyph can fit on the screen
-                    if (x_position + sprite_metadata[entry].width < 640 &&
-                        y_position + sprite_metadata[entry].height < 400)
+                    if (x_position + sprite_metadata[entry].width <= 640 &&
+                        y_position + sprite_metadata[entry].height <= 400)
                     {
                         size_t data_offset = sprite_metadata[entry].data_offset;
 

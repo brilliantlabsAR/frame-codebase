@@ -28,60 +28,48 @@
     output logic [3:0] pixel_write_data_out
  );
 
-logic [1:0] pixel_pulse_counter;
-logic [1:0] enable_edge_monitor;
-logic [1:0] data_valid_edge_monitor;
-
-logic [4:0] pixels_remaining;
-
+enum {IDLE, NEW_PIXELS, DRAW, HOLD_OUTPUT_DATA, WAIT_FOR_NEW_PIXELS} state;
 logic [9:0] current_x_pen_position;
 logic [9:0] current_y_pen_position;
+logic [4:0] pixels_remaining;
 
 always_ff @(posedge clock_in) begin
 
     if (reset_n_in == 0 || enable_in == 0) begin
         pixel_write_enable_out <= 0;
-
-        pixel_pulse_counter <= 0;
-        enable_edge_monitor <= 0;
-        data_valid_edge_monitor <= 0;
-        
-        pixels_remaining <= 0;
+        state <= IDLE;
     end
 
     else begin
 
-        pixel_pulse_counter <= pixel_pulse_counter + 1;
+        case (state)
 
-        // Every 2 clocks
-        if (pixel_pulse_counter == 'b01) begin
-
-            pixel_pulse_counter <= 0;
-
-            enable_edge_monitor <= {enable_edge_monitor[0], 
-                                    enable_in};
-
-            data_valid_edge_monitor <= {data_valid_edge_monitor[0], 
-                                        data_valid_in};
-
-            // On a new draw sequence
-            if (enable_edge_monitor == 'b01) begin
-                current_x_pen_position <= x_position_in;
-                current_y_pen_position <= y_position_in;
+            IDLE: begin
+                if (enable_in) begin 
+                    current_x_pen_position <= x_position_in;
+                    current_y_pen_position <= y_position_in;
+                    state <= NEW_PIXELS;
+                end
             end
 
-            // On a new data byte
-            if (data_valid_edge_monitor == 'b01) begin
+            NEW_PIXELS: begin
                 case (total_colors_in)
-                    1: pixels_remaining <= 8;
+                    2: pixels_remaining <= 8;
                     4: pixels_remaining <= 4;
                     16: pixels_remaining <= 2;
                 endcase
+
+                if (data_valid_in) begin
+                    state <= DRAW;
+                end
+
+                if (enable_in == 0) begin
+                    state <= IDLE;
+                end
             end
 
-            // Draw pixels
-            if (pixels_remaining > 0) begin
-                    
+            DRAW: begin
+
                 pixels_remaining <= pixels_remaining - 1;
 
                 // Calculate the cursor position and width wrapping
@@ -96,20 +84,67 @@ always_ff @(posedge clock_in) begin
 
                 // Output the pixel write address
                 pixel_write_address_out <= current_x_pen_position + 
-                                        (current_y_pen_position * 640);
+                                           (current_y_pen_position * 640);
 
-                // Draw the pixel TODO color mode and color offset
-                pixel_write_data_out <= data_in[3:0];
+                // Draw the pixel TODO color offset
+                case (total_colors_in)
+                    2: begin
+                        case (pixels_remaining[2:0])
+                            'b000: pixel_write_data_out <= data_in[0] + color_palette_offset_in;
+                            'b001: pixel_write_data_out <= data_in[1] + color_palette_offset_in;
+                            'b010: pixel_write_data_out <= data_in[2] + color_palette_offset_in;
+                            'b011: pixel_write_data_out <= data_in[3] + color_palette_offset_in;
+                            'b100: pixel_write_data_out <= data_in[4] + color_palette_offset_in;
+                            'b101: pixel_write_data_out <= data_in[5] + color_palette_offset_in;
+                            'b110: pixel_write_data_out <= data_in[6] + color_palette_offset_in;
+                            'b111: pixel_write_data_out <= data_in[7] + color_palette_offset_in;
+                        endcase
+                    end
+
+                    4: begin
+                        case (pixels_remaining[1:0])
+                            'b00: pixel_write_data_out <= data_in[1:0] + color_palette_offset_in;
+                            'b01: pixel_write_data_out <= data_in[3:2] + color_palette_offset_in;
+                            'b10: pixel_write_data_out <= data_in[5:4] + color_palette_offset_in;
+                            'b11: pixel_write_data_out <= data_in[7:6] + color_palette_offset_in;
+                        endcase
+                    end
+
+                    16: begin
+                        case (pixels_remaining[0])
+                            'b0: pixel_write_data_out <= data_in[3:0] + color_palette_offset_in;
+                            'b1: pixel_write_data_out <= data_in[7:4] + color_palette_offset_in;
+                        endcase
+                    end
+                endcase
 
                 pixel_write_enable_out <= 1;
 
+                state <= HOLD_OUTPUT_DATA;
+
+            end
+        
+            HOLD_OUTPUT_DATA: begin
+
+                if (pixels_remaining == 0) begin
+                    state <= WAIT_FOR_NEW_PIXELS;    
+                end
+
+                else begin
+                    state <= DRAW;
+                end
+
             end
 
-            else begin
+            WAIT_FOR_NEW_PIXELS: begin
                 pixel_write_enable_out <= 0;
+
+                if (data_valid_in == 0) begin
+                    state <= NEW_PIXELS;
+                end
             end
 
-        end
+        endcase
 
     end
 
