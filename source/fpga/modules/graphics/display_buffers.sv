@@ -30,11 +30,11 @@ module buffer (
     input logic clock,
     input logic reset_n,
 
-    input logic [14:0] write_address,
-    input logic [14:0] read_address,
+    input logic [17:0] write_address,
+    input logic [17:0] read_address,
 
-    input logic [31:0] write_data,
-    output logic [31:0] read_data,
+    input logic [3:0] write_data,
+    output logic [3:0] read_data,
 
     input logic write_enable
 );
@@ -49,10 +49,28 @@ always @(posedge clock) begin
 
     else begin
         if (write_enable) begin
-            mem[write_address] <= write_data;
+            case (write_address[2:0])
+                'd0: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:4],  write_data                                };
+                'd1: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:8],  write_data, mem[write_address[17:3]][3:0] };
+                'd2: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:12], write_data, mem[write_address[17:3]][7:0] };
+                'd3: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:16], write_data, mem[write_address[17:3]][11:0]};
+                'd4: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:20], write_data, mem[write_address[17:3]][15:0]};
+                'd5: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:24], write_data, mem[write_address[17:3]][19:0]};
+                'd6: mem[write_address[17:3]] <= {mem[write_address[17:3]][31:28], write_data, mem[write_address[17:3]][23:0]};
+                'd7: mem[write_address[17:3]] <= {                                 write_data, mem[write_address[17:3]][27:0]};
+            endcase
         end
 
-        read_data <= mem[read_address];
+        case (read_address[2:0])
+            'd0: read_data <= mem[read_address[17:3]][3:0];
+            'd1: read_data <= mem[read_address[17:3]][7:4];
+            'd2: read_data <= mem[read_address[17:3]][11:8];
+            'd3: read_data <= mem[read_address[17:3]][15:12];
+            'd4: read_data <= mem[read_address[17:3]][19:16];
+            'd5: read_data <= mem[read_address[17:3]][23:20];
+            'd6: read_data <= mem[read_address[17:3]][27:24];
+            'd7: read_data <= mem[read_address[17:3]][31:28];
+        endcase
     end
 end
 
@@ -72,13 +90,13 @@ module display_buffers (
     input logic switch_write_buffer_in
 );
 
-logic [14:0] display_ram_address_a;
-logic [14:0] display_ram_address_b;
+logic [17:0] display_ram_address_a;
+logic [17:0] display_ram_address_b;
 
-logic [31:0] display_ram_read_data_a;
-logic [31:0] display_ram_read_data_b;
+logic [3:0] display_ram_read_data_a;
+logic [3:0] display_ram_read_data_b;
 
-logic [31:0] display_ram_write_data;
+logic [3:0] display_ram_write_data;
 
 logic display_ram_write_enable_a;
 logic display_ram_write_enable_b;
@@ -153,13 +171,13 @@ always_ff @(posedge clock_in) begin
 
     else begin
         if (displayed_buffer == BUFFER_A) begin
-            display_ram_address_a <= pixel_read_address_in[17:3];
-            display_ram_address_b <= pixel_write_address_in[17:3];
+            display_ram_address_a <= pixel_read_address_in;
+            display_ram_address_b <= pixel_write_address_in;
         end
 
         else begin
-            display_ram_address_a <= pixel_write_address_in[17:3];
-            display_ram_address_b <= pixel_read_address_in[17:3];
+            display_ram_address_a <= pixel_write_address_in;
+            display_ram_address_b <= pixel_read_address_in;
         end
     end
 
@@ -174,29 +192,31 @@ always_ff @(posedge clock_in) begin
 
     // Read pixels from displayed_buffer
     if (displayed_buffer == BUFFER_A) begin
-        case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_a[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_a[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_a[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_a[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_a[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_a[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_a[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_a[31:28];
-        endcase
+        pixel_read_data_out <= display_ram_read_data_a;
+        // case (pixel_read_address_in[2:0])
+        //     'd0: pixel_read_data_out <= display_ram_read_data_a[3:0];
+        //     'd1: pixel_read_data_out <= display_ram_read_data_a[7:4];
+        //     'd2: pixel_read_data_out <= display_ram_read_data_a[11:8];
+        //     'd3: pixel_read_data_out <= display_ram_read_data_a[15:12];
+        //     'd4: pixel_read_data_out <= display_ram_read_data_a[19:16];
+        //     'd5: pixel_read_data_out <= display_ram_read_data_a[23:20];
+        //     'd6: pixel_read_data_out <= display_ram_read_data_a[27:24];
+        //     'd7: pixel_read_data_out <= display_ram_read_data_a[31:28];
+        // endcase
     end
 
     else begin
-        case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_b[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_b[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_b[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_b[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_b[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_b[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_b[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_b[31:28];
-        endcase
+        pixel_read_data_out <= display_ram_read_data_b;
+        // case (pixel_read_address_in[2:0])
+        //     'd0: pixel_read_data_out <= display_ram_read_data_b[3:0];
+        //     'd1: pixel_read_data_out <= display_ram_read_data_b[7:4];
+        //     'd2: pixel_read_data_out <= display_ram_read_data_b[11:8];
+        //     'd3: pixel_read_data_out <= display_ram_read_data_b[15:12];
+        //     'd4: pixel_read_data_out <= display_ram_read_data_b[19:16];
+        //     'd5: pixel_read_data_out <= display_ram_read_data_b[23:20];
+        //     'd6: pixel_read_data_out <= display_ram_read_data_b[27:24];
+        //     'd7: pixel_read_data_out <= display_ram_read_data_b[31:28];
+        // endcase
     end
 
 end
@@ -205,29 +225,31 @@ end
 always_comb begin
 
     if (displayed_buffer == BUFFER_B) begin
-        case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_a[31:4],  pixel_write_data_in                               };
-            'd1: display_ram_write_data = {display_ram_read_data_a[31:8],  pixel_write_data_in, display_ram_read_data_a[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_a[31:12], pixel_write_data_in, display_ram_read_data_a[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_a[31:16], pixel_write_data_in, display_ram_read_data_a[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_a[31:20], pixel_write_data_in, display_ram_read_data_a[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_a[31:24], pixel_write_data_in, display_ram_read_data_a[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_a[31:28], pixel_write_data_in, display_ram_read_data_a[23:0]};
-            'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_a[27:0]};
-        endcase
+        display_ram_write_data = pixel_write_data_in;
+        // case (pixel_write_address_in[2:0])
+        //     'd0: display_ram_write_data = {display_ram_read_data_a[31:4],  pixel_write_data_in                               };
+        //     'd1: display_ram_write_data = {display_ram_read_data_a[31:8],  pixel_write_data_in, display_ram_read_data_a[3:0] };
+        //     'd2: display_ram_write_data = {display_ram_read_data_a[31:12], pixel_write_data_in, display_ram_read_data_a[7:0] };
+        //     'd3: display_ram_write_data = {display_ram_read_data_a[31:16], pixel_write_data_in, display_ram_read_data_a[11:0]};
+        //     'd4: display_ram_write_data = {display_ram_read_data_a[31:20], pixel_write_data_in, display_ram_read_data_a[15:0]};
+        //     'd5: display_ram_write_data = {display_ram_read_data_a[31:24], pixel_write_data_in, display_ram_read_data_a[19:0]};
+        //     'd6: display_ram_write_data = {display_ram_read_data_a[31:28], pixel_write_data_in, display_ram_read_data_a[23:0]};
+        //     'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_a[27:0]};
+        // endcase
     end
 
     else begin
-        case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_b[31:4],  pixel_write_data_in                               };
-            'd1: display_ram_write_data = {display_ram_read_data_b[31:8],  pixel_write_data_in, display_ram_read_data_b[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_b[31:12], pixel_write_data_in, display_ram_read_data_b[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_b[31:16], pixel_write_data_in, display_ram_read_data_b[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_b[31:20], pixel_write_data_in, display_ram_read_data_b[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_b[31:24], pixel_write_data_in, display_ram_read_data_b[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_b[31:28], pixel_write_data_in, display_ram_read_data_b[23:0]};
-            'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_b[27:0]};
-        endcase
+        display_ram_write_data = pixel_write_data_in;
+        // case (pixel_write_address_in[2:0])
+        //     'd0: display_ram_write_data = {display_ram_read_data_b[31:4],  pixel_write_data_in                               };
+        //     'd1: display_ram_write_data = {display_ram_read_data_b[31:8],  pixel_write_data_in, display_ram_read_data_b[3:0] };
+        //     'd2: display_ram_write_data = {display_ram_read_data_b[31:12], pixel_write_data_in, display_ram_read_data_b[7:0] };
+        //     'd3: display_ram_write_data = {display_ram_read_data_b[31:16], pixel_write_data_in, display_ram_read_data_b[11:0]};
+        //     'd4: display_ram_write_data = {display_ram_read_data_b[31:20], pixel_write_data_in, display_ram_read_data_b[15:0]};
+        //     'd5: display_ram_write_data = {display_ram_read_data_b[31:24], pixel_write_data_in, display_ram_read_data_b[19:0]};
+        //     'd6: display_ram_write_data = {display_ram_read_data_b[31:28], pixel_write_data_in, display_ram_read_data_b[23:0]};
+        //     'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_b[27:0]};
+        // endcase
     end
 
     // Select one of the four enables based on write address and selected buffer
