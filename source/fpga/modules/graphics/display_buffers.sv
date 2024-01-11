@@ -193,30 +193,11 @@ always_ff @(posedge clock_in) begin
     // Read pixels from displayed_buffer
     if (displayed_buffer == BUFFER_A) begin
         pixel_read_data_out <= display_ram_read_data_a;
-        // case (pixel_read_address_in[2:0])
-        //     'd0: pixel_read_data_out <= display_ram_read_data_a[3:0];
-        //     'd1: pixel_read_data_out <= display_ram_read_data_a[7:4];
-        //     'd2: pixel_read_data_out <= display_ram_read_data_a[11:8];
-        //     'd3: pixel_read_data_out <= display_ram_read_data_a[15:12];
-        //     'd4: pixel_read_data_out <= display_ram_read_data_a[19:16];
-        //     'd5: pixel_read_data_out <= display_ram_read_data_a[23:20];
-        //     'd6: pixel_read_data_out <= display_ram_read_data_a[27:24];
-        //     'd7: pixel_read_data_out <= display_ram_read_data_a[31:28];
-        // endcase
     end
 
     else begin
         pixel_read_data_out <= display_ram_read_data_b;
-        // case (pixel_read_address_in[2:0])
-        //     'd0: pixel_read_data_out <= display_ram_read_data_b[3:0];
-        //     'd1: pixel_read_data_out <= display_ram_read_data_b[7:4];
-        //     'd2: pixel_read_data_out <= display_ram_read_data_b[11:8];
-        //     'd3: pixel_read_data_out <= display_ram_read_data_b[15:12];
-        //     'd4: pixel_read_data_out <= display_ram_read_data_b[19:16];
-        //     'd5: pixel_read_data_out <= display_ram_read_data_b[23:20];
-        //     'd6: pixel_read_data_out <= display_ram_read_data_b[27:24];
-        //     'd7: pixel_read_data_out <= display_ram_read_data_b[31:28];
-        // endcase
+
     end
 
 end
@@ -224,33 +205,7 @@ end
 // RAM writing logic
 always_comb begin
 
-    if (displayed_buffer == BUFFER_B) begin
-        display_ram_write_data = pixel_write_data_in;
-        // case (pixel_write_address_in[2:0])
-        //     'd0: display_ram_write_data = {display_ram_read_data_a[31:4],  pixel_write_data_in                               };
-        //     'd1: display_ram_write_data = {display_ram_read_data_a[31:8],  pixel_write_data_in, display_ram_read_data_a[3:0] };
-        //     'd2: display_ram_write_data = {display_ram_read_data_a[31:12], pixel_write_data_in, display_ram_read_data_a[7:0] };
-        //     'd3: display_ram_write_data = {display_ram_read_data_a[31:16], pixel_write_data_in, display_ram_read_data_a[11:0]};
-        //     'd4: display_ram_write_data = {display_ram_read_data_a[31:20], pixel_write_data_in, display_ram_read_data_a[15:0]};
-        //     'd5: display_ram_write_data = {display_ram_read_data_a[31:24], pixel_write_data_in, display_ram_read_data_a[19:0]};
-        //     'd6: display_ram_write_data = {display_ram_read_data_a[31:28], pixel_write_data_in, display_ram_read_data_a[23:0]};
-        //     'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_a[27:0]};
-        // endcase
-    end
-
-    else begin
-        display_ram_write_data = pixel_write_data_in;
-        // case (pixel_write_address_in[2:0])
-        //     'd0: display_ram_write_data = {display_ram_read_data_b[31:4],  pixel_write_data_in                               };
-        //     'd1: display_ram_write_data = {display_ram_read_data_b[31:8],  pixel_write_data_in, display_ram_read_data_b[3:0] };
-        //     'd2: display_ram_write_data = {display_ram_read_data_b[31:12], pixel_write_data_in, display_ram_read_data_b[7:0] };
-        //     'd3: display_ram_write_data = {display_ram_read_data_b[31:16], pixel_write_data_in, display_ram_read_data_b[11:0]};
-        //     'd4: display_ram_write_data = {display_ram_read_data_b[31:20], pixel_write_data_in, display_ram_read_data_b[15:0]};
-        //     'd5: display_ram_write_data = {display_ram_read_data_b[31:24], pixel_write_data_in, display_ram_read_data_b[19:0]};
-        //     'd6: display_ram_write_data = {display_ram_read_data_b[31:28], pixel_write_data_in, display_ram_read_data_b[23:0]};
-        //     'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_b[27:0]};
-        // endcase
-    end
+    display_ram_write_data = pixel_write_data_in;
 
     // Select one of the four enables based on write address and selected buffer
     display_ram_write_enable_a = displayed_buffer == BUFFER_B && 
