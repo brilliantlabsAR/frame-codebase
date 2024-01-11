@@ -195,12 +195,6 @@ static void draw_sprite(lua_State *L,
                             (uint8_t)total_colors,
                             (uint8_t)palette_offset};
 
-    LOG("Printing %llu color sprite at (%llu, %llu) with %llu width ",
-        total_colors,
-        x_position,
-        y_position,
-        width);
-
     spi_write(FPGA, &address, 1, true);
     spi_write(FPGA, (uint8_t *)meta_data, sizeof(meta_data), true);
     spi_write(FPGA, (uint8_t *)pixel_data, pixel_data_length, false);
