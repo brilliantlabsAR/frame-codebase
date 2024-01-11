@@ -26,6 +26,38 @@
   *    x xxxx xxxx xxxx x    = This leaves 14 bits to address an LRAM block
   */
 
+module buffer (
+    input logic clock,
+    input logic reset_n,
+
+    input logic [14:0] write_address,
+    input logic [14:0] read_address,
+
+    input logic [31:0] write_data,
+    output logic [31:0] read_data,
+
+    input logic write_enable
+);
+
+`ifndef RADIANT (* ram_style="huge" *) `endif reg [31:0] mem [0:32768];
+
+always @(posedge clock) begin
+
+    if (reset_n == 0) begin
+        read_data <= 0;
+    end
+
+    else begin
+        if (write_enable) begin
+            mem[write_address] <= write_data;
+        end
+
+        read_data <= mem[read_address];
+    end
+end
+
+endmodule
+
 module display_buffers (
     input logic clock_in,
     input logic reset_n_in,
@@ -40,103 +72,35 @@ module display_buffers (
     input logic switch_write_buffer_in
 );
 
-logic [13:0] display_ram_address_a;
-logic [13:0] display_ram_address_b;
+logic [14:0] display_ram_address_a;
+logic [14:0] display_ram_address_b;
 
-logic [31:0] display_ram_read_data_a_top;
-logic [31:0] display_ram_read_data_a_bottom;
-logic [31:0] display_ram_read_data_b_top;
-logic [31:0] display_ram_read_data_b_bottom;
+logic [31:0] display_ram_read_data_a;
+logic [31:0] display_ram_read_data_b;
 
 logic [31:0] display_ram_write_data;
 
-logic display_ram_write_enable_a_top;
-logic display_ram_write_enable_a_bottom;
-logic display_ram_write_enable_b_top;
-logic display_ram_write_enable_b_bottom;
+logic display_ram_write_enable_a;
+logic display_ram_write_enable_b;
 
-PDPSC512K #(
-    .OUTREG("NO_REG"),
-    .GSR("DISABLED"),
-    .RESETMODE("SYNC"),
-    .ASYNC_RESET_RELEASE("SYNC"),
-    .ECC_BYTE_SEL("BYTE_EN")
-) display_buffer_a_top (
-    .DI(display_ram_write_data),
-    .ADW(display_ram_address_a),
-    .ADR(display_ram_address_a),
-    .CLK(clock_in),
-    .CEW('b1),
-    .CER('b1),
-    .WE(display_ram_write_enable_a_top),
-    .CSW('b1),
-    .CSR('b1),
-    .RSTR('b0),
-    .BYTEEN_N('b0000),
-    .DO(display_ram_read_data_a_top)
+buffer buffer_a (
+    .clock(clock_in),
+    .reset_n(reset_n_in),
+    .write_address(display_ram_address_a),
+    .read_address(display_ram_address_a),
+    .write_data(display_ram_write_data),
+    .read_data(display_ram_read_data_a),
+    .write_enable(display_ram_write_enable_a)
 );
 
-PDPSC512K #(
-    .OUTREG("NO_REG"),
-    .GSR("DISABLED"),
-    .RESETMODE("SYNC"),
-    .ASYNC_RESET_RELEASE("SYNC"),
-    .ECC_BYTE_SEL("BYTE_EN")
-) display_buffer_a_bottom (
-    .DI(display_ram_write_data),
-    .ADW(display_ram_address_a),
-    .ADR(display_ram_address_a),
-    .CLK(clock_in),
-    .CEW('b1),
-    .CER('b1),
-    .WE(display_ram_write_enable_a_bottom),
-    .CSW('b1),
-    .CSR('b1),
-    .RSTR('b0),
-    .BYTEEN_N('b0000),
-    .DO(display_ram_read_data_a_bottom)
-);
-
-PDPSC512K #(
-    .OUTREG("NO_REG"),
-    .GSR("DISABLED"),
-    .RESETMODE("SYNC"),
-    .ASYNC_RESET_RELEASE("SYNC"),
-    .ECC_BYTE_SEL("BYTE_EN")
-) display_buffer_b_top (
-    .DI(display_ram_write_data),
-    .ADW(display_ram_address_b),
-    .ADR(display_ram_address_b),
-    .CLK(clock_in),
-    .CEW('b1),
-    .CER('b1),
-    .WE(display_ram_write_enable_b_top),
-    .CSW('b1),
-    .CSR('b1),
-    .RSTR('b0),
-    .BYTEEN_N('b0000),
-    .DO(display_ram_read_data_b_top)
-);
-
-PDPSC512K #(
-    .OUTREG("NO_REG"),
-    .GSR("DISABLED"),
-    .RESETMODE("SYNC"),
-    .ASYNC_RESET_RELEASE("SYNC"),
-    .ECC_BYTE_SEL("BYTE_EN")
-) display_buffer_b_bottom (
-    .DI(display_ram_write_data),
-    .ADW(display_ram_address_b),
-    .ADR(display_ram_address_b),
-    .CLK(clock_in),
-    .CEW('b1),
-    .CER('b1),
-    .WE(display_ram_write_enable_b_bottom),
-    .CSW('b1),
-    .CSR('b1),
-    .RSTR('b0),
-    .BYTEEN_N('b0000),
-    .DO(display_ram_read_data_b_bottom)
+buffer buffer_b (
+    .clock(clock_in),
+    .reset_n(reset_n_in),
+    .write_address(display_ram_address_b),
+    .read_address(display_ram_address_b),
+    .write_data(display_ram_write_data),
+    .read_data(display_ram_read_data_b),
+    .write_enable(display_ram_write_enable_b)
 );
 
 // Buffer switching logic
@@ -189,13 +153,13 @@ always_ff @(posedge clock_in) begin
 
     else begin
         if (displayed_buffer == BUFFER_A) begin
-            display_ram_address_a <= pixel_read_address_in[16:3];
-            display_ram_address_b <= pixel_write_address_in[16:3];
+            display_ram_address_a <= pixel_read_address_in[17:3];
+            display_ram_address_b <= pixel_write_address_in[17:3];
         end
 
         else begin
-            display_ram_address_a <= pixel_write_address_in[16:3];
-            display_ram_address_b <= pixel_read_address_in[16:3];
+            display_ram_address_a <= pixel_write_address_in[17:3];
+            display_ram_address_b <= pixel_read_address_in[17:3];
         end
     end
 
@@ -209,55 +173,29 @@ always_ff @(posedge clock_in) begin
     end
 
     // Read pixels from displayed_buffer
-    if (displayed_buffer == BUFFER_A && pixel_read_address_in[17] == 0) begin
+    if (displayed_buffer == BUFFER_A) begin
         case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_a_top[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_a_top[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_a_top[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_a_top[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_a_top[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_a_top[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_a_top[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_a_top[31:28];
-        endcase
-    end
-    
-    else if (displayed_buffer == BUFFER_A && pixel_read_address_in[17] == 1) begin
-        case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_a_bottom[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_a_bottom[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_a_bottom[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_a_bottom[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_a_bottom[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_a_bottom[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_a_bottom[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_a_bottom[31:28];
-        endcase
-    end
-    
-    else if (displayed_buffer == BUFFER_B && pixel_read_address_in[17] == 0) begin
-        case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_b_top[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_b_top[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_b_top[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_b_top[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_b_top[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_b_top[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_b_top[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_b_top[31:28];
+            'd0: pixel_read_data_out <= display_ram_read_data_a[3:0];
+            'd1: pixel_read_data_out <= display_ram_read_data_a[7:4];
+            'd2: pixel_read_data_out <= display_ram_read_data_a[11:8];
+            'd3: pixel_read_data_out <= display_ram_read_data_a[15:12];
+            'd4: pixel_read_data_out <= display_ram_read_data_a[19:16];
+            'd5: pixel_read_data_out <= display_ram_read_data_a[23:20];
+            'd6: pixel_read_data_out <= display_ram_read_data_a[27:24];
+            'd7: pixel_read_data_out <= display_ram_read_data_a[31:28];
         endcase
     end
 
     else begin
         case (pixel_read_address_in[2:0])
-            'd0: pixel_read_data_out <= display_ram_read_data_b_bottom[3:0];
-            'd1: pixel_read_data_out <= display_ram_read_data_b_bottom[7:4];
-            'd2: pixel_read_data_out <= display_ram_read_data_b_bottom[11:8];
-            'd3: pixel_read_data_out <= display_ram_read_data_b_bottom[15:12];
-            'd4: pixel_read_data_out <= display_ram_read_data_b_bottom[19:16];
-            'd5: pixel_read_data_out <= display_ram_read_data_b_bottom[23:20];
-            'd6: pixel_read_data_out <= display_ram_read_data_b_bottom[27:24];
-            'd7: pixel_read_data_out <= display_ram_read_data_b_bottom[31:28];
+            'd0: pixel_read_data_out <= display_ram_read_data_b[3:0];
+            'd1: pixel_read_data_out <= display_ram_read_data_b[7:4];
+            'd2: pixel_read_data_out <= display_ram_read_data_b[11:8];
+            'd3: pixel_read_data_out <= display_ram_read_data_b[15:12];
+            'd4: pixel_read_data_out <= display_ram_read_data_b[19:16];
+            'd5: pixel_read_data_out <= display_ram_read_data_b[23:20];
+            'd6: pixel_read_data_out <= display_ram_read_data_b[27:24];
+            'd7: pixel_read_data_out <= display_ram_read_data_b[31:28];
         endcase
     end
 
@@ -266,78 +204,40 @@ end
 // RAM writing logic
 always_comb begin
 
-    if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 0) begin
+    if (displayed_buffer == BUFFER_B) begin
         case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_a_top[31:4],  pixel_write_data_in                                   };
-            'd1: display_ram_write_data = {display_ram_read_data_a_top[31:8],  pixel_write_data_in, display_ram_read_data_a_top[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_a_top[31:12], pixel_write_data_in, display_ram_read_data_a_top[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_a_top[31:16], pixel_write_data_in, display_ram_read_data_a_top[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_a_top[31:20], pixel_write_data_in, display_ram_read_data_a_top[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_a_top[31:24], pixel_write_data_in, display_ram_read_data_a_top[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_a_top[31:28], pixel_write_data_in, display_ram_read_data_a_top[23:0]};
-            'd7: display_ram_write_data = {                                    pixel_write_data_in, display_ram_read_data_a_top[27:0]};
-        endcase
-    end
-
-    else if (displayed_buffer == BUFFER_B && pixel_write_address_in[17] == 1) begin
-        case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_a_bottom[31:4],  pixel_write_data_in                                      };
-            'd1: display_ram_write_data = {display_ram_read_data_a_bottom[31:8],  pixel_write_data_in, display_ram_read_data_a_bottom[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_a_bottom[31:12], pixel_write_data_in, display_ram_read_data_a_bottom[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_a_bottom[31:16], pixel_write_data_in, display_ram_read_data_a_bottom[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_a_bottom[31:20], pixel_write_data_in, display_ram_read_data_a_bottom[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_a_bottom[31:24], pixel_write_data_in, display_ram_read_data_a_bottom[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_a_bottom[31:28], pixel_write_data_in, display_ram_read_data_a_bottom[23:0]};
-            'd7: display_ram_write_data = {                                       pixel_write_data_in, display_ram_read_data_a_bottom[27:0]};
-        endcase
-    end
-
-    else if (displayed_buffer == BUFFER_A && pixel_write_address_in[17] == 0) begin
-        case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_b_top[31:4],  pixel_write_data_in                                   };
-            'd1: display_ram_write_data = {display_ram_read_data_b_top[31:8],  pixel_write_data_in, display_ram_read_data_b_top[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_b_top[31:12], pixel_write_data_in, display_ram_read_data_b_top[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_b_top[31:16], pixel_write_data_in, display_ram_read_data_b_top[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_b_top[31:20], pixel_write_data_in, display_ram_read_data_b_top[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_b_top[31:24], pixel_write_data_in, display_ram_read_data_b_top[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_b_top[31:28], pixel_write_data_in, display_ram_read_data_b_top[23:0]};
-            'd7: display_ram_write_data = {                                    pixel_write_data_in, display_ram_read_data_b_top[27:0]};
+            'd0: display_ram_write_data = {display_ram_read_data_a[31:4],  pixel_write_data_in                               };
+            'd1: display_ram_write_data = {display_ram_read_data_a[31:8],  pixel_write_data_in, display_ram_read_data_a[3:0] };
+            'd2: display_ram_write_data = {display_ram_read_data_a[31:12], pixel_write_data_in, display_ram_read_data_a[7:0] };
+            'd3: display_ram_write_data = {display_ram_read_data_a[31:16], pixel_write_data_in, display_ram_read_data_a[11:0]};
+            'd4: display_ram_write_data = {display_ram_read_data_a[31:20], pixel_write_data_in, display_ram_read_data_a[15:0]};
+            'd5: display_ram_write_data = {display_ram_read_data_a[31:24], pixel_write_data_in, display_ram_read_data_a[19:0]};
+            'd6: display_ram_write_data = {display_ram_read_data_a[31:28], pixel_write_data_in, display_ram_read_data_a[23:0]};
+            'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_a[27:0]};
         endcase
     end
 
     else begin
         case (pixel_write_address_in[2:0])
-            'd0: display_ram_write_data = {display_ram_read_data_b_bottom[31:4],  pixel_write_data_in                                      };
-            'd1: display_ram_write_data = {display_ram_read_data_b_bottom[31:8],  pixel_write_data_in, display_ram_read_data_b_bottom[3:0] };
-            'd2: display_ram_write_data = {display_ram_read_data_b_bottom[31:12], pixel_write_data_in, display_ram_read_data_b_bottom[7:0] };
-            'd3: display_ram_write_data = {display_ram_read_data_b_bottom[31:16], pixel_write_data_in, display_ram_read_data_b_bottom[11:0]};
-            'd4: display_ram_write_data = {display_ram_read_data_b_bottom[31:20], pixel_write_data_in, display_ram_read_data_b_bottom[15:0]};
-            'd5: display_ram_write_data = {display_ram_read_data_b_bottom[31:24], pixel_write_data_in, display_ram_read_data_b_bottom[19:0]};
-            'd6: display_ram_write_data = {display_ram_read_data_b_bottom[31:28], pixel_write_data_in, display_ram_read_data_b_bottom[23:0]};
-            'd7: display_ram_write_data = {                                       pixel_write_data_in, display_ram_read_data_b_bottom[27:0]};
+            'd0: display_ram_write_data = {display_ram_read_data_b[31:4],  pixel_write_data_in                               };
+            'd1: display_ram_write_data = {display_ram_read_data_b[31:8],  pixel_write_data_in, display_ram_read_data_b[3:0] };
+            'd2: display_ram_write_data = {display_ram_read_data_b[31:12], pixel_write_data_in, display_ram_read_data_b[7:0] };
+            'd3: display_ram_write_data = {display_ram_read_data_b[31:16], pixel_write_data_in, display_ram_read_data_b[11:0]};
+            'd4: display_ram_write_data = {display_ram_read_data_b[31:20], pixel_write_data_in, display_ram_read_data_b[15:0]};
+            'd5: display_ram_write_data = {display_ram_read_data_b[31:24], pixel_write_data_in, display_ram_read_data_b[19:0]};
+            'd6: display_ram_write_data = {display_ram_read_data_b[31:28], pixel_write_data_in, display_ram_read_data_b[23:0]};
+            'd7: display_ram_write_data = {                                pixel_write_data_in, display_ram_read_data_b[27:0]};
         endcase
     end
 
     // Select one of the four enables based on write address and selected buffer
-    display_ram_write_enable_a_top = displayed_buffer == BUFFER_B && 
-                                     pixel_write_address_in[17] == 0 &&
-                                     pixel_write_enable_in == 1
-                                   ? 1 : 0;
+    display_ram_write_enable_a = displayed_buffer == BUFFER_B && 
+                                 pixel_write_enable_in == 1
+                               ? 1 : 0;
 
-    display_ram_write_enable_a_bottom = displayed_buffer == BUFFER_B  && 
-                                        pixel_write_address_in[17] == 1 &&
-                                        pixel_write_enable_in == 1
-                                      ? 1 : 0;
-
-    display_ram_write_enable_b_top = displayed_buffer == BUFFER_A && 
-                                     pixel_write_address_in[17] == 0 &&
-                                     pixel_write_enable_in == 1
-                                   ? 1 : 0;
-
-    display_ram_write_enable_b_bottom = displayed_buffer == BUFFER_A && 
-                                        pixel_write_address_in[17] == 1 &&
-                                        pixel_write_enable_in == 1
-                                      ? 1 : 0;
+    display_ram_write_enable_b = displayed_buffer == BUFFER_A && 
+                                 pixel_write_enable_in == 1
+                               ? 1 : 0;
 
 end
 
