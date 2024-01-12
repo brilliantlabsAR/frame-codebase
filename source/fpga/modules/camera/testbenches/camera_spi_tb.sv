@@ -42,12 +42,14 @@ initial begin
     // Bytes available
     send_opcode('h21);
     send_operand('h00);
-    send_operand('h00);
     done();
     #200
 
     // Read data
     send_opcode('h22);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
     send_operand('h00);
     send_operand('h00);
     send_operand('h00);
@@ -61,6 +63,39 @@ initial begin
     // Bytes available
     send_opcode('h21);
     send_operand('h00);
+    done();
+    #200
+
+    // Read data
+    send_opcode('h22);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    done();
+    #200
+
+    // Bytes available
+    send_opcode('h21);
+    send_operand('h00);
+    done();
+    #200
+    
+    // Read data
+    send_opcode('h22);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    done();
+    #200
+
+    // Bytes available
+    send_opcode('h21);
     send_operand('h00);
     done();
     #200
@@ -71,7 +106,10 @@ initial begin
     $finish;
 end
 
-camera camera (
+camera #(
+    .CAPTURE_X_RESOLUTION(5),
+    .CAPTURE_Y_RESOLUTION(5)
+) camera (
     .clock_spi_in(clock_spi),
     .reset_spi_n_in(reset_spi_n),
 
