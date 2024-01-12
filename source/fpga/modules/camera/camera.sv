@@ -65,7 +65,6 @@ assign buffer_read_address = bytes_read;
 
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
-logic post_increment;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -77,7 +76,6 @@ always_ff @(posedge clock_spi_in) begin
         bytes_read <= 0;
         last_op_code_valid_in <= 0;
         last_operand_valid_in <= 0;
-        post_increment <= 0;
     end
 
     else begin
@@ -120,8 +118,6 @@ always_ff @(posedge clock_spi_in) begin
                     if (last_operand_valid_in == 0 && operand_valid_in == 1) begin
                         bytes_read <= bytes_read + 1;
                     end
-
-                    post_increment <= 1;
                 end
 
             endcase
@@ -129,13 +125,6 @@ always_ff @(posedge clock_spi_in) begin
         end
 
         else begin
-            if (post_increment) begin
-                post_increment <= 0;
-                if (last_op_code_valid_in == 1 && op_code_valid_in == 0) begin
-                    bytes_read <= bytes_read + 1;
-                end
-            end
-
             response_valid_out <= 0;
         end
 
@@ -309,8 +298,6 @@ fifo fifo (
     .address_out(buffer_write_address)
 );
 
-`endif
-
 image_buffer image_buffer (
     .clock(clock_spi_in),
     .reset_n(reset_spi_n_in),
@@ -320,5 +307,7 @@ image_buffer image_buffer (
     .read_data(buffer_read_data),
     .write_enable(buffer_write_enable & capture_in_progress_flag)
 );
+
+`endif
 
 endmodule

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Fri Jan 12 11:00:54 2024
+[*] Fri Jan 12 13:39:22 2024
 [*]
 [dumpfile] "simulation/camera_spi_tb.fst"
-[dumpfile_mtime] "Fri Jan 12 11:00:46 2024"
-[dumpfile_size] 1919
+[dumpfile_mtime] "Fri Jan 12 13:37:08 2024"
+[dumpfile_size] 1944
 [savefile] "camera_spi_tb.gtkw"
 [timestart] 0
 [size] 2032 1104
 [pos] 10 38
-*-12.553376 19210 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-12.691820 9159 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC

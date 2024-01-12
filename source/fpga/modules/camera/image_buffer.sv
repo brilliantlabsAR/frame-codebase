@@ -24,13 +24,6 @@ module image_buffer (
 
 `ifndef RADIANT (* ram_style="huge" *) `endif reg [31:0] mem [0:16384];
 
-initial begin
-    mem[0] = 'h01234567;
-    mem[1] = 'habbccdde;
-    mem[2] = 'haabbccdd;
-    mem[3] = 'h76543210;
-end
-
 always @(posedge clock) begin
     if (reset_n == 1) begin
         if (write_enable) begin
