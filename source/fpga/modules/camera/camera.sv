@@ -30,7 +30,7 @@ module camera #(
     input logic clock_pixel_in, // 36MHz
     input logic reset_pixel_n_in,
 
-    input logic clock_sync_in, // 96MHz
+    input logic clock_debayer_in, // 144MHz
 
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
@@ -169,12 +169,12 @@ logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
 logic [5:0] datatype;
 
 logic clock_byte;
-logic reset_sync_n;
+logic reset_byte_n;
 
-reset_sync reset_sync_clock_sync (
-    .clock_in(clock_sync_in),
+reset_sync reset_sync_clock_byte (
+    .clock_in(clock_byte),
     .async_reset_n_in(global_reset_n_in),
-    .sync_reset_n_out(reset_sync_n)
+    .sync_reset_n_out(reset_byte_n)
 );
 
 csi2_receiver_ip csi2_receiver_ip (
@@ -182,7 +182,7 @@ csi2_receiver_ip csi2_receiver_ip (
     .clk_byte_hs_o(clock_byte),
     .clk_byte_fr_i(clock_byte),
     .reset_n_i(global_reset_n_in), // async reset
-    .reset_byte_fr_n_i(reset_sync_n),
+    .reset_byte_fr_n_i(reset_byte_n),
     .clk_p_io(mipi_clock_p_in),
     .clk_n_io(mipi_clock_n_in),
     .d_p_io(mipi_data_p_in),
@@ -199,8 +199,8 @@ csi2_receiver_ip csi2_receiver_ip (
     .lp_av_en_o(lp_av_en)
 );
 
-always @(posedge clock_byte or negedge reset_sync_n) begin
-    if (!reset_sync_n) begin
+always @(posedge clock_byte or negedge reset_byte_n) begin
+    if (!reset_byte_n) begin
         lp_av_en_d <= 0;
         sp_en_d <= 0;
     end
@@ -214,8 +214,8 @@ logic payload_en_1d, payload_en_2d, payload_en_3d /* synthesis syn_keep=1 nomerg
 logic [7:0] payload_1d /* synthesis syn_keep=1 nomerge=""*/;
 logic [7:0] payload_2d /* synthesis syn_keep=1 nomerge=""*/;
 logic [7:0] payload_3d /* synthesis syn_keep=1 nomerge=""*/;
-always @(posedge clock_byte or negedge reset_sync_n) begin
-    if (!reset_sync_n) begin
+always @(posedge clock_byte or negedge reset_byte_n) begin
+    if (!reset_byte_n) begin
         payload_en_1d <= 0;
         payload_en_2d <= 0;
         payload_en_3d <= 0;
@@ -240,7 +240,7 @@ logic line_valid /* synthesis syn_keep=1 nomerge=""*/;
 logic [9:0] pixel_data /* synthesis syn_keep=1 nomerge=""*/;
 
 byte_to_pixel_ip byte_to_pixel_ip (
-    .reset_byte_n_i(reset_sync_n),
+    .reset_byte_n_i(reset_byte_n),
     .clk_byte_i(clock_byte),
     .sp_en_i(sp_en_d),
     .dt_i(datatype),
@@ -263,7 +263,7 @@ logic fifo_write_enable /* synthesis syn_keep=1 nomerge=""*/;
 debayer # (
     .IMAGE_X_SIZE(IMAGE_X_SIZE)
 ) debayer (
-    .clock_2x_in(clock_spi_in),
+    .clock_2x_in(clock_debayer_in),
     .clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
     .x_offset_in(CAPTURE_X_OFFSET * 2),
@@ -285,7 +285,7 @@ logic [13:0] buffer_write_address /* synthesis syn_keep=1 nomerge=""*/;
 logic [31:0] buffer_write_data /* synthesis syn_keep=1 nomerge=""*/;
 
 fifo fifo (
-    .clock_in(clock_spi_in),
+    .clock_in(clock_debayer_in),
     .reset_n_in(reset_spi_n_in),
     .rgb10_in(rgb10),
     .rgb8_in(rgb8),
@@ -299,7 +299,7 @@ fifo fifo (
 );
 
 image_buffer image_buffer (
-    .clock(clock_spi_in),
+    .clock(clock_debayer_in),
     .reset_n(reset_spi_n_in),
     .write_address(buffer_write_address),
     .read_address(buffer_read_address),
