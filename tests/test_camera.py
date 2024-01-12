@@ -4,7 +4,7 @@ Tests the Frame specific Lua libraries over Bluetooth.
 
 import asyncio
 from frameutils import Bluetooth
-from PIL import Image, ImageDraw
+from PIL import Image
 import numpy as np
 
 image_buffer = b""

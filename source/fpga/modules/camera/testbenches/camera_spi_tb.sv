@@ -35,33 +35,68 @@ initial begin
     #200
 
     // Capture
-    send_opcode('h20);
+    received_opcode_and_operand('h20);
     done();
     #200
 
     // Bytes available
-    send_opcode('h21);
-    send_operand('h00);
-    send_operand('h00);
+    received_opcode_and_operand('h21);
+    received_operand('h00);
     done();
     #200
 
     // Read data
-    send_opcode('h22);
-    send_operand('h00);
-    send_operand('h00);
-    send_operand('h00);
-    send_operand('h00);
-    send_operand('h00);
-    send_operand('h00);
-    send_operand('h00);
+    received_opcode_and_operand('h22);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
     done();
     #200
 
     // Bytes available
-    send_opcode('h21);
-    send_operand('h00);
-    send_operand('h00);
+    received_opcode_and_operand('h21);
+    received_operand('h00);
+    done();
+    #200
+
+    // Read data
+    received_opcode_and_operand('h22);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    done();
+    #200
+
+    // Bytes available
+    received_opcode_and_operand('h21);
+    received_operand('h00);
+    done();
+    #200
+    
+    // Read data
+    received_opcode_and_operand('h22);
+    received_operand('h00);
+    received_operand('h00);
+    received_operand('h00);
+    done();
+    #200
+
+    // Bytes available
+    received_opcode_and_operand('h21);
+    received_operand('h00);
     done();
     #200
 
@@ -71,7 +106,10 @@ initial begin
     $finish;
 end
 
-camera camera (
+camera #(
+    .CAPTURE_X_RESOLUTION(5),
+    .CAPTURE_Y_RESOLUTION(5)
+) camera (
     .clock_spi_in(clock_spi),
     .reset_spi_n_in(reset_spi_n),
 
@@ -95,35 +133,36 @@ initial begin
     forever #2 clock_camera_pixel <= ~clock_camera_pixel;
 end
 
-task send_opcode(
+task received_opcode_and_operand(
     input logic [7:0] data
 );
     begin
         opcode <= data;
         opcode_valid <= 1;
         #64;
+        operand_valid <= 1;
     end
 endtask
 
-task send_operand(
+task received_operand(
     input logic [7:0] data
 );
     begin
+        #8;
+        operand_valid <= 0;
+        #64;
         operand <= data;
         operand_valid <= 1;
         operand_count <= operand_count + 1;
-        #64;
-        operand_valid <= 0;
-        #8;
     end
 endtask
 
 task done;
     begin
+        #64;
         opcode_valid <= 0;
         operand_valid <= 0;
         operand_count <= 0;
-        #8;
     end
 endtask
 

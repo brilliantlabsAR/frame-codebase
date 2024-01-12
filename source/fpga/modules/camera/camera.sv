@@ -12,6 +12,7 @@
 `ifndef RADIANT
 // `include "modules/camera/debayer.sv"
 // `include "modules/camera/fifo.sv"
+`include "modules/camera/image_buffer.sv"
 `endif
 
 module camera #(
@@ -58,10 +59,12 @@ logic [15:0] bytes_read;
 logic [15:0] bytes_remaining;
 assign bytes_remaining = capture_size - bytes_read;
 
-logic [13:0] buffer_read_address;
-logic [7:0] buffer_read_byte_data;
+logic [15:0] buffer_read_address;
+logic [7:0] buffer_read_data;
+assign buffer_read_address = bytes_read;
 
-logic [1:0] operand_valid_in_edge_monitor;
+logic last_op_code_valid_in;
+logic last_operand_valid_in;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -71,14 +74,14 @@ always_ff @(posedge clock_spi_in) begin
         response_valid_out <= 0;
         capture_flag <= 0;
         bytes_read <= 0;
-        buffer_read_address <= 0;
-        operand_valid_in_edge_monitor <= 0;
+        last_op_code_valid_in <= 0;
+        last_operand_valid_in <= 0;
     end
 
     else begin
 
-        operand_valid_in_edge_monitor <= {operand_valid_in_edge_monitor[0], 
-                                          operand_valid_in};
+        last_op_code_valid_in <= op_code_valid_in;
+        last_operand_valid_in <= operand_valid_in;
 
         // Clear capture flag once it is in process
         if (capture_in_progress_flag == 1) begin
@@ -109,12 +112,11 @@ always_ff @(posedge clock_spi_in) begin
 
                 // Read data
                 'h22: begin
-                    response_out <= buffer_read_byte_data;
+                    response_out <= buffer_read_data;
                     response_valid_out <= 1;
 
-                    if (operand_valid_in_edge_monitor == 'b01) begin
+                    if (last_operand_valid_in == 0 && operand_valid_in == 1) begin
                         bytes_read <= bytes_read + 1;
-                        buffer_read_address <= bytes_read[15:2];
                     end
                 end
 
@@ -152,18 +154,6 @@ always_ff @(posedge clock_spi_in) begin
             capture_in_progress_flag <= 0;
         end
     end
-end
-
-// Read data logic
-logic [31:0] buffer_read_data;
-
-always_comb begin
-    case (bytes_read[1:0])
-        'b00: buffer_read_byte_data = buffer_read_data[31:24];
-        'b01: buffer_read_byte_data = buffer_read_data[23:16];
-        'b10: buffer_read_byte_data = buffer_read_data[15:8];
-        'b11: buffer_read_byte_data = buffer_read_data[7:0];
-    endcase
 end
 
 `ifdef RADIANT
@@ -308,41 +298,16 @@ fifo fifo (
     .address_out(buffer_write_address)
 );
 
-`ifndef SIM
-PDPSC512K #(
-    .OUTREG("NO_REG"),
-    .GSR("DISABLED"),
-    .RESETMODE("SYNC"),
-    .ASYNC_RESET_RELEASE("SYNC"),
-    .ECC_BYTE_SEL("BYTE_EN")
-) camera_buffer (
-    .DI(buffer_write_data),
-    .ADW(buffer_write_address),
-    .ADR(buffer_read_address),
-    .CLK(clock_spi_in),
-    .CEW('b1),
-    .CER('b1),
-    .WE(buffer_write_enable & capture_in_progress_flag),
-    .CSW('b1),
-    .CSR('b1),
-    .RSTR('b0),
-    .BYTEEN_N('b0000),
-    .DO(buffer_read_data)
+image_buffer image_buffer (
+    .clock(clock_spi_in),
+    .reset_n(reset_spi_n_in),
+    .write_address(buffer_write_address),
+    .read_address(buffer_read_address),
+    .write_data(buffer_write_data),
+    .read_data(buffer_read_data),
+    .write_enable(buffer_write_enable & capture_in_progress_flag)
 );
-`else
-camera_ram_inferred camera_buffer (
-    .clk(clock_spi_in),
-    .rst_n(reset_spi_n_in),
-    .wr_addr(buffer_write_address),
-    .rd_addr(buffer_read_address),
-    .wr_data(buffer_write_data),
-    .rd_data(buffer_read_data),
-    .wr_en(buffer_write_enable & capture_in_progress_flag),
-    .rd_en(1'b1)
-);
-`endif
 
 `endif
-
 
 endmodule

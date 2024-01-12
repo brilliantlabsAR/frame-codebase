@@ -26,7 +26,7 @@
   *    x xxxx xxxx xxxx x    = This leaves 14 bits to address an LRAM block
   */
 
-module buffer (
+module display_buffer (
     input logic clock,
     input logic reset_n,
 
@@ -101,7 +101,7 @@ logic [3:0] display_ram_write_data;
 logic display_ram_write_enable_a;
 logic display_ram_write_enable_b;
 
-buffer buffer_a (
+display_buffer buffer_a (
     .clock(clock_in),
     .reset_n(reset_n_in),
     .write_address(display_ram_address_a),
@@ -111,7 +111,7 @@ buffer buffer_a (
     .write_enable(display_ram_write_enable_a)
 );
 
-buffer buffer_b (
+display_buffer buffer_b (
     .clock(clock_in),
     .reset_n(reset_n_in),
     .write_address(display_ram_address_b),
