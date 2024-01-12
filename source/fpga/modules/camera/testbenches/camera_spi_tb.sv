@@ -137,9 +137,9 @@ task send_opcode(
     input logic [7:0] data
 );
     begin
+        #64;
         opcode <= data;
         opcode_valid <= 1;
-        #64;
     end
 endtask
 
@@ -147,21 +147,21 @@ task send_operand(
     input logic [7:0] data
 );
     begin
+        #64;
         operand <= data;
         operand_valid <= 1;
         operand_count <= operand_count + 1;
-        #64;
-        operand_valid <= 0;
         #8;
+        operand_valid <= 0;
     end
 endtask
 
 task done;
     begin
+        #64;
         opcode_valid <= 0;
         operand_valid <= 0;
         operand_count <= 0;
-        #8;
     end
 endtask
 

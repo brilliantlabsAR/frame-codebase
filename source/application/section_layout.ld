@@ -61,12 +61,12 @@ SECTIONS
     .empty_flash : {
         . = ALIGN(4K);
         __empty_flash_start = .;
-        __empty_flash_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH) - 4K;
+        __empty_flash_end = __bond_storage_start;
     } > APPLICATION_FLASH
 
     .bond_storage : {
         . = ALIGN(4K);
-        __bond_storage_start = .;
+        __bond_storage_start = __bond_storage_end - 4K;
         __bond_storage_end = ORIGIN(APPLICATION_FLASH) + LENGTH(APPLICATION_FLASH);
     } > APPLICATION_FLASH
 
