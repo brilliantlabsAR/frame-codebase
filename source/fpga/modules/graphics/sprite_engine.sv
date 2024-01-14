@@ -86,7 +86,7 @@ always_ff @(posedge clock_in) begin
                 pixel_write_address_out <= current_x_pen_position + 
                                            (current_y_pen_position * 640);
 
-                // Draw the pixel TODO color offset
+                // Draw pixel based on which color mode we are in
                 case (total_colors_in)
                     2: begin
                         case (pixels_remaining[2:0])
