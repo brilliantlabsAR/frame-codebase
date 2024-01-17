@@ -99,7 +99,6 @@ static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
 
     if (lua_pcall(L, 1, 0, 0) != LUA_OK)
     {
-        LOG("Something happened");
         luaL_error(L, "%s", lua_tostring(L, -1));
     }
 }
