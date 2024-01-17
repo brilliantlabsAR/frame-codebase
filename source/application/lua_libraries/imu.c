@@ -43,7 +43,10 @@ static void lua_imu_tap_callback_handler(lua_State *L, lua_Debug *ar)
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lua_imu_callback_function);
 
-    lua_pcall(L, 0, 0, 0);
+    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    {
+        luaL_error(L, "%s", lua_tostring(L, -1));
+    }
 }
 
 void imu_tap_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,

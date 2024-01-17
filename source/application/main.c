@@ -394,5 +394,7 @@ int main(void)
     while (1)
     {
         run_lua(factory_reset);
+
+        factory_reset = false;
     }
 }
