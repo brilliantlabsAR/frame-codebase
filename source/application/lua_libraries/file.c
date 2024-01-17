@@ -533,3 +533,8 @@ void lua_open_file_library(lua_State *L, bool reformat)
     lua_pushcfunction(L, lua_file_require);
     lua_setglobal(L, "require");
 }
+
+void lua_close_file_library(void)
+{
+    check_error(lfs_unmount(&filesystem));
+}

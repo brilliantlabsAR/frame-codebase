@@ -148,5 +148,7 @@ void run_lua(bool factory_reset)
         }
     }
 
+    lua_close_file_library();
+
     lua_close(L);
 }
