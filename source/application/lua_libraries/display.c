@@ -34,12 +34,37 @@ static uint32_t utf8_decode(const char *string, size_t *index)
     uint32_t codepoint = 0;
 
     // If ASCII
-    if ((string[*index] & 0b10000000) == 0)
+    if (string[*index] < 0b10000000)
     {
         codepoint = string[*index] & 0b01111111;
         *index += 1;
     }
-    // TODO others
+    else if ((string[*index] & 0b11100000) == 0b11000000)
+    {
+        codepoint = (string[*index] & 0b00011111) << 6 |
+                    (string[*index + 1] & 0b00111111);
+        *index += 2;
+    }
+    else if ((string[*index] & 0b11110000) == 0b11100000)
+    {
+        codepoint = (string[*index] & 0b00001111) << 12 |
+                    (string[*index + 1] & 0b00111111) << 6 |
+                    (string[*index + 2] & 0b00111111);
+        *index += 3;
+    }
+    else if ((string[*index] & 0b11111000) == 0b11110000)
+    {
+        codepoint = (string[*index] & 0b00000111) << 18 |
+                    (string[*index + 1] & 0b00111111) << 12 |
+                    (string[*index + 2] & 0b00111111) << 6 |
+                    (string[*index + 3] & 0b00111111);
+        *index += 4;
+    }
+    else
+    {
+        // Invalid byte. Simply skip
+        *index += 1;
+    }
 
     return codepoint;
 }
