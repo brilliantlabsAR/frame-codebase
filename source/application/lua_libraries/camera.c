@@ -85,7 +85,7 @@ static int lua_camera_read(lua_State *L)
     uint8_t *data = malloc(length);
     if (data == NULL)
     {
-        error();
+        luaL_error(L, "not enough memory");
     }
 
     spi_write(FPGA, &address, 1, true);

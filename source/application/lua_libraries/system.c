@@ -154,6 +154,10 @@ static int lua_fpga_read(lua_State *L)
     luaL_checkinteger(L, 2);
     lua_Integer length = lua_tointeger(L, 2);
     uint8_t *data = malloc(length);
+    if (data == NULL)
+    {
+        luaL_error(L, "not enough memory");
+    }
 
     spi_write(FPGA, &address, 1, true);
     spi_read(FPGA, data, length, false);

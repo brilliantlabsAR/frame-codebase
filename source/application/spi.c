@@ -135,6 +135,10 @@ void spi_write(spi_device_t device,
     if (!nrfx_is_in_ram(data))
     {
         uint8_t *m_data = malloc(length);
+        if (m_data == NULL)
+        {
+            error();
+        }
         memcpy(m_data, data, length);
         nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
         check_error(nrfx_spim_xfer(&instance, &xfer, 0));

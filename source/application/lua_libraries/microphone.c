@@ -273,7 +273,7 @@ static int lua_microphone_read(lua_State *L)
     char *samples = malloc(bytes);
     if (samples == NULL)
     {
-        luaL_error(L, "not enough heap memory");
+        luaL_error(L, "not enough memory");
     }
 
     while (true)
