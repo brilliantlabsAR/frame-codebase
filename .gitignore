@@ -4,6 +4,7 @@ build/
 # Ignore simulation files
 simulation/
 abc.history
+obj_dir/
 
 # Ignore VSCode user settings
 .vscode/settings.json
