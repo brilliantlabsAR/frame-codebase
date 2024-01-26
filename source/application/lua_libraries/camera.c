@@ -111,6 +111,11 @@ static int lua_camera_wake(lua_State *L)
 
 static int lua_camera_set_register(lua_State *L)
 {
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
     luaL_checkinteger(L, 1);
     luaL_checkinteger(L, 2);
 
