@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Jan 29 13:28:20 2024
+[*] Mon Jan 29 15:39:59 2024
 [*]
 [dumpfile] "simulation/debayer_tb.fst"
-[dumpfile_mtime] "Mon Jan 29 13:26:09 2024"
-[dumpfile_size] 2115
+[dumpfile_mtime] "Mon Jan 29 15:35:13 2024"
+[dumpfile_size] 50670
 [savefile] "debayer_tb.gtkw"
-[timestart] 0
-[size] 1376 1104
-[pos] 668 38
-*-13.655659 23030 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[timestart] 85676
+[size] 2032 1104
+[pos] 10 38
+*-5.768030 85860 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -69,14 +69,6 @@ debayer_tb.debayer.pixel_data_in[9:0]
 debayer_tb.debayer.x_counter[11:0]
 debayer_tb.debayer.y_counter[11:0]
 @22
-debayer_tb.debayer.\line_buffer_a[0][9:0]
-debayer_tb.debayer.\line_buffer_a[1][9:0]
-debayer_tb.debayer.\line_buffer_a[2][9:0]
-debayer_tb.debayer.\line_buffer_a[3][9:0]
-debayer_tb.debayer.\line_buffer_b[0][9:0]
-debayer_tb.debayer.\line_buffer_b[1][9:0]
-debayer_tb.debayer.\line_buffer_b[2][9:0]
-debayer_tb.debayer.\line_buffer_b[3][9:0]
 debayer_tb.debayer.previous_pixel[9:0]
 debayer_tb.debayer.previous_previous_pixel[9:0]
 @200
@@ -88,5 +80,33 @@ debayer_tb.debayer.frame_valid_out
 debayer_tb.debayer.pixel_red_data_out[11:0]
 debayer_tb.debayer.pixel_green_data_out[11:0]
 debayer_tb.debayer.pixel_blue_data_out[11:0]
+@200
+-
+@22
+debayer_tb.packed_rgb[30:0]
+@200
+-
+-Crop
+@420
+debayer_tb.crop.X_CROP_START
+debayer_tb.crop.X_CROP_END
+debayer_tb.crop.Y_CROP_START
+debayer_tb.crop.Y_CROP_END
+@200
+-
+@22
+debayer_tb.crop.x_counter[11:0]
+debayer_tb.crop.y_counter[11:0]
+@28
+debayer_tb.crop.previous_line_valid_in
+@200
+-
+@28
+debayer_tb.crop.line_valid_out
+debayer_tb.crop.frame_valid_out
+@22
+debayer_tb.crop.pixel_red_data_out[9:0]
+debayer_tb.crop.pixel_green_data_out[9:0]
+debayer_tb.crop.pixel_blue_data_out[9:0]
 [pattern_trace] 1
 [pattern_trace] 0

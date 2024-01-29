@@ -30,8 +30,8 @@
  */
 
 module debayer #(
-    X_RESOLUTION_IN = 5, // Include 1 left padding and 2 right padding
-    Y_RESOLUTION_IN = 4 // Include 1 top padding and 1 bottom padding
+    X_RESOLUTION_IN = 78, // Include 1 left padding and 2 right padding
+    Y_RESOLUTION_IN = 76 // Include 1 top padding and 1 bottom padding
 )(
     input logic pixel_clock_in,
     input logic reset_n_in,
@@ -60,15 +60,6 @@ logic [9:0] line_buffer_b [0:X_RESOLUTION_IN - 1];
 logic [9:0] previous_pixel;
 logic [9:0] previous_previous_pixel;
 logic [9:0] previous_previous_previous_pixel;
-
-initial begin
-    $dumpfile("simulation/debayer_tb.fst");
-
-    for (integer i = 0; i < X_RESOLUTION_IN - 1; i = i + 1) begin
-        $dumpvars(1, line_buffer_a[i]);
-        $dumpvars(1, line_buffer_b[i]);
-    end
-end
 
 always_ff @(posedge pixel_clock_in) begin
 

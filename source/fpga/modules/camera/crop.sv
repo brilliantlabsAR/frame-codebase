@@ -1,8 +1,8 @@
 module crop #(
-    X_CROP_START = 0,
-    X_CROP_END = 5,
-    Y_CROP_START = 0,
-    Y_CROP_END = 4
+    X_CROP_START = 10,
+    X_CROP_END = 25,
+    Y_CROP_START = 12,
+    Y_CROP_END = 24
 )(
     input logic pixel_clock_in,
     input logic reset_n_in,
