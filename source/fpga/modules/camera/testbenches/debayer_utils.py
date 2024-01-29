@@ -22,11 +22,21 @@ def bayer_image(file):
 
     for h in range(image.height * 2):
         for w in range(image.width * 2):
-            print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 0] * 4)};")
-            array_index += 1
-            print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 1] * 4)};")
-            array_index += 1
-            print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 2] * 4)};")
+            if (h % 2 == 0):
+                if (w % 2 == 0):
+                    # blue channel
+                    print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 2] * 4)};")
+                else:
+                    # blue channel
+                    print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 1] * 4)};")
+
+            else:
+                if (w % 2 == 0):
+                    # green channel
+                    print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 1] * 4)};")
+                else:
+                    # red channel
+                    print(f"mem[{str(array_index)}] = 'd{str(bayered_image[h, w, 0] * 4)};")
             array_index += 1
 
     bayered_image = Image.fromarray(bayered_image)
