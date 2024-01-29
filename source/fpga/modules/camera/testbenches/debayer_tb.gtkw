@@ -1,0 +1,92 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Mon Jan 29 13:28:20 2024
+[*]
+[dumpfile] "simulation/debayer_tb.fst"
+[dumpfile_mtime] "Mon Jan 29 13:26:09 2024"
+[dumpfile_size] 2115
+[savefile] "debayer_tb.gtkw"
+[timestart] 0
+[size] 1376 1104
+[pos] 668 38
+*-13.655659 23030 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] debayer_tb.
+[sst_width] 253
+[signals_width] 325
+[sst_expanded] 1
+[sst_vpaned_height] 335
+@28
+debayer_tb.pixel_clock
+debayer_tb.reset_n
+@200
+-
+-Image gen
+@24
+debayer_tb.image_gen.x_counter[31:0]
+debayer_tb.image_gen.y_counter[31:0]
+debayer_tb.image_gen.line_valid
+debayer_tb.image_gen.frame_valid
+debayer_tb.image_gen.pixel_counter[31:0]
+@22
+debayer_tb.image_gen.pixel_data_out[9:0]
+@200
+-
+-Debayer
+@28
+debayer_tb.debayer.frame_valid_in
+debayer_tb.debayer.line_valid_in
+@22
+debayer_tb.debayer.pixel_data_in[9:0]
+@200
+-
+@24
+debayer_tb.debayer.x_counter[11:0]
+debayer_tb.debayer.y_counter[11:0]
+@22
+debayer_tb.debayer.\line_buffer_a[0][9:0]
+debayer_tb.debayer.\line_buffer_a[1][9:0]
+debayer_tb.debayer.\line_buffer_a[2][9:0]
+debayer_tb.debayer.\line_buffer_a[3][9:0]
+debayer_tb.debayer.\line_buffer_b[0][9:0]
+debayer_tb.debayer.\line_buffer_b[1][9:0]
+debayer_tb.debayer.\line_buffer_b[2][9:0]
+debayer_tb.debayer.\line_buffer_b[3][9:0]
+debayer_tb.debayer.previous_pixel[9:0]
+debayer_tb.debayer.previous_previous_pixel[9:0]
+@200
+-
+@28
+debayer_tb.debayer.line_valid_out
+debayer_tb.debayer.frame_valid_out
+@22
+debayer_tb.debayer.pixel_red_data_out[11:0]
+debayer_tb.debayer.pixel_green_data_out[11:0]
+debayer_tb.debayer.pixel_blue_data_out[11:0]
+[pattern_trace] 1
+[pattern_trace] 0

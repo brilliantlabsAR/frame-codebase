@@ -22,20 +22,35 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-camera:
+spi:
 	@mkdir -p simulation
 	
 	@iverilog -Wall \
 			  -g2012 \
 			  -I ../../.. \
-			  -o simulation/camera_spi_tb.out \
-			  -i camera_spi_tb.sv
+			  -o simulation/spi_tb.out \
+			  -i spi_tb.sv
 	exit
-	@vvp simulation/camera_spi_tb.out \
+	@vvp simulation/spi_tb.out \
 		 -fst
 
-	@gtkwave simulation/camera_spi_tb.fst \
-			 camera_spi_tb.gtkw
+	@gtkwave simulation/spi_tb.fst \
+			 spi_tb.gtkw
+
+debayer:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -o simulation/debayer_tb.out \
+			  -i debayer_tb.sv
+	exit
+	@vvp simulation/debayer_tb.out \
+		 -fst
+
+	@gtkwave simulation/debayer_tb.fst \
+			 debayer_tb.gtkw
 
 clean:
 	@rm -rf simulation
