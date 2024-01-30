@@ -44,9 +44,7 @@ module debayer #(
     output logic [11:0] pixel_green_data_out,
     output logic [11:0] pixel_blue_data_out,
     output logic line_valid_out,
-    output logic frame_valid_out,
-
-    output logic [29:0] average_brightness_out
+    output logic frame_valid_out
 );
 
 // Allows max 2048 x 2048 pixel input
