@@ -55,7 +55,6 @@ logic clock_camera;
 logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
-logic clock_camera_debayer;
 logic pll_locked;
 
 OSCA #(
@@ -73,7 +72,6 @@ pll_ip pll_wrapper (
     .clkos_o(clock_camera_pixel),      // 36MHz
     .clkos2_o(clock_display),          // 36MHz
     .clkos3_o(clock_spi),              // 72MHz
-	.clkos4_o(clock_camera_debayer),   // 144MHz
     .lock_o(pll_locked)
 );
 
@@ -173,8 +171,6 @@ camera camera (
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
-
-    .clock_debayer_in(clock_camera_debayer),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),

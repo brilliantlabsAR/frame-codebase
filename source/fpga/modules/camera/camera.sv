@@ -17,10 +17,7 @@
 
 module camera #(
     CAPTURE_X_RESOLUTION = 200,
-    CAPTURE_Y_RESOLUTION = 200,
-    CAPTURE_X_OFFSET = 220,
-    CAPTURE_Y_OFFSET = 100,
-    IMAGE_X_SIZE = 1288
+    CAPTURE_Y_RESOLUTION = 200
 ) (
     input logic global_reset_n_in,
     
@@ -29,8 +26,6 @@ module camera #(
 
     input logic clock_pixel_in, // 36MHz
     input logic reset_pixel_n_in,
-
-    input logic clock_debayer_in, // 144MHz
 
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
@@ -133,24 +128,24 @@ always_ff @(posedge clock_spi_in) begin
 end
 
 // Capture command logic
-logic [1:0] debayer_frame_valid_edge_monitor;
-logic debayer_frame_valid;
+logic [1:0] frame_valid_cropped_edge_monitor;
+logic frame_valid_cropped;
 
 always_ff @(posedge clock_spi_in) begin
     if (reset_spi_n_in == 0) begin
         capture_in_progress_flag <= 0;
-        debayer_frame_valid_edge_monitor <= 0;
+        frame_valid_cropped_edge_monitor <= 0;
     end
 
     else begin
-        debayer_frame_valid_edge_monitor <= {debayer_frame_valid_edge_monitor[0],
-                                             debayer_frame_valid};
+        frame_valid_cropped_edge_monitor <= {frame_valid_cropped_edge_monitor[0],
+                                             frame_valid_cropped};
 
-        if (capture_flag && debayer_frame_valid_edge_monitor == 'b01) begin
+        if (capture_flag && frame_valid_cropped_edge_monitor == 'b01) begin
             capture_in_progress_flag <= 1;
         end
 
-        if (debayer_frame_valid_edge_monitor == 'b10) begin
+        if (frame_valid_cropped_edge_monitor == 'b10) begin
             capture_in_progress_flag <= 0;
         end
     end
@@ -162,7 +157,6 @@ logic payload_en /* synthesis syn_keep=1 nomerge=""*/;
 logic sp_en /* synthesis syn_keep=1 nomerge=""*/;
 logic sp_en_d /* synthesis syn_keep=1 nomerge=""*/;
 logic lp_av_en /* synthesis syn_keep=1 nomerge=""*/;
-logic lp_en /* synthesis syn_keep=1 nomerge=""*/;
 logic lp_av_en_d /* synthesis syn_keep=1 nomerge=""*/;
 logic [7:0] payload /* synthesis syn_keep=1 nomerge=""*/;
 logic [15:0] word_count /* synthesis syn_keep=1 nomerge=""*/;
@@ -195,7 +189,7 @@ csi2_receiver_ip csi2_receiver_ip (
     .wc_o(word_count),
     .ref_dt_i(6'h2B), // RAW10 packet code
     .sp_en_o(sp_en),
-    .lp_en_o(lp_en),
+    .lp_en_o(),
     .lp_av_en_o(lp_av_en)
 );
 
@@ -255,57 +249,87 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(pixel_data)
 );
 
-logic [9:0] rgb10 /* synthesis syn_keep=1 nomerge=""*/;
-logic [7:0] rgb8 /* synthesis syn_keep=1 nomerge=""*/;
-logic [3:0] gray4 /* synthesis syn_keep=1 nomerge=""*/;
-logic fifo_write_enable /* synthesis syn_keep=1 nomerge=""*/;
+logic [11:0] pixel_red_data_debayer_to_crop;
+logic [11:0] pixel_green_data_debayer_to_crop;
+logic [11:0] pixel_blue_data_debayer_to_crop;
+logic line_valid_debayer_to_crop;
+logic frame_valid_debayer_to_crop;
 
-debayer # (
-    .IMAGE_X_SIZE(IMAGE_X_SIZE)
+debayer #(
+    .X_RESOLUTION_IN(1288), // Include 1 left padding and 2 right padding
+    .Y_RESOLUTION_IN(768) // Include 1 top padding and 1 bottom padding
 ) debayer (
-    .clock_2x_in(clock_debayer_in),
-    .clock_in(clock_pixel_in),
+    .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
-    .x_offset_in(CAPTURE_X_OFFSET * 2),
-    .y_offset_in(CAPTURE_Y_OFFSET * 2),
-    .x_size_in(CAPTURE_X_RESOLUTION * 2),
-    .y_size_in(CAPTURE_Y_RESOLUTION * 2),
+
     .pixel_data_in(pixel_data),
     .line_valid_in(line_valid),
     .frame_valid_in(frame_valid),
-    .rgb10_out(rgb10),
-    .rgb8_out(rgb8),
-    .gray4_out(gray4),
-    .fifo_write_enable_out(fifo_write_enable),
-    .frame_valid_out(debayer_frame_valid)
-) /* synthesis syn_keep=1 */;
 
-logic buffer_write_enable /* synthesis syn_keep=1 nomerge=""*/;
-logic [13:0] buffer_write_address /* synthesis syn_keep=1 nomerge=""*/;
-logic [31:0] buffer_write_data /* synthesis syn_keep=1 nomerge=""*/;
-
-fifo fifo (
-    .clock_in(clock_debayer_in),
-    .reset_n_in(reset_spi_n_in),
-    .rgb10_in(rgb10),
-    .rgb8_in(rgb8),
-    .gray4_in(gray4),
-    .pixel_width_in(4'd8),
-    .write_enable_in(fifo_write_enable),
-    .frame_valid_in(debayer_frame_valid),
-    .write_enable_out(buffer_write_enable),
-    .pixel_data_out(buffer_write_data),
-    .address_out(buffer_write_address)
+    .pixel_red_data_out(pixel_red_data_debayer_to_crop),
+    .pixel_green_data_out(pixel_green_data_debayer_to_crop),
+    .pixel_blue_data_out(pixel_blue_data_debayer_to_crop),
+    .line_valid_out(line_valid_debayer_to_crop),
+    .frame_valid_out(frame_valid_debayer_to_crop)
 );
 
+logic [9:0] pixel_red_data_cropped;
+logic [9:0] pixel_green_data_cropped;
+logic [9:0] pixel_blue_data_cropped;
+logic line_valid_cropped;
+
+crop #(
+    .X_CROP_START(544),
+    .X_CROP_END(744),
+    .Y_CROP_START(628),
+    .Y_CROP_END(828)
+) crop (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+
+    .pixel_red_data_in(pixel_red_data_debayer_to_crop[11:2]),
+    .pixel_green_data_in(pixel_green_data_debayer_to_crop[11:2]),
+    .pixel_blue_data_in(pixel_blue_data_debayer_to_crop[11:2]),
+    .line_valid_in(line_valid_debayer_to_crop),
+    .frame_valid_in(frame_valid_debayer_to_crop),
+
+    .pixel_red_data_out(pixel_red_data_cropped),
+    .pixel_green_data_out(pixel_green_data_cropped),
+    .pixel_blue_data_out(pixel_blue_data_cropped),
+    .line_valid_out(line_valid_cropped),
+    .frame_valid_out(frame_valid_cropped)
+);
+
+logic buffer_write_enable /* synthesis syn_keep=1 nomerge=""*/;
+logic [15:0] buffer_write_address;
+logic [15:0] buffer_write_data;
+assign buffer_write_data = {
+        pixel_red_data_cropped[9:7],
+        pixel_green_data_cropped[9:7],
+        pixel_blue_data_cropped[9:8]};
+
+always_ff @(posedge clock_pixel_in) begin
+    if (frame_valid_cropped == 0) begin
+        buffer_write_address <= 0;
+        buffer_write_enable <= 0;
+    end
+    else if (frame_valid_cropped & line_valid_cropped & capture_in_progress_flag) begin
+        buffer_write_address <= buffer_write_address + 1;
+        buffer_write_enable <= 1;
+    end
+    else begin
+        buffer_write_enable <= 0;
+    end
+end
+
 image_buffer image_buffer (
-    .clock(clock_debayer_in),
+    .clock(clock_spi_in),
     .reset_n(reset_spi_n_in),
     .write_address(buffer_write_address),
     .read_address(buffer_read_address),
     .write_data(buffer_write_data),
     .read_data(buffer_read_data),
-    .write_enable(buffer_write_enable & capture_in_progress_flag)
+    .write_enable(buffer_write_enable)
 );
 
 `endif

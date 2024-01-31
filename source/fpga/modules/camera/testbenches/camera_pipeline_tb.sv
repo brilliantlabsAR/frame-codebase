@@ -401,10 +401,10 @@ csi2_transmitter_ip csi_tx_inst (
 // Camera pipeline
 camera #(
     .CAPTURE_X_RESOLUTION(IMAGE_X_SIZE/2),
-    .CAPTURE_Y_RESOLUTION(IMAGE_Y_SIZE/2),
-    .CAPTURE_X_OFFSET(0),
-    .CAPTURE_Y_OFFSET(0),
-    .IMAGE_X_SIZE(IMAGE_X_SIZE)
+    .CAPTURE_Y_RESOLUTION(IMAGE_Y_SIZE/2)
+//    .CAPTURE_X_OFFSET(0),
+//    .CAPTURE_Y_OFFSET(0),
+//    .IMAGE_X_SIZE(IMAGE_X_SIZE)
 ) camera (
     .global_reset_n_in(reset_n),
 
