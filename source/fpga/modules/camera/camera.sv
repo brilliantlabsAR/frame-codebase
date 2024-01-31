@@ -324,13 +324,13 @@ always_ff @(posedge clock_spi_in) begin
 end
 
 image_buffer image_buffer (
-    .clock(clock_spi_in),
-    .reset_n(reset_spi_n_in),
-    .write_address(buffer_write_address),
-    .read_address(buffer_read_address),
-    .write_data(buffer_write_data),
-    .read_data(buffer_read_data),
-    .write_enable(buffer_write_enable)
+    .clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+    .write_address_in(buffer_write_address),
+    .read_address_in(buffer_read_address),
+    .write_data_in(buffer_write_data),
+    .read_data_out(buffer_read_data),
+    .write_enable_in(buffer_write_enable)
 );
 
 `endif
