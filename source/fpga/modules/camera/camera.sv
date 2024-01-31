@@ -282,29 +282,55 @@ crop #(
     .frame_valid_out(cropped_frame_valid)
 );
 
+logic [15:0] buffer_write_address_metastable;
 logic [15:0] buffer_write_address;
-
 always_ff @(posedge clock_pixel_in) begin
 
     if (cropped_frame_valid == 0) begin
-        buffer_write_address <= 0;
+        buffer_write_address_metastable <= 0;
     end
-    else if (cropped_frame_valid & cropped_line_valid) begin
-        buffer_write_address <= buffer_write_address + 1;
+    else if (cropped_frame_valid && cropped_line_valid) begin
+        buffer_write_address_metastable <= buffer_write_address_metastable + 1;
     end
 
 end
 
-// TODO add clock crossing from cropper to imagebuffer
+logic [7:0] buffer_write_data_metastable;
+logic [7:0] buffer_write_data;
+assign buffer_write_data_metastable = {cropped_red_data[9:7], 
+                                       cropped_green_data[9:7], 
+                                       cropped_blue_data[9:8]};
+
+logic buffer_write_enable_metastable;
+logic buffer_write_enable;
+assign buffer_write_enable_metastable = cropped_frame_valid && 
+                                        cropped_line_valid && 
+                                        capture_in_progress_flag;
+
+always_ff @(posedge clock_spi_in) begin
+    
+    if (reset_spi_n_in == 0) begin
+        buffer_write_address <= 0;
+        buffer_write_data <= 0;
+        buffer_write_enable <= 0;
+    end
+
+    else begin
+        buffer_write_address <= buffer_write_address_metastable;
+        buffer_write_data <= buffer_write_data_metastable;
+        buffer_write_enable <= buffer_write_enable_metastable;
+    end
+    
+end
 
 image_buffer image_buffer (
     .clock(clock_spi_in),
     .reset_n(reset_spi_n_in),
     .write_address(buffer_write_address),
     .read_address(buffer_read_address),
-    .write_data({cropped_red_data[9:7], cropped_green_data[9:7], cropped_blue_data[9:8]}),
+    .write_data(buffer_write_data),
     .read_data(buffer_read_data),
-    .write_enable(cropped_frame_valid & cropped_line_valid & capture_in_progress_flag)
+    .write_enable(buffer_write_enable)
 );
 
 `endif
