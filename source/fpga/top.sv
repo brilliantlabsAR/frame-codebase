@@ -66,7 +66,7 @@ OSCA #(
     .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
-pll_ip pll_wrapper (
+pll_wrapper pll_wrapper (
     .clki_i(clock_osc),                // 18MHz
     .clkop_o(clock_camera),            // 24MHz
     .clkos_o(clock_camera_pixel),      // 36MHz
