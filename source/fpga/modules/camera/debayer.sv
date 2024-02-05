@@ -42,7 +42,7 @@ module debayer_buffer (
     output logic [29:0] pixel_read_data_out
 );
 
-logic [8:0] mem [2048:0]; 
+logic [8:0] mem [0:2047]; 
 
 logic [8:0] previous_read_data;
 logic [8:0] previous_previous_read_data;

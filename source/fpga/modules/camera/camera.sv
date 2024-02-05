@@ -269,9 +269,9 @@ crop #(
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(debayered_red_data[11:2]),
-    .pixel_green_data_in(debayered_green_data[11:2]),
-    .pixel_blue_data_in(debayered_blue_data[11:2]),
+    .pixel_red_data_in(debayered_red_data[9:0]),
+    .pixel_green_data_in(debayered_green_data[9:0]),
+    .pixel_blue_data_in(debayered_blue_data[9:0]),
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
@@ -283,7 +283,7 @@ crop #(
 );
 
 logic [15:0] buffer_write_address_metastable;
-logic [15:0] buffer_write_address;
+logic [15:0] buffer_address;
 always_ff @(posedge clock_pixel_in) begin
 
     if (cropped_frame_valid == 0) begin
@@ -310,24 +310,30 @@ assign buffer_write_enable_metastable = cropped_frame_valid &&
 always_ff @(posedge clock_spi_in) begin
     
     if (reset_spi_n_in == 0) begin
-        buffer_write_address <= 0;
+        buffer_address <= 0;
         buffer_write_data <= 0;
         buffer_write_enable <= 0;
     end
 
     else begin
-        buffer_write_address <= buffer_write_address_metastable;
-        buffer_write_data <= buffer_write_data_metastable;
+        if (buffer_write_enable_metastable) begin
+            buffer_address <= buffer_write_address_metastable;
+            buffer_write_data <= buffer_write_data_metastable;  
+        end
+        else begin
+            buffer_address <= buffer_read_address;
+            buffer_write_data <= 0;
+        end
+
         buffer_write_enable <= buffer_write_enable_metastable;
     end
-    
 end
 
 image_buffer image_buffer (
-    .clock_in(clock_pixel_in),
-    .reset_n_in(reset_pixel_n_in),
-    .write_address_in(buffer_write_address),
-    .read_address_in(buffer_read_address),
+    .clock_in(clock_spi_in),
+    .reset_n_in(reset_spi_n_in),
+    .write_address_in(buffer_address),
+    .read_address_in(buffer_address),
     .write_data_in(buffer_write_data),
     .read_data_out(buffer_read_data),
     .write_enable_in(buffer_write_enable)
