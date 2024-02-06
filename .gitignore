@@ -4,7 +4,11 @@ build/
 # Ignore simulation files
 simulation/
 abc.history
+<<<<<<< Updated upstream
 obj_dir/
+=======
+obj_dir
+>>>>>>> Stashed changes
 
 # Ignore VSCode user settings
 .vscode/settings.json
