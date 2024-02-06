@@ -226,7 +226,7 @@ always_ff @(posedge pixel_clock_in) begin
                         pixel_red_data_out <= (line_buffer_b_read_data[29:20] +   // Top left R
                                                line_buffer_b_read_data[9:0] +     // Top righ R
                                                previous_previous_pixel +          // Bottom left R
-                                               pixel_data_in) >> 1;               // Bottom right R
+                                               pixel_data_in) >> 2;               // Bottom right R
 
                         pixel_green_data_out <= (line_buffer_b_read_data[19:10] + // Top Gr
                                                  line_buffer_a_read_data[29:20] + // Left Gb
