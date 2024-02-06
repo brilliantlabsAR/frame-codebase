@@ -251,21 +251,16 @@ logic pixel_en;
 logic [9:0] pixel_data;
 
 
-parameter IMAGE_X_SIZE = 200;
-parameter IMAGE_Y_SIZE = 4;
+parameter IMAGE_X_SIZE = 1288;
+parameter IMAGE_Y_SIZE = 768;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
-image_gen #(
-    .IMAGE_X_SIZE (IMAGE_X_SIZE),
-    .IMAGE_Y_SIZE (IMAGE_Y_SIZE)
-) i_image_gen (
-    .reset_n (reset_camera_pixel_n),
-    .clk  (clock_camera_pixel),
-    .fv   (pixel_fv),
-    .lv   (),
-    .pix_data (pixel_data),
-    .pix_en (pixel_lv) 
-    // byte2pix expects pix_en to be on all the time, instead linevalid becomes enable
+image_gen_colorbar i_image_gen (
+    .reset_n_in (reset_camera_pixel_n),
+    .pixel_clock_in (clock_camera_pixel),
+    .frame_valid (pixel_fv),
+    .pixel_data_out (pixel_data),
+    .line_valid (pixel_lv) 
 );
 
 logic c2d_ready, tx_d_hs_en, byte_data_en;
@@ -399,19 +394,11 @@ csi2_transmitter_ip csi_tx_inst (
 );
 
 // Camera pipeline
-camera #(
-    .CAPTURE_X_RESOLUTION(IMAGE_X_SIZE/2),
-    .CAPTURE_Y_RESOLUTION(IMAGE_Y_SIZE/2)
-//    .CAPTURE_X_OFFSET(0),
-//    .CAPTURE_Y_OFFSET(0),
-//    .IMAGE_X_SIZE(IMAGE_X_SIZE)
-) camera (
+camera camera (
     .global_reset_n_in(reset_n),
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
-
-    .clock_sync_in(clock_camera_sync),
 
 	.clock_spi_in(clock_spi),
     .reset_spi_n_in(reset_spi_n),

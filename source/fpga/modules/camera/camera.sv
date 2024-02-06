@@ -270,8 +270,8 @@ logic cropped_line_valid;
 crop #(
     .X_CROP_START(544),
     .X_CROP_END(744),
-    .Y_CROP_START(628),
-    .Y_CROP_END(828)
+    .Y_CROP_START(280),
+    .Y_CROP_END(480)
 ) crop (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
