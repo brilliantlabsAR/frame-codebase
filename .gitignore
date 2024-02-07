@@ -4,11 +4,12 @@ build/
 # Ignore simulation files
 simulation/
 abc.history
-<<<<<<< Updated upstream
-obj_dir/
-=======
 obj_dir
->>>>>>> Stashed changes
+sim_build
+results.xml
+*.vcd
+
+__pycache__
 
 # Ignore VSCode user settings
 .vscode/settings.json
