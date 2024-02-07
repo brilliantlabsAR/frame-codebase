@@ -58,13 +58,6 @@
                 </ipxact:wire>
             </ipxact:port>
             <ipxact:port>
-                <ipxact:name>clkos5_o</ipxact:name>
-                <ipxact:displayName>clkos5_o</ipxact:displayName>
-                <ipxact:wire>
-                    <ipxact:direction>out</ipxact:direction>
-                </ipxact:wire>
-            </ipxact:port>
-            <ipxact:port>
                 <ipxact:name>lock_o</ipxact:name>
                 <ipxact:displayName>lock_o</ipxact:displayName>
                 <ipxact:wire>
@@ -128,7 +121,7 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 02 06 15:49:43</lsccip:createdTimestamp>
+            <lsccip:createdTimestamp>2024 02 07 13:00:47</lsccip:createdTimestamp>
             <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>

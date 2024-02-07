@@ -1,22 +1,22 @@
 <?xml version="1.0" ?>
-<RadiantModule architecture="LIFCL" date="2024 02 06 15:49:41" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="ip" module="byte2pixel" name="byte_to_pixel_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.6.1">
+<RadiantModule architecture="LIFCL" date="2024 02 07 13:14:30" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="ip" module="byte2pixel" name="byte_to_pixel_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.6.1">
  <Package>
-  <File modified="2024 02 06 15:49:41" name="rtl/byte_to_pixel_ip_bb.v" type="black_box_verilog"/>
-  <File modified="2024 02 06 15:49:41" name="byte_to_pixel_ip.cfg" type="cfg"/>
-  <File modified="2024 02 06 15:49:41" name="misc/byte_to_pixel_ip_tmpl.v" type="template_verilog"/>
-  <File modified="2024 02 06 15:49:41" name="misc/byte_to_pixel_ip_tmpl.vhd" type="template_vhdl"/>
-  <File modified="2024 02 06 15:49:41" name="rtl/byte_to_pixel_ip.v" type="top_level_verilog"/>
-  <File modified="2024 02 06 15:49:41" name="constraints/byte_to_pixel_ip.ldc" type="timing_constraints"/>
-  <File modified="2024 02 06 15:49:41" name="testbench/dut_params.v" type="dependency_file"/>
-  <File modified="2024 02 06 15:49:41" name="testbench/dut_inst.v" type="dependency_file"/>
-  <File modified="2024 02 06 15:49:41" name="eval/dut_params.v" type="dependency_file"/>
-  <File modified="2024 02 06 15:49:41" name="eval/dut_inst.v" type="dependency_file"/>
-  <File modified="2024 02 06 15:49:41" name="component.xml" type="IP-XACT_component"/>
-  <File modified="2024 02 06 15:49:41" name="design.xml" type="IP-XACT_design"/>
+  <File modified="2024 02 07 13:14:30" name="rtl/byte_to_pixel_ip_bb.v" type="black_box_verilog"/>
+  <File modified="2024 02 07 13:14:30" name="byte_to_pixel_ip.cfg" type="cfg"/>
+  <File modified="2024 02 07 13:14:30" name="misc/byte_to_pixel_ip_tmpl.v" type="template_verilog"/>
+  <File modified="2024 02 07 13:14:30" name="misc/byte_to_pixel_ip_tmpl.vhd" type="template_vhdl"/>
+  <File modified="2024 02 07 13:14:30" name="rtl/byte_to_pixel_ip.v" type="top_level_verilog"/>
+  <File modified="2024 02 07 13:14:30" name="constraints/byte_to_pixel_ip.ldc" type="timing_constraints"/>
+  <File modified="2024 02 07 13:14:30" name="testbench/dut_params.v" type="dependency_file"/>
+  <File modified="2024 02 07 13:14:30" name="testbench/dut_inst.v" type="dependency_file"/>
+  <File modified="2024 02 07 13:14:30" name="eval/dut_params.v" type="dependency_file"/>
+  <File modified="2024 02 07 13:14:30" name="eval/dut_inst.v" type="dependency_file"/>
+  <File modified="2024 02 07 13:14:30" name="component.xml" type="IP-XACT_component"/>
+  <File modified="2024 02 07 13:14:30" name="design.xml" type="IP-XACT_design"/>
   <File modified="2023 11 30 23:42:35" name="testbench/pixel_monitor.v" type="testbench_verilog"/>
   <File modified="2023 11 30 23:42:35" name="testbench/tb_top.v" type="testbench_verilog"/>
   <File modified="2023 11 30 23:42:35" name="testbench/byte_driver.v" type="testbench_verilog"/>
-  <File modified="2024 02 06 14:49:41" name="eval/constraint.pdc" type="eval"/>
+  <File modified="2024 02 07 12:14:30" name="eval/constraint.pdc" type="eval"/>
   <File modified="2023 11 30 23:42:35" name="eval/ip_tmp_eval.pdc" type="eval"/>
  </Package>
 </RadiantModule>

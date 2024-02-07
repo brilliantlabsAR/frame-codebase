@@ -54,13 +54,13 @@
                     <ipxact:configurableElementValue referenceId="FIFO_DEPTH">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FIFO_TYPE">EBR</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO">True</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_TYPE">PINGPONG</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_IMPL">EBR</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">2048</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_TYPE">SINGLE</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_IMPL">LUT</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">8</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_QUE_ENT">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DYN_RXFIFO_PKTDLY">False</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_PKT_DLY">8</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_CTR_WIDTH">3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_PKT_DLY">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_CTR_WIDTH">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FR_FIFO_CLKMODE">DC</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FIFO_IF">CENTERED</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_MISC">False</ipxact:configurableElementValue>
@@ -172,7 +172,7 @@
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxcsr_rxfifo_pktdly_i</ipxact:name>
-            <ipxact:tiedValue>16'd8</ipxact:tiedValue>
+            <ipxact:tiedValue>16'd1</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxcsr_rxfifo_pktdly_i"/>
             </ipxact:portReferences>
