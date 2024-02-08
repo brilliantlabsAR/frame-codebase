@@ -12,17 +12,17 @@
 /*
  *   
  *       ↙ 1 pixel dummy starting column
- *   ┌────┬────┬────┬────┬────┐
- *   │ B  │ Gb │ B  │ Gb │ B  │ ← 1 pixel dummy starting row    This row is buffered in line_buffer[line_toggle]
- *   ├────╆━━━━╅────┼────┼────┤
- *   │ Gr ┃ R  ┃ Gr │ R  │ Gr │ R is calculated when..          This row is buffered in line_buffer[!line_toggle]
- *   ├────╄━━━━╋━━━━╅────┼────┤
- *   │ B  │ Gb ┃ B  ┃ Gb │ B  │ .. B is being read
- *   ├────┼────╄━━━━╃────┼────┤
- *   │ Gr │ R  │ Gr │ R  │ Gr │ ← 1 pixel dummy ending row
- *   └────┴────┴────┴────┴────┘
- *      ↑    ↑    ↑     ↖____↖ 
- *      │    │    │           2 pixel dummy ending column
+ *   ┌────┬────┬────┬────┐
+ *   │ B  │ Gb │ B  │ Gb │ ← 1 pixel dummy starting row    This row is buffered in line_buffer[line_toggle]
+ *   ├────╆━━━━╅────┼────┤
+ *   │ Gr ┃ R  ┃ Gr │ R  │ R is calculated when..          This row is buffered in line_buffer[!line_toggle]
+ *   ├────╄━━━━╋━━━━╅────┤
+ *   │ B  │ Gb ┃ B  ┃ Gb │ .. B is being read
+ *   ├────┼────╄━━━━╃────┤
+ *   │ Gr │ R  │ Gr │ R  │ ← 1 pixel dummy ending row
+ *   └────┴────┴────┴────┘
+ *      ↑    ↑    ↑     ↖ 
+ *      │    │    │       1 pixel dummy ending column
  *      │    │    previous_pixel
  *      │    previous_previous_pixel
  *      previous_previous_previous_pixel
@@ -250,14 +250,11 @@ always_ff @(posedge pixel_clock_in) begin
 
             end
 
-            else begin
-                line_valid_out <= 0;
-            end
-
         end
 
         else begin
             x_counter <= 0;
+            line_valid_out <= 0;
 
             // Increment y at the falling edge of each line_valid
             if (last_line_valid_in) begin
