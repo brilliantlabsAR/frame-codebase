@@ -41,7 +41,7 @@ class TesterJISP:
         
         # Create some synthetic image
         # try {2,4,8,10,12,14}x136
-        self.img_bgr = np.empty((48,48,3), dtype=np.uint8)
+        self.img_bgr = np.empty((48,720,3), dtype=np.uint8)
         for j in range(self.img_bgr.shape[0]):
             self.img_bgr[j,:,0] = 200*j/(self.img_bgr.shape[0]-1)
         for j in range(self.img_bgr.shape[1]):
@@ -170,8 +170,8 @@ class TesterJISP:
                     cv2.waitKey(0) 
                     cv2.destroyAllWindows()
                     
-                #print('PSNR =', psnr(1.0*bgr.flatten() , 1.0*self.img_bgr.flatten()))
-                #print('RMSE =', rmse(1.0*bgr.flatten() , 1.0*self.img_bgr.flatten()))
+                print('PSNR =', psnr(1.0*bgr.flatten() , 1.0*self.img_bgr.flatten()))
+                print('RMSE =', rmse(1.0*bgr.flatten() , 1.0*self.img_bgr.flatten()))
 
 
     async def inject(self):
@@ -216,7 +216,7 @@ async def test_jisp(dut):
     await RisingEdge(dut.clk)
 
     t.send_img()
-    await ClockCycles(dut.clk, 250)
+    await ClockCycles(dut.clk, 1000)
     t.send_img()
 
-    await ClockCycles(dut.clk, 25000)
+    await ClockCycles(dut.clk, 75000)

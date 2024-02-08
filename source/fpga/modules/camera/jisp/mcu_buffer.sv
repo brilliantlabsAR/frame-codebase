@@ -151,8 +151,7 @@ logic [2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/64 - 1:0] ra_chroma; //7bits
 
 
 dp_ram  #(
-    .DW     (8*DW),
-    .DEPTH  (2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT)    // in bytes
+    .DEPTH  (2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8)    // in bytes
 ) y_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}),
     .wd     ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
@@ -171,8 +170,7 @@ dp_ram  #(
 // 3 bits line select
 // 6 bits block count
 dp_ram  #(
-    .DW     (8*DW),
-    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT)    // in bytes
+    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)    // in bytes
 ) u_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}),
     .wd     ({8{yuvrgb_in[1] - JPEG_BIAS}}),            // <== JPEG bias!
@@ -184,8 +182,7 @@ dp_ram  #(
     .*
 );
 dp_ram  #(
-    .DW     (8*DW),
-    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT)    // in bytes
+    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)    // in bytes
 ) v_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}),
     .wd     ({8{yuvrgb_in[2] - JPEG_BIAS}}),            // <== JPEG bias!

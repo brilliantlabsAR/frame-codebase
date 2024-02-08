@@ -33,7 +33,6 @@
 localparam LINE_BUF_SIZE = SENSOR_X_SIZE/2;
 localparam LW = DW + 1;
 
-logic unsigned [LW-1:0]     line_buffer[LINE_BUF_SIZE-1:0][2:1];    
 logic                       eof, eol;
 logic                       frame_valid_in_q, line_valid_in_q;
 logic [$clog2(SENSOR_X_SIZE)-1:0]   pixel_count;
@@ -49,6 +48,26 @@ else line_valid_in_q <= line_valid_in;
 
 always_comb eof = frame_valid_in_q & ~frame_valid_in;
 always_comb eol = line_valid_in_q & ~line_valid_in;
+
+// Line buffer explicit instance
+logic unsigned [LW-1:0]     line_buf_in[2:1];
+logic unsigned [LW-1:0]     line_buf_out[2:1];
+
+dp_ram  #(
+    .PS     (9),
+    .NP     (2),
+    //.WD     (18), // not needed, redundant
+    .DEPTH  (360)    // in bytes
+) line_buf (
+    .wa     (pixel_count >> 1),
+    .wd     ({line_buf_in[2], line_buf_in[1]}),
+    .wbe    ('1),
+    .we     (line_count[0]==0 & pixel_count[0]==1 & line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold),
+    .ra     (pixel_count >> 1),
+    .re     (line_count[0]==1 & pixel_count[0]==0 & line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold),
+    .rd     ({line_buf_out[2], line_buf_out[1]}),
+    .*
+);
 
 // Store chroma lines in line buffer
 always @(posedge clk)
@@ -66,11 +85,13 @@ else if (line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold) begin
         for (int i=1; i<=2; i++)
             if (pixel_count[0]==0)
                 yuvrgb_out[i] <= yuvrgb_in[i];
-            else if (line_count[0]==0)
-                line_buffer[pixel_count >> 1][i] <= yuvrgb_out[i] + yuvrgb_in[i];
-            else // line_count[0]==1
-                yuvrgb_out[i] <= (line_buffer[pixel_count >> 1][i] + yuvrgb_out[i] + yuvrgb_in[i] + 2) >> 2;
+            else if (line_count[0]==1)
+                yuvrgb_out[i] <= (line_buf_out[i] + yuvrgb_out[i] + yuvrgb_in[i] + 2) >> 2;
 end
+
+always_comb
+    for (int i=1; i<=2; i++)
+        line_buf_in[i] = yuvrgb_out[i] + yuvrgb_in[i];
 
 always @(posedge clk)
 if (!resetn) begin
