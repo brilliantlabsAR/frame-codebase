@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Jan 29 15:39:59 2024
+[*] Thu Feb  8 13:52:06 2024
 [*]
 [dumpfile] "simulation/debayer_tb.fst"
-[dumpfile_mtime] "Mon Jan 29 15:35:13 2024"
-[dumpfile_size] 50670
+[dumpfile_mtime] "Thu Feb  8 13:51:59 2024"
+[dumpfile_size] 141020
 [savefile] "debayer_tb.gtkw"
-[timestart] 85676
-[size] 2032 1104
+[timestart] 0
+[size] 1904 1032
 [pos] 10 38
-*-5.768030 85860 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-16.902920 94830 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,9 +40,10 @@
 [sst_width] 253
 [signals_width] 325
 [sst_expanded] 1
-[sst_vpaned_height] 335
-@28
+[sst_vpaned_height] 328
+@29
 debayer_tb.pixel_clock
+@28
 debayer_tb.reset_n
 @200
 -
@@ -65,9 +66,6 @@ debayer_tb.debayer.line_valid_in
 debayer_tb.debayer.pixel_data_in[9:0]
 @200
 -
-@24
-debayer_tb.debayer.x_counter[11:0]
-debayer_tb.debayer.y_counter[11:0]
 @22
 debayer_tb.debayer.previous_pixel[9:0]
 debayer_tb.debayer.previous_previous_pixel[9:0]
@@ -76,14 +74,13 @@ debayer_tb.debayer.previous_previous_pixel[9:0]
 @28
 debayer_tb.debayer.line_valid_out
 debayer_tb.debayer.frame_valid_out
-@22
-debayer_tb.debayer.pixel_red_data_out[11:0]
-debayer_tb.debayer.pixel_green_data_out[11:0]
-debayer_tb.debayer.pixel_blue_data_out[11:0]
 @200
 -
+@24
+debayer_tb.debayer.x_counter[10:0]
+debayer_tb.debayer.y_counter[10:0]
 @22
-debayer_tb.packed_rgb[30:0]
+debayer_tb.final_rgb_pixel[30:0]
 @200
 -
 -Crop
