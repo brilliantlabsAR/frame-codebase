@@ -35,9 +35,9 @@
                     <ipxact:configurableElementValue referenceId="THRESHOLD">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PIX_FIFO_DEPTH">16</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="PIX_FIFO_ADDR_WIDTH">4</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="FIFO_IMPL">EBR</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FIFO_IMPL">LUT</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="WORD_CNT_MIN">5</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="WORD_CNT">1610</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="WORD_CNT">40</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DEBUG_EN">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_PIXELS">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FRAMES_CNT">1</ipxact:configurableElementValue>

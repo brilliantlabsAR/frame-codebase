@@ -10,6 +10,7 @@
  */
 
 `ifndef RADIANT
+`include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
 `endif
@@ -231,16 +232,13 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(byte_to_pixel_data)
 );
 
-logic [11:0] debayered_red_data;
-logic [11:0] debayered_green_data;
-logic [11:0] debayered_blue_data;
+logic [9:0] debayered_red_data;
+logic [9:0] debayered_green_data;
+logic [9:0] debayered_blue_data;
 logic debayered_line_valid;
 logic debayered_frame_valid;
 
-debayer #(
-    .X_RESOLUTION_IN(1288), // Include 1 left padding and 2 right padding
-    .Y_RESOLUTION_IN(768) // Include 1 top padding and 1 bottom padding
-) debayer (
+debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -261,17 +259,17 @@ logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
 
 crop #(
-    .X_CROP_START(544),
-    .X_CROP_END(744),
-    .Y_CROP_START(628),
-    .Y_CROP_END(828)
+    .X_CROP_START(542),
+    .X_CROP_END(742),
+    .Y_CROP_START(260),
+    .Y_CROP_END(460)
 ) crop (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(debayered_red_data[11:2]),
-    .pixel_green_data_in(debayered_green_data[11:2]),
-    .pixel_blue_data_in(debayered_blue_data[11:2]),
+    .pixel_red_data_in(debayered_red_data),
+    .pixel_green_data_in(debayered_green_data),
+    .pixel_blue_data_in(debayered_blue_data),
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
@@ -283,7 +281,7 @@ crop #(
 );
 
 logic [15:0] buffer_write_address_metastable;
-logic [15:0] buffer_write_address;
+logic [15:0] buffer_address;
 always_ff @(posedge clock_pixel_in) begin
 
     if (cropped_frame_valid == 0) begin
@@ -310,24 +308,30 @@ assign buffer_write_enable_metastable = cropped_frame_valid &&
 always_ff @(posedge clock_spi_in) begin
     
     if (reset_spi_n_in == 0) begin
-        buffer_write_address <= 0;
+        buffer_address <= 0;
         buffer_write_data <= 0;
         buffer_write_enable <= 0;
     end
 
     else begin
-        buffer_write_address <= buffer_write_address_metastable;
-        buffer_write_data <= buffer_write_data_metastable;
+        if (buffer_write_enable_metastable) begin
+            buffer_address <= buffer_write_address_metastable;
+            buffer_write_data <= buffer_write_data_metastable;  
+        end
+        else begin
+            buffer_address <= buffer_read_address;
+            buffer_write_data <= 0;
+        end
+
         buffer_write_enable <= buffer_write_enable_metastable;
     end
-    
 end
 
 image_buffer image_buffer (
-    .clock_in(clock_pixel_in),
-    .reset_n_in(reset_pixel_n_in),
-    .write_address_in(buffer_write_address),
-    .read_address_in(buffer_read_address),
+    .clock_in(clock_spi_in),
+    .reset_n_in(reset_spi_n_in),
+    .write_address_in(buffer_address),
+    .read_address_in(buffer_address),
     .write_data_in(buffer_write_data),
     .read_data_out(buffer_read_data),
     .write_enable_in(buffer_write_enable)

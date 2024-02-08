@@ -39,7 +39,7 @@ module display_buffer (
     input logic write_enable
 );
 
-`ifndef RADIANT (* ram_style="huge" *) `endif reg [31:0] mem [0:32768];
+`ifndef RADIANT (* ram_style="huge" *) `endif reg [31:0] mem [0:32767];
 
 always @(posedge clock) begin
 
