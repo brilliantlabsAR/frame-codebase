@@ -76,10 +76,7 @@ end
 
 endmodule
 
-module debayer #(
-    X_RESOLUTION_IN = 78, // Include 1 left padding and 2 right padding
-    Y_RESOLUTION_IN = 76 // Include 1 top padding and 1 bottom padding
-)(
+module debayer (
     input logic pixel_clock_in,
     input logic reset_n_in,
 
@@ -177,9 +174,7 @@ always_ff @(posedge pixel_clock_in) begin
             line_buffer_b_read_address <= x_counter;
 
             // Valid window for outputting pixels
-            if (x_counter > 1 && 
-                x_counter < (X_RESOLUTION_IN - 1) && 
-                y_counter > 1) begin
+            if (x_counter > 1 && y_counter > 1) begin
             
                 // Debayer the pixel at x-1, y-1
                 case ({x_counter[0], y_counter[0]})

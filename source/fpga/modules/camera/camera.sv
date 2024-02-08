@@ -55,6 +55,9 @@ assign buffer_read_address = bytes_read;
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
+logic [10:0] x_count;
+logic [10:0] y_count;
+
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
     
@@ -244,10 +247,7 @@ logic [11:0] debayered_blue_data;
 logic debayered_line_valid;
 logic debayered_frame_valid;
 
-debayer #(
-    .X_RESOLUTION_IN(1288), // Include 1 left padding and 2 right padding
-    .Y_RESOLUTION_IN(768) // Include 1 top padding and 1 bottom padding
-) debayer (
+debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -268,10 +268,10 @@ logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
 
 crop #(
-    .X_CROP_START(544),
-    .X_CROP_END(744),
-    .Y_CROP_START(280),
-    .Y_CROP_END(480)
+    .X_CROP_START(542),
+    .X_CROP_END(742),
+    .Y_CROP_START(260),
+    .Y_CROP_END(460)
 ) crop (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
