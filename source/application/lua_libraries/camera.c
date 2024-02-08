@@ -28,13 +28,13 @@
 #include "lauxlib.h"
 #include "spi.h"
 #include "error_logging.h"
-
-// TODO: Add logic to put camera to sleep
-static bool camera_awake = true;
+#include "i2c.h"
+#include "nrf_gpio.h"
+#include "pinout.h"
 
 static int lua_camera_capture(lua_State *L)
 {
-    if (camera_awake == false)
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -97,6 +97,54 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
+static int lua_camera_sleep(lua_State *L)
+{
+    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+    return 0;
+}
+
+static int lua_camera_wake(lua_State *L)
+{
+    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+    return 0;
+}
+
+static int lua_camera_set_register(lua_State *L)
+{
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
+    luaL_checkinteger(L, 1);
+    luaL_checkinteger(L, 2);
+
+    lua_Integer address = lua_tointeger(L, 1);
+    lua_Integer value = lua_tointeger(L, 2);
+
+    if (address < 0 || address > 0xFFFF)
+    {
+        luaL_error(L, "address must be a 16 bit unsigned number");
+    }
+
+    if (value < 0 || value > 0xFF)
+    {
+        luaL_error(L, "value must be an 8 bit unsigned number");
+    }
+
+    i2c_response_t response = i2c_write(CAMERA,
+                                        (uint16_t)address,
+                                        0xFF,
+                                        (uint8_t)value);
+
+    if (response.fail)
+    {
+        error();
+    }
+
+    return 0;
+}
+
 void lua_open_camera_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -108,6 +156,15 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_read);
     lua_setfield(L, -2, "read");
+
+    lua_pushcfunction(L, lua_camera_sleep);
+    lua_setfield(L, -2, "sleep");
+
+    lua_pushcfunction(L, lua_camera_wake);
+    lua_setfield(L, -2, "wake");
+
+    lua_pushcfunction(L, lua_camera_set_register);
+    lua_setfield(L, -2, "set_register");
 
     lua_setfield(L, -2, "camera");
 
