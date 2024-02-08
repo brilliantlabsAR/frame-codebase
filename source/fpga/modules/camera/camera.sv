@@ -10,6 +10,7 @@
  */
 
 `ifndef RADIANT
+`include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
 `endif
@@ -54,9 +55,6 @@ assign buffer_read_address = bytes_read;
 
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
-
-logic [10:0] x_count;
-logic [10:0] y_count;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -233,17 +231,10 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .lv_o(byte_to_pixel_line_valid),
     .pd_o(byte_to_pixel_data)
 );
-`endif
 
-`ifndef RADIANT
-logic byte_to_pixel_frame_valid = 0;
-logic byte_to_pixel_line_valid = 0;
-logic [9:0] byte_to_pixel_data = 0;
-`endif
-
-logic [11:0] debayered_red_data;
-logic [11:0] debayered_green_data;
-logic [11:0] debayered_blue_data;
+logic [9:0] debayered_red_data;
+logic [9:0] debayered_green_data;
+logic [9:0] debayered_blue_data;
 logic debayered_line_valid;
 logic debayered_frame_valid;
 
@@ -276,9 +267,9 @@ crop #(
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(debayered_red_data[9:0]),
-    .pixel_green_data_in(debayered_green_data[9:0]),
-    .pixel_blue_data_in(debayered_blue_data[9:0]),
+    .pixel_red_data_in(debayered_red_data),
+    .pixel_green_data_in(debayered_green_data),
+    .pixel_blue_data_in(debayered_blue_data),
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
@@ -345,5 +336,7 @@ image_buffer image_buffer (
     .read_data_out(buffer_read_data),
     .write_enable_in(buffer_write_enable)
 );
+
+`endif
 
 endmodule
