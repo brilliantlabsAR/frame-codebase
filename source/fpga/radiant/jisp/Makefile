@@ -1,23 +1,3 @@
-
-# memories to generate
-JISP_MEMS = \
-        ram_dp_w22_d360 \
-        ram_dp_w64_b8_d2880 \
-        ram_dp_w64_b8_d720
-
-FLAGS := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp -sp "8_Low-Power_1.0V" -t "QFN72" -f "LIFCL" -p "LIFCL-17"
-
-jisp_mems: $(JISP_MEMS)
-	for m  in $(JISP_MEMS) ; do \
-                ipgenwrap -cfg $$m.cfg -name $$m -o $$m $(FLAGS); \
-        done
-
-$(JISP_MEMS):
-	mkdir $@
-        
-clean:
-	rm -rf $(JISP_MEMS)
-
 #usage: ipgen [-h] [-o OUTPUT_DIR] [-proj_dir PROJ_DIR] [-ip IP_MODULE_DIR]
 #             [-cfg IP_CONFIG_FILE] [-skip_uniquify SKIP_UNIQUIFY_HDL]
 #             [-cfg_value IP_CONFIG_VALUE] -name IP_INSTANCE_NAME
@@ -54,3 +34,27 @@ clean:
 #  -t PACKAGE            Target package name.
 #  -sp PERFORMANCE       Target performance name.
 #  -f FAMILY             Target family name.
+
+# Memories to generate:
+JISP_MEMS := \
+        ram_dp_w22_d360 \
+        ram_dp_w64_b8_d2880 \
+        ram_dp_w64_b8_d720
+
+JISP_TARGETS := $(foreach m,$(JISP_MEMS),$(m)/$(m).ipx) $(foreach m,$(JISP_MEMS),$(m)/rtl/$(m).v)
+
+IPGEN_FLAGS := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp -sp "8_Low-Power_1.0V" -t "QFN72" -f "LIFCL" -p "LIFCL-17"
+
+all: $(JISP_TARGETS)
+%.v %.ipx: 
+	@echo $@ $(JISP_TARGETS)
+	for m  in $(JISP_MEMS) ; do \
+                if [ ! -d $$m ]; then \
+                        mkdir $$m ; \
+                fi; \
+                ipgenwrap -cfg $$m.cfg -name $$m -o $$m $(IPGEN_FLAGS); \
+        done
+
+clean:
+	rm -rf $(JISP_MEMS)
+
