@@ -37,7 +37,7 @@
 
 # Memories to generate:
 JISP_MEMS := \
-        ram_dp_w22_d360 \
+        ram_dp_w18_d360 \
         ram_dp_w64_b8_d2880 \
         ram_dp_w64_b8_d720
 
