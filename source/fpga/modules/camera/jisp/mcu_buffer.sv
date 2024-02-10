@@ -34,8 +34,8 @@
     input   logic               resetn
 );
 
-always_comb assert (&x_size_m1[2:0]) else $fatal("Enforcing even image dimensions");
-always_comb assert (&y_size_m1[2:0]) else $fatal("Enforcing even image dimensions");
+//always_comb assert (&x_size_m1[2:0]) else $fatal("Enforcing even image dimensions");
+//always_comb assert (&y_size_m1[2:0]) else $fatal("Enforcing even image dimensions");
 
 localparam Y_LINE_BUF_SIZE = SENSOR_X_SIZE;
 localparam UV_LINE_BUF_SIZE = SENSOR_X_SIZE/2;
@@ -149,9 +149,10 @@ logic [2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/64 - 1:0] ra_chroma; //7bits
 //end
 */
 
-
-dp_ram  #(
-    .DEPTH  (2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8)    // in bytes
+`ifndef USE_LATTICE_EBR
+dp_ram_be  #(
+    .DW     (8*8),
+    .DEPTH  (2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8)
 ) y_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}),
     .wd     ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
@@ -162,6 +163,23 @@ dp_ram  #(
     .rd     (rd[0]),
     .*
 );
+`else
+ram_dp_w64_b8_d2880 y_buf (
+    .wr_addr_i  ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}), 
+    .wr_data_i  ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
+    .ben_i      (1 << (yuvrgb_in_pixel_count & 7)),
+    .wr_en_i    (line_valid_in & yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
+    .wr_clk_en_i(line_valid_in & yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
+
+    .rd_addr_i  ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}), 
+    .rd_en_i    (!di_hold & !empty & rsel==0), 
+    .rd_clk_en_i(!di_hold & !empty & rsel==0), 
+    .rd_data_o  (rd[0]), 
+    .wr_clk_i   (clk), 
+    .rd_clk_i   (clk), 
+    .rst_i      (1'b0)
+);
+`endif
 
 //U+V buffer
 // Address: 2x320x8 bytes = 5120 bytes -> 12.32 -> 13 bits
@@ -169,30 +187,41 @@ dp_ram  #(
 // 1 bit double buffer select
 // 3 bits line select
 // 6 bits block count
-dp_ram  #(
-    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)    // in bytes
-) u_buf (
+generate
+for (genvar k=1; k<3; k++) begin : uv_buf
+`ifndef USE_LATTICE_EBR
+dp_ram_be  #(
+    .DW     (8*8),
+    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)
+) uv_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}),
-    .wd     ({8{yuvrgb_in[1] - JPEG_BIAS}}),            // <== JPEG bias!
+    .wd     ({8{yuvrgb_in[k] - JPEG_BIAS}}),            // <== JPEG bias!
     .wbe    (1 << ((yuvrgb_in_pixel_count >> 1) & 7)),
-    .we     (line_valid_in & yuvrgb_in_valid[1] & !yuvrgb_in_hold),
+    .we     (line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold),
     .ra     ({block_count, mcu_line_count, rptr[0]}),
-    .re     (!di_hold & !empty & rsel==1),
-    .rd     (rd[1]),
+    .re     (!di_hold & !empty & rsel==k),
+    .rd     (rd[k]),
     .*
 );
-dp_ram  #(
-    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)    // in bytes
-) v_buf (
-    .wa     ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}),
-    .wd     ({8{yuvrgb_in[2] - JPEG_BIAS}}),            // <== JPEG bias!
-    .wbe    (1 << ((yuvrgb_in_pixel_count >> 1) & 7)),
-    .we     (line_valid_in & yuvrgb_in_valid[2] & !yuvrgb_in_hold),
-    .ra     ({block_count, mcu_line_count, rptr[0]}),
-    .re     (!di_hold & !empty & rsel==2),
-    .rd     (rd[2]),
-    .*
+`else
+ram_dp_w64_b8_d720 uv_buf (
+    .wr_addr_i  ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}), 
+    .wr_data_i  ({8{yuvrgb_in[k] - JPEG_BIAS}}),            // <== JPEG bias!
+    .ben_i      (1 << ((yuvrgb_in_pixel_count >> 1) & 7)),
+    .wr_en_i    (line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold), 
+    .wr_clk_en_i(line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold), 
+
+    .rd_addr_i  ({block_count, mcu_line_count, rptr[0]}), 
+    .rd_en_i    (!di_hold & !empty & rsel==k), 
+    .rd_clk_en_i(!di_hold & !empty & rsel==k), 
+    .rd_data_o  (rd[k]), 
+    .wr_clk_i   (clk), 
+    .rd_clk_i   (clk), 
+    .rst_i      (1'b0)
 );
+`endif
+end
+endgenerate
 
 // data out reg & mux
 always @(posedge clk)

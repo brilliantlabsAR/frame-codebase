@@ -52,22 +52,40 @@ always_comb eol = line_valid_in_q & ~line_valid_in;
 // Line buffer explicit instance
 logic unsigned [LW-1:0]     line_buf_in[2:1];
 logic unsigned [LW-1:0]     line_buf_out[2:1];
+logic lb_en, lb_we, lb_re;
 
+always_comb lb_en = line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold;
+always_comb lb_we = line_count[0]==0 & pixel_count[0]==1 & lb_en;
+always_comb lb_re = line_count[0]==1 & pixel_count[0]==0 & lb_en;
+
+`ifndef USE_LATTICE_EBR
 dp_ram  #(
-    .PS     (9),
-    .NP     (2),
-    //.WD     (18), // not needed, redundant
-    .DEPTH  (360)    // in bytes
+    .DW     (2*LW),
+    .DEPTH  (SENSOR_X_SIZE/2)    // in bytes
 ) line_buf (
     .wa     (pixel_count >> 1),
     .wd     ({line_buf_in[2], line_buf_in[1]}),
-    .wbe    ('1),
-    .we     (line_count[0]==0 & pixel_count[0]==1 & line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold),
+    .we     (lb_we),
     .ra     (pixel_count >> 1),
-    .re     (line_count[0]==1 & pixel_count[0]==0 & line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold),
+    .re     (lb_re),
     .rd     ({line_buf_out[2], line_buf_out[1]}),
     .*
 );
+`else
+ram_dp_w18_d360 line_buf (
+    .wr_addr_i  (pixel_count >> 1), 
+    .wr_data_i  ({line_buf_in[2], line_buf_in[1]}), 
+    .wr_en_i    (lb_we), 
+    .wr_clk_en_i(lb_we), 
+    .rd_addr_i  (pixel_count >> 1), 
+    .rd_en_i    (lb_re), 
+    .rd_clk_en_i(lb_re), 
+    .rd_data_o  ({line_buf_out[2], line_buf_out[1]}), 
+    .wr_clk_i   (clk), 
+    .rd_clk_i   (clk), 
+    .rst_i      (1'b0)
+);
+`endif
 
 // Store chroma lines in line buffer
 always @(posedge clk)

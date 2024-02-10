@@ -29,6 +29,13 @@
     input   logic               resetn
 );
 
+// for EBR simulations
+`ifdef COCOTB_SIM
+`ifdef USE_LATTICE_EBR
+GSR GSR_INST (.GSR_N('1), .CLK(clk));
+`endif
+`endif
+
 logic [DW-1:0]      yuv[2:0];
 logic               yuv_valid;
 logic               yuv_hold;

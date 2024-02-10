@@ -16,10 +16,7 @@ logic unsigned [LW-1:0]     line_buf_out_1[2:1];
 logic lb_en, lb_we, lb_re;
 logic unsigned [$clog2(SENSOR_X_SIZE/2)-1:0]     lb_ra, lb_wa;
 
-GSR GSR_INST (
-.GSR_N('1),
-.CLK(clk)
-);
+GSR GSR_INST (.GSR_N('1), .CLK(clk));
 
 
 dp_ram  #(
