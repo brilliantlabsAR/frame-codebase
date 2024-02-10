@@ -1,3 +1,4 @@
+`include "jisp.vh"
 /*
  * MCU buffer for 4:2:0 (4:4:4, 4:2:2, 4:0:0 can be added easily)
  *
@@ -16,10 +17,7 @@
     input   logic [DW-1:0]      yuvrgb_in[2:0], // to do: make pktized interface
     input   logic [2:0]         yuvrgb_in_valid, // per component
     output  logic               yuvrgb_in_hold,
-    input   logic               frame_valid_in,
-    input   logic               line_valid_in,
     input   logic               eof_in,
-    input   logic               eol_in,
     input   logic[$clog2(SENSOR_X_SIZE)-1:0]    yuvrgb_in_pixel_count,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0]    yuvrgb_in_line_count,
 
@@ -52,7 +50,6 @@ always @(posedge clk)
 if (!resetn)
     wptr <= 0;
 else if (!full & yuvrgb_in_valid[0] & (yuvrgb_in_line_count[3:0]==15 | yuvrgb_in_line_count==y_size_m1) & yuvrgb_in_pixel_count==x_size_m1)
-//else if (!full & (yuvrgb_in_line_count[3:0]==15 ? eol_in : eof_in))
     wptr <= wptr + 1;
     
 /* Order of reading 8x8 MCUs
@@ -67,21 +64,20 @@ else if (!full & yuvrgb_in_valid[0] & (yuvrgb_in_line_count[3:0]==15 | yuvrgb_in
 */
 logic[$clog2(Y_LINE_BUF_SIZE/16)-1:0]    block_count; // 6 bits for 4:2:0, 4:2:2 (7 bits for 4:4:4, 4:0:0)
 logic[$clog2(Y_LINE_BUF_SIZE/16)-1:0]    block_v_count; // 6 bits for 4:2:0 (7 bits for 4:2:2, 4:4:4, 4:0:0)
-logic[$clog2(6)-1:0]        mcu_count;
+logic[$clog2(6)-1:0]        mcu_count, mcu_count_0;
 logic[2:0]                  mcu_line_count; // 8 bytes at a time
-logic[1:0]                  rsel, rsel_z0;
-logic[(8*DW)-1:0]           rd[2:0];
+logic[(8*DW)-1:0]           rd_y, rd_uv;
 
 always_comb yuvrgb_in_hold = full;
 
 always @(posedge clk)
-if (!resetn)
+if (!resetn | eof_in)
     rptr <= 0;
 else if (!di_hold & !empty & mcu_line_count == 7 & mcu_count == 5 & block_count == (x_size_m1 >> 4))
     rptr <= rptr + 1;
 
 always @(posedge clk)
-if (!resetn) begin
+if (!resetn | eof_in) begin
     mcu_count <= 0;
     mcu_line_count <= 0;
     block_count <= 0;
@@ -106,8 +102,6 @@ else if (!di_hold & !empty) begin
         else
             mcu_count <= mcu_count + 1;             // 2. count 6 MCUs
 end
-
-always_comb rsel = mcu_count <= 3 ? 0 : mcu_count == 4 ? 1 : 2;
 
 // keep track of exact x/y read positions of pixels (for 4:2:0 only for now)
 // here juat for the read side
@@ -151,16 +145,16 @@ logic [2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/64 - 1:0] ra_chroma; //7bits
 
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
-    .DW     (8*8),
+    .DW     (DW*8),
     .DEPTH  (2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8)
 ) y_buf (
     .wa     ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}),
     .wd     ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
     .wbe    (1 << (yuvrgb_in_pixel_count & 7)),
-    .we     (line_valid_in & yuvrgb_in_valid[0] & !yuvrgb_in_hold),
+    .we     (yuvrgb_in_valid[0] & !yuvrgb_in_hold),
     .ra     ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}),
-    .re     (!di_hold & !empty & rsel==0),
-    .rd     (rd[0]),
+    .re     (!di_hold & !empty & mcu_count <= 3),
+    .rd     (rd_y),
     .*
 );
 `else
@@ -168,13 +162,13 @@ ram_dp_w64_b8_d2880 y_buf (
     .wr_addr_i  ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}), 
     .wr_data_i  ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
     .ben_i      (1 << (yuvrgb_in_pixel_count & 7)),
-    .wr_en_i    (line_valid_in & yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
-    .wr_clk_en_i(line_valid_in & yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
+    .wr_en_i    (yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
+    .wr_clk_en_i(yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
 
     .rd_addr_i  ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}), 
-    .rd_en_i    (!di_hold & !empty & rsel==0), 
-    .rd_clk_en_i(!di_hold & !empty & rsel==0), 
-    .rd_data_o  (rd[0]), 
+    .rd_en_i    (!di_hold & !empty & mcu_count <= 3), 
+    .rd_clk_en_i(!di_hold & !empty & mcu_count <= 3), 
+    .rd_data_o  (rd_y), 
     .wr_clk_i   (clk), 
     .rd_clk_i   (clk), 
     .rst_i      (1'b0)
@@ -187,50 +181,75 @@ ram_dp_w64_b8_d2880 y_buf (
 // 1 bit double buffer select
 // 3 bits line select
 // 6 bits block count
-generate
-for (genvar k=1; k<3; k++) begin : uv_buf
+
+logic [$clog2(2*2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)-1:0] uv_buf_wa, uv_buf_wa_0;
+logic [7:0]         uv_buf_wbe, uv_buf_wbe_0;
+logic [DW*8-1:0]    uv_buf_wd, uv_buf_wd_0;
+logic               uv_buf_we, uv_buf_we_0;
+
+// shared UV memory layout
+// LSB=00 buffer #0, U
+// LSB=01 buffer #0, V
+// LSB=10 buffer #1, U
+// LSB=11 buffer #1, V
+always_comb uv_buf_wa = {(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0], 1'b0};
+always_comb uv_buf_wd = {8{yuvrgb_in[1] - JPEG_BIAS}}; // <== JPEG bias!
+always_comb uv_buf_wbe = 1 << ((yuvrgb_in_pixel_count >> 1) & 7);
+always_comb uv_buf_we = yuvrgb_in_valid[1] & !yuvrgb_in_hold;
+
+always @(posedge clk) 
+if (yuvrgb_in_valid[2] & !yuvrgb_in_hold) begin
+    uv_buf_wa_0 <= uv_buf_wa | 1'b1;
+    uv_buf_wd_0 <= {8{yuvrgb_in[2] - JPEG_BIAS}};
+    uv_buf_wbe_0 <= uv_buf_wbe;
+end
+
+always @(posedge clk)
+if (!resetn | eof_in) 
+    uv_buf_we_0 <= 0;
+else if (!yuvrgb_in_hold)
+    uv_buf_we_0 <= yuvrgb_in_valid[2];
+
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
-    .DW     (8*8),
-    .DEPTH  (2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)
+    .DW     (DW*8),
+    .DEPTH  (2*2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8)
 ) uv_buf (
-    .wa     ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}),
-    .wd     ({8{yuvrgb_in[k] - JPEG_BIAS}}),            // <== JPEG bias!
-    .wbe    (1 << ((yuvrgb_in_pixel_count >> 1) & 7)),
-    .we     (line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold),
-    .ra     ({block_count, mcu_line_count, rptr[0]}),
-    .re     (!di_hold & !empty & rsel==k),
-    .rd     (rd[k]),
+    .wa     (uv_buf_we_0 ? uv_buf_wa_0 : uv_buf_wa),
+    .wd     (uv_buf_we_0 ? uv_buf_wd_0 : uv_buf_wd),            
+    .wbe    (uv_buf_we_0 ? uv_buf_wbe_0 : uv_buf_wbe),
+    .we     (uv_buf_we | uv_buf_we_0),
+    .ra     ({block_count, mcu_line_count, rptr[0], mcu_count[0]}),
+    .re     (!di_hold & !empty & mcu_count > 3 ),
+    .rd     (rd_uv),
     .*
 );
 `else
-ram_dp_w64_b8_d720 uv_buf (
-    .wr_addr_i  ({(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0]}), 
-    .wr_data_i  ({8{yuvrgb_in[k] - JPEG_BIAS}}),            // <== JPEG bias!
-    .ben_i      (1 << ((yuvrgb_in_pixel_count >> 1) & 7)),
-    .wr_en_i    (line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold), 
-    .wr_clk_en_i(line_valid_in & yuvrgb_in_valid[k] & !yuvrgb_in_hold), 
+ram_dp_w64_b8_d1440 uv_buf (
+    .wr_addr_i  (uv_buf_we_0 ? uv_buf_wa_0 : uv_buf_wa),
+    .wr_data_i  (uv_buf_we_0 ? uv_buf_wd_0 : uv_buf_wd),       
+    .ben_i      (uv_buf_we_0 ? uv_buf_wbe_0 : uv_buf_wbe),
+    .wr_en_i    (uv_buf_we | uv_buf_we_0),
+    .wr_clk_en_i(uv_buf_we | uv_buf_we_0), 
 
-    .rd_addr_i  ({block_count, mcu_line_count, rptr[0]}), 
-    .rd_en_i    (!di_hold & !empty & rsel==k), 
-    .rd_clk_en_i(!di_hold & !empty & rsel==k), 
-    .rd_data_o  (rd[k]), 
+    .rd_addr_i  ({block_count, mcu_line_count, rptr[0], mcu_count[0]}), 
+    .rd_en_i    (!di_hold & !empty & mcu_count > 3), 
+    .rd_clk_en_i(!di_hold & !empty & mcu_count > 3), 
+    .rd_data_o  (rd_uv), 
     .wr_clk_i   (clk), 
     .rd_clk_i   (clk), 
     .rst_i      (1'b0)
 );
 `endif
-end
-endgenerate
 
 // data out reg & mux
 always @(posedge clk)
 if (!di_hold & !empty)
-    rsel_z0 <= rsel;
+    mcu_count_0 <= mcu_count;
 
 always_comb 
     for (int i=0; i<8; i++)
-        di[i] = rd[rsel_z0][i*8 +: 8];
+        di[i] = mcu_count_0 < 4 ? rd_y[i*8 +: 8] : rd_uv[i*8 +: 8];
 
 /*
 always_comb begin
@@ -248,7 +267,7 @@ end
 */
 
 always @(posedge clk)
-if (!resetn) 
+if (!resetn | eof_in) 
     di_valid <= 0;
 else if (!di_hold)
     di_valid <= !empty;

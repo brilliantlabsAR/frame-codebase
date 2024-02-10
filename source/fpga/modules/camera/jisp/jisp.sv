@@ -1,3 +1,4 @@
+`include "jisp.vh"
 /*
  * Top level for Jenc related ISP (mainly for simulation purposes)
  *
@@ -45,10 +46,7 @@ logic               line_valid0;
 logic [DW-1:0]      yuv420[2:0]; 
 logic [2:0]         yuv420_valid;
 logic               yuv420_hold;
-logic               frame_valid1;
-logic               line_valid1;
 logic               eof1;
-logic               eol1;
 logic[$clog2(SENSOR_X_SIZE)-1:0] yuv420_pixel_count;
 logic[$clog2(SENSOR_Y_SIZE)-1:0] yuv420_line_count;
 
@@ -71,10 +69,7 @@ subsample subsample (
     .yuvrgb_out             (yuv420),
     .yuvrgb_out_valid       (yuv420_valid),
     .yuvrgb_out_hold        (yuv420_hold),
-    .frame_valid_out        (frame_valid1),
-    .line_valid_out         (line_valid1),
     .eof_out                (eof1),
-    .eol_out                (eol1),
     .yuvrgb_out_pixel_count (yuv420_pixel_count),
     .yuvrgb_out_line_count  (yuv420_line_count),
 
@@ -85,10 +80,7 @@ mcu_buffer mcu_buffer(
     .yuvrgb_in              (yuv420),
     .yuvrgb_in_valid        (yuv420_valid),
     .yuvrgb_in_hold         (yuv420_hold),
-    .frame_valid_in         (frame_valid1),
-    .line_valid_in          (line_valid1),
     .eof_in                 (eof1),
-    .eol_in                 (eol1),
     .yuvrgb_in_pixel_count  (yuv420_pixel_count),
     .yuvrgb_in_line_count   (yuv420_line_count),
     .*

@@ -39,11 +39,13 @@
 JISP_MEMS := \
         ram_dp_w18_d360 \
         ram_dp_w64_b8_d2880 \
-        ram_dp_w64_b8_d720
+        ram_dp_w64_b8_d1440
 
 JISP_TARGETS := $(foreach m,$(JISP_MEMS),$(m)/$(m).ipx) $(foreach m,$(JISP_MEMS),$(m)/rtl/$(m).v)
 
-IPGEN_FLAGS := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp -sp "8_Low-Power_1.0V" -t "QFN72" -f "LIFCL" -p "LIFCL-17"
+IP := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp
+VLNV := -vlnv latticesemi.com:module:ram_dp:2.2.0
+IPGEN_FLAGS := $(VLNV) -sp "8_Low-Power_1.0V" -t "WLCSP72" -f "LIFCL" -p "LIFCL-17"
 
 all: $(JISP_TARGETS)
 %.v %.ipx: 
@@ -56,5 +58,5 @@ all: $(JISP_TARGETS)
         done
 
 clean:
-	rm -rf $(JISP_MEMS)
+	rm -rf $(JISP_MEMS) jisp_tcr.dir reportview.xml
 
