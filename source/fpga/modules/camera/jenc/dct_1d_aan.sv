@@ -3,9 +3,9 @@ module dct_1d_aan #(
     parameter DW = 8,
     // Regular 1-D DCT adds +3 bits to coefficients, but 
     // AAN includes a factor of 3.923 on top of that, so +2 bits       
-    parameter CW = DW + 5,
-    parameter M_BITS = 12,         // Bit size of Multiplier coefficients a1,2,3,4,5 - 8 or 12 only
-    parameter MW = CW + M_BITS     // Multiplier width
+    parameter CW = DW + 5,          // = 13
+    parameter M_BITS = 12,          // Bit size of Multiplier coefficients a1,2,3,4,5 - 8 or 12 only
+    parameter MW = CW + M_BITS      // Multiplier width = 25
 )(
     input   logic signed[DW-1:0]    di[7:0], 
     input   logic                   di_valid,
@@ -87,7 +87,7 @@ always_comb di_hold = q_hold;
 //------------------------------------------------------------------------------
 logic signed[CW-1:0]    i[7:0];
 logic signed[CW-1:0]    b[7:0];
-logic signed[CW-1:0]    c[7:0];
+logic signed[CW-1:0]    c[8:0];
 
 // rename inputs to match source code
 always_comb
@@ -116,6 +116,7 @@ always @(posedge clk) if (en[0] & !q_hold) begin
     c[5] <= b[5] + b[6];
     c[6] <= b[6] + b[7];
     c[7] <= b[7];
+    c[8] <= -b[4] - b[5] + b[6] + b[7]; // Moved from: d_tmp[8] = c[4] + c[6];
 end
 
 //------------------------------------------------------------------------------
