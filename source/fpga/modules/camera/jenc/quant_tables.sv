@@ -11,7 +11,7 @@ module quant_tables #(
     output  logic [DW-1:0]      rd[RW-1:0]
 );
 
-logic [DW-1:0] mem[127:0]; /* s_ynthesis s_yn_ramstyle = "registers" */
+logic [DW-1:0] mem[127:0]; /* synthesis syn_romstyle=logic */
 logic [AW-1:0] ra0;
 always @(posedge clk) if (re) 
     for (int i=0; i<RW; i++) begin

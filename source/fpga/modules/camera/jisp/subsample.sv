@@ -98,19 +98,36 @@ end
 else if (line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold)     
     pixel_count <= pixel_count + 1;
 
-always @(posedge clk)
-if (line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold) begin       
-    yuvrgb_out[0] <= yuvrgb_in[0];
-    for (int i=1; i<=2; i++)
+logic unsigned[DW-1:0]  yuvrgb_out_r[2:0]; // to do: make pktized interface
+logic unsigned[DW-1:0]  yuvrgb_out_w[2:0]; // to do: make pktized interface
+
+always_comb begin
+    yuvrgb_out_w[0] = yuvrgb_in[0]; // nothing for Y
+
+    for (int i=1; i<=2; i++) begin
+        // Line buffer input
+        line_buf_in[i] = yuvrgb_out_r[i] + yuvrgb_in[i];
+
+        // outputs
+        yuvrgb_out_w[i] = yuvrgb_out_r[i];
+
         if (pixel_count[0]==0)
-            yuvrgb_out[i] <= yuvrgb_in[i];
+            yuvrgb_out_w[i] = yuvrgb_in[i];
         else if (line_count[0]==1)
-            yuvrgb_out[i] <= (line_buf_out[i] + yuvrgb_out[i] + yuvrgb_in[i] + 2) >> 2;
+            yuvrgb_out_w[i] = (line_buf_out[i] + line_buf_in[i] + 2) >> 2;
+
+    end
+    // assemble output
+    yuvrgb_out[0] = yuvrgb_out_r[0]; // Reg
+    yuvrgb_out[1] = yuvrgb_out_w[1]; // Wire!
+    yuvrgb_out[2] = yuvrgb_out_r[2]; // Reg
 end
 
-always_comb
-    for (int i=1; i<=2; i++)
-        line_buf_in[i] = yuvrgb_out[i] + yuvrgb_in[i];
+always @(posedge clk)
+if (line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold)
+    for (int i=0; i<=2; i++)
+        if (~(i == 1 & pixel_count[0]==1)) // dont need V to be stored
+            yuvrgb_out_r[i] <= yuvrgb_out_w[i];
 
 always @(posedge clk)
 if (!resetn) begin
@@ -119,7 +136,7 @@ if (!resetn) begin
 end 
 else if (!yuvrgb_in_hold) begin
         yuvrgb_out_valid[0] <= yuvrgb_in_valid;
-        yuvrgb_out_valid[1] <= yuvrgb_in_valid & pixel_count[0]==1 & line_count[0]==1;
+        yuvrgb_out_valid[1] <= yuvrgb_in_valid & pixel_count[0]==0 & line_count[0]==1;
         yuvrgb_out_valid[2] <= yuvrgb_in_valid & pixel_count[0]==1 & line_count[0]==1;
         eof_out <= eof;
 end

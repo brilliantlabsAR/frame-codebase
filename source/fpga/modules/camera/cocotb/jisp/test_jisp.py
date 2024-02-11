@@ -82,8 +82,11 @@ class TesterJISP:
                 self.q_rgb_in.put(((x, y), self.img_bgr[y,x,:]), block=False)
                 self.q_yuv_ref.put(self.img_yvu[y,x,:], block=False)
                 
-                if x%2==1 and y%2==1:
-                    d = [self.simg_yvu420[0][y,x], self.simg_yvu420[1][y//2,x//2], self.simg_yvu420[2][y//2,x//2]]
+                if y%2==1:
+                    if x%2==1:
+                        d = [self.simg_yvu420[0][y,x], self.simg_yvu420[1][y//2,x//2], 0]
+                    else:
+                        d = [self.simg_yvu420[0][y,x], 0, self.simg_yvu420[2][y//2,x//2]]
                 else:
                     d = [self.simg_yvu420[0][y,x], 0, 0]
                 self.q_yuv420_ref.put(d, block=False)
@@ -99,8 +102,9 @@ class TesterJISP:
 
             if self.dut.subsample.yuvrgb_out_valid.value[2] and self.dut.subsample.yuvrgb_out_hold.value==0:
                 yuv = [self.dut.subsample.yuvrgb_out[0].value.integer, 0, 0]
-                if self.dut.subsample.yuvrgb_out_valid.value[1]:
+                if self.dut.subsample.yuvrgb_out_valid.value[0]:
                     yuv[1] = self.dut.subsample.yuvrgb_out[2].value.integer
+                elif self.dut.subsample.yuvrgb_out_valid.value[1]:
                     yuv[2] = self.dut.subsample.yuvrgb_out[1].value.integer
                 self.q_yuv420_out.put(np.array(yuv))
 
