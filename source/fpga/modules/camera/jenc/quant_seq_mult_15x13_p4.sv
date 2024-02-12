@@ -55,24 +55,24 @@ always_comb begin
     b_pipe_stg2_next = b_pipe_stg1;
     b_pipe_stg1_next = b_pipe_stg0;
     b_pipe_stg0_next = b_in;
-    z_pipe_stg3_next = z_pipe_stg2;
-    z_pipe_stg3_next = z_pipe_stg3_next + (a_pipe_stg3_next[12] << 11);
-    z_pipe_stg3_next = z_pipe_stg3_next + (b_pipe_stg3_next[12] ? (a_pipe_stg3_next << 12) : 0);
-    z_pipe_stg3_next = z_pipe_stg3_next + (b_pipe_stg3_next[11] ? (a_pipe_stg3_next << 11) : 0);
-    z_pipe_stg3_next = z_pipe_stg3_next + (b_pipe_stg3_next[10] ? (a_pipe_stg3_next << 10) : 0);
-    z_pipe_stg2_next = z_pipe_stg1;
-    z_pipe_stg2_next = z_pipe_stg2_next + (b_pipe_stg2_next[9] ? (a_pipe_stg2_next << 9) : 0);
-    z_pipe_stg2_next = z_pipe_stg2_next + (b_pipe_stg2_next[8] ? (a_pipe_stg2_next << 8) : 0);
-    z_pipe_stg2_next = z_pipe_stg2_next + (b_pipe_stg2_next[7] ? (a_pipe_stg2_next << 7) : 0);
-    z_pipe_stg1_next = z_pipe_stg0;
-    z_pipe_stg1_next = z_pipe_stg1_next + (b_pipe_stg1_next[6] ? (a_pipe_stg1_next << 6) : 0);
-    z_pipe_stg1_next = z_pipe_stg1_next + (b_pipe_stg1_next[5] ? (a_pipe_stg1_next << 5) : 0);
-    z_pipe_stg1_next = z_pipe_stg1_next + (b_pipe_stg1_next[4] ? (a_pipe_stg1_next << 4) : 0);
-    z_pipe_stg0_next = 0;
-    z_pipe_stg0_next = z_pipe_stg0_next + (b_pipe_stg0_next[3] ? (a_pipe_stg0_next << 3) : 0);
-    z_pipe_stg0_next = z_pipe_stg0_next + (b_pipe_stg0_next[2] ? (a_pipe_stg0_next << 2) : 0);
-    z_pipe_stg0_next = z_pipe_stg0_next + (b_pipe_stg0_next[1] ? (a_pipe_stg0_next << 1) : 0);
-    z_pipe_stg0_next = z_pipe_stg0_next + (b_pipe_stg0_next[0] ? (a_pipe_stg0_next << 0) : 0);
+    z_pipe_stg3_next = z_pipe_stg2
+        + (a_pipe_stg3_next[12] << 11) // rounding bit
+        + (b_pipe_stg3_next[12] ? (a_pipe_stg3_next << 12) : 0)
+        + (b_pipe_stg3_next[11] ? (a_pipe_stg3_next << 11) : 0)
+        + (b_pipe_stg3_next[10] ? (a_pipe_stg3_next << 10) : 0);
+    z_pipe_stg2_next = z_pipe_stg1
+        + (b_pipe_stg2_next[9] ? (a_pipe_stg2_next << 9) : 0)
+        + (b_pipe_stg2_next[8] ? (a_pipe_stg2_next << 8) : 0)
+        + (b_pipe_stg2_next[7] ? (a_pipe_stg2_next << 7) : 0);
+    z_pipe_stg1_next = z_pipe_stg0
+        + (b_pipe_stg1_next[6] ? (a_pipe_stg1_next << 6) : 0)
+        + (b_pipe_stg1_next[5] ? (a_pipe_stg1_next << 5) : 0)
+        + (b_pipe_stg1_next[4] ? (a_pipe_stg1_next << 4) : 0);
+    z_pipe_stg0_next = 0
+        + (b_pipe_stg0_next[3] ? (a_pipe_stg0_next << 3) : 0)
+        + (b_pipe_stg0_next[2] ? (a_pipe_stg0_next << 2) : 0)
+        + (b_pipe_stg0_next[1] ? (a_pipe_stg0_next << 1) : 0)
+        + (b_pipe_stg0_next[0] ? (a_pipe_stg0_next << 0) : 0);
 end
 always_comb out = z_pipe_stg3;
 always_comb out_valid = valid_pipe_stg3;
