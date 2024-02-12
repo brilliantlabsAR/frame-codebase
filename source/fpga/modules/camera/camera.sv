@@ -56,6 +56,9 @@ assign buffer_read_address = bytes_read;
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
+logic [9:0] pixel_count_above_threshold;
+logic [9:0] pixel_count_below_threshold;
+
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
     
@@ -108,6 +111,18 @@ always_ff @(posedge clock_spi_in) begin
                     if (last_operand_valid_in == 0 && operand_valid_in == 1) begin
                         bytes_read <= bytes_read + 1;
                     end
+                end
+
+                // Saturation count
+                'h23: begin
+                    case (operand_count_in)
+                        0: response_out <= {6'b0, pixel_count_above_threshold[9:8]};
+                        1: response_out <= pixel_count_above_threshold[7:0];
+                        2: response_out <= {6'b0, pixel_count_below_threshold[9:8]};
+                        3: response_out <= pixel_count_below_threshold[7:0];
+                    endcase
+
+                    response_valid_out <= 1;
                 end
 
             endcase
@@ -278,6 +293,20 @@ crop #(
     .pixel_blue_data_out(cropped_blue_data),
     .line_valid_out(cropped_line_valid),
     .frame_valid_out(cropped_frame_valid)
+);
+
+gain gain (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+
+    .pixel_red_data_in(cropped_red_data),
+    .pixel_green_data_in(cropped_green_data),
+    .pixel_blue_data_in(cropped_blue_data),
+    .line_valid_in(cropped_line_valid),
+    .frame_valid_in(cropped_frame_valid),
+
+    .pixel_count_above_threshold_out(pixel_count_above_threshold),
+    .pixel_count_below_threshold_out(pixel_count_below_threshold)
 );
 
 logic [15:0] buffer_write_address_metastable;

@@ -145,6 +145,21 @@ static int lua_camera_set_register(lua_State *L)
     return 0;
 }
 
+static int lua_camera_read_counts(lua_State *L) {
+    uint8_t buf[4];
+
+    buf[0] = 0x23;
+    spi_write(FPGA, &buf, 1, true);
+    spi_read(FPGA, &buf, 4, false);
+
+    uint16_t above_threshold = (uint16_t)(buf[0] << 8) + buf[1];
+    uint16_t below_threshold = (uint16_t)(buf[2] << 8) + buf[3];
+
+    LOG("above : %x %x  below : %x %x", buf[0], buf[1], buf[2], buf[3]);
+
+    return 0;
+}
+
 void lua_open_camera_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -165,6 +180,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_set_register);
     lua_setfield(L, -2, "set_register");
+
+    lua_pushcfunction(L, lua_camera_read_counts);
+    lua_setfield(L, -2, "read_counts");
 
     lua_setfield(L, -2, "camera");
 

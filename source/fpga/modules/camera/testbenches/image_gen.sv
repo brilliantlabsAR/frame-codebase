@@ -5889,8 +5889,8 @@ endmodule
 module image_gen_colorbar #(
     parameter X_RESOLUTION = 1288,
     parameter Y_RESOLUTION = 768,
-    parameter H_FRONT_PORCH = 50, // 2x X_RESOLUTION
-    parameter H_BACK_PORCH = 50, // ~ 2.2x X_RESOLUTION
+    parameter H_FRONT_PORCH = 50,
+    parameter H_BACK_PORCH = 50,
     parameter V_FRONT_PORCH = 2,
     parameter V_BACK_PORCH = 2,
     parameter H_SYNC_PULSE_WIDTH = 44,

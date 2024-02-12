@@ -14,161 +14,7 @@
 
 `timescale 1 ps / 1 ps
 
-module image_gen #(
-    parameter IMAGE_X_SIZE = 32'd640,
-    parameter IMAGE_Y_SIZE = 32'd400,
-    parameter VBP = 32'd2,
-	parameter VFP = 32'd1,
-	parameter HSYNC = 32'd44,
-	parameter VSYNC = 32'd5
-) (
-    input logic clk,
-    input logic reset_n,
-    output logic lv,
-    output logic fv,
-    output logic [9:0] pix_data,
-	output logic pix_en
-);
-
-logic [31:0] x;
-logic [31:0] y;
-logic [7:0] reset_counter;
-
-localparam HFP = 2*IMAGE_X_SIZE;
-localparam HBP = 2.2*IMAGE_X_SIZE;
-localparam COLOR1 = 30'h000993fc; // blue
-localparam COLOR2 = 30'h3fcff000; // yellow
-localparam COLOR3 = 30'h3fc003fc; // pink
-localparam COLOR4 = 30'h0cccc0cc; // green
-localparam BARWIDTH = IMAGE_X_SIZE/4;
-
-// Debug 10 rgb values to compare with debayer output
-logic [9:0] r;
-logic [9:0] g;
-logic [9:0] b;
-
-always @(posedge clk) begin
-    if(!reset_n) begin
-        x <= 0;
-		y <= 0;
-		reset_counter <= 'd0;
-    end else begin
-		if (!reset_counter[4])
-			reset_counter <= reset_counter +1;
-		else begin 
-			if ( (x >= (HSYNC+HBP)) && (x < (HSYNC+HBP+IMAGE_X_SIZE))  &&  (y >= (VSYNC+VBP)) && (y < (VSYNC+VBP+IMAGE_Y_SIZE)) )
-				pix_en <= 1;
-			else 
-				pix_en <= 0;
-			
-			if ( (x >= (HSYNC)) && (x < (HSYNC+HBP+IMAGE_X_SIZE+HFP))  &&  (y >= (VSYNC+VBP)) && (y < (VSYNC+VBP+IMAGE_Y_SIZE)) )
-				lv <= 1;
-			else
-				lv <= 0;
-
-			if ( (y >= 0) && (y < VSYNC) )
-				fv <= 0;
-			else
-				fv <= 1;
-			
-			if (x <= (HSYNC+HBP+IMAGE_X_SIZE+HFP))
-				x <= x + 1;
-			else begin
-				x <= 0;
-				if (y <= (VSYNC+VBP+IMAGE_Y_SIZE+VFP))
-					y <= y + 1;
-				else 
-					y <= 0;
-			end
-
-			if (x >= (HSYNC+HBP)) begin
-				if ((x - (HSYNC+HBP)) < BARWIDTH) begin
-					if (y[0]) begin
-						if (x[0]) pix_data <= COLOR1[29:20]; // r
-						else pix_data <= COLOR1[19:10]; // g
-					end
-					else begin
-						if (x[0]) pix_data <= COLOR1[19:10]; // g
-						else pix_data <= COLOR1[9:0]; // b
-					end
-                    r <= COLOR1[29:20];
-                    g <= COLOR1[19:10];
-                    b <= COLOR1[9:0];
-				end
-				else if (((x - (HSYNC+HBP)) >= BARWIDTH) & ((x - (HSYNC+HBP)) < (2*BARWIDTH))) begin
-					if (y[0]) begin
-						if (x[0]) pix_data <= COLOR2[29:20]; // r
-						else pix_data <= COLOR2[19:10]; // g
-					end
-					else begin
-						if (x[0]) pix_data <= COLOR2[19:10]; // g
-						else pix_data <= COLOR2[9:0]; // b
-					end
-                    r <= COLOR2[29:20];
-                    g <= COLOR2[19:10];
-                    b <= COLOR2[9:0];
-				end
-				else if (((x - (HSYNC+HBP)) >= (2*BARWIDTH)) & ((x - (HSYNC+HBP)) < (3*BARWIDTH))) begin
-					if (y[0]) begin
-						if (x[0]) pix_data <= COLOR3[29:20]; // r
-						else pix_data <= COLOR3[19:10]; // g
-					end
-					else begin
-						if (x[0]) pix_data <= COLOR3[19:10]; // g
-						else pix_data <= COLOR3[9:0]; // b
-					end
-                    r <= COLOR3[29:20];
-                    g <= COLOR3[19:10];
-                    b <= COLOR3[9:0];
-				end
-				else if (((x - (HSYNC+HBP)) >= (3*BARWIDTH)) & ((x - (HSYNC+HBP)) < (4*BARWIDTH))) begin
-					if (y[0]) begin
-						if (x[0]) pix_data <= COLOR4[29:20]; // r
-						else pix_data <= COLOR4[19:10]; // g
-					end
-					else begin
-						if (x[0]) pix_data <= COLOR4[19:10]; // g
-						else pix_data <= COLOR4[9:0]; // b
-					end
-                    r <= COLOR4[29:20];
-                    g <= COLOR4[19:10];
-                    b <= COLOR4[9:0];
-				end
-			end
-		end
-	end
-end
-
-endmodule
-
-module camera_ram_inferred (
-    input logic clk,
-    input logic rst_n,
-    input logic [15:0] wr_addr,
-    input logic [15:0] rd_addr,
-    input logic [31:0] wr_data,
-    output logic [31:0] rd_data,
-    input logic wr_en,
-    input logic rd_en
-);
-
-reg [31:0] mem [0:16384];
-
-always @(posedge clk) begin
-    if (rst_n & wr_en) begin
-        mem[wr_addr] <= wr_data;
-    end
-end
-
-always @(posedge clk) begin
-    if (rst_n & rd_en)
-        rd_data <= mem[rd_addr];
-end
-
-endmodule
-
 module camera_pipeline_tb;
-
 
 // Clocking
 logic clock_osc;
@@ -251,11 +97,11 @@ logic pixel_en;
 logic [9:0] pixel_data;
 
 
-parameter IMAGE_X_SIZE = 1288;
-parameter IMAGE_Y_SIZE = 768;
+parameter IMAGE_X_SIZE = 76;
+parameter IMAGE_Y_SIZE = 76;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
-image_gen_colorbar i_image_gen (
+image_gen i_image_gen (
     .reset_n_in (reset_camera_pixel_n),
     .pixel_clock_in (clock_camera_pixel),
     .frame_valid (pixel_fv),

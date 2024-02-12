@@ -1,4 +1,15 @@
-module crop #(
+/*
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+ *
+ * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright © 2023 Brilliant Labs Limited
+ */
+ 
+ module crop #(
     X_CROP_START = 10,
     X_CROP_END = 25,
     Y_CROP_START = 12,
