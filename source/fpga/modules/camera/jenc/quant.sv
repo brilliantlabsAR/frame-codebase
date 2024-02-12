@@ -24,7 +24,7 @@ always_comb assert (QW == 11) else $error();
 always_comb assert (M_BITS == 13) else $error();
 
 
-//Write into Zig Zag buffer in *REVERSED* zig zag order
+//Write (or Read) into (from) Zig Zag buffer in *REVERSED* (forward) zig zag order
 logic [DW-1:0]      zigzag_mem[63:0];
 logic               zigzag_sel;         // Zig Zag mem select: 0 .. write DCT-2D output to Zig Zag buffer, 1 .. read Zig Zag buffer & send to quantizer
 logic [4:0]         zigzag_rd_cnt;
@@ -46,20 +46,30 @@ end else if (~zigzag_sel & di_valid)
 
 
 // write to Zig Zag
-logic [5:0] wa0;
+logic [5:0] zwa;
 always @(posedge clk) 
 if (~zigzag_sel & di_valid)
     for (int j=0; j<8; j++) begin
-        wa0 = di_cnt*8 + j;
+        zwa = di_cnt*8 + j;
         //$display("WRITE: %d -> %d", wa0 ,en_zigzag(wa0) );
-        zigzag_mem[en_zigzag(wa0)] <= di[j];
+`ifdef READ_ZIG_ZAG_NOT_WRITE
+        zigzag_mem[zwa] <= di[j];
+`else
+        zigzag_mem[en_zigzag(zwa)] <= di[j];
+`endif
     end
 
 // read from Zig Zag
+logic [5:0] zra;
 always_comb
-    for (int j=0; j<2; j++)
-        zigzag_rd_data[j] = zigzag_mem[zigzag_rd_cnt*2 + j];
-
+    for (int j=0; j<2; j++) begin
+        zra = zigzag_rd_cnt*2 + j;
+`ifdef READ_ZIG_ZAG_NOT_WRITE
+        zigzag_rd_data[j] = zigzag_mem[de_zigzag(zra)];
+`else
+        zigzag_rd_data[j] = zigzag_mem[zra];
+`endif
+    end
 
 // pipline inputs
 logic signed[DW-1:0]    di0[1:0];
@@ -81,11 +91,15 @@ if (zigzag_sel & !q_hold) begin
     di0         <= zigzag_rd_data;
 end
 
-logic [M_BITS-1:0] q_factor[1:0];
+logic [M_BITS-1:0]  q_factor[1:0];
+logic [(1+6)-1:0]   q_ra[1:0];
 // read the quantizer coefficients 2 at a time
-quant_tables  quant_tables (
+always_comb
+    for (int i=0; i<2; i++)
+        q_ra[i] = {1'b0, de_zigzag((zigzag_rd_cnt << 1) | i)};
+quant_tables #(.N(2)) quant_tables (
     .re         (zigzag_sel & ~q_hold),
-    .ra         ({1'b0, zigzag_rd_cnt}),
+    .ra         (q_ra),
     .rd         (q_factor),
     .*
 );
