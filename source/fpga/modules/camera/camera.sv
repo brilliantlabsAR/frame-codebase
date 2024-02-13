@@ -56,8 +56,8 @@ assign buffer_read_address = bytes_read;
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
-logic [9:0] pixel_count_above_threshold;
-logic [9:0] pixel_count_below_threshold;
+logic [15:0] pixel_count_above_threshold;
+logic [15:0] pixel_count_below_threshold;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -116,9 +116,9 @@ always_ff @(posedge clock_spi_in) begin
                 // Saturation count
                 'h23: begin
                     case (operand_count_in)
-                        0: response_out <= {6'b0, pixel_count_above_threshold[9:8]};
+                        0: response_out <= pixel_count_above_threshold[15:8];
                         1: response_out <= pixel_count_above_threshold[7:0];
-                        2: response_out <= {6'b0, pixel_count_below_threshold[9:8]};
+                        2: response_out <= pixel_count_below_threshold[15:8];
                         3: response_out <= pixel_count_below_threshold[7:0];
                     endcase
 
@@ -295,7 +295,9 @@ crop #(
     .frame_valid_out(cropped_frame_valid)
 );
 
-gain gain (
+gain #(
+    .THRESHOLD('h132)
+) gain (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 

@@ -152,12 +152,11 @@ static int lua_camera_read_counts(lua_State *L) {
     spi_write(FPGA, &buf, 1, true);
     spi_read(FPGA, &buf, 4, false);
 
-    uint16_t above_threshold = (uint16_t)(buf[0] << 8) + buf[1];
-    uint16_t below_threshold = (uint16_t)(buf[2] << 8) + buf[3];
-
-    LOG("above : %x %x  below : %x %x", buf[0], buf[1], buf[2], buf[3]);
-
-    return 0;
+    uint16_t pixels_above_threshold = (uint16_t)(buf[0] << 8) + buf[1];
+    uint16_t pixels_below_threshold = (uint16_t)(buf[2] << 8) + buf[3];
+    
+    lua_pushinteger(L, pixels_below_threshold);
+    return 1;
 }
 
 void lua_open_camera_library(lua_State *L)

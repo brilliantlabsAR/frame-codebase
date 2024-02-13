@@ -60,15 +60,61 @@ async def capture_and_download(b: Bluetooth, height, width):
     image = Image.fromarray(rgb_array)
     image.show()
 
+gain = 46
+exposure = 20000 #us
+MAX = 2000
+MIN = 200
+
+async def update_camera(b):
+    await b.send_lua(f"frame.camera.set_register({int(0x3500)}, {int((exposure >> 12) & 0xff)})")
+    await b.send_lua(f"frame.camera.set_register({int(0x3501)}, {int((exposure >> 4) & 0xff)})")
+    await b.send_lua(f"frame.camera.set_register({int(0x3502)}, {int(exposure & 0xf) << 4}")
+    
+    await b.send_lua(f"frame.camera.set_register({int(0x350a)}, {int(0x00)})")
+    await b.send_lua(f"frame.camera.set_register({int(0x350b)}, {int(gain & 0xff)})")
+
+    await asyncio.sleep(0.2)
 
 async def main():
     b = Bluetooth()
+    global gain
+    global exposure
 
     await b.connect(data_response_handler=receive_data)
 
+    await update_camera(b)
+    response = await b.send_lua(f"print(frame.camera.read_counts())", await_print=True)
+    print(f"gain {gain} exposure {exposure} -> {response}")
+
+    while (int(response) > MAX or int(response) < MIN):
+        if (int(response) > MAX):
+            if exposure < 32000:
+                exposure += 2500
+            else: 
+                if gain < 248:
+                    gain += 20
+                else:
+                    print("val at max")
+                    break
+        elif (int(response) < MIN):
+            if gain >= 26:
+                gain -= 20
+            else: 
+                if exposure > 15000:
+                    exposure -= 2500
+                else:
+                    print("val at min")
+                    break
+        
+        else:
+            break
+
+        await update_camera(b)
+        response = await b.send_lua(f"print(frame.camera.read_counts())", await_print=True)
+        print(f"gain {gain} exposure {exposure} -> {response}")
+        
     await capture_and_download(b, 200, 200)
 
     await b.disconnect()
-
 
 asyncio.run(main())
