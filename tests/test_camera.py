@@ -62,8 +62,8 @@ async def capture_and_download(b: Bluetooth, height, width):
 
 gain = 46
 exposure = 20000 #us
-MAX = 2000
-MIN = 200
+MAX = 35000
+MIN = 25000
 
 async def update_camera(b):
     await b.send_lua(f"frame.camera.set_register({int(0x3500)}, {int((exposure >> 12) & 0xff)})")
@@ -88,10 +88,10 @@ async def main():
 
     while (int(response) > MAX or int(response) < MIN):
         if (int(response) > MAX):
-            if exposure < 32000:
+            if exposure < 45000:
                 exposure += 2500
             else: 
-                if gain < 248:
+                if gain <= 228:
                     gain += 20
                 else:
                     print("val at max")
