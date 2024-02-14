@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# TODO automaically get the port
-PORT=/dev/cu.usbmodem97B6BC101
+stty -echoctl
 
 echo "Frame programming scrpt"
 echo "-----------------------"
@@ -11,13 +10,31 @@ do
     echo ""
     read -p "Press Enter key to start, or Ctrl-C to quit"
 
+    # Automatically assign port depending if MacOS or Linux
+    if [ "`uname`" = Darwin ]; then
+        PORT=`ls /dev/cu.usbmodem*1 | grep "cu."`
+    else
+        PORT=/dev/ttyACM0
+    fi
+
     # Create timestamp
     NOW=`date -u +'%d/%m/%Y - %H:%M:%S'`
 
     # TODO create logfile
 
-    # Erase chip (suppress all output)
-    echo "$NOW - Erasing and unlocking chip"
+    # Unlock chip
+    echo "$NOW - Unlocking chip"
+    arm-none-eabi-gdb \
+        -nx \
+        --batch-silent \
+        -ex "target extended-remote ${PORT}" \
+        -ex "monitor swd_scan" \
+        -ex "attach 1" \
+        -ex "monitor erase_mass" \
+        2> /dev/null
+
+    # Erase chip (same thing as before, but here we do want to catch the error)
+    echo "$NOW - Erasing chip"
     arm-none-eabi-gdb \
         -nx \
         --batch-silent \
@@ -44,7 +61,7 @@ do
             -ex "set logging enabled off" \
             2> /dev/null
 
-        # Get and print device Address
+        # Get and print device address
         echo -n "$NOW - "
         arm-none-eabi-gdb \
             -nx \
@@ -68,12 +85,27 @@ do
             -ex 'attach 1' \
             -ex 'load' \
             -ex 'compare-sections' \
+            -ex 'kill' \
             build/frame-firmware-v*.hex \
             2> /dev/null
 
         # If successful, start the camera focusing script otherwise throw error
         if [ $? -eq 0 ]; then
             echo "$NOW - Programmed succesfully"
+
+            # Run the camera focusing script
+            echo "$NOW - Starting focusing app. Press Ctrl-C when complete"
+            python3 production/focusing_script.py 2> /dev/null
+
+            # Clear the download counter and done
+            if [ $? -eq 0 ]; then
+                echo -e -n "\033[2K"
+                echo "$NOW - Done"
+            else
+                echo -e -n "\033[2K"
+                echo "$NOW - Error: Could not connect to start focusing"
+            fi
+
         else
             echo "$NOW - Error: Chip could not be programmed"
         fi
