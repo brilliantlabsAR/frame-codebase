@@ -3,16 +3,16 @@
     // https://marketplace.visualstudio.com/items?itemName=marus25.cortex-debug
     "configurations": [
         {
+            "name": "Application (J-Link)",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "request": "launch",
             "cwd": "${workspaceFolder}",
             "executable": "build/application.elf",
-            "name": "J-Link Application",
-            "request": "launch",
-            "type": "cortex-debug",
+            "preLaunchTask": "Build",
             "device": "nRF52840_XXAA",
             "showDevDebugOutput": "none",
-            "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
-            "preLaunchTask": "Build",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
@@ -24,16 +24,16 @@
             ]
         },
         {
+            "name": "Bootloader (J-Link)",
+            "type": "cortex-debug",
+            "servertype": "jlink",
+            "request": "launch",
             "cwd": "${workspaceFolder}",
             "executable": "build/bootloader.elf",
-            "name": "J-Link Bootloader",
-            "request": "launch",
-            "type": "cortex-debug",
+            "preLaunchTask": "Build Bootloader",
             "device": "nRF52840_XXAA",
             "showDevDebugOutput": "none",
-            "servertype": "jlink",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
-            "preLaunchTask": "Build Bootloader",
             "internalConsoleOptions": "neverOpen",
             "loadFiles": [
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
@@ -45,6 +45,50 @@
                 "monitor speed 2000",
                 "load"
             ]
+        },
+        {
+            "name": "Application (Black Magic Probe)",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "build/application.elf",
+            "preLaunchTask": "Build",
+            "interface": "swd",
+            "device": "nRF52840_XXAA",
+            "BMPGDBSerialPort": "/dev/cu.usbmodem97B6BC101",
+            "showDevDebugOutput": "none",
+            "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
+            "loadFiles": [
+                "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
+            ],
+            "preLaunchCommands": [
+                "monitor erase_mass",
+                "load",
+            ],
+        },
+        {
+            "name": "Bootloader (Black Magic Probe)",
+            "type": "cortex-debug",
+            "servertype": "bmp",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "executable": "build/bootloader.elf",
+            "preLaunchTask": "Build Bootloader",
+            "interface": "swd",
+            "device": "nRF52840_XXAA",
+            "BMPGDBSerialPort": "/dev/cu.usbmodem97B6BC101",
+            "showDevDebugOutput": "none",
+            "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
+            "loadFiles": [
+                "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
+                "build/application.hex",
+                "build/settings.hex"
+            ],
+            "preLaunchCommands": [
+                "monitor erase_mass",
+                "load",
+            ],
         }
     ]
 }
