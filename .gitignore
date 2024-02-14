@@ -14,3 +14,7 @@ abc.history
 
 # Temp test files
 test_scratch_pad*.py
+
+# Temp focusing image and production logs
+production/temp_focus_image.jpg
+production/log_*.txt
