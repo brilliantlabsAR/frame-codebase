@@ -80,8 +80,73 @@ function automatic [5:0] en_zigzag(input [5:0] i);
         55: en_zigzag = 61;
         62: en_zigzag = 62;
         63: en_zigzag = 63;
+        /*
+         0: en_zigzag =  0;
+         1: en_zigzag =  1;
+         2: en_zigzag =  5;
+         3: en_zigzag =  6;
+         4: en_zigzag = 14;
+         5: en_zigzag = 15;
+         6: en_zigzag = 27;
+         7: en_zigzag = 28;
+         8: en_zigzag =  2;
+         9: en_zigzag =  4;
+        10: en_zigzag =  7;
+        11: en_zigzag = 13;
+        12: en_zigzag = 16;
+        13: en_zigzag = 26;
+        14: en_zigzag = 29;
+        15: en_zigzag = 42;
+        16: en_zigzag =  3;
+        17: en_zigzag =  8;
+        18: en_zigzag = 12;
+        19: en_zigzag = 17;
+        20: en_zigzag = 25;
+        21: en_zigzag = 30;
+        22: en_zigzag = 41;
+        23: en_zigzag = 43;
+        24: en_zigzag =  9;
+        25: en_zigzag = 11;
+        26: en_zigzag = 18;
+        27: en_zigzag = 24;
+        28: en_zigzag = 31;
+        29: en_zigzag = 40;
+        30: en_zigzag = 44;
+        31: en_zigzag = 53;
+        32: en_zigzag = 10;
+        33: en_zigzag = 19;
+        34: en_zigzag = 23;
+        35: en_zigzag = 32;
+        36: en_zigzag = 39;
+        37: en_zigzag = 45;
+        38: en_zigzag = 52;
+        39: en_zigzag = 54;
+        40: en_zigzag = 20;
+        41: en_zigzag = 22;
+        42: en_zigzag = 33;
+        43: en_zigzag = 38;
+        44: en_zigzag = 46;
+        45: en_zigzag = 51;
+        46: en_zigzag = 55;
+        47: en_zigzag = 60;
+        48: en_zigzag = 21;
+        49: en_zigzag = 34;
+        50: en_zigzag = 37;
+        51: en_zigzag = 47;
+        52: en_zigzag = 50;
+        53: en_zigzag = 56;
+        54: en_zigzag = 59;
+        55: en_zigzag = 61;
+        56: en_zigzag = 35;
+        57: en_zigzag = 36;
+        58: en_zigzag = 48;
+        59: en_zigzag = 49;
+        60: en_zigzag = 57;
+        61: en_zigzag = 58;
+        62: en_zigzag = 62;
+        63: en_zigzag = 63;
+        */
     endcase
-    //en_zigzag = i;
 endfunction
 
 function automatic [5:0] de_zigzag(input [5:0] i);
@@ -151,6 +216,5 @@ function automatic [5:0] de_zigzag(input [5:0] i);
         62: de_zigzag = 62;
         63: de_zigzag = 63;
     endcase
-    //de_zigzag = i;
 endfunction
 `endif // __ZIGZAG__  _
