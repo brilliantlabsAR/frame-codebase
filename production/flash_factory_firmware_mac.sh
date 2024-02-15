@@ -2,12 +2,12 @@
 
 stty -echoctl
 
-echo "Frame programming scrpt"
+echo "Frame programming script"
 echo "-----------------------"
 
 while :
 do
-    echo ""
+    echo ""  | tee -a production/log.txt
     read -p "Press Enter key to start, or Ctrl-C to quit"
 
     # Automatically assign port depending if MacOS or Linux
@@ -23,7 +23,7 @@ do
     # TODO create logfile
 
     # Unlock chip
-    echo "$NOW - Unlocking chip"
+    echo "$NOW - Unlocking chip" | tee -a production/log.txt
     arm-none-eabi-gdb \
         -nx \
         --batch-silent \
@@ -34,7 +34,7 @@ do
         2> /dev/null
 
     # Erase chip (same thing as before, but here we do want to catch the error)
-    echo "$NOW - Erasing chip"
+    echo "$NOW - Erasing chip" | tee -a production/log.txt
     arm-none-eabi-gdb \
         -nx \
         --batch-silent \
@@ -48,7 +48,7 @@ do
     if [ $? -eq 0 ]; then
 
         # Get and print device ID
-        echo -n "$NOW - "
+        echo -n "$NOW - " | tee -a production/log.txt
         arm-none-eabi-gdb \
             -nx \
             --batch-silent \
@@ -59,10 +59,11 @@ do
             -ex "set logging enabled on" \
             -ex "monitor read deviceid" \
             -ex "set logging enabled off" \
-            2> /dev/null
+            2> /dev/null \
+            | tee -a production/log.txt
 
         # Get and print device address
-        echo -n "$NOW - "
+        echo -n "$NOW - " | tee -a production/log.txt
         arm-none-eabi-gdb \
             -nx \
             --batch-silent \
@@ -73,7 +74,8 @@ do
             -ex "set logging enabled on" \
             -ex "monitor read deviceaddr" \
             -ex "set logging enabled off" \
-            2> /dev/null
+            2> /dev/null \
+            | tee -a production/log.txt
 
         # Program sections
         echo "$NOW - Programming chip. Please wait"
@@ -91,7 +93,7 @@ do
 
         # If successful, start the camera focusing script otherwise throw error
         if [ $? -eq 0 ]; then
-            echo "$NOW - Programmed succesfully"
+            echo "$NOW - Programmed successfully" | tee -a production/log.txt
 
             # Run the camera focusing script
             echo "$NOW - Starting focusing app. Press Ctrl-C when complete"
@@ -100,18 +102,18 @@ do
             # Clear the download counter and done
             if [ $? -eq 0 ]; then
                 echo -e -n "\033[2K"
-                echo "$NOW - Done"
+                echo "$NOW - Done" | tee -a production/log.txt
             else
                 echo -e -n "\033[2K"
-                echo "$NOW - Error: Could not connect to start focusing"
+                echo "$NOW - Error: Could not connect to start focusing" | tee -a production/log.txt
             fi
 
         else
-            echo "$NOW - Error: Chip could not be programmed"
+            echo "$NOW - Error: Chip could not be programmed" | tee -a production/log.txt
         fi
 
     else
-        echo "$NOW - Error: Chip not found"
+        echo "$NOW - Error: Chip not found" | tee -a production/log.txt
     fi
 
 done
