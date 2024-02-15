@@ -2,7 +2,7 @@ from frameutils import Bluetooth
 from PIL import Image
 import asyncio
 import numpy as np
-import sys
+import os
 
 image_buffer = b""
 expected_length = 0
@@ -66,4 +66,4 @@ if __name__ == "__main__":
             loop.run_until_complete(capture_and_download(b, 200, 200))
 
     except KeyboardInterrupt:
-        sys.exit(0)
+        os._exit(0)
