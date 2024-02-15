@@ -20,8 +20,6 @@ do
     # Create timestamp
     NOW=`date -u +'%d/%m/%Y - %H:%M:%S'`
 
-    # TODO create logfile
-
     # Unlock chip
     echo "$NOW - Unlocking chip" | tee -a production/log.txt
     arm-none-eabi-gdb \
