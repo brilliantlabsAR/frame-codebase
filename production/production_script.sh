@@ -14,9 +14,9 @@ do
 
     # Automatically assign port depending if MacOS or Linux
     if [ "`uname`" = Darwin ]; then
-        PORT=`ls /dev/cu.usbmodem*1 | grep "cu."`
+        PORT=`ls /dev/cu.usbmodem*1 2> /dev/null | grep "cu."`
     else
-        PORT=/dev/ttyACM0
+        PORT=/dev/ttyACM0 2> /dev/null
     fi
 
     # Create timestamp
