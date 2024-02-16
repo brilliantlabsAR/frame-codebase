@@ -4,9 +4,11 @@ SIM ?= verilator
 #SIM ?= modelsim
 TOPLEVEL_LANG ?= verilog
 
+ifeq ($(SIM),verilator)
 VERILOG_FILES += \
         ../../jlib/dp_ram.sv \
-        ../../jlib/dp_ram_be.sv \
+        ../../jlib/dp_ram_be.sv
+endif
 
 VERILOG_FILES += \
         ../../jisp/jisp.sv \
@@ -20,7 +22,7 @@ ifeq ($(SIM),modelsim)
 VERILOG_FILES += \
         ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
         ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
-        ../../../../radiant/jisp/ram_dp_w64_b8_d720/rtl/ram_dp_w64_b8_d720.v
+        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v
 
 VERILOG_FILES += \
         $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/EBR_CORE.v \
