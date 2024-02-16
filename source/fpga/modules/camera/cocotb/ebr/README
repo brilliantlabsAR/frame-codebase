@@ -1,0 +1,13 @@
+Required: 32-bit python ebvironment cocotb installation
+https://github.com/cocotb/cocotb/wiki/Tier-2-Setup-Instructions#conda-based-installation-all-os
+
+$> conda create -n py3_32
+$> conda activate py3_32
+$> conda config --env --set subdir linux-32
+$> conda install python=3 gxx_linux-32
+
+(Then add 32-bit cocotb, 32-bit OpenCV, etc..)
+
+
+> make clean
+> make

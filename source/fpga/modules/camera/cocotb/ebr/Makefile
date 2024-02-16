@@ -14,7 +14,7 @@ VERILOG_INCLUDE_DIRS += $(realpath ../../jisp ../../jlib)
 VERILOG_FILES += \
         ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
         ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
-        ../../../../radiant/jisp/ram_dp_w64_b8_d720/rtl/ram_dp_w64_b8_d720.v
+        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v
 
 VERILOG_FILES += \
         $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/EBR_CORE.v \
@@ -58,9 +58,13 @@ TOPLEVEL = ebr_tb
 MODULE = test_ebr
 export PYTHONPATH := $(realpath ../../python):$(realpath ../jcommon):$(PYTHONPATH)
 
+all: ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v
+%.v:
+	make -C ../../../../radiant/jisp
+
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 clean::
 	rm -rf __pycache__ results.xml obj_dir dump.vcd transcript modelsim.ini
-s
+

@@ -56,7 +56,7 @@ localparam Y_LINE_BUF_SIZE = SENSOR_X_SIZE;
 localparam UV_LINE_BUF_SIZE = SENSOR_X_SIZE/2;
 localparam Y_LINE_BUF_HEIGHT = 16;
 localparam UV_LINE_BUF_HEIGHT = 8;
-localparam integer depth[1:0] = {2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8, 2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8};
+localparam integer depth[1:0] = {2*2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8, 2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8};
 
 generate
 for (genvar i=0; i<2; i++) begin : dp_ram_be
@@ -90,7 +90,7 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
             .rst_i      (1'b0)
         );
     else 
-        ram_dp_w64_b8_d720 dp_ram_be_1 (
+        ram_dp_w64_b8_d1440 dp_ram_be_1 (
             .wr_addr_i  (wa), 
             .wr_data_i  (wd), 
             .wr_en_i    (we), 
