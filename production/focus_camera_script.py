@@ -13,7 +13,7 @@ def receive_data(data):
     global expected_length
     image_buffer += data
     print(
-        f"                        Received {str(len(image_buffer))} / {str(int(expected_length))} bytes",
+        f"                        Downloading camera data {str(len(image_buffer))} / {str(int(expected_length))} bytes. Press Ctrl-C when complete      ",
         end="\r",
     )
 
@@ -52,7 +52,7 @@ async def capture_and_download(b: Bluetooth, height, width):
             rgb_array[y, x] = [red, green, blue]
 
     image = Image.fromarray(rgb_array)
-    image.save("production/temp_focus_image.jpg")
+    image.save("temp_focus_image.jpg")
 
 
 if __name__ == "__main__":
