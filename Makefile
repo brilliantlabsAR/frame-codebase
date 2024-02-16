@@ -65,6 +65,7 @@ release:
 	@make clean
 	@make application
 	@make settings-hex-zip
+	@cp $(BUILD)/frame-firmware-$(BUILD_VERSION).hex production/
 
 clean:
 	@rm -rf $(BUILD)
