@@ -77,6 +77,7 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
     );
     if (i ==0) 
         ram_dp_w64_b8_d2880 dp_ram_be_1 (
+            .ben_i      (wbe), 
             .wr_addr_i  (wa), 
             .wr_data_i  (wd), 
             .wr_en_i    (we), 
@@ -91,6 +92,7 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
         );
     else 
         ram_dp_w64_b8_d1440 dp_ram_be_1 (
+            .ben_i      (wbe), 
             .wr_addr_i  (wa), 
             .wr_data_i  (wd), 
             .wr_en_i    (we), 

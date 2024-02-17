@@ -1,7 +1,8 @@
 Lattice IP is internally encryped and thus can be simulated only with the
 Modelsim simulator provided Lattice. This Modelsim simulator is a 32-bit
 executable and requires a 32-bit Python installation with 32-bit Cocotb (and
-other precompiled 32-bit packages, like OpenCV).
+other precompiled 32-bit packages, like OpenCV). 
+Note: Only Python 3.7.1 is provided in a 32-bit verion by Anaconda.
 
 https://github.com/cocotb/cocotb/wiki/Tier-2-Setup-Instructions#conda-based-installation-all-os
 
