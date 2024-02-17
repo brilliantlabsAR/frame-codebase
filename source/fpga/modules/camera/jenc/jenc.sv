@@ -8,10 +8,12 @@ module jenc #(
     output  logic                   di_hold,
     input   logic [2:0]             di_cnt,
 
-    output  logic signed[QW-1:0]    q[1:0],
-    output  logic                   q_valid,
-    input   logic                   q_hold,
-    output  logic [4:0]             q_cnt,
+    output  logic [3:0]             out_coeff_length[1:0],
+    output  logic [11:0]            out_coeff[1:0],
+    output  logic [4:0]             out_code_length[1:0],
+    output  logic [15:0]            out_code[1:0],
+    output  logic                   out_valid[1:0],
+    input   logic                   out_hold,
 
     input   logic                   clk,
     input   logic                   resetn
@@ -22,6 +24,11 @@ logic                   d_valid;
 logic                   d_hold;
 logic [2:0]             d_cnt;
 
+logic signed[10:0]      q[1:0]; 
+logic                   q_valid;
+logic                   q_hold;
+logic [4:0]             q_cnt;
+logic                   q_chroma;
 
 dct_2d dct_2d (
     .q              (d),
@@ -34,6 +41,9 @@ quant quant(
     .di_valid       (d_valid),
     .di_hold        (d_hold),
     .di_cnt         (d_cnt),
+    .*
+);
+entropy entropy(
     .*
 );
 

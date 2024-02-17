@@ -17,7 +17,7 @@ logic [19:0] h[1:0];
 
 always_comb  
     for (int i=0; i<2; i++)
-        case(sel)
+        case(sel[i])
         0: h[i] = ht0[symbol[i]];
         1: h[i] = ht1[symbol[i]];
         2: h[i] = ht2[symbol[i]];

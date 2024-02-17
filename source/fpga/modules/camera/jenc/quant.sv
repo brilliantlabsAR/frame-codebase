@@ -15,6 +15,7 @@ module quant #(
     output  logic                   q_valid,
     input   logic                   q_hold,
     output  logic [4:0]             q_cnt,
+    output  logic                   q_chroma,
     input   logic                   clk,
     input   logic                   resetn
 );
@@ -27,7 +28,8 @@ always_comb assert (M_BITS == 13) else $error();
 //Write (or Read) into (from) Zig Zag buffer in *REVERSED* (forward) zig zag order
 logic [DW-1:0]      zigzag_mem[63:0];
 logic               zigzag_sel;         // Zig Zag mem select: 0 .. write DCT-2D output to Zig Zag buffer, 1 .. read Zig Zag buffer & send to quantizer
-logic [4:0]         zigzag_rd_cnt;
+logic [4:0]         zigzag_rd_cnt;      // read 32 x 2
+logic [2:0]         zigzag_mcu_cnt;     // 0..3 Y, 4..U, 5..V
 logic signed[DW-1:0] zigzag_rd_data[1:0];
 
 always_comb di_hold = zigzag_sel;
@@ -36,10 +38,13 @@ always @(posedge clk)
 if (!resetn) begin
     zigzag_sel <= 0;
     zigzag_rd_cnt <= 0;
+    zigzag_mcu_cnt <= 0;
 end else if (zigzag_sel & ~q_hold) begin
     zigzag_rd_cnt <= zigzag_rd_cnt + 1;
-    if (&zigzag_rd_cnt)
+    if (&zigzag_rd_cnt) begin
         zigzag_sel <= 0;
+        zigzag_mcu_cnt <= zigzag_mcu_cnt == 5 ? 0 : zigzag_mcu_cnt;
+    end
 end else if (~zigzag_sel & di_valid)
     if (&di_cnt)
         zigzag_sel <= 1;
@@ -74,9 +79,8 @@ always_comb
 // pipline inputs
 logic signed[DW-1:0]    di0[1:0];
 logic                   di0_valid;
-logic [2:0]             di0_cnt;
-// Count 2 coefficients at a time, goes in lockstep with input
-logic [1:0]             cnt_2coeff;
+logic [4:0]             di0_cnt;
+logic                   di0_chroma;
 
 always @(posedge clk) 
 if (!resetn)
@@ -86,8 +90,8 @@ else if (!q_hold)
 
 always @(posedge clk) 
 if (zigzag_sel & !q_hold) begin
-    di0_cnt     <= zigzag_rd_cnt[4:2];
-    cnt_2coeff  <= zigzag_rd_cnt[1:0];
+    di0_chroma  <= zigzag_mcu_cnt[2];
+    di0_cnt     <= zigzag_rd_cnt;
     di0         <= zigzag_rd_data;
 end
 
@@ -96,7 +100,8 @@ logic [(1+6)-1:0]   q_ra[1:0];
 // read the quantizer coefficients 2 at a time
 always_comb
     for (int i=0; i<2; i++)
-        q_ra[i] = {1'b0, de_zigzag((zigzag_rd_cnt << 1) | i)};
+        q_ra[i] = {zigzag_mcu_cnt[2], de_zigzag((zigzag_rd_cnt << 1) | i)};
+
 quant_tables #(.N(2)) quant_tables (
     .re         (zigzag_sel & ~q_hold),
     .ra         (q_ra),
@@ -120,6 +125,18 @@ quant_seq_mult_15x13_p4 mult1 (
     .a_in       (di0[1]),
     .b_in       (q_factor[1]),
     .out        (mult_out[1]),
+    .in_valid   (di0_valid & !q_hold),
+    .out_valid  ( ),
+    .en         (~q_hold),
+    .*
+);
+
+// Hijack multiplier for pipelining for now :)
+logic signed[DW+M_BITS-1:0]    pipe_out;
+quant_seq_mult_15x13_p4 cnt_pipe (
+    .a_in       ({di0_chroma, di0_cnt}),
+    .b_in       (1 << (M_BITS-1)),
+    .out        ({q_chroma, q_cnt}),
     .in_valid   (di0_valid & !q_hold),
     .out_valid  ( ),
     .en         (~q_hold),
