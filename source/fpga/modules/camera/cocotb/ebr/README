@@ -1,13 +1,16 @@
-Required: 32-bit python ebvironment cocotb installation
+Lattice IP is internally encryped and thus can be simulated only with the
+Modelsim simulator provided Lattice. This Modelsim simulator is a 32-bit
+executable and requires a 32-bit Python installation with 32-bit Cocotb (and
+other precompiled 32-bit packages, like OpenCV).
+
 https://github.com/cocotb/cocotb/wiki/Tier-2-Setup-Instructions#conda-based-installation-all-os
 
-$> conda create -n py3_32
+$> conda create -n py3_32 # use 'sudo conda' to make this a global rather than local environment
 $> conda activate py3_32
 $> conda config --env --set subdir linux-32
 $> conda install python=3 gxx_linux-32
-
-(Then add 32-bit cocotb, 32-bit OpenCV, etc..)
-
-
-> make clean
-> make
+$>
+$> pip install cocotb  # uses pip from 32-bit Python environment
+$>
+$> make clean
+$> make SIM=modelsim
