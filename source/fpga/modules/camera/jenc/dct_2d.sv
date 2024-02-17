@@ -130,11 +130,11 @@ end else if (~transpose_sel & transpose_wr_valid)
 always @(posedge clk) 
 if (~transpose_sel & transpose_wr_valid)
     for (int j=0; j<8; j++)
-        transp_mem[j][dct_q_cnt] <= dct_q[j];
+        transp_mem[dct_q_cnt][j] <= dct_q[j];
 
 // read from transpose
 always_comb
     for (int j=0; j<8; j++)
-        transpose_rd_data[j] = transp_mem[transpose_rd_cnt][j];
+        transpose_rd_data[j] = transp_mem[j][transpose_rd_cnt];
 
 endmodule
