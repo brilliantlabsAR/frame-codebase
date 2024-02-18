@@ -76,4 +76,4 @@ For quickly getting up and running, the accelerators which run on the FPGA are a
     make fpga/fpga_application.h
     ```
 
-To understand more around how the FPGA RTL works. Check the documentation [here](source/fpga/README.md).
+To understand more around how the FPGA RTL works. Check the documentation [here](docs/fpga-architecture.md).
