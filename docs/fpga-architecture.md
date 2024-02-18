@@ -4,7 +4,7 @@ The Frame FPGA architecture consists of three major components. The SPI driver, 
 
 ## Architecture
 
-![FPGA architecture block diagram for Frame](docs/top-level-architecture.drawio.png)
+![FPGA architecture block diagram for Frame](docs/diagrams/top-level-architecture.drawio.png)
 
 ## SPI Driver
 
@@ -32,7 +32,7 @@ The graphics pipeline consists of 4 sub-components. The sprite engine, the vecto
 
 Two types of graphics may be drawn. Sprites, such as text, or vectors such as lines or curves. Both types of graphics may be drawn on the screen at the same time.
 
-![Graphics pipeline for Frame](docs/graphics-pipeline-architecture.drawio.png)
+![Graphics pipeline for Frame](docs/diagrams/graphics-pipeline-architecture.drawio.png)
 
 ### 16 Color Palette
 
@@ -42,7 +42,7 @@ Rather than limiting the graphics to 16 fixed colors, each color index is mapped
 
 The color at index 0, is always expected to be the transparent (black) background color. This can be overridden if a transparent background isn't needed.
 
-![Graphics color palette on Frame](docs/graphics-color-palette.drawio.png)
+![Graphics color palette on Frame](docs/diagrams/graphics-color-palette.drawio.png)
 
 ### Sprite Graphics
 
@@ -54,19 +54,19 @@ Sprite data can be in one of three color formats. 1bit color, 2bit color and 4bi
 
 When printing a single sprite, the `palette_offset` parameter can be provided to shift which colors are used. This allows for a 1bit font sprite to take on a different color from anywhere in the palette. This option can be changed on a sprite by sprite basis.
 
-![Sprite graphics on Frame](docs/graphics-sprite-engine.drawio.png)
+![Sprite graphics on Frame](docs/diagrams/graphics-sprite-engine.drawio.png)
 
 ### Vector Graphics
 
 Vectors can be drawn with the `GRAPHICS_DRAW_VECTOR` command. By setting the control points to 0, straight lines can also be drawn.
 
-![Vector graphics on Frame](docs/graphics-vector-engine.drawio.png)
+![Vector graphics on Frame](docs/diagrams/graphics-vector-engine.drawio.png)
 
 ## Camera
 
 The complete pipeline for the camera subsection is as follows:
 
-![Camera pipeline for Frame](docs/camera-pipeline-architecture.drawio.png)
+![Camera pipeline for Frame](docs/diagrams/camera-pipeline-architecture.drawio.png)
 
 ### Capturing Images
 

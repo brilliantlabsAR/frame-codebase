@@ -8,7 +8,7 @@ The codebase is split into three sections. The **nRF52 Application**, the **nRF5
 
 The nRF52 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
 
-![Frame system architecture diagram](docs/frame-system-architecture.drawio.png)
+![Frame system architecture diagram](docs/diagrams/frame-system-architecture.drawio.png)
 
 ## Getting started with nRF52 firmware development
 
