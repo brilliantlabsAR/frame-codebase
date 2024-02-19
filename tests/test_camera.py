@@ -1,16 +1,17 @@
 """
-Tests the Frame specific Lua libraries over Bluetooth.
+Tests the camera libraries over Bluetooth.
 """
 
 import asyncio
 from frameutils import Bluetooth
 from PIL import Image
 import numpy as np
+import cv2
 
 image_buffer = b""
 expected_length = 0
 COLORMODE = "YUV"
-
+# COLORMODE = "RGB"
 
 def receive_data(data):
     global image_buffer
@@ -43,24 +44,13 @@ async def capture_and_download(b: Bluetooth, height, width):
 
     image_data = np.frombuffer(image_buffer, dtype=np.uint8)
     rgb_array = np.zeros((height, width, 3), dtype=np.uint8)
+    yuv_array = np.zeros((height, width, 3), dtype=np.uint8)
 
-    for y in range(height):
-        for x in range(width):
-            pixel = image_data[y * width + x]
+    if COLORMODE == "RGB":
+        for y in range(height):
+            for x in range(width):
+                pixel = image_data[y * width + x]
 
-            if COLORMODE == "YUV":
-                Y = (pixel & 0b11110000) >> 4
-                U = (pixel & 0b00001100) >> 2
-                V = (pixel & 0b00000011)
-
-                Y = (0b11111111 / 0b1111) * Y
-                U = (0b11111111 / 0b11) * U
-                V = (0b11111111 / 0b11) * V
-
-                red = Y + 1.140*V
-                green = Y - 0.395*U - 0.581*V
-                blue = Y + 2.032*U
-            else:
                 red = (pixel & 0b11100000) >> 5
                 green = (pixel & 0b00011100) >> 2
                 blue = pixel & 0b00000011
@@ -69,15 +59,33 @@ async def capture_and_download(b: Bluetooth, height, width):
                 green = (0b11111111 / 0b111) * green
                 blue = (0b11111111 / 0b11) * blue
 
-            rgb_array[y, x] = [red, green, blue]
+                rgb_array[y, x] = [red, green, blue]
+    
+    elif COLORMODE == "YUV": 
+        for y in range(height):
+            for x in range(width):
+                pixel = image_data[y * width + x]
+                
+                Y = (pixel & 0b11110000) >> 4
+                Cb = (pixel & 0b00001100) >> 2
+                Cr = pixel & 0b00000011
+
+                Y = (0b11111111 / 0b1111) * Y
+                Cb = (0b11111111 / 0b11) * Cb
+                Cr = (0b11111111 / 0b11) * Cr
+
+                yuv_array[y, x] = [Y, Cb, Cr]
+
+        rgb_array = cv2.cvtColor(yuv_array, cv2.COLOR_YUV2RGB)
 
     image = Image.fromarray(rgb_array)
     image.show()
 
-gain = 46
-exposure = 20000 #us
-MAX = 35000
-MIN = 25000
+# gain = 16
+gain = 48
+exposure = 25000 #us
+MAX = 8000
+MIN = 1000
 
 async def update_camera(b):
     await b.send_lua(f"frame.camera.set_register({int(0x3500)}, {int((exposure >> 12) & 0xff)})")
@@ -97,37 +105,10 @@ async def main():
     await b.connect(data_response_handler=receive_data)
 
     await update_camera(b)
-    response = await b.send_lua(f"print(frame.camera.read_counts())", await_print=True)
+    response = await b.send_lua(f"print(frame.camera.brightness())", await_print=True)
     print(f"gain {gain} exposure {exposure} -> {response}")
-
-    while (int(response) > MAX or int(response) < MIN):
-        if (int(response) > MAX):
-            if exposure < 45000:
-                exposure += 2500
-            else: 
-                if gain <= 228:
-                    gain += 20
-                else:
-                    print("val at max")
-                    break
-        elif (int(response) < MIN):
-            if gain >= 26:
-                gain -= 20
-            else: 
-                if exposure > 15000:
-                    exposure -= 2500
-                else:
-                    print("val at min")
-                    break
         
-        else:
-            break
-
-        await update_camera(b)
-        response = await b.send_lua(f"print(frame.camera.read_counts())", await_print=True)
-        print(f"gain {gain} exposure {exposure} -> {response}")
-        
-    await capture_and_download(b, 200, 200)
+    await capture_and_download(b, 180, 180)
 
     await b.disconnect()
 

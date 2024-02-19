@@ -43,7 +43,7 @@ logic capture_flag;
 logic capture_in_progress_flag;
 
 // TODO make capture_size dynamic once we have adjustable resolution
-logic [15:0] capture_size = 200 * 200;
+logic [15:0] capture_size;
 logic [15:0] bytes_read;
 
 logic [15:0] bytes_remaining;
@@ -57,6 +57,18 @@ logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
 logic [15:0] pixel_count_above_threshold;
+logic [7:0] pan_level;
+logic [7:0] zoom_level;
+
+always_comb begin
+    case (zoom_level)
+        1 : capture_size = 720*720;
+        2 : capture_size = 360*360;
+        3 : capture_size = 240*240;
+        4 : capture_size = 180*180;
+        default : capture_size = 180*180;
+    endcase
+end
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -112,7 +124,21 @@ always_ff @(posedge clock_spi_in) begin
                     end
                 end
 
-                // Saturation count
+                // Zoom
+                'h23: begin
+                    if (operand_valid_in && operand_count_in) begin
+                        zoom_level <= operand_in;
+                    end
+                end
+
+                // Pan
+                'h24: begin
+                    if (operand_valid_in && operand_count_in) begin
+                        pan_level <= operand_in;
+                    end
+                end
+
+                // Brightness
                 'h25: begin
                     case (operand_count_in)
                         0: response_out <= pixel_count_above_threshold[15:8];
@@ -121,6 +147,8 @@ always_ff @(posedge clock_spi_in) begin
 
                     response_valid_out <= 1;
                 end
+
+                // TODO: 'h26 compression factor
 
             endcase
 
@@ -271,12 +299,7 @@ logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
 logic cropped_frame_valid;
 
-crop #(
-    .X_CROP_START(542),
-    .X_CROP_END(742),
-    .Y_CROP_START(260),
-    .Y_CROP_END(460)
-) crop (
+crop crop (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -285,6 +308,9 @@ crop #(
     .pixel_blue_data_in(debayered_blue_data),
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
+
+    .pan_level(pan_level),
+    .zoom_level(zoom_level),
 
     .pixel_red_data_out(cropped_red_data),
     .pixel_green_data_out(cropped_green_data),
@@ -296,9 +322,14 @@ crop #(
 logic [7:0] yuv [2:0];
 logic yuv_line_valid;
 // logic yuv_frame_valid;
+logic [7:0] rgb24 [2:0];
+
+assign rgb24[0] = cropped_red_data[9:2];
+assign rgb24[1] = cropped_green_data[9:2];
+assign rgb24[2] = cropped_blue_data[9:2];
 
 rgb2yuv rgb2yuv (
-    .rgb24({cropped_blue_data[9:2], cropped_green_data[9:2], cropped_red_data[9:2]}),
+    .rgb24(rgb24),
     .rgb24_valid(cropped_line_valid),
     .rgb24_hold(),
     .frame_valid_in(cropped_frame_valid),
