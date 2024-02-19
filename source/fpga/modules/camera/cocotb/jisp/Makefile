@@ -66,7 +66,7 @@ TOPLEVEL = jisp
 
 # MODULE is the basename of the Python test file
 MODULE = test_jisp
-export PYTHONPATH := $(realpath ../../python):$(realpath ../jcommon):$(PYTHONPATH)
+export PYTHONPATH := $(realpath ../jcommon):$(PYTHONPATH)
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim

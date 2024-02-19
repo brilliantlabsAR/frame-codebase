@@ -56,7 +56,7 @@ TOPLEVEL = ebr_tb
 
 # MODULE is the basename of the Python test file
 MODULE = test_ebr
-export PYTHONPATH := $(realpath ../../python):$(realpath ../jcommon):$(PYTHONPATH)
+export PYTHONPATH := $(realpath ../jcommon):$(PYTHONPATH)
 
 all: ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v
 %.v:
