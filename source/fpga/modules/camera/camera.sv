@@ -57,7 +57,6 @@ logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
 logic [15:0] pixel_count_above_threshold;
-logic [15:0] pixel_count_below_threshold;
 
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
@@ -114,12 +113,10 @@ always_ff @(posedge clock_spi_in) begin
                 end
 
                 // Saturation count
-                'h23: begin
+                'h25: begin
                     case (operand_count_in)
                         0: response_out <= pixel_count_above_threshold[15:8];
                         1: response_out <= pixel_count_above_threshold[7:0];
-                        2: response_out <= pixel_count_below_threshold[15:8];
-                        3: response_out <= pixel_count_below_threshold[7:0];
                     endcase
 
                     response_valid_out <= 1;
@@ -138,24 +135,24 @@ always_ff @(posedge clock_spi_in) begin
 end
 
 // Capture command logic
-logic [1:0] cropped_frame_valid_edge_monitor;
-logic cropped_frame_valid;
+logic [1:0] yuv_frame_valid_edge_monitor;
+logic yuv_frame_valid;
 
 always_ff @(posedge clock_spi_in) begin
     if (reset_spi_n_in == 0) begin
         capture_in_progress_flag <= 0;
-        cropped_frame_valid_edge_monitor <= 0;
+        yuv_frame_valid_edge_monitor <= 0;
     end
 
     else begin
-        cropped_frame_valid_edge_monitor <= {cropped_frame_valid_edge_monitor[0],
-                                             cropped_frame_valid};
+        yuv_frame_valid_edge_monitor <= {yuv_frame_valid_edge_monitor[0],
+                                             yuv_frame_valid};
 
-        if (capture_flag && cropped_frame_valid_edge_monitor == 'b01) begin
+        if (capture_flag && yuv_frame_valid_edge_monitor == 'b01) begin
             capture_in_progress_flag <= 1;
         end
 
-        if (cropped_frame_valid_edge_monitor == 'b10) begin
+        if (yuv_frame_valid_edge_monitor == 'b10) begin
             capture_in_progress_flag <= 0;
         end
     end
@@ -272,6 +269,7 @@ logic [9:0] cropped_red_data;
 logic [9:0] cropped_green_data;
 logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
+logic cropped_frame_valid;
 
 crop #(
     .X_CROP_START(542),
@@ -295,30 +293,44 @@ crop #(
     .frame_valid_out(cropped_frame_valid)
 );
 
-gain #(
-    .THRESHOLD('h132)
-) gain (
+logic [7:0] yuv [2:0];
+logic yuv_line_valid;
+// logic yuv_frame_valid;
+
+rgb2yuv rgb2yuv (
+    .rgb24({cropped_blue_data[9:2], cropped_green_data[9:2], cropped_red_data[9:2]}),
+    .rgb24_valid(cropped_line_valid),
+    .rgb24_hold(),
+    .frame_valid_in(cropped_frame_valid),
+    .line_valid_in(cropped_line_valid),
+    .yuv(yuv),
+    .yuv_valid(),
+    .yuv_hold(1'b0),
+    .frame_valid_out(yuv_frame_valid),
+    .line_valid_out(yuv_line_valid),
+    .clk(clock_pixel_in),
+    .resetn(reset_pixel_n_in)
+);
+
+gain gain (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(cropped_red_data),
-    .pixel_green_data_in(cropped_green_data),
-    .pixel_blue_data_in(cropped_blue_data),
-    .line_valid_in(cropped_line_valid),
-    .frame_valid_in(cropped_frame_valid),
+    .Y(yuv[0]),
+    .line_valid_in(yuv_line_valid),
+    .frame_valid_in(yuv_frame_valid),
 
-    .pixel_count_above_threshold_out(pixel_count_above_threshold),
-    .pixel_count_below_threshold_out(pixel_count_below_threshold)
+    .pixel_count_above_threshold_out(pixel_count_above_threshold)
 );
 
 logic [15:0] buffer_write_address_metastable;
 logic [15:0] buffer_address;
 always_ff @(posedge clock_pixel_in) begin
 
-    if (cropped_frame_valid == 0) begin
+    if (yuv_frame_valid == 0) begin
         buffer_write_address_metastable <= 0;
     end
-    else if (cropped_frame_valid && cropped_line_valid) begin
+    else if (yuv_frame_valid && yuv_line_valid) begin
         buffer_write_address_metastable <= buffer_write_address_metastable + 1;
     end
 
@@ -326,15 +338,15 @@ end
 
 logic [7:0] buffer_write_data_metastable;
 logic [7:0] buffer_write_data;
-assign buffer_write_data_metastable = {cropped_red_data[9:7], 
-                                       cropped_green_data[9:7], 
-                                       cropped_blue_data[9:8]};
+assign buffer_write_data_metastable = {yuv[0][7:4], 
+                                       yuv[1][7:6], 
+                                       yuv[2][7:6]};
 
 logic buffer_write_enable_metastable;
 logic buffer_write_enable;
-assign buffer_write_enable_metastable = cropped_frame_valid && 
-                                        cropped_line_valid && 
-                                        capture_in_progress_flag;
+assign buffer_write_enable_metastable = yuv_frame_valid && 
+                                        yuv_line_valid && 
+                                        capture_in_progress_flag;                            
 
 always_ff @(posedge clock_spi_in) begin
     

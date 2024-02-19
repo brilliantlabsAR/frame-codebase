@@ -145,17 +145,16 @@ static int lua_camera_set_register(lua_State *L)
     return 0;
 }
 
-static int lua_camera_read_counts(lua_State *L) {
+static int lua_camera_brightness(lua_State *L) {
     uint8_t buf[4];
 
-    buf[0] = 0x23;
+    buf[0] = 0x25;
     spi_write(FPGA, &buf, 1, true);
     spi_read(FPGA, &buf, 4, false);
 
-    uint16_t pixels_above_threshold = (uint16_t)(buf[0] << 8) + buf[1];
-    uint16_t pixels_below_threshold = (uint16_t)(buf[2] << 8) + buf[3];
+    uint16_t brightness = (uint16_t)(buf[0] << 8) + buf[1];
     
-    lua_pushinteger(L, pixels_below_threshold);
+    lua_pushinteger(L, brightness);
     return 1;
 }
 
@@ -180,8 +179,8 @@ void lua_open_camera_library(lua_State *L)
     lua_pushcfunction(L, lua_camera_set_register);
     lua_setfield(L, -2, "set_register");
 
-    lua_pushcfunction(L, lua_camera_read_counts);
-    lua_setfield(L, -2, "read_counts");
+    lua_pushcfunction(L, lua_camera_brightness);
+    lua_setfield(L, -2, "brightness");
 
     lua_setfield(L, -2, "camera");
 

@@ -9,6 +9,7 @@ import numpy as np
 
 image_buffer = b""
 expected_length = 0
+COLORMODE = "YUV"
 
 
 def receive_data(data):
@@ -47,13 +48,26 @@ async def capture_and_download(b: Bluetooth, height, width):
         for x in range(width):
             pixel = image_data[y * width + x]
 
-            red = (pixel & 0b11100000) >> 5
-            green = (pixel & 0b00011100) >> 2
-            blue = pixel & 0b00000011
+            if COLORMODE == "YUV":
+                Y = (pixel & 0b11110000) >> 4
+                U = (pixel & 0b00001100) >> 2
+                V = (pixel & 0b00000011)
 
-            red = (0b11111111 / 0b111) * red
-            green = (0b11111111 / 0b111) * green
-            blue = (0b11111111 / 0b11) * blue
+                Y = (0b11111111 / 0b1111) * Y
+                U = (0b11111111 / 0b11) * U
+                V = (0b11111111 / 0b11) * V
+
+                red = Y + 1.140*V
+                green = Y - 0.395*U - 0.581*V
+                blue = Y + 2.032*U
+            else:
+                red = (pixel & 0b11100000) >> 5
+                green = (pixel & 0b00011100) >> 2
+                blue = pixel & 0b00000011
+
+                red = (0b11111111 / 0b111) * red
+                green = (0b11111111 / 0b111) * green
+                blue = (0b11111111 / 0b11) * blue
 
             rgb_array[y, x] = [red, green, blue]
 
