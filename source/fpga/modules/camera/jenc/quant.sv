@@ -55,7 +55,7 @@ logic [5:0] zwa;
 always @(posedge clk) 
 if (~zigzag_sel & di_valid)
     for (int j=0; j<8; j++) begin
-        zwa = di_cnt*8 + j;
+        zwa = di_cnt + j*8;
         //$display("WRITE: %d -> %d", wa0 ,en_zigzag(wa0) );
 `ifdef READ_ZIG_ZAG_NOT_WRITE
         zigzag_mem[zwa] <= di[j];
@@ -135,7 +135,7 @@ quant_seq_mult_15x13_p4 mult1 (
 logic signed[DW+M_BITS-1:0]    pipe_out;
 quant_seq_mult_15x13_p4 cnt_pipe (
     .a_in       ({di0_chroma, di0_cnt}),
-    .b_in       (1 << (M_BITS-1)),
+    .b_in       (1),
     .out        ({q_chroma, q_cnt}),
     .in_valid   (di0_valid & !q_hold),
     .out_valid  ( ),

@@ -56,7 +56,7 @@ always_comb begin
     b_pipe_stg1_next = b_pipe_stg0;
     b_pipe_stg0_next = b_in;
     z_pipe_stg3_next = z_pipe_stg2
-        + (a_pipe_stg3_next[12] << 11) // rounding bit
+        + (1 << 11) // rounding bit
         + (b_pipe_stg3_next[12] ? (a_pipe_stg3_next << 12) : 0)
         + (b_pipe_stg3_next[11] ? (a_pipe_stg3_next << 11) : 0)
         + (b_pipe_stg3_next[10] ? (a_pipe_stg3_next << 10) : 0);

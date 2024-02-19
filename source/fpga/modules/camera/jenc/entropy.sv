@@ -31,7 +31,7 @@ endfunction
 logic signed[10:0]          previousDC;
 always @(posedge clk)
 if (!resetn || 1'b0) // To Do: Add EOF reset
-    previousDC <= 0;
+    previousDC <= 012;
 else if (q_valid & !q_hold)
     previousDC <= q[0];
     
@@ -45,62 +45,69 @@ always @(posedge clk) if (q_valid & !q_hold) rl16_stored <= next_rl16[1];
 
 always_comb
     for (int i=0; i<2; i++) begin
-        rl[i] = i==0 ? rl_stored : next_rl[i];
-        rl16[i] = i==0 ? rl16_stored : next_rl16[i];
+        rl[i] = i==0 ? rl_stored : next_rl[i-1];
+        rl16[i] = i==0 ? rl16_stored : next_rl16[i-1];
 
-        rl_valid[i] = 0;
-        next_rl16[i] = rl16[i];
         if (i==0 & q_cnt==0 || q[i] != 0) begin // DC, or non-zero AC. Also insert any outstanding ZRL if q==0 and not DC
             rl_valid[i] = 1;
             next_rl[i] = 0;
             next_rl16[i] = 0;
         end
-        else if(i==1 & &q_cnt) begin              // coeff==0 case: Insert EOB, but do not send ZRL
+        else if(i==1 & &q_cnt) begin        // coeff==0 case: Insert EOB, but do not send ZRL
             rl_valid[i] = 1;
-            next_rl[i] = 'x;                    // dont care
+            next_rl[i] = 0;                 // dont care
+            next_rl16[i] = rl16[i];
         end
-        else if(rl[i]==15) begin                // keep track of 16-long runlengths
+        else if(rl[i]==15) begin            // keep track of 16-long runlengths
+            rl_valid[i] = 0;
             next_rl[i] = 0;
             next_rl16[i] = rl16[i] + 1;
         end
-        else                                    // coeff[i] == 0
+        else begin                          // coeff[i] == 0, count run length
+            rl_valid[i] = 0;
             next_rl[i] = rl[i] + 1;
-
+            next_rl16[i] = rl16[i];
+        end
     end
 
 // Generate code words
-logic signed[11:0]          coeff[1:0]; // 12 bits
+logic signed[11:0]          tmp_coeff[1:0], coeff[1:0]; // 12 bits
 logic unsigned[3:0]         coeff_length[1:0];
 always_comb
     for (int i=0; i<2; i++) begin
-        coeff[i] = (i==0 & q_cnt==0) ? q[i] - previousDC : q[i];
-        coeff_length[i] = bit_length(coeff[i] < 0 ? -coeff[i] : coeff[i]);
-        if (coeff[i] < 0)
-            coeff[i] = coeff[i] + ~('1 << coeff_length[i]);
+        tmp_coeff[i] = (i==0 & q_cnt==0) ? q[i] - previousDC : q[i];
+        coeff_length[i] = bit_length(tmp_coeff[i] < 0 ? -tmp_coeff[i] : tmp_coeff[i]);
+        if (tmp_coeff[i] < 0)
+            coeff[i] = tmp_coeff[i] + ~('1 << coeff_length[i]);
+        else 
+            coeff[i] = tmp_coeff[i];
     end
 
 
 // Read Huffman tables
+logic [7:0]         ht_symbol[1:0];
+logic               ht_re[1:0];
+logic [1:0]         ht_sel[1:0];
 logic [4:0]         code_length0[1:0];
 logic [15:0]        code0[1:0];
 
-generate 
-for (genvar i=0; i<2; i++) begin : ht
-    logic [7:0]     symbol =  rl_valid[i] ? 
-                                ((q[i]==0 & i==1 & &q_cnt) ?  8'h00 : {rl[i], coeff_length[i]}) : 
-                                8'hf0;
-    logic           re = q_valid & !q_hold & (rl_valid[i] | rl[i]==13-i | rl[i]==12-i); // Read 0xF0: i==1: 11|12, i==0: 12|13
-    logic [1:0]     sel;
-    always_comb sel[0] = q_chroma;
-    always_comb sel[1] = ~(i==0 & q_cnt==0); // DC table
-    huff_tables ht (
-        .len        (code_length0[i]),
-        .code       (code0[i]),
-        .*
-    );
+always_comb for (int i=0; i<2; i++) begin
+    logic [7:0] symbol = {rl[i], coeff_length[i]};
+    ht_symbol[i] =  rl_valid[i] ? ((q[i]==0 & i==1 & &q_cnt) ?  8'h00 : symbol) : 8'hf0;
+    ht_re[i] = q_valid & !q_hold & (rl_valid[i] | rl[i]==13-i | rl[i]==12-i); // Read 0xF0: i==1: 11|12, i==0: 12|13
+    ht_sel[i][0] = q_chroma;
+    ht_sel[i][1] = ~(i==0 & q_cnt==0); // DC table
 end
 
-endgenerate
+huff_tables ht (
+    .symbol     (ht_symbol),
+    .re         (ht_re),
+    .sel        (ht_sel),
+    .len        (code_length0),
+    .code       (code0),
+    .clk
+);
+
 
 /*
 ZRL insertion
