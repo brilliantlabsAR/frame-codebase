@@ -18,6 +18,11 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. Ensure you have [nRF Util](https://www.nordicsemi.com/Products/Development-tools/nRF-Util) installed, along with the `device` and `nrf5sdk-tools` subcommands.
 
+    ```sh
+    ./nrfutil install device
+    ./nrfutil install nrf5sdk-tools
+    ```
+
 1. Clone this repository and initialize any submodules:
 
     ```sh
