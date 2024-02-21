@@ -288,9 +288,10 @@ static int lua_display_text(lua_State *L)
                         switch (sprite_metadata[entry].colors)
                         {
                         case SPRITE_16_COLORS:
+                            data_length = (size_t)ceil(data_length / 2.0);
                             break;
                         case SPRITE_4_COLORS:
-                            data_length = (size_t)ceil(data_length / 2.0);
+                            data_length = (size_t)ceil(data_length / 4.0);
                             break;
                         case SPRITE_2_COLORS:
                             data_length = (size_t)ceil(data_length / 8.0);
