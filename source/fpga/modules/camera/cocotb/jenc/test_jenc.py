@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 from queue import Queue
 import os
+from scipy.fft import dctn, idctn
 
 import dct, dct_aan
 import jcommon
@@ -143,25 +144,12 @@ async def dct_test(dut):
         q = quant.QTables(50)
         dct_function = lambda x: q.quantize_luma(dct.dct2d(x)).astype(int).flatten()[quant.de_zig_zag_array().flatten()].reshape(8,8)
 
-    # generate random 8x8
-    n = 1  # N size of input
-    for _ in range(n):
-        d = np.random.randint(256, size=(8, 8))
-        d = 100*np.ones((8, 8), dtype=int)
-        d[1:,:] = 130
-        d[2:,:] = 70
-        d[3:,:] = 130
-        d[4:,:] = 70
-        d[5:,:] = 130
-        d[6:,:] = 70
-        d[7:,:] = 90
-        d[:,6:] = 0
-        
-        #t.send_8x8_data(d, dct_function)
-        #t.send_8x8_data(d, None)
+    # 16x16 -> 6x MCU from Wallace Paper
+    dut.x_size_m1.value = 15
+    dut.y_size_m1.value = 15
 
     # Send MCU from Wallace Paper
-    d= np.array([
+    d = np.array([
     [139, 144, 149, 153, 155, 155, 155, 155],
     [144, 151, 153, 156, 159, 156, 156, 156],
     [150, 155, 160, 163, 158, 156, 156, 156],
@@ -170,10 +158,35 @@ async def dct_test(dut):
     [161, 161, 161, 161, 160, 157, 157, 157],
     [162, 162, 161, 163, 162, 157, 157, 157],
     [162, 162, 161, 161, 163, 158, 158, 158]])
+    
+    d += np.random.randint(0, 10, (8,8))
     d -= 128
     
-    t.send_8x8_data(d, dct_function)
-    d = np.random.randint(256, size=(8, 8))
-    #t.send_8x8_data(d, dct_function)
+    q = quant.QTables(50)
+    dct_function = lambda x: q.quantize_luma(dct.dct2d(x)).astype(int).flatten()[quant.de_zig_zag_array().flatten()].reshape(8,8)
+
+    for i in range(4):
+        t.send_8x8_data(d, dct_function)
+        #d = np.random.randint(256, size=(8, 8))
+        #t.send_8x8_data(d, dct_function)
+        await ClockCycles(dut.clk, 50)  # wait for falling edge/"negedge"
     
-    await ClockCycles(dut.clk, 8*n+1500)  # wait for falling edge/"negedge"
+    await ClockCycles(dut.clk, 50)  # wait for falling edge/"negedge"
+
+    dct_d = dct.dct2d(d, sel='aan')
+    qdct_d = q.quantize_chroma(dct_d, sel='aan')
+    print(d.astype(int))
+    print(dct_d.astype(int))
+    print(q.qt_chroma_aan)
+    #print(f'Chroma Q-table AAN adjusted =\n{qt.qt_chroma_aan}\n')
+    print(f'Chroma Q-table AAN factors =\n{(4096*q.qt_chroma_aan_factors + .5).astype(int)}\n')
+    print(qdct_d.astype(int))
+
+    dct_function = lambda x: q.quantize_chroma(dct.dct2d(x)).astype(int).flatten()[quant.de_zig_zag_array().flatten()].reshape(8,8)
+    for i in range(2):
+        t.send_8x8_data(d, dct_function)
+        await ClockCycles(dut.clk, 50)  # wait for falling edge/"negedge"
+        
+    
+        
+    await ClockCycles(dut.clk, 1500)  # wait for falling edge/"negedge"

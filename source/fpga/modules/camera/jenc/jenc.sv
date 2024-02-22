@@ -10,10 +10,14 @@ module jenc #(
     output  logic                   di_hold,
     input   logic [2:0]             di_cnt,
 
-    output  logic [63:0]            out_data,
-    output  logic [3:0]             out_bytes,
+    output  logic [127:0]           out_data,
+    output  logic [4:0]             out_bytes,
+    output  logic                   out_tlast,
     output  logic                   out_valid,
     input   logic                   out_hold,
+
+    output  logic [19:0]            size,
+    input   logic                   size_clear,
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
@@ -40,6 +44,12 @@ logic [51:0]            codecoeff;
 logic                   codecoeff_tlast;
 logic                   codecoeff_valid;
 logic                   codecoeff_hold;
+
+logic [63:0]            b_data;
+logic [3:0]             b_bytes;
+logic                   b_tlast;
+logic                   b_valid;
+logic                   b_hold;
 
 dct_2d dct_2d (
     .q              (d),
@@ -70,7 +80,20 @@ bitpacker bitpacker(
     .in_tlast               (codecoeff_tlast),
     .in_valid               (codecoeff_valid),
     .in_hold                (codecoeff_hold),
+    .out_data               (b_data),
+    .out_bytes              (b_bytes),
+    .out_tlast              (b_tlast),
+    .out_valid              (b_valid),
+    .out_hold               (b_hold),
     .*
+);
+
+bytepacker bytepacker(
+    .in_data                (b_data),
+    .in_bytes               (b_bytes),
+    .in_tlast               (b_tlast),
+    .in_valid               (b_valid),
+    .in_hold                (b_hold),    .*
 );
 
 endmodule

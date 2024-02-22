@@ -242,10 +242,10 @@ end
 
 always @(posedge clk)
 if (!resetn)  begin
-    out_valid0 <= {0, 0};
-    out_valid1 <= {0, 0};
-    out_valid2 <= {0, 0};
-    out_valid3 <= {0, 0};
+    out_valid0 <= 0;
+    out_valid1 <= 0;
+    out_valid2 <= 0;
+    out_valid3 <= 0;
     out_valid <= 0;
 end
 else if (!out_hold) begin
