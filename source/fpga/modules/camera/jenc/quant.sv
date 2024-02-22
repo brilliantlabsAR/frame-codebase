@@ -5,7 +5,9 @@ module quant #(
     // Regular 1-D DCT adds +3 bits to coefficients, but 
     // AAN includes a factor of 3.923 on top of that, so +2 bits       
     parameter QW = DW - 4,
-    parameter M_BITS = 13          // Bit size of Multiplier coefficients
+    parameter M_BITS = 13,         // Bit size of Multiplier coefficients
+    parameter SENSOR_X_SIZE    = 720,
+    parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic signed[DW-1:0]    di[7:0], 
     input   logic                   di_valid,
@@ -15,7 +17,12 @@ module quant #(
     output  logic                   q_valid,
     input   logic                   q_hold,
     output  logic [4:0]             q_cnt,
-    output  logic                   q_chroma,
+    output  logic [1:0]             q_chroma, 
+    output  logic                   q_last_mcu,
+
+    input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
+    input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
+
     input   logic                   clk,
     input   logic                   resetn
 );
@@ -43,7 +50,7 @@ end else if (zigzag_sel & ~q_hold) begin
     zigzag_rd_cnt <= zigzag_rd_cnt + 1;
     if (&zigzag_rd_cnt) begin
         zigzag_sel <= 0;
-        zigzag_mcu_cnt <= zigzag_mcu_cnt == 5 ? 0 : zigzag_mcu_cnt;
+        zigzag_mcu_cnt <= zigzag_mcu_cnt == 5 ? 0 : zigzag_mcu_cnt + 1;
     end
 end else if (~zigzag_sel & di_valid)
     if (&di_cnt)
@@ -80,7 +87,7 @@ always_comb
 logic signed[DW-1:0]    di0[1:0];
 logic                   di0_valid;
 logic [4:0]             di0_cnt;
-logic                   di0_chroma;
+logic [1:0]             di0_chroma;
 
 always @(posedge clk) 
 if (!resetn)
@@ -90,7 +97,7 @@ else if (!q_hold)
 
 always @(posedge clk) 
 if (zigzag_sel & !q_hold) begin
-    di0_chroma  <= zigzag_mcu_cnt[2];
+    di0_chroma  <= zigzag_mcu_cnt[2] ? (zigzag_mcu_cnt[0] ? 2 : 1) : 0;
     di0_cnt     <= zigzag_rd_cnt;
     di0         <= zigzag_rd_data;
 end
@@ -131,12 +138,46 @@ quant_seq_mult_15x13_p4 mult1 (
     .*
 );
 
+
+//logic for finding the last block
+parameter X_SIZE_D16 = (SENSOR_X_SIZE + 15) >> 4;
+parameter Y_SIZE_D16 = (SENSOR_Y_SIZE + 15) >> 4;
+logic[$clog2(X_SIZE_D16)-1:0] x_mcu;
+logic[$clog2(Y_SIZE_D16)-1:0] y_mcu;
+
+// pipline
+logic                   last_mcu;
+logic                   di0_last_mcu;
+
+always_comb last_mcu = zigzag_mcu_cnt == 5 & x_mcu == (x_size_m1 >> 4) & y_mcu == (y_size_m1 >> 4);
+
+always @(posedge clk) 
+if (!resetn) begin
+    x_mcu <= 0;
+    y_mcu <= 0;
+end else if (zigzag_sel & ~q_hold) begin
+    if (&zigzag_rd_cnt & zigzag_mcu_cnt == 5) begin
+        if (x_mcu == (x_size_m1 >> 4)) begin
+            x_mcu <= 0;
+            if (y_mcu == (y_size_m1 >> 4))
+                y_mcu <= 0;
+            else
+                y_mcu <= y_mcu + 1;
+        end else
+            x_mcu <= x_mcu + 1;
+    end
+end
+
+always @(posedge clk) 
+if (zigzag_sel & !q_hold)
+    di0_last_mcu  <= last_mcu;
+
 // Hijack multiplier for pipelining for now :)
 logic signed[DW+M_BITS-1:0]    pipe_out;
 quant_seq_mult_15x13_p4 cnt_pipe (
-    .a_in       ({di0_chroma, di0_cnt}),
+    .a_in       ({di0_last_mcu, di0_chroma, di0_cnt}),
     .b_in       (1),
-    .out        ({q_chroma, q_cnt}),
+    .out        ({q_last_mcu, q_chroma, q_cnt}),
     .in_valid   (di0_valid & !q_hold),
     .out_valid  ( ),
     .en         (~q_hold),
