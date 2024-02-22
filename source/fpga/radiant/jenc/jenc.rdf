@@ -30,6 +30,12 @@
         <Source name="../../modules/camera/jenc/huff_tables.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
+        <Source name="../../modules/camera/jenc/bitpacker.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../../modules/camera/jenc/bytepacker.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
         <Source name="jenc.sdc" type="Pre-Synthesis Constraints File" type_short="SDC">
             <Options/>
         </Source>
