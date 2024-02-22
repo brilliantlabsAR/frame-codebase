@@ -16,7 +16,8 @@ VERILOG_FILES += \
         ../../jenc/quant.sv \
         ../../jenc/quant_tables.sv \
         ../../jenc/entropy.sv \
-        ../../jenc/huff_tables.sv
+        ../../jenc/huff_tables.sv \
+        ../../jenc/bitpacker.sv
  
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../../jenc ../../jlib)

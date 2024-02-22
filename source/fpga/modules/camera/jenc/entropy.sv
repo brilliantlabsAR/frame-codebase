@@ -9,6 +9,7 @@ module entropy (
     //packed code+coeff
     output  logic [5:0]             out_codecoeff_length,
     output  logic [51:0]            out_codecoeff,
+    output  logic                   out_tlast,
     output  logic                   out_valid,
     input   logic                   out_hold,
 
@@ -167,6 +168,7 @@ logic [4:0]                 codecoeff_length3[1:0];
 logic [25:0]                codecoeff3[1:0];
 // valid
 logic [1:0]                 out_valid0, out_valid1, out_valid2, out_valid3;
+logic [3:0]                 last_mcu;
 
 always @(posedge clk)
 for (int i=0; i<2; i++)
@@ -228,6 +230,15 @@ if (|out_valid3) begin
             (out_valid3[1] ? (codecoeff3[1] << (52 - tmp_codecoeff_length)) : 0);
 end
 
+// end of stream
+always @(posedge clk)
+if (!out_hold) begin
+    if (q_valid) last_mcu[0] <= q_last_mcu & &q_cnt;
+    if (out_valid0) last_mcu[1] <= last_mcu[0];
+    if (out_valid1) last_mcu[2] <= last_mcu[1];
+    if (out_valid2) last_mcu[3] <= last_mcu[2];
+    if (out_valid3) out_tlast <= last_mcu[3];
+end
 
 always @(posedge clk)
 if (!resetn)  begin

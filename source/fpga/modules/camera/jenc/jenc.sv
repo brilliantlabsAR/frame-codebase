@@ -10,8 +10,8 @@ module jenc #(
     output  logic                   di_hold,
     input   logic [2:0]             di_cnt,
 
-    output  logic [5:0]             out_codecoeff_length,
-    output  logic [51:0]            out_codecoeff,
+    output  logic [63:0]            out_data,
+    output  logic [3:0]             out_bytes,
     output  logic                   out_valid,
     input   logic                   out_hold,
 
@@ -34,6 +34,13 @@ logic [4:0]             q_cnt;
 logic [1:0]             q_chroma;
 logic                   q_last_mcu;
 
+//packed code+coeff
+logic [5:0]             codecoeff_length;
+logic [51:0]            codecoeff;
+logic                   codecoeff_tlast;
+logic                   codecoeff_valid;
+logic                   codecoeff_hold;
+
 dct_2d dct_2d (
     .q              (d),
     .q_valid        (d_valid),
@@ -49,6 +56,20 @@ quant quant(
     .*
 );
 entropy entropy(
+    .out_codecoeff_length   (codecoeff_length),
+    .out_codecoeff          (codecoeff),
+    .out_tlast              (codecoeff_tlast),
+    .out_valid              (codecoeff_valid),
+    .out_hold               (codecoeff_hold),
+    .*
+);
+
+bitpacker bitpacker(
+    .in_codecoeff_length    (codecoeff_length),
+    .in_codecoeff           (codecoeff),
+    .in_tlast               (codecoeff_tlast),
+    .in_valid               (codecoeff_valid),
+    .in_hold                (codecoeff_hold),
     .*
 );
 
