@@ -269,6 +269,21 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
+brightness brightness (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+
+    .pixel_red_data_in(debayered_red_data),
+    .pixel_green_data_in(debayered_green_data),
+    .pixel_blue_data_in(debayered_blue_data),
+    .line_valid_in(debayered_line_valid),
+    .frame_valid_in(debayered_frame_valid),
+
+    .red_brightness_out(red_brightness),
+    .green_brightness_out(green_brightness),
+    .blue_brightness_out(blue_brightness)
+);
+
 logic [9:0] cropped_red_data;
 logic [9:0] cropped_green_data;
 logic [9:0] cropped_blue_data;
@@ -294,21 +309,6 @@ crop #(
     .pixel_blue_data_out(cropped_blue_data),
     .line_valid_out(cropped_line_valid),
     .frame_valid_out(cropped_frame_valid)
-);
-
-brightness brightness (
-    .pixel_clock_in(clock_pixel_in),
-    .reset_n_in(reset_pixel_n_in),
-
-    .pixel_red_data_in(cropped_red_data),
-    .pixel_green_data_in(cropped_green_data),
-    .pixel_blue_data_in(cropped_blue_data),
-    .line_valid_in(cropped_line_valid),
-    .frame_valid_in(cropped_frame_valid),
-
-    .red_brightness_out(red_brightness),
-    .green_brightness_out(green_brightness),
-    .blue_brightness_out(blue_brightness)
 );
 
 logic [15:0] buffer_write_address_metastable;

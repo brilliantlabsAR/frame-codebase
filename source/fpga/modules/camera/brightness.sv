@@ -10,10 +10,11 @@
  */
 
 module brightness #(
-    X_WINDOW_START = 82,
-    X_WINDOW_END = 98,
-    Y_WINDOW_START = 82,
-    Y_WINDOW_END = 98
+    // 512x512 window in the center of a 1280x720 image
+    X_WINDOW_START = 384, 
+    X_WINDOW_END = 896,
+    Y_WINDOW_START = 104,
+    Y_WINDOW_END = 616
 )(
     input logic pixel_clock_in,
     input logic reset_n_in,
@@ -35,9 +36,9 @@ logic [11:0] y_counter;
 logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [17:0] average_red_brightness;
-logic [17:0] average_green_brightness;
-logic [17:0] average_blue_brightness;
+logic [27:0] average_red_brightness;
+logic [27:0] average_green_brightness;
+logic [27:0] average_blue_brightness;
 
 always_ff @(posedge pixel_clock_in) begin
 
@@ -50,9 +51,9 @@ always_ff @(posedge pixel_clock_in) begin
         previous_line_valid <= 0;
 
         if (previous_frame_valid) begin
-            red_brightness_out <= average_red_brightness[17:10];
-            green_brightness_out <= average_green_brightness[17:10];
-            blue_brightness_out <= average_blue_brightness[17:10];
+            red_brightness_out <= average_red_brightness[27:20];
+            green_brightness_out <= average_green_brightness[27:20];
+            blue_brightness_out <= average_blue_brightness[27:20];
         end
 
         average_red_brightness <= 0;
