@@ -23,7 +23,7 @@ module reset_sync (
 			sync_reset_n_out <= 0;
 			metastable_reset_n <= 0;
 		end else begin
-			metastable_reset_n <= async_reset_n_in;
+			metastable_reset_n <= 1;
 			sync_reset_n_out <= metastable_reset_n;
 		end
 		
