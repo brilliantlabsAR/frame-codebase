@@ -63,6 +63,9 @@
         <Source name="sim_only/csi2_transmitter_ip/csi2_transmitter_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
             <Options/>
         </Source>
+        <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
+            <Options/>
+        </Source>
         <Source name="source/frame/frame.pdc" type="Physical Constraints File" type_short="PDC">
             <Options/>
         </Source>
