@@ -35,9 +35,9 @@ logic [11:0] y_counter;
 logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [265:0] average_red_brightness;
-logic [265:0] average_green_brightness;
-logic [265:0] average_blue_brightness;
+logic [17:0] average_red_brightness;
+logic [17:0] average_green_brightness;
+logic [17:0] average_blue_brightness;
 
 always_ff @(posedge pixel_clock_in) begin
 
@@ -50,9 +50,9 @@ always_ff @(posedge pixel_clock_in) begin
         previous_line_valid <= 0;
 
         if (previous_frame_valid) begin
-            red_brightness_out <= average_red_brightness[265:258];
-            green_brightness_out <= average_green_brightness[265:258];
-            blue_brightness_out <= average_blue_brightness[265:258];
+            red_brightness_out <= average_red_brightness[17:10];
+            green_brightness_out <= average_green_brightness[17:10];
+            blue_brightness_out <= average_blue_brightness[17:10];
         end
 
         average_red_brightness <= 0;
