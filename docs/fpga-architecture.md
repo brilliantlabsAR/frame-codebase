@@ -78,6 +78,10 @@ The complete pipeline for the camera subsection is as follows:
 
 TODO
 
+### JPEG Encoder
+
+![JPEG Encoder](diagrams/jenc.drawio.png)
+
 ## Licence
 
 Copyright © 2023 Brilliant Labs Limited
