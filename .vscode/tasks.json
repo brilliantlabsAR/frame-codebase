@@ -56,9 +56,9 @@
             }
         },
         {
-            "label": "Flash",
+            "label": "Flash (J-Link)",
             "type": "shell",
-            "command": "make flash",
+            "command": "make flash-jlink",
             "problemMatcher": [
                 "$gcc"
             ],
@@ -72,9 +72,39 @@
             }
         },
         {
-            "label": "Erase",
+            "label": "Flash (Black-Magic)",
             "type": "shell",
-            "command": "make recover",
+            "command": "make flash-blackmagic",
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Erase (J-Link)",
+            "type": "shell",
+            "command": "make erase-jlink",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "Erase (Black-Magic)",
+            "type": "shell",
+            "command": "make erase-blackmagic",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,
