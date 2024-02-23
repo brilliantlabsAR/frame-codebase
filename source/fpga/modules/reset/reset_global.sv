@@ -10,10 +10,10 @@
  */
 
 module reset_global (
-	input logic clock_in,
-	input logic pll_locked_in,
+    input logic clock_in,
+    input logic pll_locked_in,
     output logic pll_reset_out,
-	output logic global_reset_n_out
+    output logic global_reset_n_out
 );
 
     logic [7:0] global_reset_counter /* synthesis syn_keep=1 nomerge=""*/;
@@ -24,7 +24,7 @@ module reset_global (
         if (!pll_reset_counter[7]) begin
             pll_reset_counter <= pll_reset_counter + 1;
             global_reset_n_out <= 0;
-		    global_reset_counter <= 0;
+            global_reset_counter <= 0;
             pll_reset_out <= 1;
         end
 

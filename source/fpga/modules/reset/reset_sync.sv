@@ -10,20 +10,20 @@
  */
 
 module reset_sync (
-	input logic clock_in,
-	input logic async_reset_n_in,
-	output logic sync_reset_n_out
+    input logic clock_in,
+    input logic async_reset_n_in,
+    output logic sync_reset_n_out
 );
 
-	logic metastable1_reset_n;
-	logic metastable2_reset_n;
-	
-	always @(posedge clock_in) begin
+    logic metastable1_reset_n;
+    logic metastable2_reset_n;
+    
+    always @(posedge clock_in) begin
 
-		metastable1_reset_n <= async_reset_n_in;
-		metastable2_reset_n <= metastable1_reset_n;
-		sync_reset_n_out <= metastable2_reset_n;
-		
-	end
+        metastable1_reset_n <= async_reset_n_in;
+        metastable2_reset_n <= metastable1_reset_n;
+        sync_reset_n_out <= metastable2_reset_n;
+        
+    end
 
 endmodule
