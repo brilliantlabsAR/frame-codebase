@@ -32,6 +32,46 @@
 #include "nrf_gpio.h"
 #include "pinout.h"
 
+static int lua_camera_exposure(lua_State *L)
+{
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
+    uint8_t address = 0x25;
+    spi_write(FPGA, &address, 1, true);
+
+    uint8_t data[3];
+    spi_read(FPGA, data, sizeof(data), false);
+
+    // TODO Some processing to balance the channels
+
+    // TODO change gain registers
+    // check_error(i2c_write(CAMERA, address, 0xFF, value).fail);
+    // check_error(i2c_write(CAMERA, address, 0xFF, value).fail);
+    // check_error(i2c_write(CAMERA, address, 0xFF, value).fail);
+
+    // TODO Delay for camera to update
+
+    // return 0;
+
+    //////// TEMP debugging
+
+    lua_newtable(L);
+
+    lua_pushnumber(L, data[0]);
+    lua_setfield(L, -2, "r");
+
+    lua_pushnumber(L, data[1]);
+    lua_setfield(L, -2, "g");
+
+    lua_pushnumber(L, data[2]);
+    lua_setfield(L, -2, "b");
+
+    return 1;
+}
+
 static int lua_camera_capture(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
@@ -150,6 +190,9 @@ void lua_open_camera_library(lua_State *L)
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
+
+    lua_pushcfunction(L, lua_camera_exposure);
+    lua_setfield(L, -2, "exposure");
 
     lua_pushcfunction(L, lua_camera_capture);
     lua_setfield(L, -2, "capture");
