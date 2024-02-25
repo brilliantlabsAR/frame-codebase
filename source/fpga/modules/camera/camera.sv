@@ -10,10 +10,10 @@
  */
 
 `ifndef RADIANT
-`include "modules/camera/brightness.sv"
 `include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
+`include "modules/camera/metering.sv"
 `endif
 
 module camera (
@@ -54,9 +54,9 @@ logic [15:0] buffer_read_address;
 logic [7:0] buffer_read_data;
 assign buffer_read_address = bytes_read;
 
-logic [7:0] red_brightness;
-logic [7:0] green_brightness;
-logic [7:0] blue_brightness;
+logic [7:0] red_metering;
+logic [7:0] green_metering;
+logic [7:0] blue_metering;
 
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
@@ -115,12 +115,12 @@ always_ff @(posedge clock_spi_in) begin
                     end
                 end
 
-                // Brightness
+                // Metering
                 'h25: begin
                     case (operand_count_in)
-                        0: response_out <= red_brightness;
-                        1: response_out <= green_brightness;
-                        2: response_out <= blue_brightness;
+                        0: response_out <= red_metering;
+                        1: response_out <= green_metering;
+                        2: response_out <= blue_metering;
                     endcase
 
                     response_valid_out <= 1;
@@ -269,7 +269,7 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
-brightness brightness (
+metering metering (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -279,9 +279,9 @@ brightness brightness (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    .red_brightness_out(red_brightness),
-    .green_brightness_out(green_brightness),
-    .blue_brightness_out(blue_brightness)
+    .red_metering_out(red_metering),
+    .green_metering_out(green_metering),
+    .blue_metering_out(blue_metering)
 );
 
 logic [9:0] cropped_red_data;

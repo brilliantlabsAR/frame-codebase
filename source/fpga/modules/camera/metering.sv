@@ -9,7 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module brightness #(
+module metering #(
     // 512x512 window in the center of a 1280x720 image
     X_WINDOW_START = 384, 
     X_WINDOW_END = 896,
@@ -25,9 +25,9 @@ module brightness #(
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    output logic [7:0] red_brightness_out,
-    output logic [7:0] green_brightness_out,
-    output logic [7:0] blue_brightness_out
+    output logic [7:0] red_metering_out,
+    output logic [7:0] green_metering_out,
+    output logic [7:0] blue_metering_out
 );
 
 logic [11:0] x_counter;
@@ -36,9 +36,9 @@ logic [11:0] y_counter;
 logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [27:0] average_red_brightness;
-logic [27:0] average_green_brightness;
-logic [27:0] average_blue_brightness;
+logic [27:0] average_red_metering;
+logic [27:0] average_green_metering;
+logic [27:0] average_blue_metering;
 
 always_ff @(posedge pixel_clock_in) begin
 
@@ -51,14 +51,14 @@ always_ff @(posedge pixel_clock_in) begin
         previous_line_valid <= 0;
 
         if (previous_frame_valid) begin
-            red_brightness_out <= average_red_brightness[27:20];
-            green_brightness_out <= average_green_brightness[27:20];
-            blue_brightness_out <= average_blue_brightness[27:20];
+            red_metering_out <= average_red_metering[27:20];
+            green_metering_out <= average_green_metering[27:20];
+            blue_metering_out <= average_blue_metering[27:20];
         end
 
-        average_red_brightness <= 0;
-        average_green_brightness <= 0;
-        average_blue_brightness <= 0;
+        average_red_metering <= 0;
+        average_green_metering <= 0;
+        average_blue_metering <= 0;
 
     end
 
@@ -79,16 +79,16 @@ always_ff @(posedge pixel_clock_in) begin
             end
         end
 
-        // Calculate brightness only for the window
+        // Calculate metering only for the window
         if(line_valid_in &&
            x_counter >= X_WINDOW_START &&
            x_counter < X_WINDOW_END &&
            y_counter >= Y_WINDOW_START &&
            y_counter < Y_WINDOW_END) begin
 
-            average_red_brightness <= average_red_brightness + pixel_red_data_in;
-            average_green_brightness <= average_green_brightness + pixel_green_data_in;
-            average_blue_brightness <= average_blue_brightness + pixel_blue_data_in;
+            average_red_metering <= average_red_metering + pixel_red_data_in;
+            average_green_metering <= average_green_metering + pixel_green_data_in;
+            average_blue_metering <= average_blue_metering + pixel_blue_data_in;
 
         end
 
