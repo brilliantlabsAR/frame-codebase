@@ -13,10 +13,10 @@ module image_buffer (
     input logic clock_in,
     input logic reset_n_in,
 
-    input logic [15:0] write_address_in,
+    input logic [13:0] write_address_in,
     input logic [15:0] read_address_in,
 
-    input logic [7:0] write_data_in,
+    input logic [31:0] write_data_in,
     output logic [7:0] read_data_out,
 
     input logic write_enable_in
@@ -32,12 +32,7 @@ always @(posedge clock_in) begin
 
     else begin
         if (write_enable_in) begin
-            case (write_address_in[1:0])
-                'd0: mem[write_address_in[15:2]] <= {mem[write_address_in[15:2]][31:8],  write_data_in                                   };
-                'd1: mem[write_address_in[15:2]] <= {mem[write_address_in[15:2]][31:16], write_data_in, mem[write_address_in[15:2]][7:0] };
-                'd2: mem[write_address_in[15:2]] <= {mem[write_address_in[15:2]][31:24], write_data_in, mem[write_address_in[15:2]][15:0]};
-                'd3: mem[write_address_in[15:2]] <= {                                    write_data_in, mem[write_address_in[15:2]][23:0]};
-            endcase
+            mem[write_address_in] <= write_data_in;
         end
 
         case (read_address_in[1:0])

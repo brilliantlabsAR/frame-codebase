@@ -107,7 +107,10 @@ always @(posedge clk)
 if (s_valid & ~in_hold & (next_byte_count >= 16 | s_tlast)) begin
     out_tlast <= s_tlast;
     out_data <= next_byte_packer;
-    tbytes <= next_byte_count;
+    if (s_tlast)
+        tbytes <= next_byte_count;
+    else
+        tbytes <= 16;
 end
 
 always_comb out_bytes[3:0] = tbytes;
@@ -124,8 +127,10 @@ else if (out_valid & ~out_hold)
     else
         size_cnt <= size_cnt + out_bytes;
 
+logic [1:0] size_clear_sync;
+always @(posedge clk) size_clear_sync <= {size_clear_sync, size_clear};
 always @(posedge clk)
-if (!resetn | size_clear)
+if (!resetn | size_clear_sync[1])
     size <= 0;
 else if (out_valid & ~out_hold & s_tlast)
     size <= size_cnt + out_bytes;

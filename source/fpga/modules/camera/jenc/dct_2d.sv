@@ -30,12 +30,12 @@ module dct_2d #(
 // input muxes to dct
 // MCU 8-line buffer/Transpose mem
 //------------------------------------------------------------------------------
-logic [CW-1:0] dct_di[7:0]; 
+logic signed[CW-1:0] dct_di[7:0]; 
 logic [2:0] dct_di_cnt;
 logic dct_di_valid;
 logic dct_di_hold;
 
-logic [CW-1:0] transpose_rd_data[7:0];
+logic signed[CW-1:0] transpose_rd_data[7:0];
 logic [2:0] transpose_rd_cnt;
 logic transpose_rd_hold;
 logic transpose_rd_valid;

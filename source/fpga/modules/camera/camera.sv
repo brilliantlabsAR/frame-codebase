@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -38,12 +39,17 @@ module camera (
     output logic response_valid_out
 );
 
+localparam X_CROP_START = 542;
+localparam X_CROP_END   = 742;
+localparam Y_CROP_START = 260;
+localparam Y_CROP_END   = 460;
+
 // Registers to hold the current command operations
 logic capture_flag;
 logic capture_in_progress_flag;
 
 // TODO make capture_size dynamic once we have adjustable resolution
-logic [15:0] capture_size = 200 * 200;
+logic [15:0] capture_size = (X_CROP_END - X_CROP_START) * (Y_CROP_END - Y_CROP_START);
 logic [15:0] bytes_read;
 
 logic [15:0] bytes_remaining;
@@ -56,6 +62,12 @@ assign buffer_read_address = bytes_read;
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
+// Jpeg
+logic                   jpeg_sel;
+logic                   jpeg_out_size_clear;
+logic                   jpeg_reset;
+logic [19:0]            jpeg_out_size;
+
 // Handle op-codes as they come in
 always_ff @(posedge clock_spi_in) begin
     
@@ -66,6 +78,9 @@ always_ff @(posedge clock_spi_in) begin
         bytes_read <= 0;
         last_op_code_valid_in <= 0;
         last_operand_valid_in <= 0;
+
+        jpeg_sel <= 0;
+        jpeg_out_size_clear <= 0;
     end
 
     else begin
@@ -110,6 +125,22 @@ always_ff @(posedge clock_spi_in) begin
                     end
                 end
 
+                // JPEG
+                'h30: begin
+                    if (operand_valid_in) begin
+                        jpeg_sel <= operand_in[0];
+                        jpeg_out_size_clear <= operand_in[1];
+                        jpeg_reset <= operand_in[3];
+                    end
+                end
+                // JPEG size
+                'h31: begin
+                    case (operand_count_in)
+                        0: response_out <= jpeg_out_size[7:0];
+                        1: response_out <= jpeg_out_size[15:8];
+                        2: response_out <= jpeg_out_size[19:16];
+                    endcase
+                end
             endcase
 
         end
@@ -123,24 +154,25 @@ always_ff @(posedge clock_spi_in) begin
 end
 
 // Capture command logic
-logic [1:0] cropped_frame_valid_edge_monitor;
-logic cropped_frame_valid;
+logic [2:0] frame_valid_edge_monitor;
+logic debayered_frame_valid;
+logic jpeg_end;
 
 always_ff @(posedge clock_spi_in) begin
     if (reset_spi_n_in == 0) begin
         capture_in_progress_flag <= 0;
-        cropped_frame_valid_edge_monitor <= 0;
+        frame_valid_edge_monitor <= 0;
     end
 
     else begin
-        cropped_frame_valid_edge_monitor <= {cropped_frame_valid_edge_monitor[0],
-                                             cropped_frame_valid};
+        frame_valid_edge_monitor <= {frame_valid_edge_monitor,
+                                             debayered_frame_valid};
 
-        if (capture_flag && cropped_frame_valid_edge_monitor == 'b01) begin
+        if (capture_flag && frame_valid_edge_monitor[2:1] == 'b01) begin
             capture_in_progress_flag <= 1;
         end
 
-        if (cropped_frame_valid_edge_monitor == 'b10) begin
+        else if (jpeg_sel ? jpeg_end | jpeg_reset : frame_valid_edge_monitor[2:1] == 'b10) begin
             capture_in_progress_flag <= 0;
         end
     end
@@ -232,19 +264,45 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(byte_to_pixel_data)
 );
 
+logic [9:0] cropped_data;
+logic cropped_line_valid;
+logic cropped_frame_valid;
+
+crop crop (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+
+    .x_crop_start(X_CROP_START),
+    .x_crop_end(X_CROP_END),
+    .y_crop_start(Y_CROP_START),
+    .y_crop_end(Y_CROP_END),
+
+    .pixel_red_data_in(byte_to_pixel_data),
+    .pixel_green_data_in('0),
+    .pixel_blue_data_in('0),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
+
+    .pixel_red_data_out(cropped_data),
+    .pixel_green_data_out(),
+    .pixel_blue_data_out(),
+    .line_valid_out(cropped_line_valid),
+    .frame_valid_out(cropped_frame_valid)
+);
+
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
 logic [9:0] debayered_blue_data;
 logic debayered_line_valid;
-logic debayered_frame_valid;
+//logic debayered_frame_valid;
 
 debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_data_in(byte_to_pixel_data),
-    .line_valid_in(byte_to_pixel_line_valid),
-    .frame_valid_in(byte_to_pixel_frame_valid),
+    .pixel_data_in(cropped_data),
+    .line_valid_in(cropped_line_valid),
+    .frame_valid_in(cropped_frame_valid),
 
     .pixel_red_data_out(debayered_red_data),
     .pixel_green_data_out(debayered_green_data),
@@ -253,85 +311,128 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
-logic [9:0] cropped_red_data;
-logic [9:0] cropped_green_data;
-logic [9:0] cropped_blue_data;
-logic cropped_line_valid;
 
-crop #(
-    .X_CROP_START(542),
-    .X_CROP_END(742),
-    .Y_CROP_START(260),
-    .Y_CROP_END(460)
-) crop (
-    .pixel_clock_in(clock_pixel_in),
-    .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(debayered_red_data),
-    .pixel_green_data_in(debayered_green_data),
-    .pixel_blue_data_in(debayered_blue_data),
-    .line_valid_in(debayered_line_valid),
-    .frame_valid_in(debayered_frame_valid),
 
-    .pixel_red_data_out(cropped_red_data),
-    .pixel_green_data_out(cropped_green_data),
-    .pixel_blue_data_out(cropped_blue_data),
-    .line_valid_out(cropped_line_valid),
-    .frame_valid_out(cropped_frame_valid)
+// JPEG Reset just in case
+logic jpeg_reset_n;
+reset_sync reset_sync_jpeg (
+    .clock_in(clock_pixel_in),
+    .async_reset_n_in(~jpeg_reset),
+    .sync_reset_n_out(jpeg_reset_n)
 );
 
-logic [15:0] buffer_write_address_metastable;
-logic [15:0] buffer_address;
-always_ff @(posedge clock_pixel_in) begin
 
-    if (cropped_frame_valid == 0) begin
-        buffer_write_address_metastable <= 0;
-    end
-    else if (cropped_frame_valid && cropped_line_valid) begin
-        buffer_write_address_metastable <= buffer_write_address_metastable + 1;
-    end
+// JPEG ISP (RGB2YUV, 4:4:4 2 4:2:0, 16-line MCU buffer)
+logic [7:0]             jpeg_in_data[7:0]; 
+logic                   jpeg_in_valid;
+logic                   jpeg_in_hold;
+logic [2:0]             jpeg_in_cnt;
 
-end
+jisp #(
+    .SENSOR_X_SIZE      (720),
+    .SENSOR_Y_SIZE      (720)
+) jisp (
+    .rgb24              ({debayered_blue_data[9:2], debayered_green_data[9:2], debayered_red_data[9:2]}),
+    .rgb24_valid        (jpeg_sel & debayered_line_valid),
+    .rgb24_hold         ( ),
+    .frame_valid_in     (jpeg_sel & debayered_frame_valid),
+    .line_valid_in      (jpeg_sel & debayered_line_valid),
 
-logic [7:0] buffer_write_data_metastable;
-logic [7:0] buffer_write_data;
-assign buffer_write_data_metastable = {cropped_red_data[9:7], 
-                                       cropped_green_data[9:7], 
-                                       cropped_blue_data[9:8]};
+    .di                 (jpeg_in_data),
+    .di_valid           (jpeg_in_valid),
+    .di_hold            (jpeg_in_hold),
+    .di_cnt             (jpeg_in_cnt),
 
-logic buffer_write_enable_metastable;
-logic buffer_write_enable;
-assign buffer_write_enable_metastable = cropped_frame_valid && 
-                                        cropped_line_valid && 
-                                        capture_in_progress_flag;
+    .x_size_m1          (X_CROP_END - X_CROP_START),
+    .y_size_m1          (Y_CROP_END - Y_CROP_START),
 
-always_ff @(posedge clock_spi_in) begin
-    
-    if (reset_spi_n_in == 0) begin
-        buffer_address <= 0;
-        buffer_write_data <= 0;
-        buffer_write_enable <= 0;
-    end
+    .clk                (clock_pixel_in),
+    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+);
 
-    else begin
-        if (buffer_write_enable_metastable) begin
-            buffer_address <= buffer_write_address_metastable;
-            buffer_write_data <= buffer_write_data_metastable;  
-        end
-        else begin
-            buffer_address <= buffer_read_address;
-            buffer_write_data <= 0;
-        end
+logic [127:0]           jpeg_out_data;
+logic [4:0]             jpeg_out_bytes;
+logic                   jpeg_out_tlast;
+logic                   jpeg_out_valid;
 
-        buffer_write_enable <= buffer_write_enable_metastable;
-    end
-end
+
+jenc #(
+    .SENSOR_X_SIZE      (720),
+    .SENSOR_Y_SIZE      (720)
+) jenc (
+    .di                 (jpeg_in_data),
+    .di_valid           (jpeg_in_valid),
+    .di_hold            (jpeg_in_hold),
+    .di_cnt             (jpeg_in_cnt),
+
+    .out_data           (jpeg_out_data),
+    .out_bytes          (jpeg_out_bytes),
+    .out_tlast          (jpeg_out_tlast),
+    .out_valid          (jpeg_out_valid),
+    .out_hold           (1'b0),
+
+    .size               (jpeg_out_size),
+    .size_clear         (jpeg_out_size_clear),
+
+    .x_size_m1          (X_CROP_END - X_CROP_START),
+    .y_size_m1          (Y_CROP_END - Y_CROP_START),
+
+    .clk                (clock_pixel_in),
+    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+);
+
+
+
+
+// JPEG CDC for frame buffer
+// CDC first, then split 128 bits into chunks of 32 bits/4 bytes, then write
+//
+// Important for synthesis:
+// set false_path -from  -to ... (between clocks)
+// set_max_delay {$clock_spi_in_period} -from [jpeg_out_data, jpeg_out_bytes, jpeg_out_valid, jpeg_out_tlast] -to  [get_clocks clock_spi_in]
+// set_max_delay {$clock_spi_in_period} -from [jpeg_sel] -to [get_clocks clock_pixel_in]
+logic [13:0]            jpeg_buffer_address;
+logic [31:0]            jpeg_buffer_write_data;
+logic                   jpeg_buffer_write_enable;
+
+jenc_cdc jenc_cdc (.*);
+
+
+// RGB data: Assemble 32 bits/4 bytes, then CDC, then write
+//
+// Important for synthesis:
+// set false_path -from  -to ... (between clocks)
+// set_max_delay {$clock_spi_in_period} -from [debayered_frame_valid rgb_buffer_write_data] -to  [get_clocks clock_spi_in]
+// set_max_delay {$clock_spi_in_period} -from [jpeg_sel] -to [get_clocks clock_pixel_in]
+
+logic [13:0]            rgb_buffer_address;
+logic [31:0]            rgb_buffer_write_data;
+logic                   rgb_buffer_write_enable;
+	
+rgb_cdc rgb_cdc (
+    .line_valid         (debayered_line_valid),
+    .frame_valid        (debayered_frame_valid),
+    .red_data           (debayered_red_data),
+    .green_data         (debayered_green_data),
+    .blue_data          (debayered_blue_data),
+    .*
+);
+
+// image buffer
+logic [13:0]            buffer_address;
+logic [31:0]            buffer_write_data;
+logic                   buffer_write_enable;
+
+always_comb buffer_address      = jpeg_sel ? jpeg_buffer_address : rgb_buffer_address;
+always_comb buffer_write_data   = jpeg_sel ? jpeg_buffer_write_data : rgb_buffer_write_data;
+always_comb buffer_write_enable = jpeg_sel ? jpeg_buffer_write_enable : rgb_buffer_write_enable;
 
 image_buffer image_buffer (
     .clock_in(clock_spi_in),
     .reset_n_in(reset_spi_n_in),
     .write_address_in(buffer_address),
-    .read_address_in(buffer_address),
+    .read_address_in(buffer_read_address),
     .write_data_in(buffer_write_data),
     .read_data_out(buffer_read_data),
     .write_enable_in(buffer_write_enable)
