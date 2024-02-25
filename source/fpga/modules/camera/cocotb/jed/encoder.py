@@ -1,6 +1,10 @@
-from quant import qt_scale_log
 from jpg import *
 import numpy as np
+import getopt, sys
+
+sys.path.append("../python_misc/")
+
+from quant import qt_scale_log
 
 
 # helper function to write a 2-byte short integer in big-endian
@@ -76,7 +80,7 @@ def writeAPP0(out_file):
     out_file.append(0)
 
 
-def writeJPG_header(height, width):
+def writeJPG_header(height, width, qf_log=0):
     out_file = []
     
     # SOI
@@ -89,8 +93,8 @@ def writeJPG_header(height, width):
     # DQT
     #writeQuantizationTable(out_file, 0, qTableY100)
     #writeQuantizationTable(out_file, 1, qTableCbCr100)
-    writeQuantizationTable(out_file, 0, [list(qt_scale_log(np.array(qTableY50[0]), qf_log=0)), None])
-    writeQuantizationTable(out_file, 1, [list(qt_scale_log(np.array(qTableCbCr50[0]), qf_log=0)), None])
+    writeQuantizationTable(out_file, 0, [list(qt_scale_log(np.array(qTableY50[0]), qf_log=qf_log)), None])
+    writeQuantizationTable(out_file, 1, [list(qt_scale_log(np.array(qTableCbCr50[0]), qf_log=qf_log)), None])
 
     # SOF
     writeStartOfFrame(out_file, height, width)
@@ -121,3 +125,33 @@ def writeJPG():
 
     out_file.append(writeJPG_footer())
     return out_file
+
+
+if __name__ == '__main__':
+    # defaults
+    filename = 'header.bin'
+    footerfilename = 'footer.bin'
+    qf = 0
+
+    try:
+        # Parsing argument
+        arguments, values = getopt.getopt(sys.argv[1:], "f:h:w:q:t:", ["Filename=", "Height=", "Width=", "QF=", "Footerfilename="])
+        for currentArgument, currentValue in arguments:
+            if currentArgument in ("-f", "--Filename"):
+                filename = currentValue
+            elif currentArgument in ("-t", "--Footerfilename"):
+                footerfilename = int(currentValue)
+            elif currentArgument in ("-h", "--Height"):
+                h = int(currentValue)
+            elif currentArgument in ("-w", "--Width"):
+                w = int(currentValue)
+            elif currentArgument in ("-q", "--QF"):
+                qf = int(currentValues)
+    except getopt.error as err:
+        print (str(err))
+
+    print (f"Height={h} Width={w} QF={qf} Filename={filename} Footer={footerfilename}")
+    with open(filename, "wb") as f:
+        f.write(bytearray(writeJPG_header(h, w, qf)))
+    with open(footerfilename, "wb") as f:
+        f.write(bytearray(writeJPG_footer()))
