@@ -42,6 +42,9 @@
         <Source name="../modules/camera/debayer.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
+        <Source name="../modules/camera/metering.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
         <Source name="../modules/camera/crop.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -62,9 +65,6 @@
         </Source>
         <Source name="sim_only/csi2_transmitter_ip/csi2_transmitter_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
             <Options/>
-        </Source>
-        <Source name="../modules/camera/brightness.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
             <Options/>
