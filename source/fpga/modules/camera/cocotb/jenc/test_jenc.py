@@ -176,7 +176,7 @@ async def dct_test(dut):
     test_image = 'baboon.bmp'
     t = Tester(dut, test_image)
 
-    #await t.initialize_encoder()    
+    await t.initialize_encoder()    
     cocotb.start_soon(t.send_rgb())   
 
     await t.read_image_buffer()
