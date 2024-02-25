@@ -69,7 +69,7 @@ def qt_scale_log(qt, qf_log=0, qd=None):
     t = np.floor(scale*qt + 0.5); 
     t[t < 1] = 1   # Prevent divide by 0 error 
     t /= qd
-    return t
+    return t.astype(int)
 
 
 # From https://medium.com/100-days-of-algorithms/day-63-zig-zag-51a41127f31
