@@ -59,7 +59,6 @@ static struct advertising_data_t
     .payload = {0},
 };
 
-// TODO move bonds into filesystem.c
 extern uint32_t __bond_storage_start;
 static uint32_t bond_storage = (uint32_t)&__bond_storage_start;
 

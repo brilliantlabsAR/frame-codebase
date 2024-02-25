@@ -163,7 +163,9 @@ LINKED_LIBRARIES += \
 	-lgcc \
 
 $(BUILD)/application.hex: $(C_FILES) ../fpga/fpga_application.h
+	@echo Building application...
 	@mkdir -p $(BUILD)
 	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/application.elf $(C_FILES) $(LINKED_LIBRARIES)
 	@arm-none-eabi-objcopy -O ihex $(BUILD)/application.elf $(BUILD)/application.hex
 	@arm-none-eabi-size $(BUILD)/application.elf
+	@echo Application built

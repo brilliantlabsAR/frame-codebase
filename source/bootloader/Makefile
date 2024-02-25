@@ -211,12 +211,14 @@ LINKED_LIBRARIES += \
   	$(LIBRARIES)/nrf5sdk/micro-ecc/micro_ecc_lib_nrf52hf_armgcc.a \
 
 $(BUILD)/bootloader.hex: $(C_FILES)
+	@echo Building bootloader...
 	@mkdir -p $(BUILD)
 	@arm-none-eabi-gcc $(FLAGS) -o $(BUILD)/bootloader.elf $(C_FILES) $(LINKED_LIBRARIES)
 	@arm-none-eabi-objcopy -O ihex $(BUILD)/bootloader.elf $(BUILD)/bootloader.hex
 	@rm frame-bootloader-*.hex
 	@cp $(BUILD)/bootloader.hex frame-bootloader-$(BUILD_VERSION).hex
 	@arm-none-eabi-size $(BUILD)/bootloader.elf
+	@echo Bootloader built
 
 regenerate_keys:
 	@nrfutil keys generate dfu_private_key.pem

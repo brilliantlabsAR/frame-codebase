@@ -37,8 +37,8 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
     ```sh
     make release
-    make recover # Unlocks the flash protection if needed
-    make flash
+    make erase-jlink # Unlocks the flash protection if needed
+    make flash-jlink
     ```
 
 ### Debugging
