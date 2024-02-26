@@ -359,8 +359,7 @@ static void hardware_setup(bool *factory_reset)
         {
             if (camera_id.value != 0x97)
             {
-                // TODO enable this check for final hardware
-                // error_with_message("Camera not found");
+                error_with_message("Camera not found");
             }
         }
 

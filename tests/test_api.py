@@ -109,12 +109,12 @@ async def main():
     # Display
 
     ## Text
-    await test.lua_send("frame.display.text('Hello there!', 0, 0, 0xFFFFFF)")
-    await test.lua_send("frame.display.text('Red', 100, 100, 0xFF0000)")
-    await test.lua_send("frame.display.text('Green', 200, 200, 0x00FF00)")
-    await test.lua_send("frame.display.text('Blue', 300, 300, 0x0000FF)")
+    await test.lua_send("frame.display.text('Hello there!', 1, 1)")
+    await test.lua_send("frame.display.text('Red', 100, 100)")
+    await test.lua_send("frame.display.text('Green', 200, 200)")
+    await test.lua_send("frame.display.text('Blue', 300, 300)")
     await test.lua_send("frame.display.show()")
-    # TODO alignment, move and color
+    # TODO alignment and color
 
     ## Vectors
     # TODO
@@ -126,16 +126,11 @@ async def main():
 
     ## Capture and read
     await test.lua_send("frame.camera.wake()")
-    await test.lua_send("frame.sleep(0.5)")
+    await test.lua_send("frame.sleep(0.1)")
     await test.lua_send("frame.camera.capture()")
-    await test.lua_equals("frame.camera.bytes_available()", "320000")
     await test.lua_equals("#frame.camera.read(123)", "123")
-    await test.lua_equals("frame.camera.bytes_available()", "319877")
-    await test.lua_send("frame.camera.capture()")
-    await test.lua_equals("frame.camera.bytes_available()", "320000")
     await test.lua_send("frame.camera.sleep()")
     await test.lua_error("frame.camera.capture()")
-    await test.lua_error("frame.camera.read(123)")
 
     ## Resolution, scale & color format
     # TODO

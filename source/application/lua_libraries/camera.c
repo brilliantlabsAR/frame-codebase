@@ -323,6 +323,9 @@ static int lua_camera_set_register(lua_State *L)
 
 void lua_open_camera_library(lua_State *L)
 {
+    // Wake up camera in case it was asleep
+    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+
     i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
     i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
     i2c_response_t exposure_reg_c = i2c_read(CAMERA, 0x3502, 0xF0);
