@@ -26,6 +26,15 @@ async def capture_and_download(b: Bluetooth, height, width):
     global expected_length
 
     print(f"Capturing image")
+    await b.send_lua("frame.camera.auto(25); print(nil)", await_print=True)
+    await b.send_lua("resp = frame.camera.get_brightness()")
+    print(
+        await b.send_lua(
+            "print(tostring(resp['r'])..'\t'..tostring(resp['g'])..'\t'..tostring(resp['b']))",
+            await_print=True,
+        )
+    )
+
     await b.send_lua(f"frame.camera.capture()")
     await asyncio.sleep(0.5)
 
