@@ -32,6 +32,12 @@
 #include "nrf_gpio.h"
 #include "pinout.h"
 
+static struct current_camera_settings
+{
+    uint16_t exposure;
+    uint8_t sensor_gain;
+} current;
+
 static int lua_camera_capture(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
@@ -97,6 +103,75 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
+static int lua_camera_auto(lua_State *L)
+{
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
+    luaL_checkinteger(L, 1);
+    lua_Integer loop_count = lua_tointeger(L, 1);
+
+    if (loop_count < 1 || loop_count > 25)
+    {
+        return luaL_error(L, "loop count must be between 1 and 25");
+    }
+
+    for (size_t i = 0; i < loop_count; i++)
+    {
+        uint8_t address = 0x25;
+        spi_write(FPGA, &address, 1, true);
+
+        volatile uint8_t brightness_data[3];
+        spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
+
+        double average_brightness = (brightness_data[0] +
+                                     brightness_data[1] +
+                                     brightness_data[2]) /
+                                    3.0;
+
+        double error = 170.0 - average_brightness;
+
+        current.exposure = (uint16_t)(current.exposure + (error * 1.5));
+        current.sensor_gain = (uint8_t)(current.sensor_gain + (error * 0.3));
+
+        if (current.exposure > 800)
+        {
+            current.exposure = 800;
+        }
+
+        if (current.exposure < 20)
+        {
+            current.exposure = 20;
+        }
+
+        if (current.sensor_gain > 255)
+        {
+            current.sensor_gain = 255;
+        }
+
+        if (current.sensor_gain < 0)
+        {
+            current.sensor_gain = 0;
+        }
+
+        check_error(i2c_write(CAMERA, 0x3500, 0x03, current.exposure >> 12).fail);
+        check_error(i2c_write(CAMERA, 0x3501, 0xFF, current.exposure >> 4).fail);
+        check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
+        check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
+
+        int status = luaL_dostring(L, "frame.sleep(0.035)");
+        if (status != LUA_OK)
+        {
+            const char *lua_error = lua_tostring(L, -1);
+            lua_writestring(lua_error, strlen(lua_error));
+        }
+    }
+
+    return 0;
+}
+
 static int lua_camera_sleep(lua_State *L)
 {
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
@@ -119,18 +194,18 @@ static int lua_camera_get_brightness(lua_State *L)
     uint8_t address = 0x25;
     spi_write(FPGA, &address, 1, true);
 
-    uint8_t data[3];
-    spi_read(FPGA, data, sizeof(data), false);
+    volatile uint8_t brightness_data[3];
+    spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
 
     lua_newtable(L);
 
-    lua_pushnumber(L, data[0]);
+    lua_pushnumber(L, brightness_data[0]);
     lua_setfield(L, -2, "r");
 
-    lua_pushnumber(L, data[1]);
+    lua_pushnumber(L, brightness_data[1]);
     lua_setfield(L, -2, "g");
 
-    lua_pushnumber(L, data[2]);
+    lua_pushnumber(L, brightness_data[2]);
     lua_setfield(L, -2, "b");
 
     return 1;
@@ -145,16 +220,16 @@ static int lua_camera_set_exposure(lua_State *L)
 
     luaL_checkinteger(L, 1);
 
-    lua_Integer exposure_time = lua_tointeger(L, 1);
+    lua_Integer exposure = lua_tointeger(L, 1);
 
-    if (exposure_time < 20 || exposure_time > 0x3FFF)
+    if (exposure < 20 || exposure > 0x3FFF)
     {
         return luaL_error(L, "exposure must be between 20us and 25000us");
     }
 
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure_time >> 12).fail);
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure_time >> 4).fail);
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure_time << 4).fail);
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure << 4).fail);
 
     return 0;
 }
@@ -170,12 +245,11 @@ static int lua_camera_set_gain(lua_State *L)
 
     lua_Integer sensor_gain = lua_tointeger(L, 1);
 
-    if (sensor_gain > 0x3FF)
+    if (sensor_gain > 0xFF)
     {
-        return luaL_error(L, "gain must be less than 0x3FF");
+        return luaL_error(L, "gain must be less than 0xFF");
     }
 
-    check_error(i2c_write(CAMERA, 0x3504, 0x03, sensor_gain >> 8).fail);
     check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
 
     return 0;
@@ -249,6 +323,25 @@ static int lua_camera_set_register(lua_State *L)
 
 void lua_open_camera_library(lua_State *L)
 {
+    i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
+    i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
+    i2c_response_t exposure_reg_c = i2c_read(CAMERA, 0x3502, 0xF0);
+    i2c_response_t sensor_gain_reg = i2c_read(CAMERA, 0x3505, 0xFF);
+
+    if (exposure_reg_a.fail ||
+        exposure_reg_b.fail ||
+        exposure_reg_c.fail ||
+        sensor_gain_reg.fail)
+    {
+        error();
+    }
+
+    current.exposure = exposure_reg_a.value << 12 |
+                       exposure_reg_b.value << 4 |
+                       exposure_reg_c.value >> 4;
+
+    current.sensor_gain = sensor_gain_reg.value;
+
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
@@ -258,6 +351,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_read);
     lua_setfield(L, -2, "read");
+
+    lua_pushcfunction(L, lua_camera_auto);
+    lua_setfield(L, -2, "auto");
 
     lua_pushcfunction(L, lua_camera_sleep);
     lua_setfield(L, -2, "sleep");
