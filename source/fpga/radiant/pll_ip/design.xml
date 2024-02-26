@@ -68,7 +68,7 @@
                     <ipxact:configurableElementValue referenceId="gui_clk_s2_tol">0.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s2_ppm">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s2_phase">0</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="gui_clk_s3_en">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="gui_clk_s3_en">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s3_byp">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s3_freq">72.0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="gui_clk_s3_div">8</ipxact:configurableElementValue>

@@ -7,3 +7,7 @@ jmems:
 	make -C jisp
 lram:
 	make -C image_buffer
+
+clean:
+	make clean -C jisp
+	make clean -C image_buffer
