@@ -147,7 +147,7 @@ static int lua_camera_set_exposure(lua_State *L)
 
     lua_Integer exposure_time = lua_tointeger(L, 1);
 
-    if (exposure_time < 20 || exposure_time > 25000)
+    if (exposure_time < 20 || exposure_time > 0x3FFF)
     {
         return luaL_error(L, "exposure must be between 20us and 25000us");
     }
@@ -193,8 +193,8 @@ static int lua_camera_set_white_balance(lua_State *L)
     luaL_checkinteger(L, 3);
 
     lua_Integer red_gain = lua_tointeger(L, 1);
-    lua_Integer green_gain = lua_tointeger(L, 1);
-    lua_Integer blue_gain = lua_tointeger(L, 1);
+    lua_Integer green_gain = lua_tointeger(L, 2);
+    lua_Integer blue_gain = lua_tointeger(L, 3);
 
     if (red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
     {
