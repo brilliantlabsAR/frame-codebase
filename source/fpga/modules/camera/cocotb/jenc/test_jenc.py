@@ -175,6 +175,7 @@ async def dct_test(dut):
 
     test_image = 'baboon.bmp'
     test_image = '4.2.07.tiff'
+    test_image = '4.2.03.tiff'
     
     t = Tester(dut, test_image)
 
