@@ -213,7 +213,7 @@ for (int i=0; i<2; i++)
             if (tmp_codecoeff_length > 26 | tmp_codecoeff_length < 1)
                 codecoeff3[i] <= 'hx;
             else
-                codecoeff3[i] <= (code2[i] << 10) | (coeff2[i] << (26 - tmp_codecoeff_length));
+                codecoeff3[i] <= (code_length2[i] != 0 ? (code2[i] << 10) : 0) | (coeff_length2[i] != 0 ? (coeff2[i] << (26 - tmp_codecoeff_length)) : 0);
         end
     end
 

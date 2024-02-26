@@ -77,38 +77,54 @@ logic [3:0]             tbytes;
 always_comb next_byte_count  = byte_count + s_bytes;
 always_comb {next_byte_packer, next_byte_packer_lsb128} = (byte_packer << 128) | (s_data << (128 - 8*byte_count));
 
+logic [1:0] s_tlast_extend; // corner case tlast & count > 16
+logic       true_s_tlast;
+
+always @(*) true_s_tlast = (s_tlast & next_byte_count <= 16) | s_tlast_extend == 3;
+
 always @(posedge clk)
-if (!resetn)
+if (!resetn) begin
+    s_tlast_extend <= 0;
+end
+else if ((s_valid | s_tlast_extend!=0) & ~in_hold) begin
+    if ((s_tlast & next_byte_count > 16) | s_tlast_extend!=0)
+        s_tlast_extend <= s_tlast_extend + 1;
+end
+
+always @(posedge clk)
+if (!resetn) begin
     byte_count <= 0;
-else if (s_valid & ~in_hold)
-    if (s_tlast)
+    byte_packer <= 0;
+    s_tlast_extend <= 0;
+end
+else if ((s_valid | s_tlast_extend==3) & ~in_hold) begin
+    if (true_s_tlast)
         byte_count <= 0;
     else
         byte_count <= next_byte_count;
-        
-always @(posedge clk)
-if (!resetn)
-    byte_packer <= 0;
-else if (s_valid & ~in_hold)
-    if (s_tlast)
+
+    if (true_s_tlast)
         byte_packer <= 0;
     else if (next_byte_count >= 16)
         byte_packer <= next_byte_packer_lsb128;
     else
         byte_packer <= next_byte_packer;
+end
         
 always @(posedge clk)
 if (!resetn)
     out_valid <= 0;
 else if (~in_hold)
-    out_valid <= s_valid & (next_byte_count >= 16 | s_tlast);
+    out_valid <= s_tlast_extend==3 | (s_valid & (next_byte_count >= 16 | s_tlast));
 
 always @(posedge clk)
-if (s_valid & ~in_hold & (next_byte_count >= 16 | s_tlast)) begin
-    out_tlast <= s_tlast;
+if (~in_hold & (s_tlast_extend==3 | (s_valid & (next_byte_count >= 16 | s_tlast)))) begin
+    out_tlast <= true_s_tlast;
     out_data <= next_byte_packer;
-    if (s_tlast)
+    if (s_valid & s_tlast & next_byte_count <= 16)
         tbytes <= next_byte_count;
+    else if (s_tlast_extend == 3)
+        tbytes <= byte_count;
     else
         tbytes <= 16;
 end
@@ -132,7 +148,7 @@ always @(posedge clk) size_clear_sync <= {size_clear_sync, size_clear};
 always @(posedge clk)
 if (!resetn | size_clear_sync[1])
     size <= 0;
-else if (out_valid & ~out_hold & s_tlast)
+else if ((s_tlast_extend==3 | out_valid) & ~out_hold & true_s_tlast)
     size <= size_cnt + out_bytes;
 
 endmodule

@@ -174,6 +174,8 @@ async def dct_test(dut):
     await ClockCycles(dut.clock_spi_in, 2)
 
     test_image = 'baboon.bmp'
+    test_image = '4.2.07.tiff'
+    
     t = Tester(dut, test_image)
 
     await t.initialize_encoder()    
