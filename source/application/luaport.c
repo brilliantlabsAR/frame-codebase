@@ -113,6 +113,17 @@ void run_lua(bool factory_reset)
         lua_pop(L, 1);
     }
 
+    // Show splash screen
+    status = luaL_dostring(L, "frame.display.text('FRAME', 280, 176);"
+                              "frame.display.show();");
+
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        lua_writestring(lua_error, strlen(lua_error));
+        lua_pop(L, 1);
+    }
+
     //  Run REPL
     while (true)
     {

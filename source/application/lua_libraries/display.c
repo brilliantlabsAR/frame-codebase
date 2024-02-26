@@ -69,13 +69,6 @@ static uint32_t utf8_decode(const char *string, size_t *index)
     return codepoint;
 }
 
-static int lua_display_clear(lua_State *L)
-{
-    uint8_t address = 0x10;
-    spi_write(FPGA, &address, 1, false);
-    return 0;
-}
-
 static int lua_display_assign_color(lua_State *L)
 {
     uint8_t address = 0x11;
@@ -319,8 +312,29 @@ static int lua_display_text(lua_State *L)
 
 static int lua_display_show(lua_State *L)
 {
-    uint8_t address = 0x14;
-    spi_write(FPGA, &address, 1, false);
+    uint8_t show_command = 0x14;
+    uint8_t clear_command = 0x10;
+
+    spi_write(FPGA, &show_command, 1, false);
+
+    int status = luaL_dostring(L, "frame.sleep(0.02)");
+
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        lua_writestring(lua_error, strlen(lua_error));
+    }
+
+    spi_write(FPGA, &clear_command, 1, false);
+
+    status = luaL_dostring(L, "frame.sleep(0.02)");
+
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        lua_writestring(lua_error, strlen(lua_error));
+    }
+
     return 0;
 }
 
@@ -329,9 +343,6 @@ void lua_open_display_library(lua_State *L)
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
-
-    lua_pushcfunction(L, lua_display_clear);
-    lua_setfield(L, -2, "clear");
 
     lua_pushcfunction(L, lua_display_assign_color);
     lua_setfield(L, -2, "assign_color");
