@@ -95,7 +95,6 @@ always @(posedge clk)
 if (!resetn) begin
     byte_count <= 0;
     byte_packer <= 0;
-    s_tlast_extend <= 0;
 end
 else if ((s_valid | s_tlast_extend==3) & ~in_hold) begin
     if (true_s_tlast)
