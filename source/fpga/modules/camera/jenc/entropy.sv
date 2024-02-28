@@ -91,24 +91,30 @@ always_comb
 
 
 // Read Huffman tables
-logic [7:0]         ht_symbol[1:0];
-logic               ht_re[1:0];
-logic [1:0]         ht_sel[1:0];
+logic [7:0]         ht_symbol[1:0];  // for debug
+logic [3:0]         ht_rl[1:0], ht_coeff_length[1:0];
+logic [1:0]         ht_re;
+logic [1:0]         ht_chroma;
+logic [1:0]         ht_ac;
 logic [4:0]         code_length0[1:0];
 logic [15:0]        code0[1:0];
 
 always_comb for (int i=0; i<2; i++) begin
-    logic [7:0] symbol = {rl[i], coeff_length[i]};
-    ht_symbol[i] =  rl_valid[i] ? ((q[i]==0 & i==1 & &q_cnt) ?  8'h00 : symbol) : 8'hf0;
+    ht_rl[i]            =  rl_valid[i] ? ((q[i]==0 & i==1 & &q_cnt) ?  4'h0 :           rl[i]) : 8'hf;
+    ht_coeff_length[i]  =  rl_valid[i] ? ((q[i]==0 & i==1 & &q_cnt) ?  4'h0 : coeff_length[i]) : 4'h0;
+    ht_symbol[i] = {ht_rl[i], ht_coeff_length[i]}; // for debug
+
     ht_re[i] = q_valid & !q_hold & (rl_valid[i] | rl[i]==13-i | rl[i]==12-i); // Read 0xF0: i==1: 11|12, i==0: 12|13
-    ht_sel[i][0] = |q_chroma;
-    ht_sel[i][1] = ~(i==0 & q_cnt==0); // DC table
+    ht_chroma[i] = |q_chroma;
+    ht_ac[i] = ~(i==0 & q_cnt==0);
 end
 
 huff_tables ht (
-    .symbol     (ht_symbol),
+    .rl         (ht_rl),
+    .coeff_length (ht_coeff_length),
     .re         (ht_re),
-    .sel        (ht_sel),
+    .chroma     (ht_chroma),
+    .ac         (ht_ac),
     .len        (code_length0),
     .code       (code0),
     .clk
