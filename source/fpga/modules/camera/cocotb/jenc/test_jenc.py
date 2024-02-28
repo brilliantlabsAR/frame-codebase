@@ -173,9 +173,9 @@ async def dct_test(dut):
     
     await ClockCycles(dut.clock_spi_in, 2)
 
-    test_image = 'baboon.bmp'
-    test_image = '4.2.07.tiff'
-    test_image = '4.2.03.tiff'
+    test_image = 'baboon.bmp'  # 256x256
+    test_image = '4.2.07.tiff'  # peppers 512x512
+    test_image = '4.2.03.tiff'  # baboon 512x512
     
     t = Tester(dut, test_image)
 
