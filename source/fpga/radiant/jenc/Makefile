@@ -6,17 +6,17 @@
 #             [-p DEVICE] [-t PACKAGE] [-sp PERFORMANCE] [-f FAMILY]
 #
 #Lattice soft IP generation engine.
-IP := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp_true
-VLNV := -vlnv latticesemi.com:module:ram_dp_true:2.2.0
+IP := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp
+VLNV := -vlnv latticesemi.com:module:ram_dp:2.2.0
 IPGEN_FLAGS := $(VLNV) -sp "8_Low-Power_1.0V" -t "WLCSP72" -f "LIFCL" -p "LIFCL-17"
 
-all: ram_dp_true_w16_d128/ram_dp_true_w16_d128.ipx ram_dp_true_w16_d128/rtl/ram_dp_true_w16_d128.v
+all: ram_dp_w32_b4_d64/ram_dp_w32_b4_d64.ipx ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v
 %.v %.ipx: 
-	if [ ! -d ram_dp_true_w16_d128 ]; then \
-		mkdir ram_dp_true_w16_d128 ; \
+	if [ ! -d ram_dp_w32_b4_d64 ]; then \
+		mkdir ram_dp_w32_b4_d64 ; \
 	fi
-	ipgenwrap -cfg ram_dp_true_w16_d128.cfg -name ram_dp_true_w16_d128 -o ram_dp_true_w16_d128 $(IPGEN_FLAGS)
+	ipgenwrap -cfg ram_dp_w32_b4_d64.cfg -name ram_dp_w32_b4_d64 -o ram_dp_w32_b4_d64 $(IPGEN_FLAGS)
 
 clean:
-	rm -rf ram_dp_true_w16_d128
+	rm -rf ram_dp_w32_b4_d64
 

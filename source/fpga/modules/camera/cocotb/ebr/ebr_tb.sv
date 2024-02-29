@@ -29,7 +29,7 @@ dp_ram  #(
     .ra     (lb_ra),
     .re     (lb_re),
     .rd     ({line_buf_out_0[2], line_buf_out_0[1]}),
-    .*
+    .clk    (~clk)
 );
 
 ram_dp_w18_d360 line_buf_1 (
@@ -41,8 +41,8 @@ ram_dp_w18_d360 line_buf_1 (
     .rd_en_i    (lb_re), 
     .rd_clk_en_i(lb_re), 
     .rd_data_o  ({line_buf_out_1[2], line_buf_out_1[1]}), 
-    .wr_clk_i   (clk), 
-    .rd_clk_i   (clk), 
+    .wr_clk_i   (~clk), 
+    .rd_clk_i   (~clk), 
     .rst_i      (1'b0)
 );
 
@@ -73,6 +73,7 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
         .DEPTH  (depth[i])
     ) dp_ram_be (
         .rd (rd_0),
+        .clk(~clk),
         .*
     );
     if (i ==0) 
@@ -86,8 +87,8 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
             .rd_en_i    (re), 
             .rd_clk_en_i(re), 
             .rd_data_o  (rd_1), 
-            .wr_clk_i   (clk), 
-            .rd_clk_i   (clk), 
+            .wr_clk_i   (~clk), 
+            .rd_clk_i   (~clk), 
             .rst_i      (1'b0)
         );
     else 
@@ -101,8 +102,8 @@ for (genvar i=0; i<2; i++) begin : dp_ram_be
             .rd_en_i    (re), 
             .rd_clk_en_i(re), 
             .rd_data_o  (rd_1), 
-            .wr_clk_i   (clk), 
-            .rd_clk_i   (clk), 
+            .wr_clk_i   (~clk), 
+            .rd_clk_i   (~clk), 
             .rst_i      (1'b0)
         );
         
