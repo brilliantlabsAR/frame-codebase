@@ -254,6 +254,7 @@ logic [9:0] debayered_blue_data;
 logic debayered_line_valid;
 logic debayered_frame_valid;
 
+// TODO: fix ranges, only works 0:728
 debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
@@ -269,7 +270,12 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
-metering metering (
+metering #(
+    .X_WINDOW_START(104), 
+    .X_WINDOW_END(616),
+    .Y_WINDOW_START(104),
+    .Y_WINDOW_END(616)
+) metering (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -290,8 +296,8 @@ logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
 
 crop #(
-    .X_CROP_START(542),
-    .X_CROP_END(742),
+    .X_CROP_START(260),
+    .X_CROP_END(460),
     .Y_CROP_START(260),
     .Y_CROP_END(460)
 ) crop (
