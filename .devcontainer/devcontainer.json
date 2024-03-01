@@ -1,0 +1,72 @@
+{
+    "name": "context-lens-firmware",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "devcontainer",
+    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/",
+    "remoteUser": "user",
+    "overrideCommand": true,
+    "postStartCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/.git/hooks/ && cp --update /opt/build/git/* /workspaces/${localWorkspaceFolderBasename}/.git/hooks/",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "charliermarsh.ruff"
+            ],
+            "settings": {
+                "coverage-gutters.coverageFileNames": [
+                    "reports/coverage.xml"
+                ],
+                "editor.codeActionsOnSave": {
+                    "source.fixAll": "always",
+                    "source.organizeImports": "always"
+                },
+                "editor.formatOnSave": true,
+                "[python]": {
+                    "editor.defaultFormatter": "charliermarsh.ruff"
+                },
+                "[toml]": {
+                    "editor.formatOnSave": false
+                },
+                "editor.rulers": [
+                ],
+                "files.autoSave": "onFocusChange",
+                "mypy-type-checker.importStrategy": "fromEnvironment",
+                "python.defaultInterpreterPath": "/opt/context-lens-firmware-env/bin/python",
+                "python.terminal.activateEnvironment": false,
+                "python.testing.pytestEnabled": true,
+                "ruff.importStrategy": "fromEnvironment",
+                "workbench.preferredDarkColorTheme": "GitHub Dark",
+                "workbench.preferredHighContrastColorTheme": "GitHub Dark High Contrast",
+                "workbench.preferredHighContrastLightColorTheme": "GitHub Light High Contrast",
+                "workbench.preferredLightColorTheme": "GitHub Light",
+                "window.autoDetectColorScheme": true,
+                "files.exclude": {
+                    "**/__pycache__": true,
+                    "**/.github": false,
+                    "**/.gitignore": true,
+                    "**/.gitmodules": true,
+                    "**/.vscode": true,
+                    "**/.debug": true,
+                    "**/.dvc": true,
+                    "**/.dvcignore": true,
+                    "**/.env": true,
+                    "**/.pre-commit-config.yaml": true,
+                    "**/.devcontainer": true,
+                    "**/.cruft.json": true,
+                    "**/.mypy_cache": true,
+                    "**/.pytest_cache": true,
+                    "**/.ruff_cache": true,
+                    "**/.dockerignore": true,
+                    "**/py.typed": true,
+                    "**/**/__init__.py": true
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/usr/bin/zsh"
+                    }
+                }
+            }
+        }
+    },
+    "postCreateCommand": "starship preset plain-text-symbols -o ~/.config/starship.toml"
+}
