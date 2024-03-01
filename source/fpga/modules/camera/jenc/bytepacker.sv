@@ -80,7 +80,7 @@ always_comb {next_byte_packer, next_byte_packer_lsb128} = (byte_packer << 128) |
 logic [1:0] s_tlast_extend; // corner case tlast & count > 16
 logic       true_s_tlast;
 
-always @(*) true_s_tlast = (s_tlast & next_byte_count <= 16) | s_tlast_extend == 3;
+always @(*) true_s_tlast = (s_valid & s_tlast & next_byte_count <= 16) | s_tlast_extend == 3;
 
 always @(posedge clk)
 if (!resetn) begin
@@ -147,7 +147,7 @@ always @(posedge clk) size_clear_sync <= {size_clear_sync, size_clear};
 always @(posedge clk)
 if (!resetn | size_clear_sync[1])
     size <= 0;
-else if ((s_tlast_extend==3 | out_valid) & ~out_hold & true_s_tlast)
+else if (out_valid & ~out_hold & out_tlast)
     size <= size_cnt + out_bytes;
 
 endmodule
