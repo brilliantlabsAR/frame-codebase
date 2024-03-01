@@ -44,6 +44,9 @@ class Tester():
         self.img_bgr = cv2.imread(img_file)
 
         #self.img_bgr =  self.img_bgr[:32,:32,:]
+        self.img_bgr = np.vstack((self.img_bgr, self.img_bgr))
+        self.img_bgr = np.hstack((self.img_bgr, self.img_bgr))
+        self.img_bgr = self.img_bgr[:720,:720,:]
 
         self.y, self.x, _ = np.shape(self.img_bgr)
         assert self.y%2 == 0
@@ -186,7 +189,7 @@ async def dct_test(dut):
 
     test_image = 'baboon.bmp'  # 256x256
     test_image = '4.2.07.tiff'  # peppers 512x512
-    test_image = '4.2.03.tiff'  # baboon 512x512
+    #test_image = '4.2.03.tiff'  # baboon 512x512
     
     t = Tester(dut, test_image)
 
