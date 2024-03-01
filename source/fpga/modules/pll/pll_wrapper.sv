@@ -15,6 +15,7 @@ module pll_wrapper (
     output logic clkos_o,
     output logic clkos2_o,
     output logic clkos3_o,
+    output logic clkos4_o,
     output logic lock_o
 );
 
@@ -55,7 +56,7 @@ PLL #(
     .ENCLK_CLKOS("ENABLED"),
     .ENCLK_CLKOS2("ENABLED"),
     .ENCLK_CLKOS3("ENABLED"),
-    .ENCLK_CLKOS4("DISABLED"),
+    .ENCLK_CLKOS4("ENABLED"),
     .ENCLK_CLKOS5("DISABLED"),
     .EXTERNAL_DIVIDE_FACTOR("0"),
     .FAST_LOCK_EN("ENABLED"),
@@ -151,7 +152,7 @@ PLL #(
     .CLKOS(clkos_o),
     .CLKOS2(clkos2_o),
     .CLKOS3(clkos3_o),
-    .CLKOS4(),
+    .CLKOS4(clkos4_o),
     .CLKOS5(),
     .LOCK(lock_o)
 );

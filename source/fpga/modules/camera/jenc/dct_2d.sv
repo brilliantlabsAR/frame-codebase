@@ -17,124 +17,101 @@ module dct_2d #(
     input   logic                   di_valid,
     output  logic                   di_hold,
     input   logic [2:0]             di_cnt,
-    output  logic signed[QW-1:0]    q[7:0],
+    output  logic signed[QW-1:0]    q[1:0],
     output  logic                   q_valid,
     input   logic                   q_hold,
-    output  logic [2:0]             q_cnt,
+    output  logic [4:0]             q_cnt,
     input   logic                   clk,
-    input   logic                   resetn
+    input   logic                   resetn,
+    input   logic                   clk_x22,
+    input   logic                   resetn_x22
 );
 
-
 //------------------------------------------------------------------------------
-// input muxes to dct
-// MCU 8-line buffer/Transpose mem
+// DCT0
 //------------------------------------------------------------------------------
-logic signed[CW-1:0] dct_di[7:0]; 
-logic [2:0] dct_di_cnt;
-logic dct_di_valid;
-logic dct_di_hold;
-
-logic signed[CW-1:0] transpose_rd_data[7:0];
-logic [2:0] transpose_rd_cnt;
-logic transpose_rd_hold;
-logic transpose_rd_valid;
-
-logic dct_src_sel;    // Source to DCT: 0 .. MCU 8-line buffer, 1 .. Transpose mem
-
-always_comb di_hold = dct_src_sel ? 1 : dct_di_hold;
-always_comb transpose_rd_hold = dct_src_sel ? dct_di_hold : 1;
-always_comb dct_di_valid = dct_src_sel ? transpose_rd_valid : di_valid;
-
-always_comb dct_di_cnt = dct_src_sel ? transpose_rd_cnt : di_cnt;
-always_comb 
-    for (int j=0; j<8; j++)
-            dct_di[j] = dct_src_sel ? transpose_rd_data[j] : di[j];
-
-always @(posedge clk) 
-if (!resetn)
-    dct_src_sel <= 0;
-else if (dct_di_valid & !dct_di_hold & &dct_di_cnt)
-    dct_src_sel <= ~dct_src_sel;
-
-//------------------------------------------------------------------------------
-// DCT
-//------------------------------------------------------------------------------
-logic [C2W-1:0] dct_q[7:0]; 
-logic [2:0] dct_q_cnt;
-logic dct_q_valid;
-logic dct_q_hold;
+logic [CW-1:0] dct0_q[7:0]; 
+logic [2:0] dct0_q_cnt;
+logic dct0_q_valid;
+logic dct0_q_hold;
 
 dct_1d_aan #(
-    .DW     (CW),
-    .CW     (C2W)
-) dct_1d (
-    .di             (dct_di),
-    .di_valid       (dct_di_valid),
-    .di_hold        (dct_di_hold),
-    .di_cnt         (dct_di_cnt),
-    .q              (dct_q),
-    .q_valid        (dct_q_valid),
-    .q_hold         (dct_q_hold),
-    .q_cnt          (dct_q_cnt),
+    .DW     (DW),
+    .CW     (CW)
+) dct_1d_0 (
+    .di             (di),
+    .di_valid       (di_valid),
+    .di_hold        (di_hold),
+    .di_cnt         (di_cnt),
+    .q              (dct0_q),
+    .q_valid        (dct0_q_valid),
+    .q_hold         (dct0_q_hold),
+    .q_cnt          (dct0_q_cnt),
     .*
 );
 
 //------------------------------------------------------------------------------
-// Destination of DCT
-// Zig zag mem OR Transpose mem
+// Transpose Mem
 //------------------------------------------------------------------------------
-logic dct_dest_sel;     // Destination of DCT output: 0 .. Zig zag mem, 1 .. Transpose mem
-logic transpose_sel;    // Transpose operation select: 0 .. write DCT output to transpose, 1 .. read transpose and write back to DCT
-logic transpose_wr_valid;
+logic [CW-1:0] dct1_d[7:0]; 
+logic [2:0] dct1_d_cnt;
+logic dct1_d_valid;
+logic dct1_d_hold;
 
-// Destination: Zig-Zag (or Transpose)
-always_comb dct_q_hold = dct_dest_sel ? transpose_sel : q_hold;
-always_comb q_valid = dct_dest_sel ? 0 : dct_q_valid;
-always_comb transpose_wr_valid = dct_dest_sel ? dct_q_valid : 0;
-always_comb transpose_rd_valid = transpose_sel;
+transpose #(.QW(CW)) transpose (
+    .d          (dct0_q),
+    .d_cnt      (dct0_q_cnt),
+    .d_valid    (dct0_q_valid),
+    .d_hold     (dct0_q_hold),
+    .q          (dct1_d),
+    .q_cnt      (dct1_d_cnt),
+    .q_valid    (dct1_d_valid),
+    .q_hold     (dct1_d_hold),
+    .*
+);
 
-always @(posedge clk) 
-if (!resetn)
-    dct_dest_sel <= 1;
-else if (dct_q_valid & !dct_q_hold & &dct_q_cnt)
-    dct_dest_sel <= ~dct_dest_sel;
+//------------------------------------------------------------------------------
+// DCT1
+//------------------------------------------------------------------------------
+logic [C2W-1:0] dct1_q[7:0]; 
+logic [QW-1:0] dct1_q_0[7:0]; 
+logic [2:0] dct1_q_cnt;
+logic dct1_q_valid;
+logic dct1_q_hold;
 
+dct_1d_aan #(
+    .DW     (CW),
+    .CW     (C2W)
+) dct_1d_1 (
+    .di             (dct1_d),
+    .di_valid       (dct1_d_valid),
+    .di_hold        (dct1_d_hold),
+    .di_cnt         (dct1_d_cnt),
+    .q              (dct1_q),
+    .q_valid        (dct1_q_valid),
+    .q_hold         (dct1_q_hold),
+    .q_cnt          (dct1_q_cnt),
+    .*
+);
 
-// Reduce the range of the signal. Should be 8+2 = 12 (AAN!)
-
-always_comb q_cnt = dct_q_cnt;
 always_comb
     for (int j=0; j<8; j++)
-        q[j] = dct_q[j];
-
+        dct1_q_0[j] = dct1_q[j];
 
 //------------------------------------------------------------------------------
-// Transpose buffer
+// ZigZag Mem
 //------------------------------------------------------------------------------
-logic [C2W-1:0] transp_mem[7:0][7:0];
 
-always @(posedge clk) 
-if (!resetn) begin
-    transpose_sel <= 0;
-    transpose_rd_cnt <= 0;
-end else if (transpose_sel & ~transpose_rd_hold) begin
-    transpose_rd_cnt <= transpose_rd_cnt + 1;
-    if (&transpose_rd_cnt)
-        transpose_sel <= 0;
-end else if (~transpose_sel & transpose_wr_valid)
-    if (&dct_q_cnt)
-        transpose_sel <= 1;
+zigzag #(.QW(QW)) zigzag (
+    .d          (dct1_q_0),
+    .d_cnt      (dct1_q_cnt),
+    .d_valid    (dct1_q_valid),
+    .d_hold     (dct1_q_hold),
 
-// write to transpose
-always @(posedge clk) 
-if (~transpose_sel & transpose_wr_valid)
-    for (int j=0; j<8; j++)
-        transp_mem[dct_q_cnt][j] <= dct_q[j];
-
-// read from transpose
-always_comb
-    for (int j=0; j<8; j++)
-        transpose_rd_data[j] = transp_mem[j][transpose_rd_cnt];
-
+    .q          (q),
+    .q_cnt      (q_cnt),
+    .q_valid    (q_valid),
+    .q_hold     ('0 ), //q_hold
+    .*
+);
 endmodule

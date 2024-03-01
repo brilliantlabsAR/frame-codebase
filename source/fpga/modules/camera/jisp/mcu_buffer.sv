@@ -1,4 +1,4 @@
-`include "jisp.vh"
+`include "jlib.vh"
 /*
  * MCU buffer for 4:2:0 (4:4:4, 4:2:2, 4:0:0 can be added easily)
  *
@@ -155,7 +155,8 @@ dp_ram_be  #(
     .ra     ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}),
     .re     (!di_hold & !empty & mcu_count <= 3),
     .rd     (rd_y),
-    .*
+    .rclk   (clk),
+    .wclk   (clk)
 );
 `else
 ram_dp_w64_b8_d2880 y_buf (
@@ -210,7 +211,8 @@ dp_ram_be  #(
     .ra     ({block_count, mcu_line_count, rptr[0], mcu_count[0]}),
     .re     (!di_hold & !empty & mcu_count > 3 ),
     .rd     (rd_uv),
-    .*
+    .rclk   (clk),
+    .wclk   (clk)
 );
 `else
 ram_dp_w64_b8_d1440 uv_buf (

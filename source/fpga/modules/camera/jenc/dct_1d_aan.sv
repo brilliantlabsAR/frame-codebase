@@ -58,30 +58,33 @@ a5:    Binary = 11000011111
 //------------------------------------------------------------------------------
 // pipeline control
 //------------------------------------------------------------------------------
-parameter N_stages = 3;
-logic [N_stages:0] en;
-logic [N_stages:1] enq;
+logic [2:0] en;
+logic i2_hold;
+logic i1_hold;
+logic i0_hold;
 
-always_comb en = {enq, di_valid};
-always_comb q_valid = en[N_stages];
+always_comb q_valid = en[2];
 always @(posedge clk) 
 if (!resetn)
-    enq <= 0;
-else if (!q_hold)
-    enq <= en;
+    en <= 0;
+else begin
+    if (!i0_hold) en[0] <= di_valid;
+    if (!i1_hold) en[1] <= en[0];
+    if (!i2_hold) en[2] <= en[1];
+end
 
 // Pipeline row counter
-logic [2:0] cnt[N_stages:0];
-logic [2:0] cntq[N_stages:1];
-
-always_comb  cnt = {cntq, di_cnt};
-always_comb q_cnt = cnt[N_stages];
-always @(posedge clk) 
-if (!q_hold)
-    for (int j=0; j<N_stages; j++) 
-        if (en[j]) cntq[j+1] <= cnt[j];
+logic [2:0] cntq[1:0];
+always @(posedge clk) begin
+    if (di_valid & !i0_hold) cntq[0] <= di_cnt;
+    if (en[0] & !i1_hold) cntq[1] <= cntq[0];
+    if (en[1] & !i2_hold) q_cnt <= cntq[1];
+end
         
-always_comb di_hold = q_hold;
+always_comb i2_hold = q_hold & en[2];
+always_comb i1_hold = i2_hold & en[1];
+always_comb i0_hold = i1_hold & en[0];
+always_comb di_hold = i0_hold & di_valid;
 //------------------------------------------------------------------------------
 // Stage 0: Butterflies
 //------------------------------------------------------------------------------
@@ -107,7 +110,7 @@ always_comb begin
 end
 
 // Stage 0b: More butterfly
-always @(posedge clk) if (en[0] & !q_hold) begin
+always @(posedge clk) if (di_valid & !i0_hold) begin
     c[0] <= b[0] + b[3];
     c[1] <= b[1] + b[2];
     c[2] <= -b[2] + b[1];
@@ -146,7 +149,7 @@ always_comb begin
     d_tmp[8] = c[4] + c[6];
 end
 
-always @(posedge clk) if (en[1] & !q_hold) begin
+always @(posedge clk) if (en[0] & !i1_hold) begin
     // scale 0,1,3,7 here due to lack of actual multiplication
     d[0] <= d_tmp[0] << M_BITS;
     d[1] <= d_tmp[1] << M_BITS;
@@ -230,11 +233,11 @@ always_comb begin
     g[6] = -f[6] + f[5];
     g[7] = f[7] - f[4];
     
-    //if (en[2] & !q_hold) 
+    //if (en[2] & !i_hold) 
 end
 
 // Output un-swizzle, and add rounding bit (+ (0.5 << MBITS))
-always @(posedge clk) if (en[2] & !q_hold) begin
+always @(posedge clk) if (en[1] & !i2_hold) begin
     o[0] <= g[0] + round;
     o[4] <= g[1] + round;
     o[2] <= g[2] + round;

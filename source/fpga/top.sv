@@ -72,6 +72,7 @@ pll_wrapper pll_wrapper (
     .clkos_o(clock_camera_pixel),      // 36MHz
     .clkos2_o(clock_display),          // 36MHz
     .clkos3_o(clock_spi),              // 72MHz
+    .clkos4_o(clk_x22),                // 78MHz
     .lock_o(pll_locked)
 );
 
@@ -103,6 +104,12 @@ reset_sync reset_sync_clock_spi (
     .clock_in(clock_spi),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(reset_spi_n)
+);
+
+reset_sync reset_sync_clock_x22 (
+    .clock_in(clk_x22),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(resetn_x22)
 );
 
 // SPI

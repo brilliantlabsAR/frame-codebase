@@ -23,16 +23,18 @@ module jenc #(
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
 
     input   logic                   clk,
-    input   logic                   resetn
+    input   logic                   resetn,
+    input   logic                   clk_x22,
+    input   logic                   resetn_x22
 );
 
 always_comb if (di_valid) assert (x_size_m1[0]) else $fatal("Enforcing even image dimensions!");
 always_comb if (di_valid) assert (y_size_m1[0]) else $fatal("Enforcing even image dimensions!");
 
-logic signed[CW-1:0]    d[7:0];
+logic signed[CW-1:0]    d[1:0];
 logic                   d_valid;
 logic                   d_hold;
-logic [2:0]             d_cnt;
+logic [4:0]             d_cnt;
 
 logic signed[10:0]      q[1:0]; 
 logic                   q_valid;

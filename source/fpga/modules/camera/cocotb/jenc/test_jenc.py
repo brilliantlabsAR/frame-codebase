@@ -169,7 +169,8 @@ async def dct_test(dut):
 
     c1 = cocotb.start_soon(clock_n_reset(dut.clock_spi_in, dut.reset_spi_n_in, f=1.02 * 72*10e6)) # 72 MHz clock
     c0 = cocotb.start_soon(clock_n_reset(dut.clock_pixel_in, dut.reset_pixel_n_in, f=0.98 * 36*10e6)) # 36 MHz clock
-    await cocotb.triggers.Combine(c1, c0)
+    c2 = cocotb.start_soon(clock_n_reset(dut.clk_x22, dut.resetn_x22, f=78*10e6)) # 78 MHz clock
+    await cocotb.triggers.Combine(c0, c1, c2)
     
     await ClockCycles(dut.clock_spi_in, 2)
 

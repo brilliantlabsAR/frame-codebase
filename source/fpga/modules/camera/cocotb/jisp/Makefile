@@ -52,7 +52,7 @@ endif
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 
 ifeq ($(SIM),verilator)
-        EXTRA_ARGS += +define+__JISP_VH__ # ugly ugly
+        EXTRA_ARGS += +define+__JLIB_VH__ # ugly ugly
         EXTRA_ARGS += --trace --trace-structs --timing
         #EXTRA_ARGS += -Wno-BADSTDPRAGMA
         EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY

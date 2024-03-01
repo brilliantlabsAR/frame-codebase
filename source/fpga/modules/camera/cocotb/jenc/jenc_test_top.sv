@@ -9,6 +9,9 @@ module jenc_test_top #(
     input logic             clock_pixel_in, // 36MHz +%
     input logic             reset_pixel_n_in,
 
+    input logic             clk_x22, // must be faster than 2*36MHz!
+    input logic             resetn_x22,
+
     input logic [9:0]       debayered_red_data,
     input logic [9:0]       debayered_green_data,
     input logic [9:0]       debayered_blue_data,
@@ -95,7 +98,8 @@ jenc #(
     .y_size_m1          (y_size_m1),
 
     .clk                (clock_pixel_in),
-    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+    .resetn             (reset_pixel_n_in & jpeg_reset_n),
+    .*
 );
 
 

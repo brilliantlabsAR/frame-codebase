@@ -25,6 +25,9 @@ module camera (
     input logic clock_pixel_in, // 36MHz
     input logic reset_pixel_n_in,
 
+    input logic clk_x22, // must be faster than 2*36MHz!
+    input logic resetn_x22,
+
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,

@@ -18,6 +18,8 @@ VERILOG_FILES += \
         ../../jenc/jenc.sv \
         ../../jenc/dct_1d_aan.sv \
         ../../jenc/dct_2d.sv \
+        ../../jenc/transpose.sv \
+        ../../jenc/zigzag.sv \
         ../../jenc/quant_seq_mult_15x13_p4.sv \
         ../../jenc/quant.sv \
         ../../jenc/quant_tables.sv \
@@ -37,7 +39,7 @@ VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../../jisp  ../../jenc ../../jlib)
 
 ifeq ($(SIM),verilator)
-        EXTRA_ARGS += +define+__JISP_VH__ # ugly ugly
+        EXTRA_ARGS += +define+__JLIB_VH__ # ugly ugly
         EXTRA_ARGS += --trace --trace-structs
         EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY
 endif
@@ -57,3 +59,4 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 
 clean::
 	rm -rf __pycache__ results.xml obj_dir
+	rm -rf jpeg_out.jpg rgb_out.bmp ecs_out.bin

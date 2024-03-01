@@ -1,4 +1,4 @@
-`include "jisp.vh"
+`include "jlib.vh"
 /*
  * Subsample 4:4:4 to 4:2:0 (4:4:4, 4:2:2, 4:0:0 can be added easily)
  *
@@ -67,7 +67,8 @@ dp_ram  #(
     .ra     (pixel_count >> 1),
     .re     (lb_re),
     .rd     ({line_buf_out[2], line_buf_out[1]}),
-    .*
+    .rclk   (clk),
+    .wclk   (clk)
 );
 `else
 ram_dp_w18_d360 line_buf (
