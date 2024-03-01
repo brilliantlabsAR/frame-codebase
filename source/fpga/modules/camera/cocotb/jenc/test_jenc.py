@@ -43,6 +43,8 @@ class Tester():
         self.dut = dut
         self.img_bgr = cv2.imread(img_file)
 
+        #self.img_bgr =  self.img_bgr[:32,:32,:]
+
         self.y, self.x, _ = np.shape(self.img_bgr)
         assert self.y%2 == 0
         assert self.x%2 == 0
@@ -62,9 +64,11 @@ class Tester():
 
     	# reset encoder
         self.dut.jpeg_reset.value = 1
+        await FallingEdge(self.dut.jpeg_reset_n)
         await RisingEdge(self.dut.clock_spi_in)
         self.dut.jpeg_reset.value = 0
         await RisingEdge(self.dut.jpeg_reset_n)
+        await RisingEdge(self.dut.clock_spi_in)
     
         #improved debug
         self.dut.buffer_read_address.value = -1
