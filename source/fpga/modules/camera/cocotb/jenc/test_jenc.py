@@ -138,6 +138,11 @@ class Tester():
             await self.read_rgb_buffer()
 
 
+    async def write_ecs(self, filename='ecs_out.bin'):
+        # Write bytes to file
+        with open(filename, "wb") as f:
+            f.write(bytearray(self.ecs))
+
     async def write_jpg(self, filename='jpeg_out.jpg'):
         hdr = bytearray(writeJPG_header(height=self.y, width=self.x))
         ecs = bytearray(self.ecs)
@@ -159,6 +164,7 @@ class Tester():
     async def write_image(self):
         if self.jpeg_sel:
             await self.write_jpg()
+            await self.write_ecs()
         else:
             await self.write_bmp()
 
