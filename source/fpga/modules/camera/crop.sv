@@ -25,7 +25,7 @@ module crop (
 logic [11:0] x_counter;
 logic [11:0] y_counter;
 
-logic previous_line_valid_in;
+logic previous_line_valid;
 
 always_ff @(posedge pixel_clock_in) begin
 
@@ -37,13 +37,13 @@ always_ff @(posedge pixel_clock_in) begin
         x_counter <= 0;
         y_counter <= 0;
         
-        previous_line_valid_in <= 0;
+        previous_line_valid <= 0;
 
     end
     
     else begin
         
-        previous_line_valid_in <= line_valid_in;
+        previous_line_valid <= line_valid_in;
 
         // Increment counters
         if (line_valid_in) begin
@@ -53,7 +53,7 @@ always_ff @(posedge pixel_clock_in) begin
         else begin
             x_counter <= 0;
 
-            if (previous_line_valid_in) begin
+            if (previous_line_valid) begin
                 y_counter <= y_counter + 1;
             end
         end

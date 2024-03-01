@@ -1,0 +1,25 @@
+#
+# This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+#
+# Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+#              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright © 2023 Brilliant Labs Limited
+#
+# Byte to pixel ip constraints
+set_multicycle_path -setup -from [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/wc_pix_sync*}] -to [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/pixcnt_c* camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/pix_out_cntr*}] 7
+set_multicycle_path -hold -from [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/wc_pix_sync*}] -to [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/pixcnt_c* camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_pixcntr/pix_out_cntr*}] 6
+
+set_false_path -through [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/dataconvert.lscc_dataconvert/pmi_fifo_dc_inst/u_fifo0/fifo_dc0/_FABRIC.u_fifo/rd_grey_sync_r*}]
+set_false_path -through [get_nets {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/dataconvert.lscc_dataconvert/pmi_fifo_dc_inst/u_fifo0/fifo_dc0/_FABRIC.u_fifo/wr_grey_sync_r*}]
+
+set_false_path -to [get_nets -hierarchical {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_driver/payload_done_fdbk_meta*}]
+set_false_path -to [get_nets -hierarchical {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_driver/lp_av_fdbk_meta*}]
+set_false_path -to [get_nets -hierarchical {camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_driver/fifo_almost_full_meta*}]
+
+set_false_path -from [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_a_r*] -to [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_rd_a_r*]
+set_false_path -from [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_b_r*] -to [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_rd_b_r*]
+set_false_path -to [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_rd_a_r*]
+set_false_path -to [get_nets -hierarchical camera/byte_to_pixel_ip/lscc_byte2pixel_inst/genblk5.lscc_activevideo/wc_rd_b_r*]

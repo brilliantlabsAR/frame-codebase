@@ -14,6 +14,7 @@
 `include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
+`include "modules/camera/metering.sv"
 `endif
 
 module camera (
@@ -61,6 +62,10 @@ assign bytes_remaining = capture_size - bytes_read;
 logic [15:0] buffer_read_address;
 logic [7:0] buffer_read_data;
 assign buffer_read_address = bytes_read;
+
+logic [7:0] red_metering;
+logic [7:0] green_metering;
+logic [7:0] blue_metering;
 
 logic last_op_code_valid_in;
 logic last_operand_valid_in;
@@ -144,6 +149,18 @@ always_ff @(posedge clock_spi_in) begin
                         2: response_out <= jpeg_out_size[19:16];
                     endcase
                 end
+
+                // Metering
+                'h25: begin
+                    case (operand_count_in)
+                        0: response_out <= red_metering;
+                        1: response_out <= green_metering;
+                        2: response_out <= blue_metering;
+                    endcase
+
+                    response_valid_out <= 1;
+                end
+
             endcase
 
         end
@@ -314,7 +331,25 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
+metering metering (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
 
+    .pixel_red_data_in(debayered_red_data),
+    .pixel_green_data_in(debayered_green_data),
+    .pixel_blue_data_in(debayered_blue_data),
+    .line_valid_in(debayered_line_valid),
+    .frame_valid_in(debayered_frame_valid),
+
+    .red_metering_out(red_metering),
+    .green_metering_out(green_metering),
+    .blue_metering_out(blue_metering)
+);
+
+logic [9:0] cropped_red_data;
+logic [9:0] cropped_green_data;
+logic [9:0] cropped_blue_data;
+logic cropped_line_valid;
 
 
 // JPEG Reset just in case

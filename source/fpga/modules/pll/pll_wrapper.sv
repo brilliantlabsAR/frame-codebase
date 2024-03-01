@@ -11,6 +11,7 @@
 
 module pll_wrapper (
     input logic clki_i,
+    input logic reset_i,
     output logic clkop_o,
     output logic clkos_o,
     output logic clkos2_o,
@@ -144,7 +145,7 @@ PLL #(
 ) pll (
     // Inputs
     .FBKCK(feedback_w),
-    .PLLRESET(1'b0),
+    .PLLRESET(reset_i),
     .REFCK(clki_i),
     
     // Outputs

@@ -110,6 +110,14 @@ i2c_response_t i2c_read(i2c_device_t device,
                                                           &i2c_response.value,
                                                           1);
 
+    // Disable tap interrupt which can lead to other i2c calls
+    bool gpiote_interrupt_was_enabled = false;
+    if (NRFX_IRQ_IS_ENABLED(GPIOTE_IRQn))
+    {
+        gpiote_interrupt_was_enabled = true;
+        NRFX_IRQ_DISABLE(GPIOTE_IRQn);
+    }
+
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
@@ -138,6 +146,11 @@ i2c_response_t i2c_read(i2c_device_t device,
             i2c_response.fail = false;
             break;
         }
+    }
+
+    if (gpiote_interrupt_was_enabled)
+    {
+        NRFX_IRQ_ENABLE(GPIOTE_IRQn);
     }
 
     i2c_response.value &= register_mask;
@@ -212,6 +225,14 @@ i2c_response_t i2c_write(i2c_device_t device,
         i2c_tx.primary_length = 3;
     }
 
+    // Disable tap interrupt which can lead to other i2c calls
+    bool gpiote_interrupt_was_enabled = false;
+    if (NRFX_IRQ_IS_ENABLED(GPIOTE_IRQn))
+    {
+        gpiote_interrupt_was_enabled = true;
+        NRFX_IRQ_DISABLE(GPIOTE_IRQn);
+    }
+
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
@@ -235,8 +256,13 @@ i2c_response_t i2c_write(i2c_device_t device,
         if (i == 2)
         {
             resp.fail = true;
-            return resp;
+            break;
         }
+    }
+
+    if (gpiote_interrupt_was_enabled)
+    {
+        NRFX_IRQ_ENABLE(GPIOTE_IRQn);
     }
 
     return resp;

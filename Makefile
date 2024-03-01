@@ -93,6 +93,10 @@ flash-blackmagic:
 	@arm-none-eabi-gdb -nx \
 					   --batch-silent \
 					   -ex "target extended-remote $(PORT)" \
+					   -ex "monitor swd_scan" \
+					   -ex "attach 1" \
+					   -ex "monitor erase_mass" \
+					   -ex "detach" \
 					   -ex 'monitor swd_scan' \
 					   -ex 'attach 1' \
 					   -ex 'load' \
@@ -109,6 +113,10 @@ erase-blackmagic:
 	@arm-none-eabi-gdb -nx \
 					   --batch-silent \
 					   -ex "target extended-remote $(PORT)" \
+					   -ex "monitor swd_scan" \
+					   -ex "attach 1" \
+					   -ex "monitor erase_mass" \
+					   -ex "detach" \
 					   -ex "monitor swd_scan" \
 					   -ex "attach 1" \
 					   -ex "monitor erase_mass" \
