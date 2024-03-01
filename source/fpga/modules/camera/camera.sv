@@ -316,6 +316,7 @@ logic [9:0] debayered_blue_data;
 logic debayered_line_valid;
 //logic debayered_frame_valid;
 
+// TODO: fix ranges, only works 0:728
 debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
@@ -331,7 +332,12 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
-metering metering (
+metering #(
+    .X_WINDOW_START(104), 
+    .X_WINDOW_END(616),
+    .Y_WINDOW_START(104),
+    .Y_WINDOW_END(616)
+) metering (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -346,11 +352,6 @@ metering metering (
     .blue_metering_out(blue_metering)
 );
 
-logic [9:0] cropped_red_data;
-logic [9:0] cropped_green_data;
-logic [9:0] cropped_blue_data;
-logic cropped_line_valid;
-
 
 // JPEG Reset just in case
 logic jpeg_reset_n;
@@ -359,7 +360,6 @@ reset_sync reset_sync_jpeg (
     .async_reset_n_in(~jpeg_reset),
     .sync_reset_n_out(jpeg_reset_n)
 );
-
 
 // JPEG ISP (RGB2YUV, 4:4:4 2 4:2:0, 16-line MCU buffer)
 logic [7:0]             jpeg_in_data[7:0]; 
