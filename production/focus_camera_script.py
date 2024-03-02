@@ -21,11 +21,10 @@ def receive_data(data):
 async def capture_and_download(b: Bluetooth, height, width):
     global image_buffer
     global expected_length
+    expected_length = height * width
 
     await b.send_lua(f"frame.camera.capture()")
     await asyncio.sleep(0.5)
-
-    expected_length = height * width
 
     image_buffer = b""
 
