@@ -170,6 +170,7 @@ always_ff @(posedge clock_spi_in) begin
                 end
                 // JPEG size
                 'h31: begin
+                    response_valid_out <= 1;
                     case (operand_count_in)
                         0: response_out <= jpeg_out_size[7:0];
                         1: response_out <= jpeg_out_size[15:8];
