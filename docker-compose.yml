@@ -3,14 +3,12 @@ version: "3.9"
 services:
 
   devcontainer:
-    platform: linux/amd64
     build:
       context: .
-      target: dev
+      target: devcontainer
       args:
-        PYTHON_VERSION: ${PYTHON_VERSION:-3.11}
-        UID: ${UID:-2000}
-        GID: ${GID:-2000}
+        UID: 4100
+        GID: 1102
     volumes:
       - ..:/workspaces
       - command-history-volume:/home/user/.history/
@@ -24,7 +22,7 @@ services:
       [
         "sh",
         "-c",
-        "sudo chown user $$SSH_AUTH_SOCK && mkdir -p /workspaces/context-lens-firmware/.git/hooks/ && zsh"
+        "sudo chown user $$SSH_AUTH_SOCK && mkdir -p /workspaces/frame-codebase/.git/hooks/ && zsh"
       ]
     environment:
       - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
@@ -32,9 +30,6 @@ services:
       - ~/.gitconfig:/etc/gitconfig
       - ~/.ssh/known_hosts:/home/user/.ssh/known_hosts
       - ${SSH_AGENT_AUTH_SOCK:-/run/host-services/ssh-auth.sock}:/run/host-services/ssh-auth.sock
-    devices:
-      - /dev/tty.usbmodemEF089F10263E1:/dev/tty.usbmodemEF089F10263E1
-    privileged: true
     profiles:
       - dev
 

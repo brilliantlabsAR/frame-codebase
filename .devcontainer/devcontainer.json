@@ -1,5 +1,5 @@
 {
-    "name": "context-lens-firmware",
+    "name": "frame-codebase",
     "dockerComposeFile": "../docker-compose.yml",
     "service": "devcontainer",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/",
@@ -9,7 +9,22 @@
     "customizations": {
         "vscode": {
             "extensions": [
-                "charliermarsh.ruff"
+                "brilliantlabs.brilliant-ar-studio",
+                "charliermarsh.ruff",
+                "esbenp.prettier-vscode",
+                "fooxly.themeswitch",
+                "github.copilot",
+                "github.copilot-chat",
+                "github.github-vscode-theme",
+                "github.vscode-pull-request-github",
+                "mhutchie.git-graph",
+                "ms-azuretools.vscode-docker",
+                "ms-python.debugpy",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-vscode-remote.remote-containers",
+                "oderwat.indent-rainbow",
+                "yzhang.markdown-all-in-one"
             ],
             "settings": {
                 "coverage-gutters.coverageFileNames": [
@@ -26,11 +41,10 @@
                 "[toml]": {
                     "editor.formatOnSave": false
                 },
-                "editor.rulers": [
-                ],
+                "editor.rulers": [],
                 "files.autoSave": "onFocusChange",
                 "mypy-type-checker.importStrategy": "fromEnvironment",
-                "python.defaultInterpreterPath": "/opt/context-lens-firmware-env/bin/python",
+                "python.defaultInterpreterPath": "/opt/frame-codebase-env/bin/python",
                 "python.terminal.activateEnvironment": false,
                 "python.testing.pytestEnabled": true,
                 "ruff.importStrategy": "fromEnvironment",
