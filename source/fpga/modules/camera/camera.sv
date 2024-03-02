@@ -18,7 +18,9 @@
 `endif
 
 module camera (
+`ifndef NO_MIPI_IP_SIM
     input logic global_reset_n_in,
+`endif //NO_MIPI_IP_SIM
     
     input logic clock_spi_in, // 72MHz
     input logic reset_spi_n_in,
@@ -29,10 +31,17 @@ module camera (
     input logic clk_x22, // must be faster than 2*36MHz!
     input logic resetn_x22,
 
+`ifndef NO_MIPI_IP_SIM
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
+`else
+    // for NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid,
+    input logic byte_to_pixel_line_valid,
+    input logic [9:0] byte_to_pixel_data,
+`endif //NO_MIPI_IP_SIM
 
     input logic [7:0] op_code_in,
     input logic op_code_valid_in,
@@ -43,17 +52,30 @@ module camera (
     output logic response_valid_out
 );
 
-localparam X_CROP_START = 542;
-localparam X_CROP_END   = 742;
-localparam Y_CROP_START = 260;
-localparam Y_CROP_END   = 460;
+logic[10:0] X_CROP_START;   // Todo: Make SPI register
+logic[10:0] X_CROP_END;     // Todo: Make SPI register
+logic[9:0] Y_CROP_START;    // Todo: Make SPI register
+logic[9:0] Y_CROP_END;      // Todo: Make SPI register
+ 
+always_ff @(posedge clock_spi_in) if (reset_spi_n_in == 0) X_CROP_START <= 542;
+always_ff @(posedge clock_spi_in) if (reset_spi_n_in == 0) X_CROP_END   <= 742;
+always_ff @(posedge clock_spi_in) if (reset_spi_n_in == 0) Y_CROP_START <= 260;
+always_ff @(posedge clock_spi_in) if (reset_spi_n_in == 0) Y_CROP_END   <= 460;
+
+logic[10:0] x_size, x_size_m1;     // Todo: Make SPI register
+logic[9:0] y_size, y_size_m1;      // Todo: Make SPI register
+
+always_comb x_size = X_CROP_END - X_CROP_START - 2;
+always_comb y_size = Y_CROP_END - Y_CROP_START - 2;
+always_comb x_size_m1 = x_size - 1;
+always_comb y_size_m1 = y_size - 1;
 
 // Registers to hold the current command operations
 logic capture_flag;
 logic capture_in_progress_flag;
 
 // TODO make capture_size dynamic once we have adjustable resolution
-logic [15:0] capture_size = (X_CROP_END - X_CROP_START) * (Y_CROP_END - Y_CROP_START);
+logic [15:0] capture_size = x_size * y_size;
 logic [15:0] bytes_read;
 
 logic [15:0] bytes_remaining;
@@ -107,7 +129,11 @@ always_ff @(posedge clock_spi_in) begin
 
                 // Capture
                 'h20: begin
-                    if (capture_in_progress_flag == 0) begin
+                    if (jpeg_sel & jpeg_reset) begin
+                        capture_flag <= 0;
+                        bytes_read <= 0;
+                    end
+                    else if (capture_in_progress_flag == 0) begin
                         capture_flag <= 1;
                         bytes_read <= 0;
                     end
@@ -116,6 +142,7 @@ always_ff @(posedge clock_spi_in) begin
                 // Bytes available
                 'h21: begin
                     case (operand_count_in)
+                        2: response_out <= bytes_remaining[19:16];
                         0: response_out <= bytes_remaining[15:8];
                         1: response_out <= bytes_remaining[7:0];
                     endcase
@@ -138,7 +165,7 @@ always_ff @(posedge clock_spi_in) begin
                     if (operand_valid_in) begin
                         jpeg_sel <= operand_in[0];
                         jpeg_out_size_clear <= operand_in[1];
-                        jpeg_reset <= operand_in[3];
+                        jpeg_reset <= operand_in[2];
                     end
                 end
                 // JPEG size
@@ -200,6 +227,7 @@ end
 
 `ifdef RADIANT
 
+`ifndef NO_MIPI_IP_SIM
 logic mipi_byte_clock;
 logic mipi_byte_reset_n;
 
@@ -283,6 +311,7 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .lv_o(byte_to_pixel_line_valid),
     .pd_o(byte_to_pixel_data)
 );
+`endif //NO_MIPI_IP_SIM
 
 logic [9:0] cropped_data;
 logic cropped_line_valid;
@@ -368,7 +397,7 @@ logic                   jpeg_in_hold;
 logic [2:0]             jpeg_in_cnt;
 
 jisp #(
-    .SENSOR_X_SIZE      (720),
+    .SENSOR_X_SIZE      (1280),
     .SENSOR_Y_SIZE      (720)
 ) jisp (
     .rgb24              ({debayered_blue_data[9:2], debayered_green_data[9:2], debayered_red_data[9:2]}),
@@ -382,8 +411,8 @@ jisp #(
     .di_hold            (jpeg_in_hold),
     .di_cnt             (jpeg_in_cnt),
 
-    .x_size_m1          (X_CROP_END - X_CROP_START),
-    .y_size_m1          (Y_CROP_END - Y_CROP_START),
+    .x_size_m1          (x_size_m1),
+    .y_size_m1          (y_size_m1),
 
     .clk                (clock_pixel_in),
     .resetn             (reset_pixel_n_in & jpeg_reset_n)
@@ -396,7 +425,7 @@ logic                   jpeg_out_valid;
 
 
 jenc #(
-    .SENSOR_X_SIZE      (720),
+    .SENSOR_X_SIZE      (1280),
     .SENSOR_Y_SIZE      (720)
 ) jenc (
     .di                 (jpeg_in_data),
@@ -413,11 +442,12 @@ jenc #(
     .size               (jpeg_out_size),
     .size_clear         (jpeg_out_size_clear),
 
-    .x_size_m1          (X_CROP_END - X_CROP_START),
-    .y_size_m1          (Y_CROP_END - Y_CROP_START),
+    .x_size_m1          (x_size_m1),
+    .y_size_m1          (y_size_m1),
 
     .clk                (clock_pixel_in),
-    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+    .resetn             (reset_pixel_n_in & jpeg_reset_n),
+    .*
 );
 
 
