@@ -24,6 +24,8 @@ services:
       ]
     environment:
       - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+    ports:
+      - "8000"
     volumes:
       - ~/.gitconfig:/etc/gitconfig
       - ~/.ssh/known_hosts:/home/ubuntu/.ssh/known_hosts
