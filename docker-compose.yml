@@ -3,15 +3,13 @@ version: "3.9"
 services:
 
   devcontainer:
+    platform: linux/amd64
     build:
       context: .
       target: devcontainer
-      args:
-        UID: 4100
-        GID: 1102
     volumes:
       - ..:/workspaces
-      - command-history-volume:/home/user/.history/
+      - command-history-volume:/home/ubuntu/.history/
 
   dev:
     extends: devcontainer
@@ -22,13 +20,13 @@ services:
       [
         "sh",
         "-c",
-        "sudo chown user $$SSH_AUTH_SOCK && mkdir -p /workspaces/frame-codebase/.git/hooks/ && zsh"
+        "sudo chown ubuntu $$SSH_AUTH_SOCK && mkdir -p /workspaces/frame-codebase/.git/hooks/ && zsh"
       ]
     environment:
       - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
     volumes:
       - ~/.gitconfig:/etc/gitconfig
-      - ~/.ssh/known_hosts:/home/user/.ssh/known_hosts
+      - ~/.ssh/known_hosts:/home/ubuntu/.ssh/known_hosts
       - ${SSH_AGENT_AUTH_SOCK:-/run/host-services/ssh-auth.sock}:/run/host-services/ssh-auth.sock
     profiles:
       - dev

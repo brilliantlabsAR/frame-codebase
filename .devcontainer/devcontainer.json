@@ -3,7 +3,7 @@
     "dockerComposeFile": "../docker-compose.yml",
     "service": "devcontainer",
     "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}/",
-    "remoteUser": "user",
+    "remoteUser": "ubuntu",
     "overrideCommand": true,
     "postStartCommand": "mkdir -p /workspaces/${localWorkspaceFolderBasename}/.git/hooks/ && cp --update /opt/build/git/* /workspaces/${localWorkspaceFolderBasename}/.git/hooks/",
     "customizations": {
@@ -64,7 +64,6 @@
                     "**/.dvcignore": true,
                     "**/.env": true,
                     "**/.pre-commit-config.yaml": true,
-                    "**/.devcontainer": true,
                     "**/.cruft.json": true,
                     "**/.mypy_cache": true,
                     "**/.pytest_cache": true,

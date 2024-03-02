@@ -11,14 +11,17 @@ RUN rm /etc/apt/apt.conf.d/docker-clean
 
 # Create a non-root user and switch to it [1].
 # [1] https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user
-ARG UID=4100
-ARG GID=1102
-RUN groupadd --gid $GID user && \
-    useradd --create-home --gid $GID --uid $UID user --no-log-init && \
-    echo 'user ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/user && chmod 0440 /etc/sudoers.d/user \
-    && chown user /opt/
+ARG USERNAME=ubuntu
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+RUN groupmod --gid $USER_GID $USERNAME \
+    && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && chown -R $USER_UID:$USER_GID /home/$USERNAME \
+    && chown $USERNAME /opt/
 
-USER user
+USER $USERNAME
 
 # Create and activate a virtual environment.
 ENV VIRTUAL_ENV /opt/frame-codebase-env
@@ -50,10 +53,10 @@ RUN --mount=type=cache,target=/var/cache/apt/ \
     apt-get update && \
     apt-get install --no-install-recommends --yes build-essential
 
-USER user
+USER $USERNAME
 
 # Install Python Tools.
-COPY --chown=user:user requirements.txt /workspaces/frame-codebase/
+COPY --chown=$USERNAME:$USERNAME requirements.txt /workspaces/frame-codebase/
 RUN --mount=type=cache,target=/root/.cache/pip/ \
     uv pip install --no-cache-dir --requirement requirements.txt
 
@@ -71,13 +74,12 @@ RUN --mount=type=cache,target=/var/cache/apt/ \
     apt-get update && \
     apt-get install --no-install-recommends --yes curl git gnupg ssh sudo vim zsh awscli gh less gcc-arm-none-eabi binutils-arm-none-eabi libusb-1.0-0 && \
     sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- "--yes" && \
-    usermod --shell /usr/bin/zsh user && \
-    echo 'user ALL=(root) NOPASSWD:ALL' > /etc/sudoers.d/user && chmod 0440 /etc/sudoers.d/user
+    usermod --shell /usr/bin/zsh $USERNAME
 
-USER user
+USER $USERNAME
 
 # Persist output generated during docker build so that we can restore it in the dev container.
-COPY --chown=user:user .pre-commit-config.yaml /workspaces/frame-codebase/
+COPY --chown=$USERNAME:$USERNAME .pre-commit-config.yaml /workspaces/frame-codebase/
 RUN git init && pre-commit install --install-hooks && \
     mkdir -p /opt/build/git/ && cp .git/hooks/commit-msg .git/hooks/pre-commit /opt/build/git/
 
@@ -95,7 +97,7 @@ RUN git init && pre-commit install --install-hooks && \
 
 FROM dev as devcontainer
 
-USER user
+USER $USERNAME
 
 # Configure the non-root user's shell.
 ENV ANTIDOTE_VERSION 1.8.6
@@ -114,3 +116,5 @@ RUN git clone --branch v$ANTIDOTE_VERSION --depth=1 https://github.com/mattmc3/a
     echo 'mkdir -p ~/.config && touch ~/.config/starship.toml' >> ~/.zshrc && \
     mkdir ~/.history/ && \
     zsh -c 'source ~/.zshrc'
+
+USER $USERNAME
