@@ -40,7 +40,9 @@ async def capture_and_download(b: Bluetooth, height, width):
 
     image_buffer = b""
 
-    await b.send_lua("while true do local i = frame.camera.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end")
+    await b.send_lua(
+        "while true do local i = frame.camera.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end"
+    )
 
     while len(image_buffer) < expected_length:
         await asyncio.sleep(0.001)
