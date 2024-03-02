@@ -59,6 +59,7 @@ static int lua_sleep(lua_State *L)
     {
         const char *lua_error = lua_tostring(L, -1);
         luaL_error(L, "%s", lua_error);
+        lua_pop(L, -1);
     }
 
     // Add the current time to the wait time
@@ -72,6 +73,7 @@ static int lua_sleep(lua_State *L)
         {
             const char *lua_error = lua_tostring(L, -1);
             luaL_error(L, "%s", lua_error);
+            lua_pop(L, -1);
         }
 
         lua_Number current_time = lua_tonumber(L, 2);

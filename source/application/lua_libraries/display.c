@@ -323,6 +323,7 @@ static int lua_display_show(lua_State *L)
     {
         const char *lua_error = lua_tostring(L, -1);
         lua_writestring(lua_error, strlen(lua_error));
+        lua_pop(L, -1);
     }
 
     spi_write(FPGA, &clear_command, 1, false);
@@ -333,6 +334,7 @@ static int lua_display_show(lua_State *L)
     {
         const char *lua_error = lua_tostring(L, -1);
         lua_writestring(lua_error, strlen(lua_error));
+        lua_pop(L, -1);
     }
 
     return 0;

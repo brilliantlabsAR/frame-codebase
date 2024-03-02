@@ -24,30 +24,20 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "lua.h"
-#include "lauxlib.h"
-#include "spi.h"
 #include "error_logging.h"
 #include "i2c.h"
+#include "lauxlib.h"
+#include "lua.h"
 #include "nrf_gpio.h"
+#include "nrfx_systick.h"
 #include "pinout.h"
+#include "spi.h"
 
 static struct current_camera_settings
 {
     uint16_t exposure;
     uint8_t sensor_gain;
 } current;
-
-static void wait_for_frame(lua_State *L)
-{
-    int status = luaL_dostring(L, "frame.sleep(0.035)");
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-    }
-    lua_pop(L, -1);
-}
 
 static int lua_camera_capture(lua_State *L)
 {
@@ -172,7 +162,14 @@ static int lua_camera_auto(lua_State *L)
         check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
         check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
 
-        wait_for_frame(L);
+        int status = luaL_dostring(L, "frame.sleep(0.035)");
+
+        if (status != LUA_OK)
+        {
+            const char *lua_error = lua_tostring(L, -1);
+            lua_writestring(lua_error, strlen(lua_error));
+            lua_pop(L, -1);
+        }
     }
 
     return 0;
@@ -331,7 +328,7 @@ void lua_open_camera_library(lua_State *L)
 {
     // Wake up camera in case it was asleep
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
-    wait_for_frame(L);
+    nrfx_systick_delay_ms(10);
 
     i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
     i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
