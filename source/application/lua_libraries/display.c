@@ -23,11 +23,12 @@
  */
 
 #include <math.h>
+#include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
+#include "nrfx_systick.h"
 #include "spi.h"
 #include "system_font.h"
-#include "error_logging.h"
 
 static uint32_t utf8_decode(const char *string, size_t *index)
 {
@@ -315,27 +316,13 @@ static int lua_display_show(lua_State *L)
     uint8_t show_command = 0x14;
     uint8_t clear_command = 0x10;
 
+    // TODO remove blocking once we have a better solution
+
     spi_write(FPGA, &show_command, 1, false);
-
-    int status = luaL_dostring(L, "frame.sleep(0.02)");
-
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-        lua_pop(L, -1);
-    }
+    nrfx_systick_delay_ms(25);
 
     spi_write(FPGA, &clear_command, 1, false);
-
-    status = luaL_dostring(L, "frame.sleep(0.02)");
-
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-        lua_pop(L, -1);
-    }
+    nrfx_systick_delay_ms(20);
 
     return 0;
 }

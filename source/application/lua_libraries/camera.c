@@ -162,14 +162,8 @@ static int lua_camera_auto(lua_State *L)
         check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
         check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
 
-        int status = luaL_dostring(L, "frame.sleep(0.035)");
-
-        if (status != LUA_OK)
-        {
-            const char *lua_error = lua_tostring(L, -1);
-            lua_writestring(lua_error, strlen(lua_error));
-            lua_pop(L, -1);
-        }
+        // TODO remove blocking once we have a better solution
+        nrfx_systick_delay_ms(33);
     }
 
     return 0;
