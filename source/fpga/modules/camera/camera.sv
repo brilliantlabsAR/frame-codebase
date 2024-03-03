@@ -142,7 +142,6 @@ always_ff @(posedge clock_spi_in) begin
                 // Bytes available
                 'h21: begin
                     case (operand_count_in)
-                        2: response_out <= bytes_remaining[19:16];
                         0: response_out <= bytes_remaining[15:8];
                         1: response_out <= bytes_remaining[7:0];
                     endcase
