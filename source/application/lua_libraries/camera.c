@@ -111,60 +111,47 @@ static int lua_camera_auto(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    luaL_checkinteger(L, 1);
-    lua_Integer loop_count = lua_tointeger(L, 1);
+    uint8_t address = 0x25;
+    spi_write(FPGA, &address, 1, true);
 
-    if (loop_count < 1 || loop_count > 25)
+    volatile uint8_t brightness_data[3];
+    spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
+
+    double average_brightness = (brightness_data[0] +
+                                 brightness_data[1] +
+                                 brightness_data[2]) /
+                                3.0;
+
+    double error = 170.0 - average_brightness;
+
+    current.exposure = (uint16_t)(current.exposure + (error * 1.5));
+    current.sensor_gain = (uint8_t)(current.sensor_gain + (error * 0.3));
+
+    if (current.exposure > 800)
     {
-        return luaL_error(L, "loop count must be between 1 and 25");
+        current.exposure = 800;
     }
 
-    for (size_t i = 0; i < loop_count; i++)
+    if (current.exposure < 20)
     {
-        uint8_t address = 0x25;
-        spi_write(FPGA, &address, 1, true);
-
-        volatile uint8_t brightness_data[3];
-        spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
-
-        double average_brightness = (brightness_data[0] +
-                                     brightness_data[1] +
-                                     brightness_data[2]) /
-                                    3.0;
-
-        double error = 170.0 - average_brightness;
-
-        current.exposure = (uint16_t)(current.exposure + (error * 1.5));
-        current.sensor_gain = (uint8_t)(current.sensor_gain + (error * 0.3));
-
-        if (current.exposure > 800)
-        {
-            current.exposure = 800;
-        }
-
-        if (current.exposure < 20)
-        {
-            current.exposure = 20;
-        }
-
-        if (current.sensor_gain > 255)
-        {
-            current.sensor_gain = 255;
-        }
-
-        if (current.sensor_gain < 0)
-        {
-            current.sensor_gain = 0;
-        }
-
-        check_error(i2c_write(CAMERA, 0x3500, 0x03, current.exposure >> 12).fail);
-        check_error(i2c_write(CAMERA, 0x3501, 0xFF, current.exposure >> 4).fail);
-        check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
-        check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
-
-        // TODO remove blocking once we have a better solution
-        nrfx_systick_delay_ms(33);
+        current.exposure = 20;
     }
+
+    if (current.sensor_gain > 255)
+    {
+        current.sensor_gain = 255;
+    }
+
+    if (current.sensor_gain < 0)
+    {
+        current.sensor_gain = 0;
+    }
+
+    // TODO group hold command
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, current.exposure >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, current.exposure >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
+    check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
 
     return 0;
 }
