@@ -118,8 +118,6 @@ void PDM_IRQHandler(void)
 
 static int lua_microphone_record(lua_State *L)
 {
-    nrfy_pdm_disable(NRF_PDM0);
-
     luaL_checknumber(L, 1);
     lua_Number seconds = lua_tonumber(L, 1);
     if (seconds <= 0)
@@ -130,7 +128,6 @@ static int lua_microphone_record(lua_State *L)
     luaL_checkinteger(L, 2);
     lua_Integer sample_rate = lua_tointeger(L, 2);
 
-    // Set the PDM clock and ratio
     switch (sample_rate)
     {
     case 20000:
@@ -157,7 +154,6 @@ static int lua_microphone_record(lua_State *L)
         break;
     }
 
-    // Set the moving average window
     switch (sample_rate)
     {
     case 20000:
@@ -187,18 +183,16 @@ static int lua_microphone_record(lua_State *L)
         }
     }
 
-    // TODO do we want to add a gain control?
-
     // Figure out total samples, and round up to nearest chunksize
     fifo.remaining_samples =
         (size_t)ceil(seconds * sample_rate / fifo.chunk_size) *
         fifo.chunk_size *
         moving_average.window_size;
 
-    // Reset head and tail
     fifo.head = 0;
     fifo.tail = 0;
 
+    nrfy_pdm_disable(NRF_PDM0);
     nrfy_pdm_periph_configure(NRF_PDM0, &config);
 
     nrfy_pdm_buffer_t buffer = {
@@ -209,6 +203,12 @@ static int lua_microphone_record(lua_State *L)
     nrfy_pdm_enable(NRF_PDM0);
     nrfy_pdm_start(NRF_PDM0, NULL);
 
+    return 0;
+}
+
+static int lua_microphone_stop(lua_State *L)
+{
+    nrfy_pdm_abort(NRF_PDM0, NULL);
     return 0;
 }
 
@@ -338,6 +338,9 @@ void lua_open_microphone_library(lua_State *L)
 
     lua_pushcfunction(L, lua_microphone_record);
     lua_setfield(L, -2, "record");
+
+    lua_pushcfunction(L, lua_microphone_stop);
+    lua_setfield(L, -2, "stop");
 
     lua_pushcfunction(L, lua_microphone_read);
     lua_setfield(L, -2, "read");
