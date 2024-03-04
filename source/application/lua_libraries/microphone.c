@@ -34,7 +34,7 @@
 #include <haly/nrfy_pdm.h>
 #include <haly/nrfy_gpio.h>
 
-static lua_Integer bit_depth = 16;
+static lua_Integer bit_depth = 8;
 
 // Main FIFO where PDM data is written to
 #define FIFO_TOTAL_SIZE 80000
@@ -118,15 +118,35 @@ void PDM_IRQHandler(void)
 
 static int lua_microphone_record(lua_State *L)
 {
-    luaL_checknumber(L, 1);
-    lua_Number seconds = lua_tonumber(L, 1);
+    lua_Number seconds = 9999.0;
+    lua_Integer sample_rate = 8000;
+    bit_depth = 8;
+
+    if (lua_istable(L, 1))
+    {
+        if (lua_getfield(L, 1, "seconds") != LUA_TNIL)
+        {
+            seconds = luaL_checknumber(L, -1);
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "sample_rate") != LUA_TNIL)
+        {
+            sample_rate = luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "bit_depth") != LUA_TNIL)
+        {
+            bit_depth = luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+        }
+    }
+
     if (seconds <= 0)
     {
         luaL_error(L, "seconds must be greater than 0");
     }
-
-    luaL_checkinteger(L, 2);
-    lua_Integer sample_rate = lua_tointeger(L, 2);
 
     switch (sample_rate)
     {
@@ -173,14 +193,9 @@ static int lua_microphone_record(lua_State *L)
         break;
     }
 
-    if (lua_gettop(L) > 2)
+    if (bit_depth != 16 && bit_depth != 8 && bit_depth != 4)
     {
-        luaL_checkinteger(L, 3);
-        bit_depth = lua_tointeger(L, 3);
-        if (bit_depth != 16 && bit_depth != 8 && bit_depth != 4)
-        {
-            luaL_error(L, "invalid bit depth");
-        }
+        luaL_error(L, "invalid bit depth");
     }
 
     // Figure out total samples, and round up to nearest chunksize
@@ -250,8 +265,8 @@ static int16_t averaged_sample()
 
 static int lua_microphone_read(lua_State *L)
 {
-    luaL_checkinteger(L, 1);
-    lua_Integer bytes = lua_tointeger(L, 1);
+    lua_Integer bytes = luaL_checkinteger(L, 1);
+
     if (bytes > 512)
     {
         luaL_error(L, "too many bytes requested");
