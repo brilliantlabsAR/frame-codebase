@@ -14,13 +14,18 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 [![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/with-context-engine/frame-codebase) 
 
-1. Open this repository in a Dev Container (you will need Docker installed) and initialize any submodules:
+1. Open this repository in a Dev Container (you will need Docker installed) and initialize any submodules by running the below from `./`:
 
     ```sh
     git submodule update --init --recursive
     ```
 
-2. Run a `Build` task to create the firmware `.hex` file necessary for the following steps. Access this by pressing `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `Tasks: Run Task`.
+2. Run the following from `./`: 
+
+    ```sh
+    make release
+    ```
+
 
 
 ### Debugging

@@ -22,6 +22,7 @@
                 "ms-python.debugpy",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
+                "ms-vscode.makefile-tools",
                 "ms-vscode-remote.remote-containers",
                 "oderwat.indent-rainbow",
                 "yzhang.markdown-all-in-one"
