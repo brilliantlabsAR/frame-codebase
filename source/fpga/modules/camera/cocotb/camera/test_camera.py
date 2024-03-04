@@ -38,9 +38,54 @@ async def show_image(*img_files, t=5000):
     cv2.destroyAllWindows()
 
 
-class Tester():
-    def __init__(self, dut, img_file='baboon.bmp'):
+class SPITransactor():
+    def __init__(self, dut):
+        self.regs = [0] * 256
         self.dut = dut
+
+
+    async def spi_write(self, op_code, *operands):
+        if len(operands) == 0:
+        	operands = [0]
+        await RisingEdge(self.dut.clock_spi_in)
+        for i, operand in enumerate(operands):
+            self.dut.operand_valid_in.value = 1
+            self.dut.op_code_valid_in.value = 1
+            self.dut.op_code_in.value = op_code + i
+            self.dut.operand_in.value = operand
+            self.regs[op_code + i] = operand    # store in memory
+
+            await RisingEdge(self.dut.clock_spi_in)
+            self.dut.operand_valid_in.value = 0
+            self.dut.op_code_valid_in.value = 0
+
+
+    async def spi_read(self, op_code, n=1):
+        await RisingEdge(self.dut.clock_spi_in)
+        for i in range(n):
+            self.dut.operand_valid_in.value = 1
+            self.dut.op_code_valid_in.value = 1
+            self.dut.operand_count_in.value = i
+            self.dut.op_code_in.value = op_code
+
+            await RisingEdge(self.dut.clock_spi_in)
+            self.dut.operand_valid_in.value = 0
+            self.dut.op_code_valid_in.value = 0
+            
+            while self.dut.response_valid_out.value == 0:
+                await RisingEdge(self.dut.clock_spi_in)
+            self.regs[op_code + i] = self.dut.response_out.value.integer
+        return self.regs[op_code:op_code + n]
+
+
+
+class Tester(SPITransactor):
+    def __init__(self, dut, img_file='baboon.bmp'):
+        super().__init__(dut)
+        self.dut = dut
+        self.jpeg_sel = 0
+        
+        # Always Read RGB image or bayer
         self.img_bgr = cv2.imread(img_file)
 
         self.img_bgr = np.vstack((self.img_bgr, self.img_bgr))
@@ -68,7 +113,7 @@ class Tester():
     async def initialize_encoder(self):
         await RisingEdge(self.dut.clock_spi_in)
 
-        #configure image size
+        #configure image size (FIXME)
         self.dut.X_CROP_START.value = 4
         self.dut.X_CROP_END.value =   4 + 2 + self.x
         self.dut.Y_CROP_START.value = 4
@@ -76,39 +121,14 @@ class Tester():
 
     	# enable & reset encoder
         self.jpeg_sel = 1
-        self.dut.operand_valid_in.value = 1
-        self.dut.op_code_valid_in.value = 1
-        self.dut.op_code_in.value = 0x30
-        self.dut.operand_in.value = 0x5
-
-        await RisingEdge(self.dut.clock_spi_in)
-        self.dut.operand_valid_in.value = 0
-        self.dut.op_code_valid_in.value = 0
-
-        while self.dut.jpeg_reset_n.value:
-            await RisingEdge(self.dut.clock_spi_in)
+        await self.spi_write(0x30, 0x5)
+        # wait 16 cycles
+        await ClockCycles(self.dut.clock_spi_in, 16)
+        await self.spi_write(0x30, 0x1)
+        await ClockCycles(self.dut.clock_spi_in, 16)
         
-        self.dut.operand_valid_in.value = 1
-        self.dut.op_code_valid_in.value = 1
-        self.dut.op_code_in.value = 0x30
-        self.dut.operand_in.value = 0x1
-
-        await RisingEdge(self.dut.clock_spi_in)
-        self.dut.operand_valid_in.value = 0
-        self.dut.op_code_valid_in.value = 0
-
-        while self.dut.jpeg_reset_n.value==0:
-            await RisingEdge(self.dut.clock_spi_in)
-
-
         # Capture flag
-        self.dut.operand_valid_in.value = 1
-        self.dut.op_code_valid_in.value = 1
-        self.dut.op_code_in.value = 0x20
-
-        await RisingEdge(self.dut.clock_spi_in)
-        self.dut.operand_valid_in.value = 0
-        self.dut.op_code_valid_in.value = 0
+        await self.spi_write(0x20)
     
     
 
@@ -139,6 +159,12 @@ class Tester():
 
         bytes = self.y * self.x
         bgr_out = []
+
+#HERE
+#        for i in range(bytes):
+#            await self.spi_read(0x22)
+#            self.ecs.append(self.regs[0x22])
+
         for self.dut.bytes_read.value in range(bytes):
             await RisingEdge(self.dut.clock_spi_in)
             await RisingEdge(self.dut.clock_spi_in)
@@ -154,57 +180,21 @@ class Tester():
     async def read_jpeg_buffer(self):
         # poll size
         while True:
-            bytes = 0
-            for i in range(2):
-                self.dut.operand_valid_in.value = 1
-                self.dut.op_code_valid_in.value = 1
-                self.dut.op_code_in.value = 0x31
-                self.dut.operand_count_in.value = i
-                await RisingEdge(self.dut.clock_spi_in)
-                self.dut.operand_valid_in.value = 0
-                self.dut.op_code_valid_in.value = 0
-
-                while self.dut.response_valid_out.value ==0:
-                    await RisingEdge(self.dut.clock_spi_in)
-                bytes += self.dut.response_out.value.integer*(2**(i*8))
+            await self.spi_read(0x31, 3)
+            bytes = sum([v*(2**(i*8)) for i,v in enumerate(self.regs[0x31:0x31+3])])
             if bytes != 0:
                 break
 
-        # RWC
-        #self.dut.jpeg_out_size_clear.value = 1
-        self.dut.operand_valid_in.value = 1
-        self.dut.op_code_valid_in.value = 1
-        self.dut.op_code_in.value = 0x30
-        self.dut.operand_in.value = 0x3 #jpeg_out_size_clear
-        await RisingEdge(self.dut.clock_spi_in)
-        self.dut.operand_valid_in.value = 0
-        self.dut.op_code_valid_in.value = 0
+        # jpeg_out_size_clear.value = 1
+        await self.spi_write(0x30, 0x3)
 
-        await RisingEdge(self.dut.clock_spi_in)
         self.ecs = []
         for i in range(bytes):
-            self.dut.operand_valid_in.value = 1
-            self.dut.op_code_valid_in.value = 1
-            self.dut.op_code_in.value = 0x22
+            await self.spi_read(0x22)
+            self.ecs.append(self.regs[0x22])
 
-            await RisingEdge(self.dut.clock_spi_in)
-            self.dut.operand_valid_in.value = 0
-            self.dut.op_code_valid_in.value = 0
-            
-            while self.dut.response_valid_out.value ==0:
-                await RisingEdge(self.dut.clock_spi_in)
-            self.ecs.append(self.dut.response_out.value.integer)
-
-
-        # RWC
-        #self.dut.jpeg_out_size_clear.value = 0 + reset
-        self.dut.operand_valid_in.value = 1
-        self.dut.op_code_valid_in.value = 1
-        self.dut.op_code_in.value = 0x30
-        self.dut.operand_in.value = 0x4
-        await RisingEdge(self.dut.clock_spi_in)
-        self.dut.operand_valid_in.value = 0
-        self.dut.op_code_valid_in.value = 0
+        # jpeg_out_size_clear.value = 0 + reset
+        await self.spi_write(0x30, 0x4)
 
 
     async def read_image_buffer(self):
