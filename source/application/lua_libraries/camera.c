@@ -67,9 +67,8 @@ static uint16_t get_bytes_available(void)
 
 static int lua_camera_read(lua_State *L)
 {
-    luaL_checkinteger(L, 1);
+    lua_Integer bytes_requested = luaL_checkinteger(L, 1);
 
-    lua_Integer bytes_requested = lua_tointeger(L, 1);
     uint16_t bytes_available = get_bytes_available();
 
     if (bytes_requested <= 0)
@@ -202,9 +201,7 @@ static int lua_camera_set_exposure(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    luaL_checkinteger(L, 1);
-
-    lua_Integer exposure = lua_tointeger(L, 1);
+    lua_Integer exposure = luaL_checkinteger(L, 1);
 
     if (exposure < 20 || exposure > 0x3FFF)
     {
@@ -225,9 +222,7 @@ static int lua_camera_set_gain(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    luaL_checkinteger(L, 1);
-
-    lua_Integer sensor_gain = lua_tointeger(L, 1);
+    lua_Integer sensor_gain = luaL_checkinteger(L, 1);
 
     if (sensor_gain > 0xFF)
     {
@@ -246,13 +241,9 @@ static int lua_camera_set_white_balance(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    luaL_checkinteger(L, 1);
-    luaL_checkinteger(L, 2);
-    luaL_checkinteger(L, 3);
-
-    lua_Integer red_gain = lua_tointeger(L, 1);
-    lua_Integer green_gain = lua_tointeger(L, 2);
-    lua_Integer blue_gain = lua_tointeger(L, 3);
+    lua_Integer red_gain = luaL_checkinteger(L, 1);
+    lua_Integer green_gain = luaL_checkinteger(L, 2);
+    lua_Integer blue_gain = luaL_checkinteger(L, 3);
 
     if (red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
     {
@@ -276,11 +267,8 @@ static int lua_camera_set_register(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    luaL_checkinteger(L, 1);
-    luaL_checkinteger(L, 2);
-
-    lua_Integer address = lua_tointeger(L, 1);
-    lua_Integer value = lua_tointeger(L, 2);
+    lua_Integer address = luaL_checkinteger(L, 1);
+    lua_Integer value = luaL_checkinteger(L, 2);
 
     if (address < 0 || address > 0xFFFF)
     {

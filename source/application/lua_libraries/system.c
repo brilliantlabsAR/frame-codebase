@@ -49,8 +49,7 @@ static int lua_sleep(lua_State *L)
         return 0;
     }
 
-    luaL_checknumber(L, 1);
-    lua_Number seconds = lua_tonumber(L, 1);
+    lua_Number seconds = luaL_checknumber(L, 1);
     lua_pop(L, 1);
 
     // Get the current time
@@ -150,18 +149,21 @@ static int lua_battery_level(lua_State *L)
 
 static int lua_fpga_read(lua_State *L)
 {
-    luaL_checkinteger(L, 1);
-    uint8_t address = (uint8_t)lua_tointeger(L, 1);
+    lua_Integer address = luaL_checkinteger(L, 1);
+    if (address < 0x00 || address > 0xFF)
+    {
+        luaL_error(L, "address must be between 0x00 and 0xFF");
+    }
 
-    luaL_checkinteger(L, 2);
-    lua_Integer length = lua_tointeger(L, 2);
+    lua_Integer length = luaL_checkinteger(L, 2);
+
     uint8_t *data = malloc(length);
     if (data == NULL)
     {
         luaL_error(L, "not enough memory");
     }
 
-    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)&address, 1, true);
     spi_read(FPGA, data, length, false);
     lua_pushlstring(L, (char *)data, length);
     free(data);
@@ -171,14 +173,16 @@ static int lua_fpga_read(lua_State *L)
 
 static int lua_fpga_write(lua_State *L)
 {
-    luaL_checkinteger(L, 1);
-    uint8_t address = (uint8_t)lua_tointeger(L, 1);
+    lua_Integer address = luaL_checkinteger(L, 1);
+    if (address < 0x00 || address > 0xFF)
+    {
+        luaL_error(L, "address must be between 0x00 and 0xFF");
+    }
 
-    luaL_checkstring(L, 2);
     size_t length;
-    const char *data = lua_tolstring(L, 2, &length);
+    const char *data = luaL_checklstring(L, 2, &length);
 
-    spi_write(FPGA, &address, 1, true);
+    spi_write(FPGA, (uint8_t *)&address, 1, true);
     spi_write(FPGA, (uint8_t *)data, length, false);
 
     return 0;
