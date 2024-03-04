@@ -24,22 +24,19 @@ def receive_data(data):
 async def capture_and_download(b: Bluetooth, height, width):
     global image_buffer
     global expected_length
-
-    print(f"Capturing image")
-    await b.send_lua("frame.camera.auto(25); print(nil)", await_print=True)
-    await b.send_lua("resp = frame.camera.get_brightness()")
-    print(
-        await b.send_lua(
-            "print(tostring(resp['r'])..'\t'..tostring(resp['g'])..'\t'..tostring(resp['b']))",
-            await_print=True,
-        )
-    )
-
-    await b.send_lua(f"frame.camera.capture()")
-    await asyncio.sleep(0.5)
-
     image_buffer = b""
 
+    print("Auto exposing")
+    await b.send_lua(
+        "for i=1,25 do frame.camera.auto(); frame.sleep(0.033) end print(nil)",
+        await_print=True,
+    )
+
+    print("Capturing image")
+    await b.send_lua("frame.camera.capture()")
+    await asyncio.sleep(0.5)
+
+    print("Downloading image")
     await b.send_lua(
         "while true do local i = frame.camera.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end"
     )

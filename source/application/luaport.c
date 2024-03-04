@@ -109,8 +109,15 @@ void run_lua(bool factory_reset)
     if (status != LUA_OK)
     {
         const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-        lua_pop(L, 1);
+
+        // Don't print anything if file simply doesn't exist. Only real errors
+        if (strcmp(lua_error,
+                   "[string \"require('main')\"]:1: cannot open file: main.lua"))
+        {
+            lua_writestring(lua_error, strlen(lua_error));
+        }
+
+        lua_pop(L, -1);
     }
 
     // Show splash screen
@@ -119,9 +126,8 @@ void run_lua(bool factory_reset)
 
     if (status != LUA_OK)
     {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-        lua_pop(L, 1);
+        lua_pop(L, -1);
+        error();
     }
 
     //  Run REPL
@@ -134,8 +140,6 @@ void run_lua(bool factory_reset)
             break;
         }
 
-        int status;
-
         if (repl_buffer[0] != 0)
         {
             NRFX_IRQ_DISABLE(SD_EVT_IRQn);
@@ -144,18 +148,22 @@ void run_lua(bool factory_reset)
             repl_buffer[0] = 0;
             NRFX_IRQ_ENABLE(SD_EVT_IRQn);
 
-            status = luaL_dostring(L, (char *)local_repl_buffer);
+            int status = luaL_dostring(L, (char *)local_repl_buffer);
+
+            if (status != LUA_OK)
+            {
+                const char *lua_error = lua_tostring(L, -1);
+                lua_writestring(lua_error, strlen(lua_error));
+                lua_pop(L, -1);
+            }
         }
         else
         {
-            status = luaL_dostring(L, "frame.sleep(0.01)");
-        }
-
-        if (status != LUA_OK)
-        {
-            const char *lua_error = lua_tostring(L, -1);
-            lua_writestring(lua_error, strlen(lua_error));
-            lua_pop(L, 1);
+            int status = luaL_dostring(L, "frame.sleep(0.01)");
+            if (status != LUA_OK)
+            {
+                lua_pop(L, -1);
+            }
         }
     }
 
