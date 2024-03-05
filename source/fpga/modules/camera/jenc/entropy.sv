@@ -214,7 +214,8 @@ for (int i=0; i<2; i++)
         
         // Code + Coeff
         if (out_valid2[i]) begin
-            logic [4:0] tmp_codecoeff_length = code_length2[i] + coeff_length2[i];
+            logic [4:0] tmp_codecoeff_length;
+            tmp_codecoeff_length = code_length2[i] + coeff_length2[i];
             codecoeff_length3[i] <= tmp_codecoeff_length;
             if (tmp_codecoeff_length > 26 | tmp_codecoeff_length < 1)
                 codecoeff3[i] <= 'hx;

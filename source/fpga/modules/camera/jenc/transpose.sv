@@ -2,12 +2,12 @@
 module transpose  #(
     parameter QW = 13 // 1st pass 13, 2nd pass 15
 )(
-    input logic[QW-1:0]     d[7:0],
+    input logic signed[QW-1:0] d[7:0],
     input logic[2:0]        d_cnt,
     input logic             d_valid,
     output logic            d_hold,
 
-    output logic[QW-1:0]    q[7:0],
+    output logic signed[QW-1:0] q[7:0],
     output logic[2:0]       q_cnt,
     output logic            q_valid,
     input logic             q_hold,
@@ -139,13 +139,13 @@ dp_ram_be  #(
 );
 `else
 ram_dp_w32_b4_d64 mem (
-    .wr_addr_i  ({q_cnt_0, wa}), 
+    .wr_addr_i  (wa), 
     .wr_data_i  (wd),
     .ben_i      (wbe),
     .wr_en_i    (we), 
     .wr_clk_en_i(we), 
 
-    .rd_addr_i  ({d_cnt,ra}), 
+    .rd_addr_i  (ra), 
     .rd_en_i    (re), 
     .rd_clk_en_i(re), 
     .rd_data_o  (rd), 

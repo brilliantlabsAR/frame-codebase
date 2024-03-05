@@ -2,7 +2,7 @@ module jenc #(
     parameter DW = 8,
     parameter QW = 11,
     parameter CW = QW + 4,
-    parameter SENSOR_X_SIZE    = 720,
+    parameter SENSOR_X_SIZE    = 1280,
     parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic signed[DW-1:0]    di[7:0], 

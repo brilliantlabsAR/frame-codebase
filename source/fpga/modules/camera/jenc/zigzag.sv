@@ -8,7 +8,7 @@ module zigzag  #(
     input logic             d_valid,
     output logic            d_hold,
 
-    output logic[QW-1:0]    q[1:0],
+    output logic signed[QW-1:0] q[1:0],
     output logic[4:0]       q_cnt,
     output logic            q_valid,
     input logic             q_hold,
@@ -142,13 +142,13 @@ dp_ram_be  #(
 );
 `else
 ram_dp_w32_b4_d64 mem (
-    .wr_addr_i  ({q_cnt_0, wa}), 
+    .wr_addr_i  (ra), 
     .wr_data_i  (wd),
     .ben_i      (wbe),
     .wr_en_i    (we), 
     .wr_clk_en_i(we), 
 
-    .rd_addr_i  ({d_cnt,ra}), 
+    .rd_addr_i  (ra), 
     .rd_en_i    (re), 
     .rd_clk_en_i(re), 
     .rd_data_o  (rd), 

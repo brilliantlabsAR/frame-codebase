@@ -9,7 +9,7 @@
  */
  module jisp #(
     parameter DW    = 8,
-    parameter SENSOR_X_SIZE    = 720,
+    parameter SENSOR_X_SIZE    = 1280,
     parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic unsigned[DW-1:0]  rgb24[2:0], // to do: make pktized interface
@@ -18,7 +18,7 @@
     input   logic               frame_valid_in,
     input   logic               line_valid_in,
 
-    output  logic [DW-1:0]      di[7:0], 
+    output  logic signed[DW-1:0] di[7:0], 
     output  logic               di_valid,
     input   logic               di_hold,
     output  logic [2:0]         di_cnt,

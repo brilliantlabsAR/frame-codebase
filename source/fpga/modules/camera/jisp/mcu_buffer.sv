@@ -9,7 +9,7 @@
  * Copyright (C) 2024 Robert Metchev
  */
  module mcu_buffer #(
-    parameter SENSOR_X_SIZE = 'd720,
+    parameter SENSOR_X_SIZE = 'd1280,
     parameter SENSOR_Y_SIZE = 'd720,
     parameter DW            = 8,
     parameter JPEG_BIAS     = 8'd128
@@ -21,7 +21,7 @@
     input   logic[$clog2(SENSOR_X_SIZE)-1:0]    yuvrgb_in_pixel_count,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0]    yuvrgb_in_line_count,
 
-    output  logic [DW-1:0]      di[7:0], 
+    output  logic signed[DW-1:0] di[7:0], 
     output  logic               di_valid,
     input   logic               di_hold,
     output  logic [2:0]         di_cnt,

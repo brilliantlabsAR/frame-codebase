@@ -381,7 +381,7 @@ reset_sync reset_sync_jpeg (
 );
 
 // JPEG ISP (RGB2YUV, 4:4:4 2 4:2:0, 16-line MCU buffer)
-logic [7:0]             jpeg_in_data[7:0]; 
+logic signed[7:0]       jpeg_in_data[7:0]; 
 logic                   jpeg_in_valid;
 logic                   jpeg_in_hold;
 logic [2:0]             jpeg_in_cnt;
@@ -469,4 +469,7 @@ image_buffer image_buffer (
 
 `endif
 
+`ifdef CAMERA_HAS_DUMPER_V
+`include "dumper.v"
+`endif
 endmodule

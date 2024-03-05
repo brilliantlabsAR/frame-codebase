@@ -6,7 +6,7 @@ module quant #(
     // AAN includes a factor of 3.923 on top of that, so +2 bits       
     parameter QW = DW - 4,
     parameter M_BITS = 13,         // Bit size of Multiplier coefficients
-    parameter SENSOR_X_SIZE    = 720,
+    parameter SENSOR_X_SIZE    = 1280,
     parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic signed[DW-1:0]    di[1:0], 
