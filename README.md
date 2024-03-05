@@ -12,34 +12,21 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 ## Getting started with nRF52 firmware development
 
-1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/with-context-engine/frame-codebase) 
 
-1. Ensure you have the [nRF Command Line Tools](https://www.nordicsemi.com/Products/Development-tools/nRF-Command-Line-Tools) installed.
-
-1. Ensure you have [nRF Util](https://www.nordicsemi.com/Products/Development-tools/nRF-Util) installed, along with the `device` and `nrf5sdk-tools` subcommands.
+1. Open this repository in a Dev Container (you will need Docker installed) and initialize any submodules by running the below from `./`:
 
     ```sh
-    ./nrfutil install device
-    ./nrfutil install nrf5sdk-tools
+    git submodule update --init --recursive
     ```
 
-1. Clone this repository and initialize any submodules:
-
-    ```sh
-    git clone https://github.com/brilliantlabsAR/frame-codebase.git
-    
-    cd frame-codebase
-
-    git submodule update --init
-    ```
-
-1. You should now be able to build and flash the project to an [nRF52840 DK](https://www.nordicsemi.com/Products/Development-hardware/nRF52840-DK) by calling the following commands from the `frame-codebase` folder.
+2. Run the following from `./`: 
 
     ```sh
     make release
-    make erase-jlink # Unlocks the flash protection if needed
-    make flash-jlink
     ```
+
+
 
 ### Debugging
 

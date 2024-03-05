@@ -14,6 +14,8 @@ RUN rm /etc/apt/apt.conf.d/docker-clean
 ARG USERNAME=ubuntu
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 RUN groupmod --gid $USER_GID $USERNAME \
     && usermod --uid $USER_UID --gid $USER_GID $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
@@ -83,13 +85,16 @@ COPY --chown=$USERNAME:$USERNAME .pre-commit-config.yaml /workspaces/frame-codeb
 RUN git init && pre-commit install --install-hooks && \
     mkdir -p /opt/build/git/ && cp .git/hooks/commit-msg .git/hooks/pre-commit /opt/build/git/
 
-# # Install nRF and Segger Command Line Tools (enable this when https://github.com/docker/for-mac/issues/900 is fixed.)
-# RUN sh -c "curl -fsSLOJ https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil" && \
-#     chmod +x nrfutil && \
-#     mv nrfutil /usr/local/bin/
+# Install nRF and Segger Command Line Tools.
+RUN sh -c "curl -fsSLOJ https://developer.nordicsemi.com/.pc-tools/nrfutil/x64-linux/nrfutil" && \
+    chmod +x nrfutil && \
+    sudo mv nrfutil /usr/local/bin/ && \
+    nrfutil install completion device nrf5sdk-tools
 
-# # Configure nRFutil.
-# RUN nrfutil install completion device nrf5sdk-tools
+
+# Install Other nRF Tools.
+RUN sh -c "curl -fsSLOJ https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-24-0/nrf-command-line-tools_10.24.0_amd64.deb" && \
+    sudo dpkg -i nrf-command-line-tools_10.24.0_amd64.deb
 
 ################################################################$
 # Shell Customization
