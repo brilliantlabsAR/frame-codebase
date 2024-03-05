@@ -1,5 +1,7 @@
 # defaults
-SIM ?= verilator
+#SIM ?= verilator
+SIM ?= modelsim
+export SIM := $(SIM)
 TOPLEVEL_LANG ?= verilog
 
 ifeq ($(SIM),verilator)
@@ -38,17 +40,31 @@ VERILOG_FILES += \
         ../../metering.sv \
         ../../camera.sv
  
-VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
-VERILOG_INCLUDE_DIRS += $(realpath ../../jisp  ../../jenc ../../jlib)
+VERILOG_FILES += \
+        ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
+        ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
+        ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
+        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
+        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v \
+        $(LATTICE_ROOT)/cae_library/synthesis/verilog/lifcl.v
 
+VERILOG_FILES += dumper.v
+
+VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
+VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib)
+
+EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer
+EXTRA_ARGS += +define+RADIANT
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+__JLIB_VH__       # ugly ugly
-        EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer
-        EXTRA_ARGS += +define+RADIANT
         EXTRA_ARGS += --trace --trace-structs
         EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY
 endif
-
+ifeq ($(SIM),modelsim)
+        EXTRA_ARGS += +define+CAMERA_HAS_DUMPER_V
+        EXTRA_ARGS += -suppress vlog-2244 
+        export COCOTB_RESOLVE_X=ZEROS       
+endif
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
 TOPLEVEL =  camera
 
@@ -59,6 +75,9 @@ export PYTHONPATH := $(realpath ../python_misc):$(realpath ../jcommon):$(realpat
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
+g gtkwave:
+	gtkwave dump.vcd -a 1.gtkw
 clean::
 	rm -rf __pycache__ results.xml obj_dir
 	rm -rf jpeg_out.jpg rgb_out.bmp ecs_out.bin
+	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf vish_stacktrace.vstf
