@@ -1,7 +1,6 @@
 module jenc_cdc (
     // input
     input logic         jpeg_reset,
-    input logic         jpeg_sel,
     output logic        jpeg_end,
 
     input logic[127:0]  jpeg_out_data,
@@ -44,7 +43,7 @@ if (reset_spi_n_in == 0 || jpeg_reset == 1) begin
     word_cnt <= 0;
 end else begin
     // CDC
-    jpeg_out_valid_cdc[1:0] <= {jpeg_out_valid_cdc[0], jpeg_sel & jpeg_out_valid};
+    jpeg_out_valid_cdc[1:0] <= {jpeg_out_valid_cdc[0],  jpeg_out_valid};
 
     // little precaution: if not done writing the 4th 32-bit word when a new 128-bit word is available,
     // wait until finished
@@ -72,6 +71,6 @@ always_comb jpeg_end = word_cnt==3 & jpeg_out_tlast;
 
 always_comb jpeg_buffer_write_data = word_cnt == 0 ? jpeg_out_data_rr[31:0] : jpeg_out_data_rr_127_32_cdc[32*word_cnt +: 32];
 always_comb jpeg_buffer_address = {qword_cnt, word_cnt};	
-always_comb jpeg_buffer_write_enable = jpeg_sel & (word_cnt == 0 ? jpeg_out_valid_cdc[2:1] == 2'b01 : jpeg_out_bytes_cdc > 4*word_cnt);
+always_comb jpeg_buffer_write_enable = word_cnt == 0 ? jpeg_out_valid_cdc[2:1] == 2'b01 : jpeg_out_bytes_cdc > 4*word_cnt;
 
 endmodule

@@ -101,9 +101,9 @@ class Tester(SPITransactor):
         self.img_bayer[1::2, 0::2] = 0 + self.img_bgr[1::2, 0::2, 1] # bottom left G
         self.img_bayer[1::2, 1::2] = 0 + self.img_bgr[1::2, 1::2, 2] # bottom right R
 
-        self.y, self.x = 200, 200
-        #self.y, self.x = 32, 32
-        self.img_bayer = self.img_bayer[:2*self.y,:2*self.x]
+        self.y, self.x = 720, 720  # crop full sensor size
+        self.img_bayer = self.img_bayer[:self.y,:self.x]
+        self.y, self.x = 200, 200  # re-define jpeg image size
 
         #cv2.imshow(img_file, self.img_bayer)
         #cv2.waitKey(0) 
@@ -121,10 +121,10 @@ class Tester(SPITransactor):
 
     	# enable & reset encoder
         self.jpeg_sel = 1
-        await self.spi_write(0x30, 0x5)
+        await self.spi_write(0x30, 0x4)
         # wait 16 cycles
         await ClockCycles(self.dut.clock_spi_in, 16)
-        await self.spi_write(0x30, 0x1)
+        await self.spi_write(0x30, 0x9)
         await ClockCycles(self.dut.clock_spi_in, 16)
         
         # Capture flag
@@ -160,11 +160,6 @@ class Tester(SPITransactor):
         bytes = self.y * self.x
         bgr_out = []
 
-#HERE
-#        for i in range(bytes):
-#            await self.spi_read(0x22)
-#            self.ecs.append(self.regs[0x22])
-
         for self.dut.bytes_read.value in range(bytes):
             await RisingEdge(self.dut.clock_spi_in)
             await RisingEdge(self.dut.clock_spi_in)
@@ -184,14 +179,22 @@ class Tester(SPITransactor):
             bytes = sum([v*(2**(i*8)) for i,v in enumerate(self.regs[0x31:0x31+3])])
             if bytes != 0:
                 break
-
-        # jpeg_out_size_clear.value = 1
-        await self.spi_write(0x30, 0x3)
+                
+        # Read one more time to avoid race condition
+        await self.spi_read(0x31, 3)
+        bytes = sum([v*(2**(i*8)) for i,v in enumerate(self.regs[0x31:0x31+3])])
 
         self.ecs = []
         for i in range(bytes):
             await self.spi_read(0x22)
             self.ecs.append(self.regs[0x22])
+
+
+        # jpeg_out_size_clear.value = 1
+        await self.spi_write(0x30, 0x2)
+
+        # wait 16 cycles
+        await ClockCycles(self.dut.clock_spi_in, 16)
 
         # jpeg_out_size_clear.value = 0 + reset
         await self.spi_write(0x30, 0x4)
@@ -254,11 +257,12 @@ async def dct_test(dut):
     t = Tester(dut, test_image)
 
     await t.initialize_encoder()    
-    cocotb.start_soon(t.send_bayer())   
+    bayer  = cocotb.start_soon(t.send_bayer())   
 
     await t.read_image_buffer()
     await t.write_image()
     
     await show_image(test_image, 'jpeg_out.jpg' if t.jpeg_sel else 'rgb_out.bmp', t=0)
 
-    await ClockCycles(dut.clock_spi_in, 10000)  # wait for falling edge/"negedge"
+    await cocotb.triggers.Combine(bayer)  # wait for frame end
+    await ClockCycles(dut.clock_spi_in, 100)  # wait for falling edge/"negedge"
