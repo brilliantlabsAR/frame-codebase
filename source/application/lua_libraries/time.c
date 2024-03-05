@@ -51,10 +51,8 @@ static int lua_time_utc(lua_State *L)
         return 1;
     }
 
-    luaL_checkinteger(L, 1);
-
     NRFX_IRQ_DISABLE(rtc.irq);
-    utc_time_ms = lua_tointeger(L, 1) * 1000;
+    utc_time_ms = luaL_checkinteger(L, 1) * 1000;
     NRFX_IRQ_ENABLE(rtc.irq);
 
     return 0;
@@ -79,9 +77,7 @@ static int lua_time_zone(lua_State *L)
     int hour = 0;
     int minute = 0;
 
-    luaL_checkstring(L, 1);
-
-    if (sscanf(lua_tostring(L, 1), "%d:%d", &hour, &minute) != 2)
+    if (sscanf(luaL_checkstring(L, 1), "%d:%d", &hour, &minute) != 2)
     {
         luaL_error(L, "must be '+hh:mm' or '-hh:mm'");
     }
@@ -158,21 +154,14 @@ static int lua_time_date(lua_State *L)
     }
 
     // Return table from epoch timestamp
-    if (lua_isinteger(L, 1))
-    {
 
-        time_t local_time_from_stamp_s = lua_tointeger(L, 1) +
-                                         (time_zone_offset_minutes * 60) +
-                                         (time_zone_offset_hours * 60 * 60);
+    time_t local_time_from_stamp_s = luaL_checkinteger(L, 1) +
+                                     (time_zone_offset_minutes * 60) +
+                                     (time_zone_offset_hours * 60 * 60);
 
-        table_from_time(L, local_time_from_stamp_s);
+    table_from_time(L, local_time_from_stamp_s);
 
-        return 1;
-    }
-
-    luaL_error(L, "expected a utc timestamp");
-
-    return 0;
+    return 1;
 }
 
 void lua_open_time_library(lua_State *L)
