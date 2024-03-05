@@ -26,7 +26,19 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
     make release
     ```
 
+3. On your local machine with `nrfutil` installed run: 
 
+    ```sh
+    nrfutil device recover
+    ```
+
+4. On your local machine with `nrfutil` installed run (be sure to use shell autocomplete to find the `.hex` file to build the firmware): 
+
+    ```sh
+    nrfutil device program \
+        --options reset=RESET_HARD \
+        --firmware $(BUILD)/frame-firmware-*.hex
+    ```
 
 ### Debugging
 
