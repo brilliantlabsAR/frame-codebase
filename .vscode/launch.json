@@ -56,7 +56,7 @@
             "preLaunchTask": "Build",
             "interface": "swd",
             "device": "nRF52840_XXAA",
-            "BMPGDBSerialPort": "/dev/cu.usbmodem97B6BC101",
+            "BMPGDBSerialPort": "/dev/ttyACM0",
             "showDevDebugOutput": "none",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
             "internalConsoleOptions": "neverOpen",
