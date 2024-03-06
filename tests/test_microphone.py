@@ -26,7 +26,9 @@ async def record_and_play(b: Bluetooth, seconds, sample_rate, bit_depth):
     global expected_samples
 
     print(f"Recording {seconds} seconds at {sample_rate/1000}kHz {bit_depth}bit")
-    await b.send_lua(f"frame.microphone.record({seconds}, {sample_rate}, {bit_depth})")
+    await b.send_lua(
+        f"frame.microphone.record{{seconds={seconds}, sample_rate={sample_rate}, bit_depth={bit_depth}}}"
+    )
     await asyncio.sleep(0.5)
 
     expected_samples = seconds * sample_rate * (bit_depth / 8)

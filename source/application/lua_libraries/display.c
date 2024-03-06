@@ -23,11 +23,12 @@
  */
 
 #include <math.h>
+#include "error_logging.h"
 #include "lauxlib.h"
 #include "lua.h"
+#include "nrfx_systick.h"
 #include "spi.h"
 #include "system_font.h"
-#include "error_logging.h"
 
 static uint32_t utf8_decode(const char *string, size_t *index)
 {
@@ -73,15 +74,10 @@ static int lua_display_assign_color(lua_State *L)
 {
     uint8_t address = 0x11;
 
-    luaL_checkinteger(L, 1);
-    luaL_checkinteger(L, 2);
-    luaL_checkinteger(L, 3);
-    luaL_checkinteger(L, 4);
-
-    lua_Integer pallet_index = lua_tointeger(L, 1) - 1;
-    lua_Integer red = lua_tointeger(L, 2);
-    lua_Integer green = lua_tointeger(L, 3);
-    lua_Integer blue = lua_tointeger(L, 4);
+    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer red = luaL_checkinteger(L, 2);
+    lua_Integer green = luaL_checkinteger(L, 3);
+    lua_Integer blue = luaL_checkinteger(L, 4);
 
     if (pallet_index < 0 || pallet_index > 15)
     {
@@ -122,15 +118,10 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
 {
     uint8_t address = 0x11;
 
-    luaL_checkinteger(L, 1);
-    luaL_checkinteger(L, 2);
-    luaL_checkinteger(L, 3);
-    luaL_checkinteger(L, 4);
-
-    lua_Integer pallet_index = lua_tointeger(L, 1) - 1;
-    lua_Integer y = lua_tointeger(L, 2);
-    lua_Integer cb = lua_tointeger(L, 3);
-    lua_Integer cr = lua_tointeger(L, 4);
+    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer y = luaL_checkinteger(L, 2);
+    lua_Integer cb = luaL_checkinteger(L, 3);
+    lua_Integer cr = luaL_checkinteger(L, 4);
 
     if (pallet_index < 0 || pallet_index > 15)
     {
@@ -220,22 +211,15 @@ static void draw_sprite(lua_State *L,
 
 static int lua_display_bitmap(lua_State *L)
 {
-    luaL_checkinteger(L, 1);
-    luaL_checkinteger(L, 2);
-    luaL_checkinteger(L, 3);
-    luaL_checkinteger(L, 4);
-    luaL_checkinteger(L, 5);
-    luaL_checkstring(L, 6);
-
     size_t pixel_data_length;
-    const char *pixel_data = lua_tolstring(L, 6, &pixel_data_length);
+    const char *pixel_data = luaL_checklstring(L, 6, &pixel_data_length);
 
     draw_sprite(L,
-                lua_tointeger(L, 1),
-                lua_tointeger(L, 2),
-                lua_tointeger(L, 3),
-                lua_tointeger(L, 4),
-                lua_tointeger(L, 5),
+                luaL_checkinteger(L, 1),
+                luaL_checkinteger(L, 2),
+                luaL_checkinteger(L, 3),
+                luaL_checkinteger(L, 4),
+                luaL_checkinteger(L, 5),
                 (uint8_t *)pixel_data,
                 pixel_data_length);
 
@@ -244,16 +228,13 @@ static int lua_display_bitmap(lua_State *L)
 
 static int lua_display_text(lua_State *L)
 {
-    luaL_checkstring(L, 1);
-    luaL_checkinteger(L, 2);
-    luaL_checkinteger(L, 3);
     // TODO color options
     // TODO justification options
     // TODO character spacing
 
-    const char *string = lua_tostring(L, 1);
-    lua_Integer x_position = lua_tointeger(L, 2);
-    lua_Integer y_position = lua_tointeger(L, 3);
+    const char *string = luaL_checkstring(L, 1);
+    lua_Integer x_position = luaL_checkinteger(L, 2);
+    lua_Integer y_position = luaL_checkinteger(L, 3);
     lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
@@ -315,25 +296,13 @@ static int lua_display_show(lua_State *L)
     uint8_t show_command = 0x14;
     uint8_t clear_command = 0x10;
 
+    // TODO remove blocking once we have a better solution
+
     spi_write(FPGA, &show_command, 1, false);
-
-    int status = luaL_dostring(L, "frame.sleep(0.02)");
-
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-    }
+    nrfx_systick_delay_ms(25);
 
     spi_write(FPGA, &clear_command, 1, false);
-
-    status = luaL_dostring(L, "frame.sleep(0.02)");
-
-    if (status != LUA_OK)
-    {
-        const char *lua_error = lua_tostring(L, -1);
-        lua_writestring(lua_error, strlen(lua_error));
-    }
+    nrfx_systick_delay_ms(20);
 
     return 0;
 }

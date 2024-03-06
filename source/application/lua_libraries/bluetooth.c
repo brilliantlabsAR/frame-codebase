@@ -54,10 +54,8 @@ static int lua_bluetooth_max_length(lua_State *L)
 
 static int lua_bluetooth_send(lua_State *L)
 {
-    luaL_checkstring(L, 1);
-
     size_t length;
-    const char *string = lua_tolstring(L, 1, &length);
+    const char *string = luaL_checklstring(L, 1, &length);
 
     if (length + 1 > ble_negotiated_mtu)
     {
