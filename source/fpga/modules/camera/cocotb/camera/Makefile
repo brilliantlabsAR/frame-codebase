@@ -40,15 +40,40 @@ VERILOG_FILES += \
         ../../metering.sv \
         ../../camera.sv
  
+ifeq ($(SIM),modelsim)
 VERILOG_FILES += \
         ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
         ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
         ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
         ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
-        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v \
-        $(LATTICE_ROOT)/cae_library/synthesis/verilog/lifcl.v
 
-VERILOG_FILES += dumper.v
+
+VERILOG_FILES += \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/EBR_CORE.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_hw.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/fifo_new.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_polctl.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_cfg_in.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_fbuf.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_pwrup.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_tdp.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_inbuf.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/ebr_pwrsw_vcc.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/PDP16K.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/lifcl/PDP16K_MODE.v
+
+VERILOG_FILES += \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/VHI.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/VLO.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/ebr_hw.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/GSR.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/GSR_CORE.v \
+        $(LATTICE_ROOT)/cae_library/simulation/verilog/uaplatform/gsr_center.v
+
+VERILOG_FILES += \
+        dumper.v
+endif
+
 
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib)
@@ -61,7 +86,7 @@ ifeq ($(SIM),verilator)
         EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY
 endif
 ifeq ($(SIM),modelsim)
-        EXTRA_ARGS += +define+CAMERA_HAS_DUMPER_V
+        EXTRA_ARGS += +define+COCOTB_MODELSIM
         EXTRA_ARGS += -suppress vlog-2244 
         export COCOTB_RESOLVE_X=ZEROS       
 endif

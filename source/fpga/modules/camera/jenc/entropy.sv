@@ -225,11 +225,15 @@ for (int i=0; i<2; i++)
     end
 
 // Final
+logic [4:0] tmp_codecoeff_length0;
+logic [4:0] tmp_codecoeff_length1;
+logic [5:0] tmp_codecoeff_length;
+always_comb tmp_codecoeff_length0 = out_valid3[0] ? codecoeff_length3[0] : 0;
+always_comb tmp_codecoeff_length1 = out_valid3[1] ? codecoeff_length3[1] : 0;
+always_comb tmp_codecoeff_length = tmp_codecoeff_length0 + tmp_codecoeff_length1;
+
 always @(posedge clk)
 if (|out_valid3) begin
-    logic [4:0] tmp_codecoeff_length0 = out_valid3[0] ? codecoeff_length3[0] : 0;
-    logic [4:0] tmp_codecoeff_length1 = out_valid3[1] ? codecoeff_length3[1] : 0;
-    logic [5:0] tmp_codecoeff_length = tmp_codecoeff_length0 + tmp_codecoeff_length1;
     out_codecoeff_length <= tmp_codecoeff_length;
     if (tmp_codecoeff_length > 52 | tmp_codecoeff_length < 2)
         out_codecoeff <= 'hx;

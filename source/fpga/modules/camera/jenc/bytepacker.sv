@@ -36,7 +36,7 @@ for (genvar i=0; i<8; i++) begin : ff_stuff
         end
     else 
         always_comb begin
-            if (&in_data_s[i][(71 + i*8)  : (64 + i*8)] & in_bytes>=(8-i)) begin
+            if (&in_data_s[i-1][(71 + i*8)  : (64 + i*8)] & in_bytes>=(8-i)) begin
                 in_bytes_s[i] = in_bytes_s[i-1] + 1;
                 in_data_s[i][127      : (64 + i*8)] = in_data_s[i-1][127      : 64 + i*8];
                 in_data_s[i][63 + i*8 : 56 + i*8] = 0;

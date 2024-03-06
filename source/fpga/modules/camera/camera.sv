@@ -52,6 +52,11 @@ module camera (
     output logic response_valid_out
 );
 
+`ifdef COCOTB_MODELSIM
+`include "dumper.v"
+GSR GSR_INST (.GSR_N('1), .CLK(clk));
+`endif
+
 logic[10:0] X_CROP_START;   // Todo: Make SPI register
 logic[10:0] X_CROP_END;     // Todo: Make SPI register
 logic[9:0] Y_CROP_START;    // Todo: Make SPI register
@@ -469,7 +474,4 @@ image_buffer image_buffer (
 
 `endif
 
-`ifdef CAMERA_HAS_DUMPER_V
-`include "dumper.v"
-`endif
 endmodule

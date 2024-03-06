@@ -142,7 +142,7 @@ dp_ram_be  #(
 );
 `else
 ram_dp_w32_b4_d64 mem (
-    .wr_addr_i  (ra), 
+    .wr_addr_i  (wa), 
     .wr_data_i  (wd),
     .ben_i      (wbe),
     .wr_en_i    (we), 
