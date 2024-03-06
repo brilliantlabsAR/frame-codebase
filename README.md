@@ -26,19 +26,25 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
     make release
     ```
 
-3. On your local machine with `nrfutil` installed run: 
+3. Download the `./build` directory to your local machine.
+
+4. Ensure you have [nrfutil installed](https://devzone.nordicsemi.com/nordic/nordic-blog/b/blog/posts/nrf-util-unified-command-line-utility). You can follow the instructions at this link to install this library onto `$PATH`. 
+
+5. On your local machine with `nrfutil` installed run: 
 
     ```sh
     nrfutil device recover
     ```
 
-4. On your local machine with `nrfutil` installed run (be sure to use shell autocomplete to find the `.hex` file to build the firmware): 
+6. On your local machine with `nrfutil` installed in the parent directory where `./build` is located run: 
 
     ```sh
     nrfutil device program \
         --options reset=RESET_HARD \
-        --firmware $(BUILD)/frame-firmware-*.hex
+        --firmware ./build/frame-firmware-*.hex
     ```
+
+7. The device should now be programmed and running the latest firmware and advertise its Bluetooth name as `Frame`. You can use a utility such as [nRF Connect for iPhone](https://apps.apple.com/us/app/nrf-connect-for-mobile/id1054362403) to locate the device and prove it is advertising.
 
 ### Debugging
 
