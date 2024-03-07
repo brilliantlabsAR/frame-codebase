@@ -301,7 +301,7 @@ initial begin
         spi_select_in = 1;
         
         // Wait for reset, 1 frame of 76x76 to end
-        delay_us('d1100);
+        delay_us('d1250);
 
         // Reset jpeg
         spi_select_in = 0;
@@ -321,7 +321,7 @@ initial begin
         spi_select_in = 0;
         txrx_byte('h20, temp);
         spi_select_in = 1;
-        delay_us('d8000);
+        delay_us('d2500);
 
         // JPEG bytes available
         $display("read jpeg bytes available");

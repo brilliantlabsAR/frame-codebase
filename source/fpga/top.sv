@@ -55,6 +55,7 @@ logic clock_camera;
 logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
+logic clk_x22;
 logic pll_locked;
 logic reset_n_pll;
 
@@ -83,6 +84,7 @@ logic global_reset_n;
 logic reset_spi_n;
 logic reset_display_n;
 logic reset_camera_pixel_n;
+logic resetn_x22;
 
 reset_global reset_global (
     .clock_in(clock_osc),
@@ -181,6 +183,9 @@ camera camera (
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),
+
+    .clk_x22(clk_x22),
+    .resetn_x22(resetn_x22),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
