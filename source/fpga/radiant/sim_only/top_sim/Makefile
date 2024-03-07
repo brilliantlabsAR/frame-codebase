@@ -9,6 +9,7 @@ SIM_SRCS += tb_top.sv
 
 SRCH_PATH = $(MODULES)/../top.sv \
  $(MODULES)/pll/pll_wrapper.sv \
+ $(RADIANT)/pll_ip/rtl/pll_ip.v \
  $(MODULES)/reset/reset_sync.sv \
  $(MODULES)/reset/reset_global.sv \
  $(RADIANT)/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v \
@@ -53,12 +54,11 @@ SRCH_PATH = $(MODULES)/../top.sv \
  $(MODULES)/spi/spi_peripheral.sv \
  $(MODULES)/spi/spi_register.sv
 
-# 8233 = array out of bounds, fix later
+# vsim-8233 = array out of bounds, fix later
 VLOG_OPTS = -93 -sv -warning vlog-2388 -suppress 2388 -lint=full -pedanticerrors -fsmverbose w +libext+.v+.vl+.sv +libext+.sv \
- -suppress 8233 \
  +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+USE_LATTICE_EBR $(MODULES)/camera/jlib/jlib.vh $(MODULES)/camera/jenc/zigzag.vh $(SRCH_PATH) 
 
-VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389 +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+USE_LATTICE_EBR $(MODULES)/camera/jlib/jlib.vh $(MODULES)/camera/jenc/zigzag.vh
+VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+USE_LATTICE_EBR $(MODULES)/camera/jlib/jlib.vh $(MODULES)/camera/jenc/zigzag.vh
 
 .PHONY: compile sim lib clean
 
