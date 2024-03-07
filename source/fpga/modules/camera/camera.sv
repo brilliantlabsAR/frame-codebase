@@ -61,11 +61,18 @@ logic[10:0] X_CROP_START;   // Todo: Make SPI register
 logic[10:0] X_CROP_END;     // Todo: Make SPI register
 logic[9:0] Y_CROP_START;    // Todo: Make SPI register
 logic[9:0] Y_CROP_END;      // Todo: Make SPI register
- 
+
+`ifdef TOP_SIM
+always_ff @(posedge clock_spi_in) X_CROP_START <= 0;
+always_ff @(posedge clock_spi_in) X_CROP_END   <= 76;
+always_ff @(posedge clock_spi_in) Y_CROP_START <= 0;
+always_ff @(posedge clock_spi_in) Y_CROP_END   <= 76;
+`else
 always_ff @(posedge clock_spi_in) X_CROP_START <= 500;
 always_ff @(posedge clock_spi_in) X_CROP_END   <= 702;
 always_ff @(posedge clock_spi_in) Y_CROP_START <= 258;
 always_ff @(posedge clock_spi_in) Y_CROP_END   <= 460;
+`endif
 
 logic[10:0] x_size, x_size_m1;     // Todo: Make SPI register
 logic[9:0] y_size, y_size_m1;      // Todo: Make SPI register
@@ -189,6 +196,7 @@ logic [1:0] capture_in_progress_cdc;
 
 logic debayered_frame_valid;
 logic cropped_frame_valid;
+logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
 logic jpeg_end;
 
 always_comb capture_in_progress_flag  = capture_in_progress_state[1];
@@ -287,7 +295,6 @@ always @(posedge mipi_byte_clock or negedge mipi_byte_reset_n) begin
 
 end
 
-logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
 logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/;
 logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/;
 

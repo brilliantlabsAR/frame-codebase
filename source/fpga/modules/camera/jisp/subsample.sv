@@ -1,4 +1,6 @@
+`ifndef MODELSIM
 `include "jlib.vh"
+`endif
 /*
  * Subsample 4:4:4 to 4:2:0 (4:4:4, 4:2:2, 4:0:0 can be added easily)
  *
