@@ -135,6 +135,9 @@
         <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
+        <Source name="image_buffer/large_ram_dp_w32_d16k_q/large_ram_dp_w32_d16k_q.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
             <Options/>
         </Source>
