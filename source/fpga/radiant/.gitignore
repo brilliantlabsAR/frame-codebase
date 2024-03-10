@@ -11,6 +11,7 @@ reportview.xml
 !/pll_ip/*.xml
 !/pll_ip/*.cfg
 !/pll_ip/*.ipx
+!/pll_ip/Makefile
 
 /byte_to_pixel_ip/*
 !/byte_to_pixel_ip/*.xml
