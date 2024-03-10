@@ -2,7 +2,7 @@
 <RadiantProject version="4.2" radiant="2023.2.0.38.1" title="frame" device="LIFCL-17-8UWG72C" performance_grade="8_Low-Power_1.0V" default_implementation="frame">
     <Options/>
     <Implementation title="frame" dir="frame" description="frame" synthesis="lse" default_strategy="Strategy">
-        <Options VERILOG_DIRECTIVES="RADIANT=1 USE_LATTICE_EBR=1" VerilogStandard="System Verilog" def_top="top" hdl_sort="off">
+        <Options VERILOG_DIRECTIVES="RADIANT=1 USE_LATTICE_EBR=1" VerilogStandard="System Verilog" def_top="large_ram_dp_w32_d16k_q" hdl_sort="off">
             <Option name="include path" value="../modules/camera/jlib;../modules/camera/jenc;../modules/camera"/>
             <Option name="top" value="top"/>
         </Options>
