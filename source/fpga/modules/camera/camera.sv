@@ -57,6 +57,12 @@ module camera (
 GSR GSR_INST (.GSR_N('1), .CLK(clk));
 `endif
 
+`ifndef NO_MIPI_IP_SIM
+logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/;
+`endif //NO_MIPI_IP_SIM
+
 logic[10:0] X_CROP_START;   // Todo: Make SPI register
 logic[10:0] X_CROP_END;     // Todo: Make SPI register
 logic[9:0] Y_CROP_START;    // Todo: Make SPI register
@@ -287,10 +293,6 @@ always @(posedge mipi_byte_clock or negedge mipi_byte_reset_n) begin
 
 end
 
-logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
-logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/;
-logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/;
-
 byte_to_pixel_ip byte_to_pixel_ip (
     .reset_byte_n_i(mipi_byte_reset_n),
     .clk_byte_i(mipi_byte_clock),
@@ -365,11 +367,9 @@ metering #(
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
-    .pixel_red_data_in(debayered_red_data),
-    .pixel_green_data_in(debayered_green_data),
-    .pixel_blue_data_in(debayered_blue_data),
-    .line_valid_in(debayered_line_valid),
-    .frame_valid_in(debayered_frame_valid),
+    .pixel_data_in(byte_to_pixel_data),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
 
     .red_metering_out(red_metering),
     .green_metering_out(green_metering),

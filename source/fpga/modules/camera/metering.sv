@@ -19,9 +19,11 @@ module metering #(
     input logic pixel_clock_in,
     input logic reset_n_in,
 
-    input logic [9:0] pixel_red_data_in,
-    input logic [9:0] pixel_green_data_in,
-    input logic [9:0] pixel_blue_data_in,
+    //input logic [9:0] pixel_red_data_in,
+    //input logic [9:0] pixel_green_data_in,
+    //input logic [9:0] pixel_blue_data_in,
+    input logic [9:0] pixel_data_in,
+    
     input logic line_valid_in,
     input logic frame_valid_in,
 
@@ -86,9 +88,12 @@ always_ff @(posedge pixel_clock_in) begin
            y_counter >= Y_WINDOW_START &&
            y_counter < Y_WINDOW_END) begin
 
-            average_red_metering <= average_red_metering + pixel_red_data_in;
-            average_green_metering <= average_green_metering + pixel_green_data_in;
-            average_blue_metering <= average_blue_metering + pixel_blue_data_in;
+           //average_red_metering <= average_red_metering + pixel_red_data_in;
+           //average_green_metering <= average_green_metering + pixel_green_data_in;
+           //average_blue_metering <= average_blue_metering + pixel_blue_data_in;
+           if (x_counter[0]==1 && y_counter[0]==1) average_red_metering <= average_red_metering + 4*pixel_data_in;
+           if (x_counter[0] != y_counter[0]) average_green_metering <= average_green_metering + 2*pixel_data_in;
+           if (x_counter[0]==0 && y_counter[0]==0) average_blue_metering <= average_blue_metering + 4*pixel_data_in;
 
         end
 
