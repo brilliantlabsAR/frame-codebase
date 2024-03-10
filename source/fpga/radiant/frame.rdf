@@ -54,9 +54,6 @@
         <Source name="../modules/camera/image_buffer.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
-            <Options/>
-        </Source>
         <Source name="byte_to_pixel_ip/byte_to_pixel_ip.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
@@ -134,6 +131,9 @@
         </Source>
         <Source name="../modules/camera/jenc/zigzag.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
             <Options/>
