@@ -104,9 +104,84 @@ struct HuffmanTable {
     bool set = false;
 };
 
+struct ColorComponent {
+    byte horizontalSamplingFactor = 0;
+    byte verticalSamplingFactor = 0;
+    byte quantizationTableID = 0;
+    byte huffmanDCTableID = 0;
+    byte huffmanACTableID = 0;
+    bool usedInFrame = false;
+    bool usedInScan = false;
+};
+
+struct Block {
+    union {
+        int y[64] = { 0 };
+        int r[64];
+    };
+    union {
+        int cb[64] = { 0 };
+        int g [64];
+    };
+    union {
+        int cr[64] = { 0 };
+        int b [64];
+    };
+    int* operator[](uint i) {
+        switch (i) {
+            case 0:
+                return y;
+            case 1:
+                return cb;
+            case 2:
+                return cr;
+            default:
+                return nullptr;
+        }
+    }
+};
+
+struct JPGImage {
+    QuantizationTable quantizationTables[4];
+    HuffmanTable huffmanDCTables[4];
+    HuffmanTable huffmanACTables[4];
+    ColorComponent colorComponents[3];
+
+    byte frameType = 0;
+    uint height = 0;
+    uint width = 0;
+    byte numComponents = 0;
+    bool zeroBased = false;
+
+    byte componentsInScan = 0;
+    byte startOfSelection = 0;
+    byte endOfSelection = 0;
+    byte successiveApproximationHigh = 0;
+    byte successiveApproximationLow = 0;
+
+    uint restartInterval = 0;
+
+    Block* blocks = nullptr;
+
+    bool valid = true;
+
+    uint blockHeight = 0;
+    uint blockWidth = 0;
+    uint blockHeightReal = 0;
+    uint blockWidthReal = 0;
+
+    byte horizontalSamplingFactor = 0;
+    byte verticalSamplingFactor = 0;
+};
+
 struct BMPImage {
     uint height = 0;
     uint width = 0;
+
+    Block* blocks = nullptr;
+
+    uint blockHeight = 0;
+    uint blockWidth = 0;
 };
 
 const byte zigZagMap[] = {
@@ -120,6 +195,22 @@ const byte zigZagMap[] = {
     53, 60, 61, 54, 47, 55, 62, 63
 };
 
+// IDCT scaling factors
+const float m0 = 2.0 * std::cos(1.0 / 16.0 * 2.0 * M_PI);
+const float m1 = 2.0 * std::cos(2.0 / 16.0 * 2.0 * M_PI);
+const float m3 = 2.0 * std::cos(2.0 / 16.0 * 2.0 * M_PI);
+const float m5 = 2.0 * std::cos(3.0 / 16.0 * 2.0 * M_PI);
+const float m2 = m0 - m5;
+const float m4 = m0 + m5;
+
+const float s0 = std::cos(0.0 / 16.0 * M_PI) / std::sqrt(8);
+const float s1 = std::cos(1.0 / 16.0 * M_PI) / 2.0;
+const float s2 = std::cos(2.0 / 16.0 * M_PI) / 2.0;
+const float s3 = std::cos(3.0 / 16.0 * M_PI) / 2.0;
+const float s4 = std::cos(4.0 / 16.0 * M_PI) / 2.0;
+const float s5 = std::cos(5.0 / 16.0 * M_PI) / 2.0;
+const float s6 = std::cos(6.0 / 16.0 * M_PI) / 2.0;
+const float s7 = std::cos(7.0 / 16.0 * M_PI) / 2.0;
 
 // standard tables
 
@@ -150,6 +241,66 @@ const QuantizationTable qTableCbCr50 = {
     },
     true
 };
+
+const QuantizationTable qTableY75 = {
+    {
+        16/2,  11/2,  10/2,  16/2,  24/2,  40/2,  51/2,  61/2,
+        12/2,  12/2,  14/2,  19/2,  26/2,  58/2,  60/2,  55/2,
+        14/2,  13/2,  16/2,  24/2,  40/2,  57/2,  69/2,  56/2,
+        14/2,  17/2,  22/2,  29/2,  51/2,  87/2,  80/2,  62/2,
+        18/2,  22/2,  37/2,  56/2,  68/2, 109/2, 103/2,  77/2,
+        24/2,  35/2,  55/2,  64/2,  81/2, 104/2, 113/2,  92/2,
+        49/2,  64/2,  78/2,  87/2, 103/2, 121/2, 120/2, 101/2,
+        72/2,  92/2,  95/2,  98/2, 112/2, 100/2, 103/2,  99/2
+    },
+    true
+};
+
+const QuantizationTable qTableCbCr75 = {
+    {
+        17/2, 18/2, 24/2, 47/2, 99/2, 99/2, 99/2, 99/2,
+        18/2, 21/2, 26/2, 66/2, 99/2, 99/2, 99/2, 99/2,
+        24/2, 26/2, 56/2, 99/2, 99/2, 99/2, 99/2, 99/2,
+        47/2, 66/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2,
+        99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2,
+        99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2,
+        99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2,
+        99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2, 99/2
+    },
+    true
+};
+
+const QuantizationTable qTableY100 = {
+    {
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1
+    },
+    true
+};
+
+const QuantizationTable qTableCbCr100 = {
+    {
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1
+    },
+    true
+};
+
+const QuantizationTable* const qTables50[]  = {  &qTableY50,  &qTableCbCr50,  &qTableCbCr50 };
+const QuantizationTable* const qTables75[]  = {  &qTableY75,  &qTableCbCr75,  &qTableCbCr75 };
+const QuantizationTable* const qTables100[] = { &qTableY100, &qTableCbCr100, &qTableCbCr100 };
 
 HuffmanTable hDCTableY = {
     { 0, 0, 1, 6, 7, 8, 9, 10, 11, 12, 12, 12, 12, 12, 12, 12, 12 },
@@ -225,4 +376,5 @@ HuffmanTable hACTableCbCr = {
 
 HuffmanTable* const dcTables[] = { &hDCTableY, &hDCTableCbCr, &hDCTableCbCr };
 HuffmanTable* const acTables[] = { &hACTableY, &hACTableCbCr, &hACTableCbCr };
+
 #endif

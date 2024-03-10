@@ -1,2 +1,4 @@
-header.bin
-footer.bin
+*.bin
+*.jpg
+*.jpeg
+bin/
