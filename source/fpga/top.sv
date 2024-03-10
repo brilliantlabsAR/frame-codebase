@@ -56,7 +56,7 @@ logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
 logic pll_locked;
-logic reset_pll;
+logic reset_n_pll;
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -67,9 +67,9 @@ OSCA #(
     .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
-pll_ip pll_wrapper (
+pll_wrapper pll_wrapper (
     .clki_i(clock_osc),                // 18MHz
-    .rstn_i(~reset_pll),
+    .rstn_i(reset_n_pll),
     .clkop_o(clock_camera),            // 24MHz
     .clkos_o(clock_camera_pixel),      // 36MHz
     .clkos2_o(clock_display),          // 36MHz
@@ -87,7 +87,7 @@ logic reset_camera_pixel_n;
 reset_global reset_global (
     .clock_in(clock_osc),
     .pll_locked_in(pll_locked),
-    .pll_reset_out(reset_pll),
+    .pll_reset_n_out(reset_n_pll),
     .global_reset_n_out(global_reset_n)
 );
 
