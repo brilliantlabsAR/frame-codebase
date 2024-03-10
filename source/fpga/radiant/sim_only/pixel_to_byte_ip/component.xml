@@ -222,15 +222,23 @@
                 <ipxact:fileType user="IP-XACT_design">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_top.v</ipxact:name>
-                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
                 <ipxact:name>testbench/create_defines.py</ipxact:name>
                 <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_dsi_reset.vh</ipxact:name>
+                <ipxact:name>testbench/byte_out_monitor.v</ipxact:name>
+                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/vid_timing_gen_driver.v</ipxact:name>
+                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_csi2_reset.vh</ipxact:name>
+                <ipxact:fileType user="testbench">user</ipxact:fileType>
+            </ipxact:file>
+            <ipxact:file>
+                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_dsi_trans.vh</ipxact:name>
                 <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
@@ -242,23 +250,15 @@
                 <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_csi2_reset.vh</ipxact:name>
-                <ipxact:fileType user="testbench">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
                 <ipxact:name>testbench/tb_include/test_snow_pixel2byte_csi2_trans.vh</ipxact:name>
                 <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_dsi_trans.vh</ipxact:name>
+                <ipxact:name>testbench/tb_include/test_snow_pixel2byte_dsi_reset.vh</ipxact:name>
                 <ipxact:fileType user="testbench">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/vid_timing_gen_driver.v</ipxact:name>
-                <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
-            </ipxact:file>
-            <ipxact:file>
-                <ipxact:name>testbench/byte_out_monitor.v</ipxact:name>
+                <ipxact:name>testbench/tb_top.v</ipxact:name>
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
         </ipxact:fileSet>
@@ -273,8 +273,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 02 07 11:22:58</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 03 10 16:31:51</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

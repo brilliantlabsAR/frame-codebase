@@ -27,11 +27,13 @@ reportview.xml
 !/sim_only/csi2_transmitter_ip/*.xml
 !/sim_only/csi2_transmitter_ip/*.cfg
 !/sim_only/csi2_transmitter_ip/*.ipx
+!/sim_only/csi2_transmitter_ip/rtl
 
 /sim_only/pixel_to_byte_ip/*
 !/sim_only/pixel_to_byte_ip/*.xml
 !/sim_only/pixel_to_byte_ip/*.cfg
 !/sim_only/pixel_to_byte_ip/*.ipx
+!/sim_only/pixel_to_byte_ip/rtl
 
 # Logs and reports
 radiantc.*
