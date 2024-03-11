@@ -22,7 +22,7 @@ async def test_microphone(b: Bluetooth):
     global expected_length
     expected_length = 3 * 8000 * (8 / 8)
 
-    await b.send_lua("frame.microphone.record(3, 8000, 8)")
+    await b.send_lua("frame.microphone.record{seconds=3}")
     await asyncio.sleep(3)
 
     audio_buffer = b""
