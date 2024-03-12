@@ -117,6 +117,10 @@ class Tester(SPITransactor):
         self.img_bayer = self.img_bayer[:self.y,:self.x]
         self.y, self.x = 200, 200  # re-define jpeg image size
 
+        self.y, self.x = 80, 80  # crop full sensor size
+        self.img_bayer = self.img_bayer[:self.y,:self.x]
+        self.y, self.x = 64, 64  # re-define jpeg image size
+
         #cv2.imshow(img_file, self.img_bayer)
         #cv2.waitKey(0) 
         #cv2.destroyAllWindows()
