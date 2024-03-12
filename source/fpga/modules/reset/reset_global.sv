@@ -17,11 +17,13 @@ module reset_global (
 );
 
     logic [7:0] global_reset_counter /* synthesis syn_keep=1 nomerge=""*/;
-    logic [7:0] pll_reset_counter = 0 /* synthesis syn_keep=1 nomerge=""*/;
+    logic [7:0] pll_reset_counter /* synthesis syn_keep=1 nomerge=""*/;
+
+    initial pll_reset_counter = 0;
 
     always_ff @(posedge clock_in) begin
 
-        if (!pll_reset_counter[7]) begin
+        if (!pll_reset_counter[3]) begin
             pll_reset_counter <= pll_reset_counter + 1;
             global_reset_n_out <= 0;
             global_reset_counter <= 0;
@@ -30,7 +32,7 @@ module reset_global (
 
         else begin
 
-            if (pll_locked_in & !global_reset_counter[7]) begin
+            if (pll_locked_in & !global_reset_counter[3]) begin
                 global_reset_counter <= global_reset_counter + 1;
             end
 
@@ -38,7 +40,7 @@ module reset_global (
                 global_reset_counter <= 0;
             end
 
-            global_reset_n_out <= pll_locked_in && global_reset_counter[7];
+            global_reset_n_out <= pll_locked_in && global_reset_counter[3];
             pll_reset_n_out <= 1;
 
         end
