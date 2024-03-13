@@ -54,7 +54,7 @@ ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE}
 set_false_path -from [get_clocks clock_camera_pixel] -to [get_clocks clk_x22]
 
 # max delay to prevent run away scenic routes
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/we_cdc*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/d_valid_nrz_pre_cdc*/Q*]
 set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/d_addr_cdc*/Q*]
 set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wptr_cdc*/Q*]
 set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wd_cdc*/Q*]
