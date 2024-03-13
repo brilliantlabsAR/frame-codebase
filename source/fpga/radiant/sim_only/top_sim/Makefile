@@ -62,9 +62,9 @@ SRCH_PATH = $(MODULES)/../top.sv \
 
 # vsim-8233 = array out of bounds, fix later
 VLOG_OPTS = -93 -sv -warning vlog-2388 -suppress 2388 -lint=full -pedanticerrors -fsmverbose w +libext+.v+.vl+.sv +libext+.sv \
- +define+RADIANT +define+MODELSIM +define+TOP_SIM $(SRCH_PATH) 
+ +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+INFER_LARGE_RAM $(SRCH_PATH) 
 
-VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM
+VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM  +define+INFER_LARGE_RAM
 
 .PHONY: compile sim lib clean
 
@@ -72,7 +72,7 @@ compile: $(WORKDIR) $(SIM_SRCS)
 	vlog $(VLOG_OPTS) $(SIM_SRCS)
 
 sim:
-	vsim -c $(VSIM_OPTS) -do "add wave -recursive -depth 10 *; run 500us; quit" work.$(TOP)
+	vsim -c $(VSIM_OPTS) -do "run 4ms; mem save -o img.mem -f mti -noaddress -data unsigned -addr hex -wordsperline 1 /tb_top/dut/camera/image_buffer/mem/mem; quit" work.$(TOP)
 
 sim_gui:
 	vsim -gui $(VSIM_OPTS) work.$(TOP)
