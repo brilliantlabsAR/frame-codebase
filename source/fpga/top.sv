@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ps/1ps
 /*
  * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
@@ -72,11 +72,11 @@ initial clock_camera = 0;
 initial clock_display = 0;
 initial clock_spi = 0;
 initial clk_x22 = 0;
-initial forever #(27.78) clock_osc = ~clock_osc;
-initial forever #(20.833) clock_camera = reset_n_pll ? ~clock_camera : 0;
-initial forever #(13.89) clock_display = reset_n_pll ? ~clock_display : 0;
-initial forever #(6.945) clock_spi = reset_n_pll ? ~clock_spi : 0;
-initial forever #(6.41) clk_x22 = reset_n_pll ? ~clk_x22 : 0;
+initial forever #(27777.778) clock_osc = ~clock_osc;
+initial forever #(20833.333) clock_camera = reset_n_pll ? ~clock_camera : 0;
+initial forever #(13999.889) clock_display = reset_n_pll ? ~clock_display : 0;
+initial forever #( 6944.444) clock_spi = reset_n_pll ? ~clock_spi : 0;
+initial forever #( 6410.256) clk_x22 = reset_n_pll ? ~clk_x22 : 0;
 always_comb pll_locked = reset_n_pll;
 `else
 OSCA #(
