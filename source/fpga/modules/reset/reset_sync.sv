@@ -15,15 +15,18 @@ module reset_sync (
     output logic sync_reset_n_out
 );
 
-    logic metastable1_reset_n;
-    logic metastable2_reset_n;
-    
-    always @(posedge clock_in) begin
+    logic metastable_reset_n;
 
-        metastable1_reset_n <= async_reset_n_in;
-        metastable2_reset_n <= metastable1_reset_n;
-        sync_reset_n_out <= metastable2_reset_n;
-        
+    always @(posedge clock_in or negedge async_reset_n_in) begin
+
+        if (~async_reset_n_in) begin
+            sync_reset_n_out <= 0;
+            metastable_reset_n <= 0;
+        end else begin
+            metastable_reset_n <= 1;
+            sync_reset_n_out <= metastable_reset_n;
+        end
+
     end
 
 endmodule
