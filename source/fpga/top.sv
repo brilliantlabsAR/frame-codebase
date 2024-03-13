@@ -60,6 +60,7 @@ module top (
 // Clocking
 logic clock_osc;
 logic clock_camera;
+logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
 logic clk_x22;
@@ -73,6 +74,7 @@ initial clock_display = 0;
 initial clock_spi = 0;
 initial clk_x22 = 0;
 initial forever #(27777.778) clock_osc = ~clock_osc;
+initial forever #(13999.889) clock_camera_pixel = reset_n_pll ? ~clock_camera_pixel : 0;
 initial forever #(20833.333) clock_camera = reset_n_pll ? ~clock_camera : 0;
 initial forever #(13999.889) clock_display = reset_n_pll ? ~clock_display : 0;
 initial forever #( 6944.444) clock_spi = reset_n_pll ? ~clock_spi : 0;

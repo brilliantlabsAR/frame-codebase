@@ -5,6 +5,8 @@ RADIANT = ../../../radiant
 
 TOP = tb_top
 SIM_SRCS += tb_top.sv
+# TOP = camera_pipeline_tb
+# SIM_SRCS += $(MODULES)/camera/testbenches/camera_pipeline_tb.sv
 
 
 SRCH_PATH = $(MODULES)/../top.sv \
@@ -17,7 +19,7 @@ SRCH_PATH = $(MODULES)/../top.sv \
  $(MODULES)/camera/camera.sv \
  $(MODULES)/camera/crop.sv \
  $(MODULES)/camera/debayer.sv \
- $(MODULES)/camera/dumper.v \
+ $(RADIANT)/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v \
  $(MODULES)/camera/image_buffer.sv \
  $(MODULES)/camera/jenc_cdc.sv \
  $(MODULES)/camera/metering.sv \
@@ -39,6 +41,10 @@ SRCH_PATH = $(MODULES)/../top.sv \
  $(MODULES)/camera/jenc/quant.sv \
  $(MODULES)/camera/jenc/transpose.sv \
  $(MODULES)/camera/jenc/zigzag.sv \
+ $(MODULES)/camera/jenc/zigzag.vh \
+ $(MODULES)/camera/jlib/dp_ram_be.sv \
+ $(MODULES)/camera/jlib/dp_ram.sv \
+ $(MODULES)/camera/jlib/large_ram_dp_q.sv \
  $(RADIANT)/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
  $(RADIANT)/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
  $(RADIANT)/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
@@ -56,9 +62,9 @@ SRCH_PATH = $(MODULES)/../top.sv \
 
 # vsim-8233 = array out of bounds, fix later
 VLOG_OPTS = -93 -sv -warning vlog-2388 -suppress 2388 -lint=full -pedanticerrors -fsmverbose w +libext+.v+.vl+.sv +libext+.sv \
- +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+USE_LATTICE_EBR $(MODULES)/camera/jlib/jlib.vh $(MODULES)/camera/jenc/zigzag.vh $(SRCH_PATH) 
+ +define+RADIANT +define+MODELSIM +define+TOP_SIM $(SRCH_PATH) 
 
-VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+USE_LATTICE_EBR $(MODULES)/camera/jlib/jlib.vh $(MODULES)/camera/jenc/zigzag.vh
+VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM
 
 .PHONY: compile sim lib clean
 
@@ -66,7 +72,7 @@ compile: $(WORKDIR) $(SIM_SRCS)
 	vlog $(VLOG_OPTS) $(SIM_SRCS)
 
 sim:
-	vsim -c $(VSIM_OPTS) -do "run -500ns; quit" work.$(TOP)
+	vsim -c $(VSIM_OPTS) -do "add wave -recursive -depth 10 *; run 500us; quit" work.$(TOP)
 
 sim_gui:
 	vsim -gui $(VSIM_OPTS) work.$(TOP)

@@ -16,7 +16,7 @@ module tb_top (
 );
 
 `ifdef COCOTB_MODELSIM
-`include "dumper.vh"
+// `include "dumper.vh"
 GSR GSR_INST (.GSR_N('1), .CLK('0));
 `endif //COCOTB_MODELSIM
 

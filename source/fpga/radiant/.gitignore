@@ -39,6 +39,7 @@ reportview.xml
 !/sim_only/pll_sim_ip/*.xml
 !/sim_only/pll_sim_ip/*.cfg
 !/sim_only/pll_sim_ip/*.ipx
+!/sim_only/pll_sim_ip/rtl
 
 # Logs and reports
 radiantc.*

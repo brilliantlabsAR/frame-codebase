@@ -5,6 +5,11 @@ module tb_top;
 // Clocking
 logic clock_osc;
 
+logic clock_camera_pixel;
+logic clock_camera_byte;
+logic clock_camera_sync;
+logic pll_locked;
+
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -14,12 +19,6 @@ OSCA #(
     .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
-logic clock_camera_pixel;
-logic clock_camera_byte;
-logic clock_camera_sync;
-logic clock_spi;
-logic pll_locked;
-
 pll_sim_ip pll_sim_ip (
     .clki_i(clock_osc),
     .clkop_o(clock_camera_pixel),
@@ -27,6 +26,20 @@ pll_sim_ip pll_sim_ip (
     .clkos2_o(clock_camera_sync),
     .lock_o(pll_locked)
 );
+
+
+// initial clock_osc = 0;
+// initial clock_camera_pixel = 0;
+// initial clock_camera_sync = 0;
+
+// // initial forever #(27777.778) clock_osc = ~clock_osc; // 18M
+// initial forever #(13999.889) clock_camera_pixel = ~clock_camera_pixel; // 36M
+// initial forever #(20833.333) clock_camera_sync = ~clock_camera_sync; // 96M
+
+// initial begin
+//     pll_locked = 0;
+//     #100000 pll_locked = 1;
+// end
 
 // Reset
 reg CLK_GSR  = 0;
@@ -38,7 +51,6 @@ logic global_reset_n;
 logic reset_camera_pixel_n;
 logic reset_camera_byte_n;
 logic reset_camera_sync_n;
-logic reset_spi_n;
 
 reset_global reset_global (
     .clock_in(clock_osc),
@@ -66,12 +78,6 @@ reset_sync reset_sync_clock_camera_byte (
     .clock_in(clock_camera_byte),
     .async_reset_n_in(reset_n),
     .sync_reset_n_out(reset_camera_byte_n)
-);
-
-reset_sync reset_sync_clock_spi (
-    .clock_in(clock_spi),
-    .async_reset_n_in(reset_n),
-    .sync_reset_n_out(reset_spi_n)
 );
 
 // Image to MIPI
