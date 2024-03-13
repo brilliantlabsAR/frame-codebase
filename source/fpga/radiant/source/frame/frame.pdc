@@ -48,3 +48,15 @@ ldc_set_port -iobuf {IO_TYPE=LVCMOS18H} [get_ports display_cb2_out]
 ldc_set_location -site {B5} [get_ports camera_clock_out]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports camera_clock_out]
 ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE}
+
+# False paths between clocks for timing
+#set_false_path -from [get_clocks clk_x22] -to [get_clocks clock_camera_pixel]
+set_false_path -from [get_clocks clock_camera_pixel] -to [get_clocks clk_x22]
+
+# max delay to prevent run away scenic routes
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/we_cdc*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/d_addr_cdc*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wptr_cdc*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wd_cdc*/Q*]
+
+
