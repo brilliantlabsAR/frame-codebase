@@ -1,3 +1,4 @@
+`include "zigzag.vh"
 // Implementation of AAN 1-D DCT, adopted from from https://unix4lyfe.org/dct-1d/
 module dct_1d_aan #(
     parameter DW = 8,
@@ -15,6 +16,7 @@ module dct_1d_aan #(
     output  logic                   q_valid,
     input   logic                   q_hold,
     output  logic [2:0]             q_cnt,
+    output  logic [5:0]             q_cnt_zig_zag_timing[7:0],
     input   logic                   clk,
     input   logic                   resetn
 );
@@ -79,6 +81,9 @@ always @(posedge clk) begin
     if (di_valid & !i0_hold) cntq[0] <= di_cnt;
     if (en[0] & !i1_hold) cntq[1] <= cntq[0];
     if (en[1] & !i2_hold) q_cnt <= cntq[1];
+    if (en[1] & !i2_hold)
+        for (int i=0; i<8; i++)
+            q_cnt_zig_zag_timing[i] <= en_zigzag({i, cntq[1]});
 end
         
 always_comb i2_hold = q_hold & en[2];

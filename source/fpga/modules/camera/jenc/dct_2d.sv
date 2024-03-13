@@ -47,6 +47,7 @@ dct_1d_aan #(
     .q_valid        (dct0_q_valid),
     .q_hold         (dct0_q_hold),
     .q_cnt          (dct0_q_cnt),
+    .q_cnt_zig_zag_timing (),
     .*
 );
 
@@ -76,6 +77,7 @@ transpose #(.QW(CW)) transpose (
 logic signed[C2W-1:0] dct1_q[7:0]; 
 logic [QW-1:0] dct1_q_0[7:0]; 
 logic [2:0] dct1_q_cnt;
+logic [5:0] dct1_q_cnt_zig_zag_timing[7:0];
 logic dct1_q_valid;
 logic dct1_q_hold;
 
@@ -91,6 +93,7 @@ dct_1d_aan #(
     .q_valid        (dct1_q_valid),
     .q_hold         (dct1_q_hold),
     .q_cnt          (dct1_q_cnt),
+    .q_cnt_zig_zag_timing (dct1_q_cnt_zig_zag_timing),
     .*
 );
 
@@ -105,6 +108,7 @@ always_comb
 zigzag #(.QW(QW)) zigzag (
     .d          (dct1_q_0),
     .d_cnt      (dct1_q_cnt),
+    .d_cnt_zig_zag_timing (dct1_q_cnt_zig_zag_timing),
     .d_valid    (dct1_q_valid),
     .d_hold     (dct1_q_hold),
 

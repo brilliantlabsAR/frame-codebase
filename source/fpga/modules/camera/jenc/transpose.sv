@@ -85,9 +85,11 @@ if (d_valid & ~full) begin
     wd_cdc <= {d[2*wr_cnt + 1], d[2*wr_cnt]};
     wptr_cdc <= wptr[0];
     d_addr <= {wr_cnt, 1'b0, d_cnt};
+    d_addr_cdc[0] <= {wr_cnt, 1'b0, d_cnt};
+    d_addr_cdc[1] <= {wr_cnt, 1'b1, d_cnt};
 end
-always_comb d_addr_cdc[0] = d_addr;
-always_comb d_addr_cdc[1] = d_addr | (1<<$bits(d_cnt));
+//always_comb d_addr_cdc[0] = d_addr;
+//always_comb d_addr_cdc[1] = d_addr | (1<<$bits(d_cnt));
 
 
 //CDC

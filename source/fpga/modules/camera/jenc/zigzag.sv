@@ -4,6 +4,7 @@ module zigzag  #(
 )(
     input logic[QW-1:0]     d[7:0],
     input logic[2:0]        d_cnt,
+    input logic[5:0]        d_cnt_zig_zag_timing[7:0],
     input logic             d_valid,
     output logic            d_hold,
 
@@ -81,16 +82,19 @@ else if (~full)
     d_valid_nrz_pre_cdc <= d_valid_nrz;
  
 logic [5:0] zwa0,  zwa1;
+always_comb zwa0 = {wr_cnt, 1'b0, d_cnt};
+always_comb zwa1 = zwa0 | (1<<$bits(d_cnt));
 always @(posedge clk) 
 if (d_valid & ~full) begin
     wd_cdc <= {d[2*wr_cnt + 1], d[2*wr_cnt]};
     wptr_cdc <= wptr[0];
 
-    zwa0 = {wr_cnt, 1'b0, d_cnt};
-    zwa1 = zwa0 | (1<<$bits(d_cnt));
+    //d_addr_cdc[0] <= en_zigzag(zwa0);
+    //d_addr_cdc[1] <= en_zigzag(zwa1);
     
-    d_addr_cdc[0] = en_zigzag(zwa0);
-    d_addr_cdc[1] = en_zigzag(zwa1);
+    d_addr_cdc[0] <= d_cnt_zig_zag_timing[zwa0 >> $bits(d_cnt)];
+    d_addr_cdc[1] <= d_cnt_zig_zag_timing[zwa1 >> $bits(d_cnt)];
+
 end
 
 //CDC
