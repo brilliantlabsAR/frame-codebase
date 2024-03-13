@@ -1,6 +1,4 @@
-`ifndef MODELSIM
-`include "jlib.vh"
-`endif
+
 `include "zigzag.vh"
 module zigzag  #(
     parameter QW = 15 // 1st pass 13, 2nd pass 15

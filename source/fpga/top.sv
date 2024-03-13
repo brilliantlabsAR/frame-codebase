@@ -1,3 +1,4 @@
+`timescale 1ps/1ps
 /*
  * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
  *
@@ -39,12 +40,19 @@ module top (
     output logic display_cb1_out,
     output logic display_cb2_out,
 
+    `ifdef NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/,
+    input logic clock_camera_pixel,
+    `else
     `ifdef RADIANT
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
     `endif
+    `endif //NO_MIPI_IP_SIM
 
     output logic camera_clock_out
 );
@@ -52,13 +60,25 @@ module top (
 // Clocking
 logic clock_osc;
 logic clock_camera;
-logic clock_camera_pixel;
 logic clock_display;
 logic clock_spi;
 logic clk_x22;
 logic pll_locked;
 logic reset_n_pll;
 
+`ifdef NO_PLL_IP_SIM
+initial clock_osc = 0;
+initial clock_camera = 0;
+initial clock_display = 0;
+initial clock_spi = 0;
+initial clk_x22 = 0;
+initial forever #(27777.778) clock_osc = ~clock_osc;
+initial forever #(20833.333) clock_camera = reset_n_pll ? ~clock_camera : 0;
+initial forever #(13999.889) clock_display = reset_n_pll ? ~clock_display : 0;
+initial forever #( 6944.444) clock_spi = reset_n_pll ? ~clock_spi : 0;
+initial forever #( 6410.256) clk_x22 = reset_n_pll ? ~clk_x22 : 0;
+always_comb pll_locked = reset_n_pll;
+`else
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -68,7 +88,7 @@ OSCA #(
     .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
-pll_ip pll_wrapper (
+pll_ip pll (
     .clki_i(clock_osc),                // 18MHz
     .rstn_i(reset_n_pll),
     .clkop_o(clock_camera),            // 24MHz
@@ -78,6 +98,7 @@ pll_ip pll_wrapper (
     .clkos4_o(clk_x22),                // 78MHz
     .lock_o(pll_locked)
 );
+`endif
 
 // Reset
 logic global_reset_n;
@@ -187,12 +208,18 @@ camera camera (
     .clk_x22(clk_x22),
     .resetn_x22(resetn_x22),
     
+    `ifdef NO_MIPI_IP_SIM
+    .byte_to_pixel_frame_valid,
+    .byte_to_pixel_line_valid,
+    .byte_to_pixel_data,
+    `else
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
     .mipi_clock_n_in(mipi_clock_n_in),
     .mipi_data_p_in(mipi_data_p_in),
     .mipi_data_n_in(mipi_data_n_in),
     `endif
+    `endif //NO_MIPI_IP_SIM
     
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
