@@ -3,7 +3,6 @@ module tb_top (
     input logic global_reset_n,
     input logic clock_camera_pixel,
     input logic clock_camera_sync,
-    input logic clock_spi,
 
     // Image to MIPI
     input logic pixel_lv,
@@ -18,7 +17,7 @@ module tb_top (
 
 `ifdef COCOTB_MODELSIM
 `include "dumper.vh"
-GSR GSR_INST (.GSR_N('1), .CLK(clk));
+GSR GSR_INST (.GSR_N('1), .CLK('0));
 `endif //COCOTB_MODELSIM
 
 `ifndef NO_MIPI_IP_SIM
@@ -27,7 +26,6 @@ logic reset_n;
 logic reset_camera_pixel_n;
 logic reset_camera_byte_n;
 logic reset_camera_sync_n;
-logic reset_spi_n;
 
 logic clock_camera_byte;
 logic pll_dphy_locked;
@@ -50,12 +48,6 @@ reset_sync reset_sync_clock_camera_byte (
     .clock_in(clock_camera_byte),
     .async_reset_n_in(reset_n),
     .sync_reset_n_out(reset_camera_byte_n)
-);
-
-reset_sync reset_sync_clock_spi (
-    .clock_in(clock_spi),
-    .async_reset_n_in(reset_n),
-    .sync_reset_n_out(reset_spi_n)
 );
 
 parameter IMAGE_X_SIZE = 1288;
@@ -166,7 +158,7 @@ wire mipi_data_p;
 wire mipi_data_n;
 
 csi2_transmitter_ip csi_tx_inst (
-        .ref_clk_i(clock_camera_sync & reset_camera_sync_n),
+        .ref_clk_i(clock_camera_sync),
         .reset_n_i(reset_camera_sync_n),
         .usrstdby_i(1'b0),
         .pd_dphy_i(1'b0),

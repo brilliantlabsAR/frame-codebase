@@ -83,9 +83,7 @@ VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib .)
 
 EXTRA_ARGS += +define+RADIANT
-#ifdef TOP_SIM
-#EXTRA_ARGS += +define+TOP_SIM
-#endif
+EXTRA_ARGS += +define+TOP_SIM
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM            # Simulate Bayer input
         EXTRA_ARGS += +define+NO_PLL_IP_SIM            # Emulate PLL
@@ -103,11 +101,8 @@ ifeq ($(SIM),modelsim)
 endif
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-#ifdef TOP_SIM
-#TOPLEVEL =  tb_top
-#else
-TOPLEVEL =  camera
-#endif
+TOPLEVEL =  tb_top
+
 # MODULE is the basename of the Python test file
 MODULE = test_camera
 export PYTHONPATH := $(realpath ../python_misc):$(realpath ../jcommon):$(realpath ../jed):$(PYTHONPATH)

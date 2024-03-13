@@ -17,20 +17,22 @@ np.random.seed(0)
 
 def initialize_ports(dut):
     """Only control ports get initialized"""
-    dut.byte_to_pixel_frame_valid.value = 0
-    dut.byte_to_pixel_line_valid.value = 0
+    dut.pixel_fv.value = 0
+    dut.pixel_lv.value = 0
+    dut.pixel_data.value = 0
 
-    dut.op_code_valid_in.value = 0
-    dut.operand_valid_in.value = 0
-
+    dut.spi_select_in.value = 1
+    dut.spi_data_in.value = 0
 
 
 async def clock_n_reset(c, r, f, n=5):
-    r.value = 0
+    if r is not None:
+        r.value = 0
     period = round(10e9/f, 2) # in ns
     cocotb.start_soon(Clock(c, period, units="ns").start())
     await ClockCycles(c, n)
-    r.value = 1
+    if r is not None:
+        r.value = 1
  
 
 async def show_image(*img_files, t=5000):
@@ -43,48 +45,32 @@ async def show_image(*img_files, t=5000):
 
 class SPITransactor():
     def __init__(self, dut):
-        self.regs = [0] * 256
         self.dut = dut
 
 
-    async def spi_write(self, op_code, *operands):
+    async def spi_write_read(self, op_code, *operands):
         if len(operands) == 0:
         	operands = [0]
-        await RisingEdge(self.dut.clock_spi_in)
-        for i, operand in enumerate(operands):
-            self.dut.operand_valid_in.value = 1
-            self.dut.op_code_valid_in.value = 1
-            self.dut.op_code_in.value = op_code + i
-            self.dut.operand_in.value = operand
-            self.regs[op_code + i] = operand    # store in memory
+        data_recvd = [0]*len(operands)
 
-            await RisingEdge(self.dut.clock_spi_in)
-            self.dut.operand_valid_in.value = 0
-            self.dut.op_code_valid_in.value = 0
-
-
-    async def spi_read(self, op_code, n=1):
-        await RisingEdge(self.dut.clock_spi_in)
-        for i in range(n):
-            self.dut.operand_valid_in.value = 1
-            self.dut.op_code_valid_in.value = 1
-            self.dut.operand_count_in.value = i
-            self.dut.op_code_in.value = op_code
-
-            await RisingEdge(self.dut.clock_spi_in)
-            self.dut.operand_valid_in.value = 0
-            self.dut.op_code_valid_in.value = 0
-            
-            while self.dut.response_valid_out.value == 0:
-                await RisingEdge(self.dut.clock_spi_in)
-            self.regs[op_code + i] = self.dut.response_out.value.integer
-        return self.regs[op_code:op_code + n]
-
+        await FallingEdge(self.dut.spi_clock_in)
+        for i in range(8)[::-1]:
+            self.dut.spi_select_in.value = 0
+            self.dut.spi_data_in.value = (op_code >> i) & 0x1
+            await FallingEdge(self.dut.spi_clock_in)
+        for j, operand in enumerate(operands):
+            for i in range(8)[::-1]:
+                self.dut.spi_select_in.value = 0
+                self.dut.spi_data_in.value = (operand >> i) & 0x1
+                await FallingEdge(self.dut.spi_clock_in)
+                data_recvd[j] |= (self.dut.spi_data_out.value << i)
+        self.dut.spi_select_in.value = 1
+        return data_recvd
 
 
 class Tester(SPITransactor):
     def __init__(self, dut, img_file='baboon.bmp', read_bmp=True, save_bmp_to_array=False):
-        super().__init__(dut)
+        super(Tester, self).__init__(dut)
         self.dut = dut
         self.jpeg_sel = 0
         
@@ -126,95 +112,100 @@ class Tester(SPITransactor):
         #cv2.destroyAllWindows()
         #print(self.img_bayer[:8,:8])
     
-    async def initialize_encoder(self):
-        await RisingEdge(self.dut.clock_spi_in)
+    async def initialize(self):
+        if self.jpeg_sel:
+            await self.initialize_encoder()
+        else:
+            await self.initialize_rgb()
 
-        #configure image size (FIXME)
-        self.dut.X_CROP_START.value = 4
-        self.dut.X_CROP_END.value =   4 + 2 + self.x
-        self.dut.Y_CROP_START.value = 4
-        self.dut.Y_CROP_END.value =   4 + 2 + self.y
+    async def initialize_encoder(self):
+        await RisingEdge(self.dut.spi_clock_in)
 
     	# enable & reset encoder
         self.jpeg_sel = 1
-        await self.spi_write(0x30, 0x4)
-        # wait 16 cycles
-        await ClockCycles(self.dut.clock_spi_in, 16)
-        await self.spi_write(0x30, 0x9)
-        await ClockCycles(self.dut.clock_spi_in, 16)
-        
+        await self.spi_write_read(0x30, 0x6)
+        await self.spi_write_read(0x30, 0x0)
         # Capture flag
-        await self.spi_write(0x20)
+        await self.spi_write_read(0x20)
     
+    async def initialize_rgb(self):
+        await RisingEdge(self.dut.spi_clock_in)
+
+    	# enable & reset encoder
+        self.jpeg_sel = 0
+        await self.spi_write_read(0x30, 0x7)
+        await self.spi_write_read(0x30, 0x1)
+        # Capture flag
+        await self.spi_write_read(0x20)
     
 
     async def send_bayer(self):
 	    # send RGB
-        await RisingEdge(self.dut.clock_pixel_in)
-        for line in self.img_bayer:
-            await RisingEdge(self.dut.clock_pixel_in)
-            for pix in line:
-                self.dut.byte_to_pixel_frame_valid.value = 1
-                self.dut.byte_to_pixel_line_valid.value = 1
+        await RisingEdge(self.dut.clock_camera_pixel)
+        self.dut.pixel_fv.value = 1
+        await ClockCycles(self.dut.clock_camera_pixel, 2)
 
-                self.dut.byte_to_pixel_data.value = 4 * int(pix)
-                await RisingEdge(self.dut.clock_pixel_in)
-            self.dut.byte_to_pixel_line_valid.value = 0
+        for line in self.img_bayer:
+            await ClockCycles(self.dut.clock_camera_pixel, 100)
+            self.dut.pixel_lv.value = 1
+            for pix in line:
+
+                self.dut.pixel_data.value = 4 * int(pix)
+                await RisingEdge(self.dut.clock_camera_pixel)
+            self.dut.pixel_lv.value = 0
             # Horizontal blanking requirement:
             #   horizontal-blanking > ceil(X-dimension/128)
             #   1 clock added above, so blank = ceil(X-dimension/128) satisfies this requirement
-            blank = (self.x + 127)//128
+            #blank = (self.x + 127)//128
             
-            await ClockCycles(self.dut.clock_pixel_in, blank)
-        self.dut.byte_to_pixel_frame_valid.value = 0
-        await ClockCycles(self.dut.clock_pixel_in, blank)
+            await ClockCycles(self.dut.clock_camera_pixel, 100)
+        self.dut.pixel_fv.value = 0
+        await ClockCycles(self.dut.clock_camera_pixel, 100)
 
 
     async def read_rgb_buffer(self):
-        await FallingEdge(self.dut.rgb_cdc.frame_valid)
-        await RisingEdge(self.dut.clock_spi_in)
+        await FallingEdge(self.dut.dut.camera.rgb_cdc.frame_valid)
+        await RisingEdge(self.dut.spi_clock_in)
 
         bytes = self.y * self.x
         bgr_out = []
 
-        for self.dut.bytes_read.value in range(bytes):
-            await RisingEdge(self.dut.clock_spi_in)
-            await RisingEdge(self.dut.clock_spi_in)
-            pix = self.dut.buffer_read_data.value.integer
-            r = 32*((pix>>5) & 7)
-            g = 32*((pix>>2) & 7)
+        for _ in range(bytes):
+            [pix] = await self.spi_write_read(0x22, 0xff)
+            r = 32*((pix >> 5) & 7)
+            g = 32*((pix >> 2) & 7)
             b = 64*(pix & 3)
             bgr_out.append([b, g, r])
 
         self.bgr_out = np.array(bgr_out, dtype=np.uint8).reshape(self.y, self.x, 3)
+
+        # reset
+        await self.spi_write_read(0x30, 0x5)
+        await self.spi_write_read(0x30, 0x1)
         
 
     async def read_jpeg_buffer(self):
         # poll size
         while True:
-            await self.spi_read(0x31, 3)
-            bytes = sum([v*(2**(i*8)) for i,v in enumerate(self.regs[0x31:0x31+3])])
+            read_data = await self.spi_write_read(0x31, *[0xff]*3)
+            bytes = sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
             if bytes != 0:
                 break
                 
         # Read one more time to avoid race condition
-        await self.spi_read(0x31, 3)
-        bytes = sum([v*(2**(i*8)) for i,v in enumerate(self.regs[0x31:0x31+3])])
+        read_data = await self.spi_write_read(0x31, *[0xff]*3)
+        bytes = sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
 
         self.ecs = []
-        for i in range(bytes):
-            await self.spi_read(0x22)
-            self.ecs.append(self.regs[0x22])
-
+        for _ in range(bytes):
+            ecs = await self.spi_write_read(0x22, 0xff)
+            self.ecs.extend(ecs)
 
         # jpeg_out_size_clear.value = 1
-        await self.spi_write(0x30, 0x2)
-
-        # wait 16 cycles
-        await ClockCycles(self.dut.clock_spi_in, 16)
-
-        # jpeg_out_size_clear.value = 0 + reset
-        await self.spi_write(0x30, 0x4)
+        await self.spi_write_read(0x30, 0x2)
+        # reset
+        await self.spi_write_read(0x30, 0x4)
+        await self.spi_write_read(0x30, 0x0)
 
 
     async def read_image_buffer(self):
@@ -260,12 +251,10 @@ class Tester(SPITransactor):
 async def dct_test(dut):
     initialize_ports(dut)
 
-    c1 = cocotb.start_soon(clock_n_reset(dut.clock_spi_in, dut.reset_spi_n_in, f=1.02 * 72*10e6)) # 72 MHz clock
-    c0 = cocotb.start_soon(clock_n_reset(dut.clock_pixel_in, dut.reset_pixel_n_in, f=0.98 * 36*10e6)) # 36 MHz clock
-    c2 = cocotb.start_soon(clock_n_reset(dut.clk_x22, dut.resetn_x22, f=78*10e6)) # 78 MHz clock
-    await cocotb.triggers.Combine(c0, c1, c2)
-    
-    await ClockCycles(dut.clock_spi_in, 2)
+    clk_op = cocotb.start_soon(clock_n_reset(dut.clock_camera_pixel, None, f=36.0*10e6))       # 36 MHz clock
+    clk_os = cocotb.start_soon(clock_n_reset(dut.spi_clock_in, dut.global_reset_n, f=(72.0/4)*10e6))  # 72/2 MHz clock
+    clk_s2 = cocotb.start_soon(clock_n_reset(dut.clock_camera_sync, None, f=96.0*10e6))        # 96 MHz clock
+    await cocotb.triggers.Combine(clk_op, clk_os, clk_s2)
 
     test_image = 'baboon.bmp'  # 256x256
     test_image = '4.2.07.tiff'  # peppers 512x512
@@ -273,6 +262,11 @@ async def dct_test(dut):
     
     test_image = '../jenc/' + test_image;
     t = Tester(dut, test_image, read_bmp=False)
+
+    #// Wait for reset, 1 frame of 76x76 to end
+    #delay_us('d1250);
+    #await Timer(1250, units='us')
+    await Timer(5, units='us')
 
     for _ in range(1):
         if False:
@@ -282,7 +276,8 @@ async def dct_test(dut):
 
 
         # send capture frame
-        await t.initialize_encoder()    
+        t.jpeg_sel = 1
+        await t.initialize()    
         bayer  = cocotb.start_soon(t.send_bayer())   
 
         await t.read_image_buffer()
@@ -291,4 +286,4 @@ async def dct_test(dut):
         await show_image(test_image, 'jpeg_out.jpg' if t.jpeg_sel else 'rgb_out.bmp', t=0)
 
         await cocotb.triggers.Combine(bayer)  # wait for frame end
-    await ClockCycles(dut.clock_spi_in, 100)
+    await ClockCycles(dut.spi_clock_in, 100)
