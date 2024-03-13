@@ -207,6 +207,7 @@ logic [1:0] capture_in_progress_cdc;
 
 logic debayered_frame_valid;
 logic cropped_frame_valid;
+logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
 logic jpeg_end;
 
 always_comb capture_in_progress_flag  = capture_in_progress_state[1];
@@ -311,6 +312,9 @@ always @(posedge mipi_byte_clock or negedge mipi_byte_reset_n) begin
     end
 
 end
+
+logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/;
 
 byte_to_pixel_ip byte_to_pixel_ip (
     .reset_byte_n_i(mipi_byte_reset_n),

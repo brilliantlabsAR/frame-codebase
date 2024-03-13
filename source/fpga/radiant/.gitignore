@@ -35,6 +35,11 @@ reportview.xml
 !/sim_only/pixel_to_byte_ip/*.ipx
 !/sim_only/pixel_to_byte_ip/rtl
 
+/sim_only/pll_sim_ip/*
+!/sim_only/pll_sim_ip/*.xml
+!/sim_only/pll_sim_ip/*.cfg
+!/sim_only/pll_sim_ip/*.ipx
+
 # Logs and reports
 radiantc.*
 *.log
@@ -44,3 +49,9 @@ transcript
 # Temporary and backup files
 .recovery
 *.bak
+
+# Modelsim
+*.bak
+*.wlf
+*.mti
+work
