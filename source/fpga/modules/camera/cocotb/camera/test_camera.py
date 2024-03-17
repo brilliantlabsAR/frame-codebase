@@ -143,10 +143,10 @@ class Tester(SPITransactor):
 	    # send RGB
         await RisingEdge(self.dut.clock_camera_pixel)
         self.dut.pixel_fv.value = 1
-        await ClockCycles(self.dut.clock_camera_pixel, 2)
+        await ClockCycles(self.dut.clock_camera_pixel, 300)
 
         for line in self.img_bayer:
-            await ClockCycles(self.dut.clock_camera_pixel, 100)
+            await ClockCycles(self.dut.clock_camera_pixel, 300)
             self.dut.pixel_lv.value = 1
             for pix in line:
 
@@ -158,9 +158,9 @@ class Tester(SPITransactor):
             #   1 clock added above, so blank = ceil(X-dimension/128) satisfies this requirement
             #blank = (self.x + 127)//128
             
-            await ClockCycles(self.dut.clock_camera_pixel, 100)
+            await ClockCycles(self.dut.clock_camera_pixel, 300)
         self.dut.pixel_fv.value = 0
-        await ClockCycles(self.dut.clock_camera_pixel, 100)
+        await ClockCycles(self.dut.clock_camera_pixel, 300)
 
 
     async def read_rgb_buffer(self):
@@ -253,8 +253,7 @@ async def dct_test(dut):
 
     clk_op = cocotb.start_soon(clock_n_reset(dut.clock_camera_pixel, None, f=36.0*10e6))       # 36 MHz clock
     clk_os = cocotb.start_soon(clock_n_reset(dut.spi_clock_in, dut.global_reset_n, f=(72.0/4)*10e6))  # 72/2 MHz clock
-    clk_s2 = cocotb.start_soon(clock_n_reset(dut.clock_camera_sync, None, f=96.0*10e6))        # 96 MHz clock
-    await cocotb.triggers.Combine(clk_op, clk_os, clk_s2)
+    await cocotb.triggers.Combine(clk_op, clk_os)
 
     test_image = 'baboon.bmp'  # 256x256
     test_image = '4.2.07.tiff'  # peppers 512x512
@@ -265,11 +264,10 @@ async def dct_test(dut):
 
     #// Wait for reset, 1 frame of 76x76 to end
     #delay_us('d1250);
-    #await Timer(1250, units='us')
-    await Timer(5, units='us')
+    await Timer(12.5, units='us')
 
     for _ in range(1):
-        if False:
+        for _ in range(2):
             # send non capture frame
             bayer  = cocotb.start_soon(t.send_bayer())   
             await cocotb.triggers.Combine(bayer)  # wait for frame end
