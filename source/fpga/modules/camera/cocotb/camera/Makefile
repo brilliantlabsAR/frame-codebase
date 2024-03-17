@@ -64,6 +64,7 @@ endif
 ifeq ($(SIM),modelsim)
 # Lattice verif models
 VERILOG_FILES += \
+        ../../../../radiant/sim_only/pll_sim_ip/rtl/pll_sim_ip.v \
         ../../../../radiant/sim_only/pixel_to_byte_ip/rtl/pixel_to_byte_ip.v \
         ../../../../radiant/sim_only/csi2_transmitter_ip/rtl/csi2_transmitter_ip.v
 

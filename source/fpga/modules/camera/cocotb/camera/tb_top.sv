@@ -2,7 +2,6 @@
 module tb_top (
     input logic global_reset_n,
     input logic clock_camera_pixel,
-    input logic clock_camera_sync,
 
     // Image to MIPI
     input logic pixel_lv,
@@ -21,6 +20,24 @@ GSR GSR_INST (.GSR_N('1), .CLK('0));
 `endif //COCOTB_MODELSIM
 
 `ifndef NO_MIPI_IP_SIM
+
+OSCA #(
+    .HF_CLK_DIV("24"),
+    .HF_OSC_EN("ENABLED"),
+    .LF_OUTPUT_EN("DISABLED")
+    ) osc (
+    .HFOUTEN(1'b1),
+    .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
+);
+
+pll_sim_ip pll_sim_ip (
+    .clki_i(clock_osc),
+    .clkop_o( ),
+    .clkos_o( ),
+    .clkos2_o(clock_camera_sync),
+    .lock_o(pll_locked)
+);
+
 
 logic reset_n;
 logic reset_camera_pixel_n;
@@ -50,8 +67,8 @@ reset_sync reset_sync_clock_camera_byte (
     .sync_reset_n_out(reset_camera_byte_n)
 );
 
-parameter IMAGE_X_SIZE = 1288;
-parameter IMAGE_Y_SIZE = 768;
+parameter IMAGE_X_SIZE = 80;//1288;
+parameter IMAGE_Y_SIZE = 80;//768;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
 logic c2d_ready, tx_d_hs_en, byte_data_en;
