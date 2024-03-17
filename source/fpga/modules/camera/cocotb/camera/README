@@ -15,3 +15,10 @@ $> pip install cocotb  # uses pip from 32-bit Python environment
 $>
 $> make clean
 $> make SIM=modelsim
+
+
+
+Verilator sim in 64-bit env:
+$> conda activate base
+$> make clean
+$> make SIM=verilator
