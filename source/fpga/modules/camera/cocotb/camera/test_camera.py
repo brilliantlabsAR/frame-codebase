@@ -50,7 +50,7 @@ class SPITransactor():
 
     async def spi_write_read(self, op_code, *operands):
         if len(operands) == 0:
-        	operands = [0]
+            operands = [0]
         data_recvd = [0]*len(operands)
 
         await FallingEdge(self.dut.spi_clock_in)

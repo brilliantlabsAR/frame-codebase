@@ -62,9 +62,12 @@ SRCH_PATH = $(MODULES)/../top.sv \
 
 # vsim-8233 = array out of bounds, fix later
 VLOG_OPTS = -93 -sv -warning vlog-2388 -suppress 2388 -lint=full -pedanticerrors -fsmverbose w +libext+.v+.vl+.sv +libext+.sv \
- +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+INFER_LARGE_RAM $(SRCH_PATH) 
+ +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+INFER_LARGE_RAM \
+ $(SRCH_PATH) 
 
-VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 +define+RADIANT +define+MODELSIM +define+TOP_SIM  +define+INFER_LARGE_RAM
+VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work \
+ -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 \
+ +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+INFER_LARGE_RAM
 
 .PHONY: compile sim lib clean
 
@@ -72,7 +75,9 @@ compile: $(WORKDIR) $(SIM_SRCS)
 	vlog $(VLOG_OPTS) $(SIM_SRCS)
 
 sim:
-	vsim -c $(VSIM_OPTS) -do "run 4ms; mem save -o img.mem -f mti -noaddress -data unsigned -addr hex -wordsperline 1 /tb_top/dut/camera/image_buffer/mem/mem; quit" work.$(TOP)
+	vsim -c $(VSIM_OPTS) \
+	-do "vcd file top_sim.vcd; vcd add -r /tb_top/dut/camera/*; run 5ms; mem save -o /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/top_sim/img.mem -f mti -noaddress -data unsigned -addr hex -startaddress 0 -endaddress 68 -wordsperline 1 /tb_top/dut/camera/image_buffer/mem; quit" \
+	work.$(TOP)
 
 sim_gui:
 	vsim -gui $(VSIM_OPTS) work.$(TOP)

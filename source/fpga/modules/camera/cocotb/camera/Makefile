@@ -1,6 +1,6 @@
 # defaults
-#SIM ?= verilator
-SIM ?= modelsim
+SIM ?= verilator
+# SIM ?= modelsim
 export SIM := $(SIM)
 TOPLEVEL_LANG ?= verilog
 
@@ -83,16 +83,17 @@ VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib .)
 
 EXTRA_ARGS += +define+RADIANT
-EXTRA_ARGS += +define+TOP_SIM
+# EXTRA_ARGS += +define+TOP_SIM
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM            # Simulate Bayer input
-        EXTRA_ARGS += +define+NO_PLL_IP_SIM            # Emulate PLL
+        EXTRA_ARGS += +define+NO_PLL_IP_SIM             # Emulate PLL
+        EXTRA_ARGS += +define+INFER_LARGE_RAM           # RTL vs. memory models explicitely
         EXTRA_ARGS += --timing
         EXTRA_ARGS += --trace --trace-structs
         EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY
 endif
 ifeq ($(SIM),modelsim)
-        #EXTRA_ARGS += +define+INFER_LARGE_RAM           # RTL vs. memory models explicitely
+        EXTRA_ARGS += +define+INFER_LARGE_RAM           # RTL vs. memory models explicitely
         EXTRA_ARGS += +define+USE_LATTICE_EBR           # use EBR explicitely
         EXTRA_ARGS += +define+COCOTB_MODELSIM
         EXTRA_ARGS += -suppress vlog-2244 
@@ -101,10 +102,11 @@ ifeq ($(SIM),modelsim)
 endif
 
 # TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-TOPLEVEL =  tb_top
+# TOPLEVEL =  tb_top
+TOPLEVEL =  camera
 
 # MODULE is the basename of the Python test file
-MODULE = test_camera
+MODULE = test_camera_only
 export PYTHONPATH := $(realpath ../python_misc):$(realpath ../jcommon):$(realpath ../jed):$(PYTHONPATH)
 
 # include cocotb's make rules to take care of the simulator setup

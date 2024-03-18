@@ -32,13 +32,13 @@ pll_sim_ip pll_sim_ip (
 // initial clock_camera_pixel = 0;
 // initial clock_camera_sync = 0;
 
-// // initial forever #(27777.778) clock_osc = ~clock_osc; // 18M
+// initial forever #(27777.778) clock_osc = ~clock_osc; // 18M
 // initial forever #(13999.889) clock_camera_pixel = ~clock_camera_pixel; // 36M
 // initial forever #(20833.333) clock_camera_sync = ~clock_camera_sync; // 96M
 
 // initial begin
 //     pll_locked = 0;
-//     #100000 pll_locked = 1;
+//     #10000 pll_locked = 1;
 // end
 
 // Reset
@@ -87,8 +87,8 @@ logic pixel_en;
 logic [9:0] pixel_data;
 
 
-parameter IMAGE_X_SIZE = 1288;
-parameter IMAGE_Y_SIZE = 768;
+parameter IMAGE_X_SIZE = 76;
+parameter IMAGE_Y_SIZE = 76;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
 image_gen i_image_gen (
@@ -99,6 +99,7 @@ image_gen i_image_gen (
     .line_valid (pixel_lv) 
 );
 
+`ifndef NO_MIPI_IP_SIM
 logic c2d_ready, tx_d_hs_en, byte_data_en;
 logic [5:0] dt;
 logic [7:0] byte_data;
@@ -228,6 +229,7 @@ csi2_transmitter_ip csi_tx_inst (
         .lp_en_i(r_lp_en),
         .pll_lock_o(pll_dphy_locked)
 );
+`endif
 
 logic spi_clock_in, spi_data_in, spi_data_out, spi_select_in;
 
@@ -251,10 +253,16 @@ top dut (
     // .display_cb1_out(display_cb1_out),
     // .display_cb2_out(display_cb2_out),
 
+    `ifdef NO_MIPI_IP_SIM
+    .byte_to_pixel_frame_valid(pixel_fv),
+    .byte_to_pixel_line_valid(pixel_lv),
+    .byte_to_pixel_data(pixel_data)
+    `else
     .mipi_clock_p_in(mipi_clock_p),
     .mipi_clock_n_in(mipi_clock_n),
     .mipi_data_p_in(mipi_data_p),
     .mipi_data_n_in(mipi_data_n)
+    `endif
 );
 
 task txrx_byte(

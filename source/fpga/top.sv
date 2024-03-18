@@ -44,7 +44,6 @@ module top (
     input logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/,
     input logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/,
     input logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/,
-    input logic clock_camera_pixel,
     `else
     `ifdef RADIANT
     inout wire mipi_clock_p_in,
