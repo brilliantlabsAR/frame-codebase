@@ -274,8 +274,8 @@ task txrx_byte(
             spi_data_in <= data_send[i];
             #62500;
             spi_clock_in <= ~spi_clock_in;
-            #62500;
             data_recvd[i] <= spi_data_out;
+            #62500;
             spi_clock_in <= ~spi_clock_in;
         end
         $display("%0t spi => sent: 0x%0h recieved: 0x%0h", $time, data_send, data_recvd);
@@ -317,6 +317,13 @@ initial begin
         // Wait for reset, 1 frame of 76x76 to end
         delay_us('d2400);
 
+        // Chip ID
+        spi_select_in = 0;
+        txrx_byte('hdb, temp);
+        txrx_byte('h00, temp);
+        spi_select_in = 1;
+        delay_us('d1);
+
         // Reset jpeg
         spi_select_in = 0;
         txrx_byte('h30, temp);
@@ -346,11 +353,13 @@ initial begin
         txrx_byte('hff, jpeg_bytes2);
         jpeg_bytes = jpeg_bytes0 + (jpeg_bytes1 << 8) + (jpeg_bytes2 << 16);
         spi_select_in = 1;
+
+        delay_us('d1);
         
         $display("reading camera");
         spi_select_in = 0;
         txrx_byte('h22, temp);
-        for (integer i=0; i < jpeg_bytes; i++)
+        for (integer i=0; i < 792; i++)
             txrx_byte('hff, temp);
         spi_select_in = 1;
     end

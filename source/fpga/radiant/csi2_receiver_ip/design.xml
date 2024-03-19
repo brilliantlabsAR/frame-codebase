@@ -56,14 +56,14 @@
                     <ipxact:configurableElementValue referenceId="RX_FIFO">True</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_TYPE">SINGLE</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_IMPL">LUT</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">8</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">16</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_QUE_ENT">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DYN_RXFIFO_PKTDLY">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_PKT_DLY">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_CTR_WIDTH">0</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FR_FIFO_CLKMODE">DC</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="FIFO_IF">CENTERED</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_MISC">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_MISC">True</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DELAYB_DELMODE">ECLK_CENTERED</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DELAYB_COARSEDEL">0P8NS</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DELAYB_DELVAL">47</ipxact:configurableElementValue>
@@ -774,79 +774,93 @@
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxdatsyncfr_state_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxdatsyncfr_state_o"/>
+                <ipxact:externalPortReference portRef="rxdatsyncfr_state_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxemptyfr0_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxemptyfr0_o"/>
+                <ipxact:externalPortReference portRef="rxemptyfr0_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxemptyfr1_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxemptyfr1_o"/>
+                <ipxact:externalPortReference portRef="rxemptyfr1_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxfullfr0_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxfullfr0_o"/>
+                <ipxact:externalPortReference portRef="rxfullfr0_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxfullfr1_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxfullfr1_o"/>
+                <ipxact:externalPortReference portRef="rxfullfr1_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxque_curstate_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxque_curstate_o"/>
+                <ipxact:externalPortReference portRef="rxque_curstate_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxque_empty_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxque_empty_o"/>
+                <ipxact:externalPortReference portRef="rxque_empty_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.rxque_full_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="rxque_full_o"/>
+                <ipxact:externalPortReference portRef="rxque_full_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.fifo_dly_err_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="fifo_dly_err_o"/>
+                <ipxact:externalPortReference portRef="fifo_dly_err_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.fifo_undflw_err_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="fifo_undflw_err_o"/>
+                <ipxact:externalPortReference portRef="fifo_undflw_err_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>
             <ipxact:name>csi2_receiver_ip.fifo_ovflw_err_o</ipxact:name>
-            <ipxact:tiedValue>open</ipxact:tiedValue>
             <ipxact:portReferences>
                 <ipxact:internalPortReference componentRef="csi2_receiver_ip" portRef="fifo_ovflw_err_o"/>
+                <ipxact:externalPortReference portRef="fifo_ovflw_err_o"/>
             </ipxact:portReferences>
         </ipxact:adHocConnection>
         <ipxact:adHocConnection>

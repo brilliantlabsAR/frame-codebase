@@ -370,6 +370,95 @@
                     <ipxact:direction>out</ipxact:direction>
                 </ipxact:wire>
             </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxdatsyncfr_state_o</ipxact:name>
+                <ipxact:displayName>rxdatsyncfr_state_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxemptyfr0_o</ipxact:name>
+                <ipxact:displayName>rxemptyfr0_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxemptyfr1_o</ipxact:name>
+                <ipxact:displayName>rxemptyfr1_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxfullfr0_o</ipxact:name>
+                <ipxact:displayName>rxfullfr0_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxfullfr1_o</ipxact:name>
+                <ipxact:displayName>rxfullfr1_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxque_curstate_o</ipxact:name>
+                <ipxact:displayName>rxque_curstate_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                    <ipxact:vectors>
+                        <ipxact:vector>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:vector>
+                    </ipxact:vectors>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxque_empty_o</ipxact:name>
+                <ipxact:displayName>rxque_empty_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>rxque_full_o</ipxact:name>
+                <ipxact:displayName>rxque_full_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>fifo_dly_err_o</ipxact:name>
+                <ipxact:displayName>fifo_dly_err_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>fifo_undflw_err_o</ipxact:name>
+                <ipxact:displayName>fifo_undflw_err_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
+                <ipxact:name>fifo_ovflw_err_o</ipxact:name>
+                <ipxact:displayName>fifo_ovflw_err_o</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>out</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
         </ipxact:ports>
     </ipxact:model>
     <ipxact:fileSets>
@@ -467,7 +556,7 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 03 13 15:49:56</lsccip:createdTimestamp>
+            <lsccip:createdTimestamp>2024 03 19 14:04:40</lsccip:createdTimestamp>
             <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>

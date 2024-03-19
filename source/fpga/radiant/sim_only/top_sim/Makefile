@@ -76,7 +76,7 @@ compile: $(WORKDIR) $(SIM_SRCS)
 
 sim:
 	vsim -c $(VSIM_OPTS) \
-	-do "vcd file top_sim.vcd; vcd add -r /tb_top/dut/camera/*; run 5ms; mem save -o /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/top_sim/img.mem -f mti -noaddress -data unsigned -addr hex -startaddress 0 -endaddress 68 -wordsperline 1 /tb_top/dut/camera/image_buffer/mem; quit" \
+	-do "log add -r /tb_top/dut/camera/*; run 5ms; mem save -o /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/top_sim/img.mem -f mti -noaddress -data unsigned -addr hex -startaddress 0 -endaddress 68 -wordsperline 1 /tb_top/dut/camera/image_buffer/mem; quit" \
 	work.$(TOP)
 
 sim_gui:

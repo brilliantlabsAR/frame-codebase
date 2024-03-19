@@ -32,12 +32,15 @@
 #include "nrfx_systick.h"
 #include "pinout.h"
 #include "spi.h"
+#include "nrfx_systick.h"
 
 static struct current_camera_settings
 {
     uint16_t exposure;
     uint8_t sensor_gain;
 } current;
+
+static volatile uint32_t jpeg_bytes_remaining;
 
 static int lua_camera_capture(lua_State *L)
 {
@@ -99,6 +102,83 @@ static int lua_camera_read(lua_State *L)
 
     lua_pushlstring(L, (char *)data, length);
     free(data);
+
+    return 1;
+}
+
+static int lua_camera_read_jpeg(lua_State *L)
+{
+    lua_Integer bytes_requested = luaL_checkinteger(L, 1);
+
+    uint32_t bytes_available = jpeg_bytes_remaining;
+
+    if (bytes_requested <= 0)
+    {
+        luaL_error(L, "bytes must be greater than 0");
+    }
+
+    if (bytes_available <= 0)
+    {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    uint8_t address = 0x22;
+
+    uint32_t length = bytes_available < bytes_requested
+                          ? bytes_available
+                          : bytes_requested;
+
+    uint8_t *data = malloc(length);
+    if (data == NULL)
+    {
+        luaL_error(L, "not enough memory");
+    }
+
+    spi_write(FPGA, &address, 1, true);
+    spi_read(FPGA, data, length, false);
+
+    lua_pushlstring(L, (char *)data, length);
+    free(data);
+
+    jpeg_bytes_remaining -= length;
+
+    return 1;
+}
+
+static int lua_camera_reset_jpeg(lua_State *L)
+{
+    uint8_t data[2] = {0x30, 0x06};
+    spi_write(FPGA, data, 2, false);
+
+    nrfx_systick_delay_us(1);
+
+    data[1] = 0x00;
+    spi_write(FPGA, data, 2, false);
+
+    jpeg_bytes_remaining = 0;
+
+    return 0;
+}
+
+static int lua_camera_jpeg_size(lua_State *L)
+{
+    volatile uint8_t data[3] = {0x31, 0x00, 0x00, 0x00};
+    spi_write(FPGA, data, 4, false);
+
+    nrfx_coredep_delay_us(1);
+
+    spi_write(FPGA, data, 1, true);
+    spi_read(FPGA, data, 3, false);
+
+    data[0] = 0x31;
+    spi_write(FPGA, data, 1, true);
+    spi_read(FPGA, data, 3, false);
+
+    jpeg_bytes_remaining = data[0] + (data[1] << 8) + (data[2] << 16);
+    lua_Number bytes_remaining_num = jpeg_bytes_remaining;
+
+    lua_pushnumber(L, bytes_remaining_num);
 
     return 1;
 }
@@ -351,6 +431,15 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_set_register);
     lua_setfield(L, -2, "set_register");
+
+    lua_pushcfunction(L, lua_camera_read_jpeg);
+    lua_setfield(L, -2, "read_jpeg");
+
+    lua_pushcfunction(L, lua_camera_reset_jpeg);
+    lua_setfield(L, -2, "reset_jpeg");
+
+    lua_pushcfunction(L, lua_camera_jpeg_size);
+    lua_setfield(L, -2, "jpeg_size");
 
     lua_setfield(L, -2, "camera");
 
