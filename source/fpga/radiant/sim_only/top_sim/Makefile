@@ -63,7 +63,7 @@ SRCH_PATH = $(MODULES)/../top.sv \
 # vsim-8233 = array out of bounds, fix later
 VLOG_OPTS = -93 -sv -warning vlog-2388 -suppress 2388 -lint=full -pedanticerrors -fsmverbose w +libext+.v+.vl+.sv +libext+.sv \
  +define+RADIANT +define+MODELSIM +define+TOP_SIM +define+INFER_LARGE_RAM \
- $(SRCH_PATH) 
+ $(SRCH_PATH) +incdir+/home/rmetchev/workspace/frame-codebase2/source/fpga/modules/camera/cocotb/camera
 
 VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -L pmi_work \
  -suppress vsim-7033,vsim-8630,3009,3389,vsim-8233 \
@@ -71,13 +71,20 @@ VSIM_OPTS = -warning vsim-3009 -t 100fs -voptargs="+acc" -L lifcl -L ovi_lifcl -
 
 .PHONY: compile sim lib clean
 
+all: compile
+
 compile: $(WORKDIR) $(SIM_SRCS)
 	vlog $(VLOG_OPTS) $(SIM_SRCS)
 
+<<<<<<< Updated upstream
 sim:
 	vsim -c $(VSIM_OPTS) \
 	-do "log add -r /tb_top/dut/camera/*; run 5ms; mem save -o /home/rohit/Documents/frame-codebase/source/fpga/radiant/sim_only/top_sim/img.mem -f mti -noaddress -data unsigned -addr hex -startaddress 0 -endaddress 68 -wordsperline 1 /tb_top/dut/camera/image_buffer/mem; quit" \
 	work.$(TOP)
+=======
+sim: compile
+	vsim -c $(VSIM_OPTS) -do "run 4ms; mem save -o img.mem -f mti -noaddress -data unsigned -addr hex -wordsperline 1 /tb_top/dut/camera/image_buffer/mem/mem; quit" work.$(TOP)
+>>>>>>> Stashed changes
 
 sim_gui:
 	vsim -gui $(VSIM_OPTS) work.$(TOP)

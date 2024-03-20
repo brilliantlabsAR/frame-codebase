@@ -22,12 +22,12 @@ OSCA #(
 pll_sim_ip pll_sim_ip (
     .clki_i(clock_osc),
     .clkop_o(clock_camera_pixel),
-    .clkos_o(clock_spi),
+    .clkos_o( ),
     .clkos2_o(clock_camera_sync),
     .lock_o(pll_locked)
 );
 
-
+`include "dumper.vh"
 // initial clock_osc = 0;
 // initial clock_camera_pixel = 0;
 // initial clock_camera_sync = 0;
@@ -87,8 +87,8 @@ logic pixel_en;
 logic [9:0] pixel_data;
 
 
-parameter IMAGE_X_SIZE = 76;
-parameter IMAGE_Y_SIZE = 76;
+parameter IMAGE_X_SIZE = 16;
+parameter IMAGE_Y_SIZE = 16;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
 image_gen i_image_gen (
