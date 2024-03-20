@@ -87,8 +87,8 @@ logic pixel_en;
 logic [9:0] pixel_data;
 
 
-parameter IMAGE_X_SIZE = 16;
-parameter IMAGE_Y_SIZE = 16;
+parameter IMAGE_X_SIZE = 76;
+parameter IMAGE_Y_SIZE = 76;
 parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
 
 image_gen i_image_gen (

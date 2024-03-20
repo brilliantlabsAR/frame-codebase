@@ -10,8 +10,8 @@
  */
 
 module image_gen #(
-    parameter X_RESOLUTION = 16,
-    parameter Y_RESOLUTION = 16,
+    parameter X_RESOLUTION = 76,
+    parameter Y_RESOLUTION = 76,
     parameter H_FRONT_PORCH = 152, // 2x X_RESOLUTION
     parameter H_BACK_PORCH = 167, // ~ 2.2x X_RESOLUTION
     parameter V_FRONT_PORCH = 1,
