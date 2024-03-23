@@ -208,31 +208,33 @@ top dut (
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
-    // .display_clock_out(display_clock_out),
-    // .display_hsync_out(display_hsync_out),
-    // .display_vsync_out(display_vsync_out),
-    // .display_y0_out(display_y0_out),
-    // .display_y1_out(display_y1_out),
-    // .display_y2_out(display_y2_out),
-    // .display_y3_out(display_y3_out),
-    // .display_cr0_out(display_cr0_out),
-    // .display_cr1_out(display_cr1_out),
-    // .display_cr2_out(display_cr2_out),
-    // .display_cb0_out(display_cb0_out),
-    // .display_cb1_out(display_cb1_out),
-    // .display_cb2_out(display_cb2_out),
+    .display_clock_out(), // .display_clock_out(display_clock_out),
+    .display_hsync_out(), // .display_hsync_out(display_hsync_out),
+    .display_vsync_out(), // .display_vsync_out(display_vsync_out),
+    .display_y0_out(), // .display_y0_out(display_y0_out),
+    .display_y1_out(), // .display_y1_out(display_y1_out),
+    .display_y2_out(), // .display_y2_out(display_y2_out),
+    .display_y3_out(), // .display_y3_out(display_y3_out),
+    .display_cr0_out(), // .display_cr0_out(display_cr0_out),
+    .display_cr1_out(), // .display_cr1_out(display_cr1_out),
+    .display_cr2_out(), // .display_cr2_out(display_cr2_out),
+    .display_cb0_out(), // .display_cb0_out(display_cb0_out),
+    .display_cb1_out(), // .display_cb1_out(display_cb1_out),
+    .display_cb2_out(), // .display_cb2_out(display_cb2_out),
 
     `ifdef NO_MIPI_IP_SIM
     .byte_to_pixel_frame_valid(pixel_fv),
     .byte_to_pixel_line_valid(pixel_lv),
     .byte_to_pixel_data(pixel_data),
-    .clock_camera_pixel(clock_camera_pixel)
+    .clock_camera_pixel(clock_camera_pixel),
     `else
     .mipi_clock_p_in(mipi_clock_p),
     .mipi_clock_n_in(mipi_clock_n),
     .mipi_data_p_in(mipi_data_p),
-    .mipi_data_n_in(mipi_data_n)
+    .mipi_data_n_in(mipi_data_n),
     `endif //NO_MIPI_IP_SIM
+    
+    .camera_clock_out()
 );
 
 endmodule

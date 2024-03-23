@@ -90,13 +90,14 @@ ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_PLL_IP_SIM            # Emulate PLL
         EXTRA_ARGS += --timing
         EXTRA_ARGS += --trace --trace-structs
-        EXTRA_ARGS += -Wall -Wno-fatal -Wno-WIDTHTRUNC -Wno-WIDTHEXPAND -Wno-ASCRANGE -Wno-PINCONNECTEMPTY
+        WNO = fatal WIDTHTRUNC WIDTHEXPAND ASCRANGE EOFNEWLINE PINCONNECTEMPTY DECLFILENAME GENUNNAMED VARHIDDEN UNUSEDPARAM
+        EXTRA_ARGS += -Wall $(WNO:%=-Wno-%)
 endif
 ifeq ($(SIM),modelsim)
         #EXTRA_ARGS += +define+INFER_LARGE_RAM           # RTL vs. memory models explicitely
         EXTRA_ARGS += +define+USE_LATTICE_EBR           # use EBR explicitely
         EXTRA_ARGS += +define+COCOTB_MODELSIM
-        EXTRA_ARGS += -suppress vlog-2244 
+        EXTRA_ARGS += -suppress vlog-2244 -suppress  vlog-13314
         EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work 
         export COCOTB_RESOLVE_X=ZEROS       
 endif
@@ -115,5 +116,10 @@ g gtkwave:
 	gtkwave dump.vcd -a 1.gtkw
 clean::
 	rm -rf __pycache__ results.xml obj_dir
-	rm -rf jpeg_out.jpg rgb_out.bmp ecs_out.bin dump.vcd
+	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin dump.vcd
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
+
+.PHONY: bmp
+bmp: rgb_out.bmp
+%.bmp: %.bmp.npy
+	python npy2bmp.py $< $@

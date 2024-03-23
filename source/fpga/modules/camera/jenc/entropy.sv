@@ -236,7 +236,7 @@ always @(posedge clk)
 if (|out_valid3) begin
     out_codecoeff_length <= tmp_codecoeff_length;
     if (tmp_codecoeff_length > 52 | tmp_codecoeff_length < 2)
-        out_codecoeff <= 'hx;
+        out_codecoeff <= {52{1'hx}};
     else
         out_codecoeff <= 
             (out_valid3[0] ? (codecoeff3[0] << 26) : 0) | 

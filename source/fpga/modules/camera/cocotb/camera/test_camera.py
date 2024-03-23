@@ -107,6 +107,8 @@ class Tester(SPITransactor):
         self.img_bayer = self.img_bayer[:self.y,:self.x]
         self.y, self.x = 64, 64  # re-define jpeg image size
 
+        #cv2.imwrite('orig.bmp', self.img_bgr[:self.y, :self.x, :])
+
         #cv2.imshow(img_file, self.img_bayer)
         #cv2.waitKey(0) 
         #cv2.destroyAllWindows()
@@ -236,7 +238,10 @@ class Tester(SPITransactor):
         #cv2.imwrite(img_file + '.orig.bmp', self.img_bgr)
         #import imageio; imageio.imwrite('file_name.jpg', self.img_bgr[:,:,[2,1,0]])
         if os.environ['SIM'] != 'modelsim':
-            cv2.imwrite(filename, self.bgr_out)    
+            cv2.imwrite(filename, self.bgr_out)
+        else:
+            with open(filename + '.npy', 'wb') as f:
+                np.save(f, self.bgr_out)
 
 
     async def write_image(self):
