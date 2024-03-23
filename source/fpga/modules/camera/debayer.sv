@@ -11,75 +11,57 @@
 
 /*
  *   
- *       ↙ 1 pixel dummy starting column
- *   ┌────┬────┬────┬────┐
- *   │ B  │ Gb │ B  │ Gb │ ← 1 pixel dummy starting row    This row is buffered in line_buffer[line_toggle]
- *   ├────╆━━━━╅────┼────┤
- *   │ Gr ┃ R  ┃ Gr │ R  │ R is calculated when..          This row is buffered in line_buffer[!line_toggle]
- *   ├────╄━━━━╋━━━━╅────┤
- *   │ B  │ Gb ┃ B  ┃ Gb │ .. B is being read
- *   ├────┼────╄━━━━╃────┤
- *   │ Gr │ R  │ Gr │ R  │ ← 1 pixel dummy ending row
- *   └────┴────┴────┴────┘
- *      ↑    ↑    ↑     ↖ 
- *      │    │    │       1 pixel dummy ending column
- *      │    │    previous_pixel
- *      │    previous_previous_pixel
+ *     +-- 1 pixel dummy starting column
+ *     |
+ *     v
+ *   +----+----+----+----+
+ *   | B  | Gb | B  | Gb | <-- 1 pixel dummy starting row    This row is buffered in line_buffer[line_toggle]
+ *   +----+----+----+----+
+ *   | Gr | R* | Gr | R  | R is calculated when..          This row is buffered in line_buffer[!line_toggle]
+ *   +----+----+----+----+
+ *   | B  | Gb | B* | Gb | .. B is being read
+ *   +----+----+----+----+
+ *   | Gr | R  | Gr | R  | <-- 1 pixel dummy ending row
+ *   +----+----+----+----+
+ *      ^    ^    ^    ^ 
+ *      |    |    |    |
+ *      |    |    |    +-- 1 pixel dummy ending column
+ *      |    |    previous_pixel
+ *      |    previous_previous_pixel
  *      previous_previous_previous_pixel
  *   
  */
 
 module debayer_buffer (
-    input logic clock_in,
-    input logic reset_n_in,
+    input logic pixel_clock_in,
+
+    // Reads 2 10bit word at the address
+    input logic [10:0] x_counter,
+    input logic [10:0] y_counter, // = line index
+    input logic line_valid_in,
+    output logic [9:0] line_buffer_read_data[1:0],
 
     // Writes one 10bit word at the address
-    input logic [10:0] pixel_write_address_in,
-    input logic [9:0] pixel_write_data_in,
-    input logic line_index,
-
-    // Reads three last three 10bit words from the address
-    input logic [10:0] pixel_read_address_in,
-    output logic [29:0] pixel_read_data_out [1:0]
+    input logic [10:0] previous_x_counter,
+    input logic [10:0] previous_y_counter, // = line index
+    input logic we,
+    input logic [9:0] previous_pixel
 );
 
 logic [17:0] mem [0:727]; 
 
-logic [8:0] current_read_data [1:0];
-logic [8:0] previous_read_data [1:0];
-logic [8:0] previous_previous_read_data [1:0];
-
-always_comb begin
-    current_read_data[0] = mem[pixel_write_address_in][17:9];
-    current_read_data[1] = mem[pixel_write_address_in][8:0];
+// Read
+always_ff @(posedge pixel_clock_in) if (line_valid_in) begin
+    line_buffer_read_data[0] <= mem[x_counter][17:9] << 1;
+    line_buffer_read_data[1] <= mem[x_counter][8:0] << 1;
 end
 
-always_ff @(posedge clock_in) begin
-    
-    if(reset_n_in == 1) begin
-        
-        for (int i=0; i<2; i=i+1) begin
-            // Output the last three words
-            pixel_read_data_out[i] <= {previous_previous_read_data[i], 
-                                    1'b0,
-                                    previous_read_data[i],
-                                    1'b0,
-                                    current_read_data[i],
-                                    1'b0};
-            
-            // Buffer last words
-            previous_previous_read_data[i] <= previous_read_data[i];
-            previous_read_data[i] <= current_read_data[i];
-        end
-
-        // Save the input word (dropping the last bit)
-        if (line_index == 0)
-            mem[pixel_write_address_in] <= {pixel_write_data_in[9:1], current_read_data[1]};
-        else
-            mem[pixel_write_address_in] <= {current_read_data[0], pixel_write_data_in[9:1]};
-
-    end
-
+// Write
+always_ff @(posedge pixel_clock_in) if (we) begin
+    if (previous_y_counter[0] == 0)
+        mem[previous_x_counter] <= {previous_pixel[9:1], line_buffer_read_data[1][9:1]};
+    else
+        mem[previous_x_counter] <= {line_buffer_read_data[0][9:1], previous_pixel[9:1]};
 end
 
 endmodule
@@ -102,15 +84,23 @@ module debayer (
 // Allows max 2048 x 2048 pixel input
 logic [10:0] x_counter;
 logic [10:0] y_counter;
+logic [10:0] previous_x_counter;
+logic [10:0] previous_y_counter;
 
 logic last_line_valid_in;
+logic we;
+logic last_frame_valid_in;
 
 logic [9:0] previous_pixel;
 logic [9:0] previous_previous_pixel;
 logic [9:0] previous_previous_previous_pixel;
 
+logic [9:0] line_buffer_read_data[1:0];
+logic [9:0] previous_line_buffer_read_data[1:0];
+logic [9:0] previous_previous_line_buffer_read_data[1:0];
+
+
 logic [10:0] line_buffer_read_address;
-logic [29:0] line_buffer_read_data [1:0];
 logic line_index;
 logic [10:0] line_buffer_write_address;
 logic [9:0] line_buffer_write_data;
@@ -123,133 +113,119 @@ assign pixel_red_data_out = pixel_red_data[9:0];
 assign pixel_green_data_out = pixel_green_data[9:0];
 assign pixel_blue_data_out = pixel_blue_data[9:0];
 
-debayer_buffer line_buffer (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(reset_n_in),
-
-    .pixel_write_address_in(line_buffer_write_address),
-    .pixel_write_data_in(line_buffer_write_data),
-    .line_index(line_index),
-
-    .pixel_read_address_in(line_buffer_read_address),
-    .pixel_read_data_out(line_buffer_read_data)
-);
+debayer_buffer debayer_buffer (.*);
 
 always_ff @(posedge pixel_clock_in) begin
 
-    if(reset_n_in == 0 || frame_valid_in == 0) begin
-
-        line_valid_out <= 0;
-        frame_valid_out <= 0;
-
+    // 1st stage: Count pixels/lines (read + write stage)
+    if(reset_n_in == 0) begin
+        last_frame_valid_in <= 0;
+        last_line_valid_in <= 0;
+        we <= 0;
         x_counter <= 0;
         y_counter <= 0;
+    end
+    else begin
+        last_frame_valid_in <= (y_counter > 1) & frame_valid_in;
+        if(frame_valid_in == 0) begin
+            last_line_valid_in <= 0;
+            we <= 0;
+            x_counter <= 0;
+            y_counter <= 0;
+        end
+        else begin
+            last_line_valid_in <= (x_counter > 1) & line_valid_in;
+            we <= line_valid_in;
+            if (line_valid_in) begin
+                x_counter <= x_counter + 1;
+                previous_x_counter <= x_counter;
+                previous_y_counter <= y_counter;
 
-        pixel_red_data <= 0;
-        pixel_green_data <= 0;
-        pixel_blue_data <= 0;
+                // Always buffer the last 3 input pixels
+                previous_previous_previous_pixel <= previous_previous_pixel;
+                previous_previous_pixel <= previous_pixel;
+                previous_pixel <= pixel_data_in;
 
+                // Always buffer the last 2 line buffer pixels
+                previous_previous_line_buffer_read_data[1:0] <= previous_line_buffer_read_data[1:0];
+                previous_line_buffer_read_data[1:0] <= line_buffer_read_data[1:0];
+            end
+            else begin
+                x_counter <= 0;
+
+                // Increment y at the falling edge of each line_valid
+                if (last_line_valid_in) begin
+                    y_counter <= y_counter + 1;
+                end
+            end
+        end
     end
     
+    // 2nd stage: Calculate RGB with data from memory and input
+    if(reset_n_in == 0)
+        frame_valid_out <= 0;
+    else
+        frame_valid_out <= last_frame_valid_in;
+
+    if(reset_n_in == 0 || last_frame_valid_in == 0)
+        line_valid_out <= 0;
     else begin
+        line_valid_out <= last_line_valid_in;
+        if (last_line_valid_in) begin
+            case ({previous_x_counter[0], previous_y_counter[0]})
+                // When input is B, output R
+                'b00: begin
+                    pixel_red_data  <= previous_line_buffer_read_data[1];                   // Middle R
 
-        last_line_valid_in <= line_valid_in;
-        
-        // Always buffer the last 2 pixels
-        previous_previous_pixel <= previous_pixel;
-        previous_pixel <= pixel_data_in;
+                    pixel_green_data <= (previous_line_buffer_read_data[0] +                // Top Gb
+                                            previous_previous_line_buffer_read_data[1] +    // Left Gr
+                                            line_buffer_read_data[1] +                      // Right Gr
+                                            previous_previous_pixel) >> 2;                  // Bottom Gb
 
-        // Write the pixel into the line buffer 2 pixels behind
-        if (x_counter > 1) begin
-            line_index <= y_counter[0];
-            line_buffer_write_address <= x_counter - 2;
-            line_buffer_write_data <= previous_previous_pixel;
+                    pixel_blue_data <= (previous_previous_line_buffer_read_data[0] +        // Top left B
+                                            line_buffer_read_data[0] +                      // Top right B
+                                            previous_previous_previous_pixel +              // Bottom left B
+                                            previous_pixel) >> 2;                           // Bottom right B
+                end
+
+                // When input is Gb, output Gr
+                'b10: begin
+                    pixel_red_data <= (previous_previous_line_buffer_read_data[1] +         // Left R
+                                           line_buffer_read_data[1]) >> 1;                  // Right R
+
+                    pixel_green_data <= previous_line_buffer_read_data[1];                  // Middle Gr
+
+                    pixel_blue_data <= (previous_line_buffer_read_data[0] +                 // Top B
+                                            previous_previous_pixel) >> 1;                  // Bottom B
+                end
+
+                // When input is Gr, output Gb
+                'b01: begin
+                    pixel_red_data <= (previous_line_buffer_read_data[1] +                  // Top R
+                                            previous_previous_pixel) >> 1;                  // Bottom R
+
+                    pixel_green_data <= previous_line_buffer_read_data[0];                  // Middle Gb
+
+                    pixel_blue_data <= (previous_previous_line_buffer_read_data[0] +        // Left B
+                                            line_buffer_read_data[0]) >> 1;                 // Right B
+                end
+                
+                // When input is R, output B
+                'b11: begin
+                    pixel_red_data <= (previous_previous_line_buffer_read_data[1] +         // Top left R
+                                            line_buffer_read_data[1] +                      // Top righ R
+                                            previous_previous_previous_pixel +              // Bottom left R
+                                            previous_pixel) >> 2;                           // Bottom right R
+
+                    pixel_green_data <= (previous_line_buffer_read_data[1] +                // Top Gr
+                                            previous_previous_line_buffer_read_data[0] +    // Left Gb
+                                            line_buffer_read_data[0] +                      // Right Gb
+                                            previous_previous_pixel) >> 2;                  // Bottom Gr
+
+                    pixel_blue_data <= previous_line_buffer_read_data[0];                   // Middle B
+                end
+            endcase
         end
-
-        // Increment counters and output whenever line valid is high
-        if (line_valid_in) begin
-
-            x_counter <= x_counter + 1;
-
-            line_buffer_read_address <= x_counter;
-
-            // Valid window for outputting pixels
-            if (x_counter > 1 && y_counter > 1) begin
-            
-                // Debayer the pixel at x-1, y-1
-                case ({x_counter[0], y_counter[0]})
-
-                    // When input is B, output R
-                    'b00: begin
-                        pixel_red_data <= line_buffer_read_data[1][19:10];         // Middle R
-
-                        pixel_green_data <= (line_buffer_read_data[0][19:10] +     // Top Gb
-                                                 line_buffer_read_data[1][29:20] + // Left Gr
-                                                 line_buffer_read_data[1][9:0] +   // Right Gr
-                                                 previous_pixel) >> 2;            // Bottom Gb
-
-                        pixel_blue_data <= (line_buffer_read_data[0][29:20] +      // Top left B
-                                                line_buffer_read_data[0][9:0] +    // Top right B
-                                                previous_previous_pixel +         // Bottom left B
-                                                pixel_data_in) >> 2;              // Bottom right B
-                    end
-
-                    // When input is Gb, output Gr
-                    'b10: begin
-                        pixel_red_data <= (line_buffer_read_data[1][29:20] +        // Left R
-                                               line_buffer_read_data[1][9:0]) >> 1; // right R
-
-                        pixel_green_data <= line_buffer_read_data[1][19:10];        // Middle Gr
-
-                        pixel_blue_data <= (line_buffer_read_data[0][19:10] +       // Top B
-                                                previous_pixel) >> 1;               // Bottom B
-                    end
-
-                    // When input is Gr, output Gb
-                    'b01: begin
-                        pixel_red_data <= (line_buffer_read_data[1][19:10] +         // Top R
-                                               previous_pixel) >> 1;                 // Bottom R
-
-                        pixel_green_data <= line_buffer_read_data[0][19:10];         // Middle Gb
-
-                        pixel_blue_data <= (line_buffer_read_data[0][29:20]+         // Left B
-                                                line_buffer_read_data[0][9:0]) >> 1; // Right B
-                    end
-                    
-                    // When input is R, output B
-                    'b11: begin
-                        pixel_red_data <= (line_buffer_read_data[1][29:20] +         // Top left R
-                                               line_buffer_read_data[1][9:0] +       // Top righ R
-                                               previous_previous_pixel +             // Bottom left R
-                                               pixel_data_in) >> 2;                  // Bottom right R
-
-                        pixel_green_data <= (line_buffer_read_data[1][19:10] +       // Top Gr
-                                                 line_buffer_read_data[0][29:20] +   // Left Gb
-                                                 line_buffer_read_data[0][9:0] +     // Right Gb
-                                                 previous_pixel) >> 2;               // Bottom Gr
-
-                        pixel_blue_data <= line_buffer_read_data[0][19:10];          // Middle B
-                    end
-
-                endcase
-
-                line_valid_out <= 1;
-                frame_valid_out <= 1;
-
-            end
-
-        end
-
-        else begin
-            x_counter <= 0;
-            line_valid_out <= 0;
-
-            // Increment y at the falling edge of each line_valid
-            if (last_line_valid_in) begin
-                y_counter <= y_counter + 1;
-            end
-        end
-
     end
 
 end
