@@ -2,6 +2,7 @@
 module tb_top (
     input logic global_reset_n,
     input logic clock_camera_pixel,
+    input logic cpu_clock_8hmz,
 
     // Image to MIPI
     input logic pixel_lv,
@@ -67,9 +68,9 @@ reset_sync reset_sync_clock_camera_byte (
     .sync_reset_n_out(reset_camera_byte_n)
 );
 
-parameter IMAGE_X_SIZE = 80;//1288;
-parameter IMAGE_Y_SIZE = 80;//768;
-parameter WORD_COUNT = IMAGE_X_SIZE * 10 / 8; // RAW10 in bytes
+`define SENSOR_X_SIZE  1288
+`define SENSOR_Y_SIZE  768
+parameter WORD_COUNT = `SENSOR_X_SIZE * 10 / 8; // RAW10 in bytes
 
 logic c2d_ready, tx_d_hs_en, byte_data_en;
 logic [5:0] dt;
@@ -237,4 +238,12 @@ top dut (
     .camera_clock_out()
 );
 
+`ifdef GATE_SIM
+wire camera_debayered_frame_valid_keep = dut.\camera.debayered_frame_valid_keep ;
+wire camera_debayered_line_valid_keep = dut.\camera.debayered_line_valid_keep ;
+wire [9:2] camera_debayered_blue_data = {dut.\camera.debayered_blue_data[9] , dut.\camera.debayered_blue_data[8] , dut.\camera.debayered_blue_data[7] , dut.\camera.debayered_blue_data[6] , dut.\camera.debayered_blue_data[5] , dut.\camera.debayered_blue_data[4] , dut.\camera.debayered_blue_data[3] , dut.\camera.debayered_blue_data[2] };
+wire [9:2] camera_debayered_green_data = {dut.\camera.debayered_green_data[9] , dut.\camera.debayered_green_data[8] , dut.\camera.debayered_green_data[7] , dut.\camera.debayered_green_data[6] , dut.\camera.debayered_green_data[5] , dut.\camera.debayered_green_data[4] , dut.\camera.debayered_green_data[3] , dut.\camera.debayered_green_data[2] };
+wire [9:2] camera_debayered_red_data = {dut.\camera.debayered_red_data[9] , dut.\camera.debayered_red_data[8] , dut.\camera.debayered_red_data[7] , dut.\camera.debayered_red_data[6] , dut.\camera.debayered_red_data[5] , dut.\camera.debayered_red_data[4] , dut.\camera.debayered_red_data[3] , dut.\camera.debayered_red_data[2] };
+
+`endif
 endmodule

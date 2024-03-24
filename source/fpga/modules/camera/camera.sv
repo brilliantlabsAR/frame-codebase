@@ -68,17 +68,10 @@ logic[10:0] X_CROP_END;     // Todo: Make SPI register
 logic[9:0] Y_CROP_START;    // Todo: Make SPI register
 logic[9:0] Y_CROP_END;      // Todo: Make SPI register
 
-//`ifdef TOP_SIM
 always_ff @(posedge clock_spi_in) X_CROP_START <= 0;
-always_ff @(posedge clock_spi_in) X_CROP_END   <= 66;
+always_ff @(posedge clock_spi_in) X_CROP_END   <= 18;
 always_ff @(posedge clock_spi_in) Y_CROP_START <= 0;
-always_ff @(posedge clock_spi_in) Y_CROP_END   <= 66;
-//`else
-//always_ff @(posedge clock_spi_in) X_CROP_START <= 500;
-//always_ff @(posedge clock_spi_in) X_CROP_END   <= 702;
-//always_ff @(posedge clock_spi_in) Y_CROP_START <= 258;
-//always_ff @(posedge clock_spi_in) Y_CROP_END   <= 460;
-//`endif
+always_ff @(posedge clock_spi_in) Y_CROP_END   <= 18;
 
 logic[10:0] x_size, x_size_m1;     // Todo: Make SPI register
 logic[9:0] y_size, y_size_m1;      // Todo: Make SPI register

@@ -23,6 +23,7 @@ def initialize_ports(dut):
 
     dut.spi_select_in.value = 1
     dut.spi_data_in.value = 0
+    dut.spi_clock_in.value = 0
 
 
 async def clock_n_reset(c, r, f, n=5):
@@ -53,17 +54,25 @@ class SPITransactor():
         	operands = [0]
         data_recvd = [0]*len(operands)
 
-        await FallingEdge(self.dut.spi_clock_in)
+        await FallingEdge(self.dut.cpu_clock_8hmz)
+        self.dut.spi_select_in.value = 0
+
+        await RisingEdge(self.dut.cpu_clock_8hmz)
         for i in range(8)[::-1]:
-            self.dut.spi_select_in.value = 0
             self.dut.spi_data_in.value = (op_code >> i) & 0x1
-            await FallingEdge(self.dut.spi_clock_in)
+            self.dut.spi_clock_in.value = 1
+            await FallingEdge(self.dut.cpu_clock_8hmz)
+            self.dut.spi_clock_in.value = 0
+            await RisingEdge(self.dut.cpu_clock_8hmz)
         for j, operand in enumerate(operands):
             for i in range(8)[::-1]:
-                self.dut.spi_select_in.value = 0
                 self.dut.spi_data_in.value = (operand >> i) & 0x1
-                await FallingEdge(self.dut.spi_clock_in)
+                self.dut.spi_clock_in.value = 1
                 data_recvd[j] |= (self.dut.spi_data_out.value << i)
+                await FallingEdge(self.dut.cpu_clock_8hmz)
+                self.dut.spi_clock_in.value = 0
+                await RisingEdge(self.dut.cpu_clock_8hmz)
+        self.dut.spi_data_in.value = 0
         self.dut.spi_select_in.value = 1
         return data_recvd
 
@@ -84,13 +93,19 @@ class Tester(SPITransactor):
             with open(img_file + '.npy', 'rb') as f:
                 self.img_bgr = np.load(f)
 
-        # Makse sure at least 720x720
-        self.img_bgr = np.vstack([self.img_bgr] * np.ceil(720/np.shape(self.img_bgr)[0]).astype(int))
-        self.img_bgr = np.hstack([self.img_bgr] * np.ceil(720/np.shape(self.img_bgr)[1]).astype(int))
+        # Makse sure at least 1288x768
+        self.img_bgr = np.vstack([self.img_bgr] * np.ceil(768/np.shape(self.img_bgr)[0]).astype(int))
+        self.img_bgr = np.hstack([self.img_bgr] * np.ceil(1288/np.shape(self.img_bgr)[1]).astype(int))
         
         self.y, self.x, _ = np.shape(self.img_bgr)
         assert self.y%2 == 0
         assert self.x%2 == 0
+        
+        #artificial test image
+        #self.img_bgr[:, :, :] = 0
+        #self.img_bgr[9:, 9:, 0] = 255
+        #self.img_bgr[:9, :, 2] = 255
+        #self.img_bgr[:, :9, 1] = 255
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        
@@ -99,15 +114,16 @@ class Tester(SPITransactor):
         self.img_bayer[1::2, 0::2] = 0 + self.img_bgr[1::2, 0::2, 1] # bottom left G
         self.img_bayer[1::2, 1::2] = 0 + self.img_bgr[1::2, 1::2, 2] # bottom right R
 
-        self.y, self.x = 720, 720  # crop full sensor size
-        self.img_bayer = self.img_bayer[:self.y,:self.x]
-        self.y, self.x = 200, 200  # re-define jpeg image size
+        self.img_bayer = self.img_bayer[0:, 180:]
+        self.img_bgr = self.img_bgr[0:, 180:, :]
 
-        self.y, self.x = 80, 80  # crop full sensor size
-        self.img_bayer = self.img_bayer[:self.y,:self.x]
-        self.y, self.x = 64, 64  # re-define jpeg image size
+        self.y = int(os.environ.get('SENSOR_Y_SIZE', 768))
+        self.x = int(os.environ.get('SENSOR_X_SIZE', 1288))
+        self.img_bayer = self.img_bayer[:self.y, :self.x]
+        self.y = int(os.environ.get('IMAGE_Y_SIZE', 200))
+        self.x = int(os.environ.get('IMAGE_X_SIZE', 200))
 
-        #cv2.imwrite('orig.bmp', self.img_bgr[:self.y, :self.x, :])
+        orig = self.img_bgr[1:, 1:, :]; cv2.imwrite('orig.bmp', orig[:self.y, :self.x, :])
 
         #cv2.imshow(img_file, self.img_bayer)
         #cv2.waitKey(0) 
@@ -121,7 +137,7 @@ class Tester(SPITransactor):
             await self.initialize_rgb()
 
     async def initialize_encoder(self):
-        await RisingEdge(self.dut.spi_clock_in)
+        await RisingEdge(self.dut.cpu_clock_8hmz)
 
     	# enable & reset encoder
         self.jpeg_sel = 1
@@ -131,7 +147,7 @@ class Tester(SPITransactor):
         await self.spi_write_read(0x20)
     
     async def initialize_rgb(self):
-        await RisingEdge(self.dut.spi_clock_in)
+        await RisingEdge(self.dut.cpu_clock_8hmz)
 
     	# enable & reset encoder
         self.jpeg_sel = 0
@@ -166,8 +182,13 @@ class Tester(SPITransactor):
 
 
     async def read_rgb_buffer(self):
-        await FallingEdge(self.dut.dut.camera.rgb_cdc.frame_valid)
-        await RisingEdge(self.dut.spi_clock_in)
+        if os.environ['GATE_SIM'] == 1:
+            frame_valid = self.dut.camera_debayered_frame_valid_keep
+        else:
+            frame_valid = self.dut.dut.camera.rgb_cdc.frame_valid
+        await FallingEdge(frame_valid)
+
+        await RisingEdge(self.dut.cpu_clock_8hmz)
 
         bytes = self.y * self.x
         bgr_out = []
@@ -257,7 +278,7 @@ async def dct_test(dut):
     initialize_ports(dut)
 
     clk_op = cocotb.start_soon(clock_n_reset(dut.clock_camera_pixel, None, f=36.0*10e6))       # 36 MHz clock
-    clk_os = cocotb.start_soon(clock_n_reset(dut.spi_clock_in, dut.global_reset_n, f=(72.0/4)*10e6))  # 72/2 MHz clock
+    clk_os = cocotb.start_soon(clock_n_reset(dut.cpu_clock_8hmz, dut.global_reset_n, f=8*10e6))  # 8 MHz clock
     await cocotb.triggers.Combine(clk_op, clk_os)
 
     test_image = 'baboon.bmp'  # 256x256
@@ -279,7 +300,8 @@ async def dct_test(dut):
 
 
         # send capture frame
-        t.jpeg_sel = 1
+        t.jpeg_sel = int(os.environ['JPEG_SEL'])
+
         await t.initialize()    
         bayer  = cocotb.start_soon(t.send_bayer())   
 
@@ -289,4 +311,4 @@ async def dct_test(dut):
         await show_image(test_image, 'jpeg_out.jpg' if t.jpeg_sel else 'rgb_out.bmp', t=0)
 
         await cocotb.triggers.Combine(bayer)  # wait for frame end
-    await ClockCycles(dut.spi_clock_in, 100)
+    await ClockCycles(dut.cpu_clock_8hmz, 100)
