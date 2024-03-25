@@ -358,14 +358,42 @@ always_ff @(posedge clock_spi_in) begin
     end
 end
 
+
+// TODO gather 4 bytes and push them into the image buffer
+logic [31:0] buffer_packed_write_data;
+logic buffer_packed_write_enable;
+
+always_ff @(posedge clock_spi_in) begin
+
+    if (reset_spi_n_in) begin
+        buffer_packed_write_data <= 0;
+        buffer_packed_write_enable <= 0;
+    end
+
+    else begin
+        if (buffer_write_enable) begin
+            case (buffer_address[1:0])
+                'd0: buffer_packed_write_data <= {buffer_packed_write_data[31:8],  buffer_write_data                                };
+                'd1: buffer_packed_write_data <= {buffer_packed_write_data[31:16], buffer_write_data, buffer_packed_write_data[7:0] };
+                'd2: buffer_packed_write_data <= {buffer_packed_write_data[31:24], buffer_write_data, buffer_packed_write_data[15:0]};
+                'd3: begin
+                    buffer_packed_write_data <=  {                                 buffer_write_data, buffer_packed_write_data[23:0]};
+                    buffer_packed_write_enable <= 1;
+                end 
+            endcase
+        end
+    end
+
+end
+
 image_buffer image_buffer (
     .clock_in(clock_spi_in),
     .reset_n_in(reset_spi_n_in),
-    .write_address_in(buffer_address),
+    .write_address_in(buffer_address[15:2]),
     .read_address_in(buffer_address),
-    .write_data_in(buffer_write_data),
+    .write_data_in(buffer_packed_write_data),
     .read_data_out(buffer_read_data),
-    .write_enable_in(buffer_write_enable)
+    .write_enable_in(buffer_packed_write_enable)
 );
 
 `endif
