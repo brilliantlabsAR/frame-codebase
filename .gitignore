@@ -9,6 +9,7 @@ sim_build
 results.xml
 *.vcd
 *.vcd.fst
+*.vcd.fst.hier
 
 __pycache__
 

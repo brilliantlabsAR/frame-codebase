@@ -161,9 +161,10 @@ g gtkwave:
 	gtkwave dump.vcd -o -a 1.gtkw
 clean::
 	rm -rf __pycache__ results.xml obj_dir
-	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin dump.vcd
-	rm -rf dump.vcd.fst dump.vcd.fst.hier
+	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin rgb332_out.npy
+	rm -rf dump.vcd dump.vcd.fst dump.vcd.fst.hier 
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
+	rm -rf frame_frame_vo.sdf_*.csd
 
 .PHONY: bmp
 bmp: rgb_out.bmp

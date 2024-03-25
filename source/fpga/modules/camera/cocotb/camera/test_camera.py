@@ -123,7 +123,7 @@ class Tester(SPITransactor):
         self.y = int(os.environ.get('IMAGE_Y_SIZE', 200))
         self.x = int(os.environ.get('IMAGE_X_SIZE', 200))
 
-        orig = self.img_bgr[1:, 1:, :]; cv2.imwrite('orig.bmp', orig[:self.y, :self.x, :])
+        #orig = self.img_bgr[1:, 1:, :]; cv2.imwrite('orig.bmp', orig[:self.y, :self.x, :])
 
         #cv2.imshow(img_file, self.img_bayer)
         #cv2.waitKey(0) 
@@ -182,7 +182,7 @@ class Tester(SPITransactor):
 
 
     async def read_rgb_buffer(self):
-        if os.environ['GATE_SIM'] == 1:
+        if int(os.environ['GATE_SIM']):
             frame_valid = self.dut.camera_debayered_frame_valid_keep
         else:
             frame_valid = self.dut.dut.camera.rgb_cdc.frame_valid
@@ -191,15 +191,18 @@ class Tester(SPITransactor):
         await RisingEdge(self.dut.cpu_clock_8hmz)
 
         bytes = self.y * self.x
+        self.rgb332_out = []
         bgr_out = []
 
         for _ in range(bytes):
             [pix] = await self.spi_write_read(0x22, 0xff)
+            self.rgb332_out.append(pix)
             r = 32*((pix >> 5) & 7)
             g = 32*((pix >> 2) & 7)
             b = 64*(pix & 3)
             bgr_out.append([b, g, r])
 
+        self.rgb332_out = np.array(self.rgb332_out, dtype=np.uint32).reshape(self.y, self.x)
         self.bgr_out = np.array(bgr_out, dtype=np.uint8).reshape(self.y, self.x, 3)
 
         # reset
@@ -243,6 +246,13 @@ class Tester(SPITransactor):
         with open(filename, "wb") as f:
             f.write(bytearray(self.ecs))
 
+
+    async def write_rgb332(self, filename='rgb332_out.npy'):
+        # Write bytes to file
+        with open(filename, "wb") as f:
+            np.save(f, self.rgb332_out)
+
+
     async def write_jpg(self, filename='jpeg_out.jpg'):
         hdr = bytearray(writeJPG_header(height=self.y, width=self.x))
         ecs = bytearray(self.ecs)
@@ -271,6 +281,7 @@ class Tester(SPITransactor):
             await self.write_ecs()
         else:
             await self.write_bmp()
+            await self.write_rgb332()
 
 
 @cocotb.test()
