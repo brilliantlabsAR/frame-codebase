@@ -56,7 +56,7 @@
                     <ipxact:configurableElementValue referenceId="RX_FIFO">True</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_TYPE">SINGLE</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_IMPL">LUT</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">8</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_FIFO_DEPTH">16</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="NUM_QUE_ENT">4</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DYN_RXFIFO_PKTDLY">False</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="RX_FIFO_PKT_DLY">1</ipxact:configurableElementValue>

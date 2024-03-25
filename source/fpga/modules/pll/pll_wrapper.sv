@@ -11,11 +11,12 @@
 
 module pll_wrapper (
     input logic clki_i,
-    input logic reset_i,
+    input logic rstn_i,
     output logic clkop_o,
     output logic clkos_o,
     output logic clkos2_o,
     output logic clkos3_o,
+    output logic clkos4_o,
     output logic lock_o
 );
 
@@ -34,20 +35,20 @@ PLL #(
     .CLKOS5_TRIM("0b0000"),
     .CRIPPLE("1P"),
     .CSET("8P"),
-    .DELA("65"),
+    .DELA("38"),
     .DELAY_CTRL("200PS"),
-    .DELB("43"),
-    .DELC("43"),
-    .DELD("21"),
-    .DELE("7"),
+    .DELB("25"),
+    .DELC("25"),
+    .DELD("12"),
+    .DELE("11"),
     .DELF("7"),
     .DIRECTION("DISABLED"),
-    .DIV_DEL("0b0010101"),
-    .DIVA("65"),
-    .DIVB("43"),
-    .DIVC("43"),
-    .DIVD("21"),
-    .DIVE("7"),
+    .DIV_DEL("0b0001100"),
+    .DIVA("38"),
+    .DIVB("25"),
+    .DIVC("25"),
+    .DIVD("12"),
+    .DIVE("11"),
     .DIVF("7"),
     .DYN_SEL("0b000"),
     .DYN_SOURCE("STATIC"),
@@ -56,7 +57,7 @@ PLL #(
     .ENCLK_CLKOS("ENABLED"),
     .ENCLK_CLKOS2("ENABLED"),
     .ENCLK_CLKOS3("ENABLED"),
-    .ENCLK_CLKOS4("DISABLED"),
+    .ENCLK_CLKOS4("ENABLED"),
     .ENCLK_CLKOS5("DISABLED"),
     .EXTERNAL_DIVIDE_FACTOR("0"),
     .FAST_LOCK_EN("ENABLED"),
@@ -100,7 +101,7 @@ PLL #(
     .PHIF("0"),
     .PLLPD_N("USED"),
     .PLLPDN_EN("DISABLED"),
-    .PLLRESET_ENA("DISABLED"),
+    .PLLRESET_ENA("ENABLED"),
     .REF_INTEGER_MODE("ENABLED"),
     .REF_MASK("0b00000000"),
     .REF_MMD_DIG("1"),
@@ -144,7 +145,7 @@ PLL #(
 ) pll (
     // Inputs
     .FBKCK(feedback_w),
-    .PLLRESET(reset_i),
+    .PLLRESET(~rstn_i),
     .REFCK(clki_i),
     
     // Outputs
@@ -152,7 +153,7 @@ PLL #(
     .CLKOS(clkos_o),
     .CLKOS2(clkos2_o),
     .CLKOS3(clkos3_o),
-    .CLKOS4(),
+    .CLKOS4(clkos4_o),
     .CLKOS5(),
     .LOCK(lock_o)
 );

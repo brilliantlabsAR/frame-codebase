@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Tue Mar  5 11:14:32 2024
+[*]
+[dumpfile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/dump.vcd"
+[dumpfile_mtime] "Tue Mar  5 11:14:32 2024"
+[dumpfile_size] 624832226
+[savefile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/1.gtkw"
+[timestart] 0
+[size] 1850 1016
+[pos] -1 -1
+*-33.333187 55915384560 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] camera.
+[sst_width] 233
+[signals_width] 276
+[sst_expanded] 1
+[sst_vpaned_height] 259
+@28
+clock_spi_in
+camera.clock_pixel_in
+camera.clk_x22
+camera.reset_spi_n_in
+camera.resetn_x22
+camera.reset_pixel_n_in
+@200
+-
+@22
+op_code_in[7:0]
+@28
+op_code_valid_in
+@22
+operand_count_in[31:0]
+operand_in[7:0]
+@28
+operand_valid_in
+@22
+response_out[7:0]
+@28
+response_valid_out
+@200
+-
+@28
+camera.byte_to_pixel_frame_valid
+camera.cropped_frame_valid
+camera.debayered_frame_valid
+camera.byte_to_pixel_line_valid
+camera.cropped_line_valid
+camera.debayered_line_valid
+@200
+-
+@28
+camera.jpeg_end
+@24
+camera.jpeg_out_size[19:0]
+@28
+camera.jpeg_out_size_clear
+@200
+-
+@25
+camera.crop.x_counter[11:0]
+camera.crop.x_crop_end[11:0]
+camera.crop.x_crop_start[11:0]
+camera.crop.y_counter[11:0]
+camera.crop.y_crop_end[11:0]
+camera.crop.y_crop_start[11:0]
+[pattern_trace] 1
+[pattern_trace] 0

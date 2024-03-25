@@ -3,7 +3,7 @@
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>ip</ipxact:library>
     <ipxact:name>csi2_transmitter_ip</ipxact:name>
-    <ipxact:version>1.9.0</ipxact:version>
+    <ipxact:version>1.9.2</ipxact:version>
     <ipxact:model>
         <ipxact:instantiations>
             <ipxact:componentInstantiation>
@@ -11,7 +11,7 @@
             </ipxact:componentInstantiation>
             <ipxact:designInstantiation>
                 <ipxact:name>csi2_transmitter_ip_design</ipxact:name>
-                <ipxact:designRef library="ip" name="csi2_transmitter_ip" vendor="latticesemi.com" version="1.9.0"/>
+                <ipxact:designRef library="ip" name="csi2_transmitter_ip" vendor="latticesemi.com" version="1.9.2"/>
             </ipxact:designInstantiation>
         </ipxact:instantiations>
         <ipxact:ports>
@@ -289,7 +289,7 @@
         </ipxact:fileSet>
     </ipxact:fileSets>
     <ipxact:vendorExtensions>
-        <lsccip:moduleRef lsccip:library="ip" lsccip:name="dphy_tx" lsccip:vendor="latticesemi.com" lsccip:version="1.9.0"/>
+        <lsccip:moduleRef lsccip:library="ip" lsccip:name="dphy_tx" lsccip:vendor="latticesemi.com" lsccip:version="1.9.2"/>
         <lsccip:deviceInfo>
             <lsccip:architecture>LIFCL</lsccip:architecture>
             <lsccip:device>LIFCL-17</lsccip:device>
@@ -298,8 +298,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 02 07 11:22:57</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 03 10 16:32:01</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

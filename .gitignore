@@ -4,6 +4,14 @@ build/
 # Ignore simulation files
 simulation/
 abc.history
+obj_dir
+sim_build
+results.xml
+*.vcd
+*.vcd.fst
+*.vcd.fst.hier
+
+__pycache__
 
 # Ignore VSCode user settings
 .vscode/settings.json
