@@ -22,3 +22,41 @@ Verilator sim in 64-bit env:
 $> conda activate base
 $> make clean
 $> make SIM=verilator
+
+
+
+Instructions:
+1.) RTL sim with verilator: *64 bit* environment (see above). Bypassed Lattice IP in test bench and camera.
+$> make clean
+
+1a.) JPEG 
+$> make SIM=verilator
+Result: jpeg_out.jpg
+
+1b.) RGB
+$> make SIM=verilator JPEG_SEL=0
+Result: rgb_out.bmp
+
+2.) RTL sim with modelsim: *32 bit* environment (see above). Includes SPI and other Lattice IP in test bench and camera.
+$> make ip -C ../../../../radiant/      # This uses ipgen to build Lattice IP 
+$> make clean
+
+2a.) JPEG 
+$> make SIM=modelsim
+Result: jpeg_out.jpg
+
+2b.) RGB
+$> make SIM=modelsim JPEG_SEL=0
+Result: rgb_out.bmp.npy
+Switch to terminal with *64 bit* environment
+$> make bmp
+This will create rgb_out.bmp
+
+3.) Gate sim with modelsim: *32 bit* environment (see above).  
+3a.) No SDF: Same as 2a.) or 2b.) with
+$> make SIM=modelsim .... GATE_SIM=1
+
+3a.) With SDF timing annotation: Same as 2a.) or 2b.) (or 3a.)) with
+$> make SIM=modelsim .... GATE_SIM=1 SDF_ANNO=1
+
+
