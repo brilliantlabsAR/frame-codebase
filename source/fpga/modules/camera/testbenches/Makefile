@@ -52,6 +52,21 @@ debayer:
 	@gtkwave simulation/debayer_tb.fst \
 			 debayer_tb.gtkw
 
+image_buffer:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -o simulation/image_buffer_tb.out \
+			  -i image_buffer_tb.sv
+	exit
+	@vvp simulation/image_buffer_tb.out \
+		 -fst
+
+	@gtkwave simulation/image_buffer_tb.fst \
+			 image_buffer_tb.gtkw
+
 clean:
 	@rm -rf simulation
 	@echo Cleaned

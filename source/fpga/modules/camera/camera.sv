@@ -315,7 +315,7 @@ logic [15:0] buffer_write_address;
 
 always_ff @(posedge clock_pixel_in) begin
 
-    if (reset_pixel_n_in) begin
+    if (reset_pixel_n_in == 0) begin
         buffer_write_address <= 0;
     end
 
@@ -339,7 +339,7 @@ image_buffer image_buffer (
     .read_address_in(buffer_read_address),
     .write_data_in({cropped_red_data[9:7], cropped_green_data[9:7], cropped_blue_data[9:8]}),
     .read_data_out(buffer_read_data),
-    .write_enable_in(cropped_frame_valid && cropped_line_valid && capture_in_progress_flag)
+    .write_read_n_in(cropped_frame_valid && cropped_line_valid && capture_in_progress_flag)
 );
 
 `endif

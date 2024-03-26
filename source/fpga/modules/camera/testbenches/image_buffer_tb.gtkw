@@ -1,0 +1,110 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Tue Mar 26 14:44:04 2024
+[*]
+[dumpfile] "simulation/image_buffer_tb.fst"
+[dumpfile_mtime] "Tue Mar 26 14:43:37 2024"
+[dumpfile_size] 2738
+[savefile] "image_buffer_tb.gtkw"
+[timestart] 2021
+[size] 1288 1104
+[pos] 752 38
+*-6.680212 2150 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] image_buffer_tb.
+[treeopen] image_buffer_tb.image_buffer.
+[sst_width] 253
+[signals_width] 333
+[sst_expanded] 1
+[sst_vpaned_height] 335
+@200
+-Image buffer
+@28
+image_buffer_tb.image_buffer.write_clock_in
+image_buffer_tb.image_buffer.read_clock_in
+image_buffer_tb.image_buffer.write_reset_n_in
+image_buffer_tb.image_buffer.read_reset_n_in
+@22
+image_buffer_tb.image_buffer.write_address_in[15:0]
+image_buffer_tb.image_buffer.read_address_in[15:0]
+image_buffer_tb.image_buffer.write_data_in[7:0]
+image_buffer_tb.image_buffer.read_data_out[7:0]
+@28
+image_buffer_tb.image_buffer.write_read_n_in
+@200
+-
+@22
+image_buffer_tb.image_buffer.packed_write_address[13:0]
+image_buffer_tb.image_buffer.packed_write_data[31:0]
+@28
+image_buffer_tb.image_buffer.packed_write_enable
+@200
+-
+@22
+image_buffer_tb.image_buffer.packed_write_address_metastable[13:0]
+image_buffer_tb.image_buffer.packed_write_data_metastable[31:0]
+@28
+image_buffer_tb.image_buffer.packed_write_enable_metastable
+@200
+-
+@22
+image_buffer_tb.image_buffer.write_address[13:0]
+image_buffer_tb.image_buffer.write_data[31:0]
+@28
+image_buffer_tb.image_buffer.write_enable
+@200
+-
+@22
+image_buffer_tb.image_buffer.read_data[31:0]
+image_buffer_tb.image_buffer.read_data_out[7:0]
+@200
+-
+-LRAM
+@28
+image_buffer_tb.image_buffer.inferred_lram.clock_in
+@29
+image_buffer_tb.image_buffer.inferred_lram.reset_n_in
+@22
+image_buffer_tb.image_buffer.inferred_lram.address_in[13:0]
+image_buffer_tb.image_buffer.inferred_lram.write_data_in[31:0]
+image_buffer_tb.image_buffer.inferred_lram.read_data_out[31:0]
+@28
+image_buffer_tb.image_buffer.inferred_lram.write_enable_in
+@200
+-
+@22
+image_buffer_tb.image_buffer.inferred_lram.\mem[0][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[1][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[2][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[3][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[4][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[5][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[6][31:0]
+image_buffer_tb.image_buffer.inferred_lram.\mem[7][31:0]
+[pattern_trace] 1
+[pattern_trace] 0
