@@ -311,89 +311,35 @@ crop #(
     .frame_valid_out(cropped_frame_valid)
 );
 
-logic [15:0] buffer_write_address_metastable;
-logic [15:0] buffer_address;
+logic [15:0] buffer_write_address;
+
 always_ff @(posedge clock_pixel_in) begin
 
-    if (cropped_frame_valid == 0) begin
-        buffer_write_address_metastable <= 0;
-    end
-    else if (cropped_frame_valid && cropped_line_valid) begin
-        buffer_write_address_metastable <= buffer_write_address_metastable + 1;
-    end
-
-end
-
-logic [7:0] buffer_write_data_metastable;
-logic [7:0] buffer_write_data;
-assign buffer_write_data_metastable = {cropped_red_data[9:7], 
-                                       cropped_green_data[9:7], 
-                                       cropped_blue_data[9:8]};
-
-logic buffer_write_enable_metastable;
-logic buffer_write_enable;
-assign buffer_write_enable_metastable = cropped_frame_valid && 
-                                        cropped_line_valid && 
-                                        capture_in_progress_flag;
-
-always_ff @(posedge clock_spi_in) begin
-    
-    if (reset_spi_n_in == 0) begin
-        buffer_address <= 0;
-        buffer_write_data <= 0;
-        buffer_write_enable <= 0;
+    if (reset_pixel_n_in) begin
+        buffer_write_address <= 0;
     end
 
     else begin
-        if (buffer_write_enable_metastable) begin
-            buffer_address <= buffer_write_address_metastable;
-            buffer_write_data <= buffer_write_data_metastable;  
+        if (cropped_frame_valid == 0) begin
+            buffer_write_address <= 0;
         end
-        else begin
-            buffer_address <= buffer_read_address;
-            buffer_write_data <= 0;
-        end
-
-        buffer_write_enable <= buffer_write_enable_metastable;
-    end
-end
-
-
-// TODO gather 4 bytes and push them into the image buffer
-logic [31:0] buffer_packed_write_data;
-logic buffer_packed_write_enable;
-
-always_ff @(posedge clock_spi_in) begin
-
-    if (reset_spi_n_in) begin
-        buffer_packed_write_data <= 0;
-        buffer_packed_write_enable <= 0;
-    end
-
-    else begin
-        if (buffer_write_enable) begin
-            case (buffer_address[1:0])
-                'd0: buffer_packed_write_data <= {buffer_packed_write_data[31:8],  buffer_write_data                                };
-                'd1: buffer_packed_write_data <= {buffer_packed_write_data[31:16], buffer_write_data, buffer_packed_write_data[7:0] };
-                'd2: buffer_packed_write_data <= {buffer_packed_write_data[31:24], buffer_write_data, buffer_packed_write_data[15:0]};
-                'd3: begin
-                    buffer_packed_write_data <=  {                                 buffer_write_data, buffer_packed_write_data[23:0]};
-                    buffer_packed_write_enable <= 1;
-                end 
-            endcase
+        else if (cropped_frame_valid && cropped_line_valid) begin
+            buffer_write_address <= buffer_write_address + 1;
         end
     end
 
 end
 
 image_buffer image_buffer (
-    .clock_in(clock_spi_in),
-    .reset_n_in(reset_spi_n_in),
-    .write_address_in(buffer_address[15:2]),
-    .read_address_in(buffer_address),
-    .write_data_in(buffer_packed_write_data),
+    .write_clock_in(clock_pixel_in),
+    .read_clock_in(clock_spi_in),
+    .write_reset_n_in(reset_pixel_n_in),
+    .read_reset_n_in(reset_spi_n_in),
+    .write_address_in(buffer_write_address),
+    .read_address_in(buffer_read_address),
+    .write_data_in({cropped_red_data[9:7], cropped_green_data[9:7], cropped_blue_data[9:8]}),
     .read_data_out(buffer_read_data),
-    .write_enable_in(buffer_packed_write_enable)
+    .write_enable_in(cropped_frame_valid && cropped_line_valid && capture_in_progress_flag)
 );
 
 `endif
