@@ -16,6 +16,10 @@
 `include "modules/camera/metering.sv"
 `endif
 
+`ifdef TESTBENCH
+`include "modules/camera/testbenches/image_gen.sv"
+`endif
+
 module camera (
     input logic global_reset_n_in,
     
@@ -248,6 +252,27 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(byte_to_pixel_data)
 );
 
+`else // RADIANT
+
+logic byte_to_pixel_frame_valid;
+logic byte_to_pixel_line_valid;
+logic [9:0] byte_to_pixel_data;
+
+`endif // RADIANT
+
+`ifdef TESTBENCH // TESTBENCH
+
+image_gen image_gen (
+    .pixel_clock_in(clock_pixel_in),
+    .reset_n_in(reset_pixel_n_in),
+
+    .pixel_data_out(byte_to_pixel_data),
+    .line_valid(byte_to_pixel_line_valid),
+    .frame_valid(byte_to_pixel_frame_valid)
+);
+
+`endif // TESTBENCH
+
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
 logic [9:0] debayered_blue_data;
@@ -289,12 +314,16 @@ logic [9:0] cropped_green_data;
 logic [9:0] cropped_blue_data;
 logic cropped_line_valid;
 
-crop #(
+crop 
+`ifndef TESTBENCH
+#(
     .X_CROP_START(542),
     .X_CROP_END(742),
     .Y_CROP_START(260),
     .Y_CROP_END(460)
-) crop (
+) 
+`endif
+crop (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
 
@@ -341,7 +370,5 @@ image_buffer image_buffer (
     .read_data_out(buffer_read_data),
     .write_read_n_in(cropped_frame_valid && cropped_line_valid && capture_in_progress_flag)
 );
-
-`endif
 
 endmodule

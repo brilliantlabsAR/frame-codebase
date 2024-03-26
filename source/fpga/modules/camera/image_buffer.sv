@@ -84,7 +84,11 @@ always @(posedge write_clock_in) begin
             else begin
                 packed_write_enable <= 0;
             end
+        end
 
+        else begin
+            packed_write_data <= 0;
+            packed_write_enable <= 0;
         end
     end
 

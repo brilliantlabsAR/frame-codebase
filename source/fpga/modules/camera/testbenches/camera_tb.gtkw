@@ -1,0 +1,160 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Tue Mar 26 16:57:38 2024
+[*]
+[dumpfile] "simulation/camera_tb.fst"
+[dumpfile_mtime] "Tue Mar 26 16:47:41 2024"
+[dumpfile_size] 628839
+[savefile] "camera_tb.gtkw"
+[timestart] 1298570000
+[size] 2032 1104
+[pos] 10 38
+*-22.740915 1325468937 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] camera_tb.
+[treeopen] camera_tb.camera.
+[treeopen] camera_tb.camera.image_buffer.
+[sst_width] 253
+[signals_width] 279
+[sst_expanded] 1
+[sst_vpaned_height] 335
+@200
+-Camera
+@28
+camera_tb.camera.global_reset_n_in
+camera_tb.camera.clock_spi_in
+camera_tb.camera.reset_spi_n_in
+camera_tb.camera.clock_pixel_in
+camera_tb.camera.reset_pixel_n_in
+@200
+-
+@22
+camera_tb.camera.op_code_in[7:0]
+@28
+camera_tb.camera.op_code_valid_in
+@22
+camera_tb.camera.operand_in[7:0]
+@28
+camera_tb.camera.operand_valid_in
+@22
+camera_tb.camera.operand_count_in[31:0]
+@200
+-
+@22
+camera_tb.camera.response_out[7:0]
+@28
+camera_tb.camera.response_valid_out
+@200
+-
+-Image Gen
+@28
+camera_tb.camera.image_gen.pixel_clock_in
+camera_tb.camera.image_gen.reset_n_in
+@200
+-
+@22
+camera_tb.camera.image_gen.pixel_data_out[9:0]
+@28
+camera_tb.camera.image_gen.line_valid
+camera_tb.camera.image_gen.frame_valid
+@200
+-
+-Debayer
+@28
+camera_tb.camera.debayer.pixel_clock_in
+camera_tb.camera.debayer.reset_n_in
+@22
+camera_tb.camera.debayer.pixel_data_in[9:0]
+@28
+camera_tb.camera.debayer.line_valid_in
+camera_tb.camera.debayer.frame_valid_in
+@200
+-
+@22
+camera_tb.camera.debayer.pixel_red_data_out[9:0]
+camera_tb.camera.debayer.pixel_green_data_out[9:0]
+camera_tb.camera.debayer.pixel_blue_data_out[9:0]
+@28
+camera_tb.camera.debayer.line_valid_out
+camera_tb.camera.debayer.frame_valid_out
+@200
+-
+-crop
+@28
+camera_tb.camera.crop.pixel_clock_in
+camera_tb.camera.crop.reset_n_in
+@22
+camera_tb.camera.crop.pixel_red_data_in[9:0]
+camera_tb.camera.crop.pixel_green_data_in[9:0]
+camera_tb.camera.crop.pixel_blue_data_in[9:0]
+@28
+camera_tb.camera.crop.line_valid_in
+camera_tb.camera.crop.frame_valid_in
+@200
+-
+@22
+camera_tb.camera.crop.pixel_red_data_out[9:0]
+camera_tb.camera.crop.pixel_green_data_out[9:0]
+camera_tb.camera.crop.pixel_blue_data_out[9:0]
+@28
+camera_tb.camera.crop.line_valid_out
+camera_tb.camera.crop.frame_valid_out
+@200
+-
+-Image Buffer
+@28
+camera_tb.camera.image_buffer.write_clock_in
+camera_tb.camera.image_buffer.read_clock_in
+camera_tb.camera.image_buffer.write_reset_n_in
+camera_tb.camera.image_buffer.read_reset_n_in
+@22
+camera_tb.camera.image_buffer.write_address_in[15:0]
+camera_tb.camera.image_buffer.read_address_in[15:0]
+camera_tb.camera.image_buffer.write_data_in[7:0]
+camera_tb.camera.image_buffer.read_data_out[7:0]
+@28
+camera_tb.camera.image_buffer.write_read_n_in
+@200
+-
+@22
+camera_tb.camera.image_buffer.inferred_lram.\mem[0][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[1][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[2][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[3][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[4][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[5][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[6][31:0]
+camera_tb.camera.image_buffer.inferred_lram.\mem[7][31:0]
+@200
+-
+@22
+camera_tb.camera.image_buffer.address[13:0]
+@29
+camera_tb.camera.image_buffer.write_enable
+[pattern_trace] 1
+[pattern_trace] 0

@@ -22,6 +22,22 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
+camera:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -D TESTBENCH=1 \
+			  -o simulation/camera_tb.out \
+			  -i camera_tb.sv
+	exit
+	@vvp simulation/camera_tb.out \
+		 -fst
+
+	@gtkwave simulation/camera_tb.fst \
+			 camera_tb.gtkw
+
 spi:
 	@mkdir -p simulation
 	
