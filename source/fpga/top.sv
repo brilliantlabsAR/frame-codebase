@@ -169,8 +169,8 @@ assign camera_clock_out = clock_camera;
 camera camera (
     .global_reset_n_in(global_reset_n),
 
-    .clock_spi_in(clock_spi),
-    .reset_spi_n_in(reset_spi_n),
+    .spi_clock_in(clock_spi),
+    .spi_reset_n_in(reset_spi_n),
 
     .clock_pixel_in(clock_camera_pixel),
     .reset_pixel_n_in(reset_camera_pixel_n),

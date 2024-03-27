@@ -31,14 +31,14 @@
  */
 
 module debayer_buffer (
-    input logic pixel_clock_in,
+    input logic clock_in,
 
     // Reads 2 10bit word at the address
     input logic [10:0] x_counter,
     input logic [10:0] y_counter, // = line index
     input logic line_valid_in,
-    output logic [9:0] line_buffer_read_data_a,
-    output logic [9:0] line_buffer_read_data_b,
+    output logic [9:0] line_buffer_a_read_data,
+    output logic [9:0] line_buffer_b_read_data,
 
     // Writes one 10bit word at the address
     input logic [10:0] previous_x_counter,
@@ -50,32 +50,32 @@ module debayer_buffer (
 logic [17:0] mem [0:727]; 
 
 // Read
-always_ff @(posedge pixel_clock_in) if (line_valid_in) begin
-    line_buffer_read_data_a <= mem[x_counter][17:9] << 1;
-    line_buffer_read_data_b <= mem[x_counter][8:0] << 1;
+always_ff @(posedge clock_in) if (line_valid_in) begin
+    line_buffer_a_read_data <= mem[x_counter][17:9] << 1;
+    line_buffer_b_read_data <= mem[x_counter][8:0] << 1;
 end
 
 // Write
-always_ff @(posedge pixel_clock_in) if (we) begin
+always_ff @(posedge clock_in) if (we) begin
     if (previous_y_counter[0] == 0)
-        mem[previous_x_counter] <= {previous_pixel[9:1], line_buffer_read_data_b[9:1]};
+        mem[previous_x_counter] <= {previous_pixel[9:1], line_buffer_b_read_data[9:1]};
     else
-        mem[previous_x_counter] <= {line_buffer_read_data_a[9:1], previous_pixel[9:1]};
+        mem[previous_x_counter] <= {line_buffer_a_read_data[9:1], previous_pixel[9:1]};
 end
 
 endmodule
 
 module debayer (
-    input logic pixel_clock_in,
+    input logic clock_in,
     input logic reset_n_in,
 
-    input logic [9:0] pixel_data_in,
+    input logic [9:0] bayer_data_in,
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    output logic [9:0] pixel_red_data_out,
-    output logic [9:0] pixel_green_data_out,
-    output logic [9:0] pixel_blue_data_out,
+    output logic [9:0] red_data_out,
+    output logic [9:0] green_data_out,
+    output logic [9:0] blue_data_out,
     output logic line_valid_out,
     output logic frame_valid_out
 );
@@ -94,12 +94,12 @@ logic [9:0] previous_pixel;
 logic [9:0] previous_previous_pixel;
 logic [9:0] previous_previous_previous_pixel;
 
-logic [9:0] line_buffer_read_data_a;
-logic [9:0] line_buffer_read_data_b;
-logic [9:0] previous_line_buffer_read_data_a;
-logic [9:0] previous_line_buffer_read_data_b;
-logic [9:0] previous_previous_line_buffer_read_data_a;
-logic [9:0] previous_previous_line_buffer_read_data_b;
+logic [9:0] line_buffer_a_read_data;
+logic [9:0] line_buffer_b_read_data;
+logic [9:0] previous_line_buffer_a_read_data;
+logic [9:0] previous_line_buffer_b_read_data;
+logic [9:0] previous_previous_line_buffer_a_read_data;
+logic [9:0] previous_previous_line_buffer_b_read_data;
 
 
 logic [10:0] line_buffer_read_address;
@@ -111,13 +111,13 @@ logic [11:0] pixel_red_data;
 logic [11:0] pixel_green_data;
 logic [11:0] pixel_blue_data;
 
-assign pixel_red_data_out = pixel_red_data[9:0];
-assign pixel_green_data_out = pixel_green_data[9:0];
-assign pixel_blue_data_out = pixel_blue_data[9:0];
+assign red_data_out = pixel_red_data[9:0];
+assign green_data_out = pixel_green_data[9:0];
+assign blue_data_out = pixel_blue_data[9:0];
 
 debayer_buffer debayer_buffer (.*);
 
-always_ff @(posedge pixel_clock_in) begin
+always_ff @(posedge clock_in) begin
 
     // 1st stage: Count pixels/lines (read + write stage)
     if(reset_n_in == 0) begin
@@ -146,13 +146,13 @@ always_ff @(posedge pixel_clock_in) begin
                 // Always buffer the last 3 input pixels
                 previous_previous_previous_pixel <= previous_previous_pixel;
                 previous_previous_pixel <= previous_pixel;
-                previous_pixel <= pixel_data_in;
+                previous_pixel <= bayer_data_in;
 
                 // Always buffer the last 2 line buffer pixels
-                previous_previous_line_buffer_read_data_a <= previous_line_buffer_read_data_a;
-                previous_previous_line_buffer_read_data_b <= previous_line_buffer_read_data_b;
-                previous_line_buffer_read_data_a <= line_buffer_read_data_a;
-                previous_line_buffer_read_data_b <= line_buffer_read_data_b;
+                previous_previous_line_buffer_a_read_data <= previous_line_buffer_a_read_data;
+                previous_previous_line_buffer_b_read_data <= previous_line_buffer_b_read_data;
+                previous_line_buffer_a_read_data <= line_buffer_a_read_data;
+                previous_line_buffer_b_read_data <= line_buffer_b_read_data;
             end
             else begin
                 x_counter <= 0;
@@ -179,54 +179,54 @@ always_ff @(posedge pixel_clock_in) begin
             case ({previous_x_counter[0], previous_y_counter[0]})
                 // When input is B, output R
                 'b00: begin
-                    pixel_red_data  <= previous_line_buffer_read_data_b;                   // Middle R
+                    pixel_red_data  <= previous_line_buffer_b_read_data;                   // Middle R
 
-                    pixel_green_data <= (previous_line_buffer_read_data_a +                // Top Gb
-                                            previous_previous_line_buffer_read_data_b +    // Left Gr
-                                            line_buffer_read_data_b +                      // Right Gr
+                    pixel_green_data <= (previous_line_buffer_a_read_data +                // Top Gb
+                                            previous_previous_line_buffer_b_read_data +    // Left Gr
+                                            line_buffer_b_read_data +                      // Right Gr
                                             previous_previous_pixel) >> 2;                  // Bottom Gb
 
-                    pixel_blue_data <= (previous_previous_line_buffer_read_data_a +        // Top left B
-                                            line_buffer_read_data_a +                      // Top right B
+                    pixel_blue_data <= (previous_previous_line_buffer_a_read_data +        // Top left B
+                                            line_buffer_a_read_data +                      // Top right B
                                             previous_previous_previous_pixel +              // Bottom left B
                                             previous_pixel) >> 2;                           // Bottom right B
                 end
 
                 // When input is Gb, output Gr
                 'b10: begin
-                    pixel_red_data <= (previous_previous_line_buffer_read_data_b +         // Left R
-                                           line_buffer_read_data_b) >> 1;                  // Right R
+                    pixel_red_data <= (previous_previous_line_buffer_b_read_data +         // Left R
+                                           line_buffer_b_read_data) >> 1;                  // Right R
 
-                    pixel_green_data <= previous_line_buffer_read_data_b;                  // Middle Gr
+                    pixel_green_data <= previous_line_buffer_b_read_data;                  // Middle Gr
 
-                    pixel_blue_data <= (previous_line_buffer_read_data_a +                 // Top B
+                    pixel_blue_data <= (previous_line_buffer_a_read_data +                 // Top B
                                             previous_previous_pixel) >> 1;                  // Bottom B
                 end
 
                 // When input is Gr, output Gb
                 'b01: begin
-                    pixel_red_data <= (previous_line_buffer_read_data_b +                  // Top R
+                    pixel_red_data <= (previous_line_buffer_b_read_data +                  // Top R
                                             previous_previous_pixel) >> 1;                  // Bottom R
 
-                    pixel_green_data <= previous_line_buffer_read_data_a;                  // Middle Gb
+                    pixel_green_data <= previous_line_buffer_a_read_data;                  // Middle Gb
 
-                    pixel_blue_data <= (previous_previous_line_buffer_read_data_a +        // Left B
-                                            line_buffer_read_data_a) >> 1;                 // Right B
+                    pixel_blue_data <= (previous_previous_line_buffer_a_read_data +        // Left B
+                                            line_buffer_a_read_data) >> 1;                 // Right B
                 end
                 
                 // When input is R, output B
                 'b11: begin
-                    pixel_red_data <= (previous_previous_line_buffer_read_data_b +         // Top left R
-                                            line_buffer_read_data_b +                      // Top righ R
+                    pixel_red_data <= (previous_previous_line_buffer_b_read_data +         // Top left R
+                                            line_buffer_b_read_data +                      // Top righ R
                                             previous_previous_previous_pixel +              // Bottom left R
                                             previous_pixel) >> 2;                           // Bottom right R
 
-                    pixel_green_data <= (previous_line_buffer_read_data_b +                // Top Gr
-                                            previous_previous_line_buffer_read_data_a +    // Left Gb
-                                            line_buffer_read_data_a +                      // Right Gb
+                    pixel_green_data <= (previous_line_buffer_b_read_data +                // Top Gr
+                                            previous_previous_line_buffer_a_read_data +    // Left Gb
+                                            line_buffer_a_read_data +                      // Right Gb
                                             previous_previous_pixel) >> 2;                  // Bottom Gr
 
-                    pixel_blue_data <= previous_line_buffer_read_data_a;                   // Middle B
+                    pixel_blue_data <= previous_line_buffer_a_read_data;                   // Middle B
                 end
             endcase
         end

@@ -19,12 +19,12 @@ module image_gen #(
     parameter H_SYNC_PULSE_WIDTH = 44,
     parameter V_SYNC_PULSE_WIDTH = 5
 ) (
-    input logic pixel_clock_in,
+    input logic clock_in,
     input logic reset_n_in,
 
-    output logic [9:0] pixel_data_out,
-    output logic line_valid,
-    output logic frame_valid
+    output logic [9:0] bayer_data_out,
+    output logic line_valid_out,
+    output logic frame_valid_out
 );
 
 logic [31:0] x_counter;
@@ -33,13 +33,13 @@ logic [31:0] pixel_counter;
 
 logic [9:0] mem[5927:0];
 
-always @(posedge pixel_clock_in) begin
+always @(posedge clock_in) begin
 
     if(!reset_n_in) begin
 
-        pixel_data_out <= 0;
-        line_valid <= 0;
-        frame_valid <= 0;
+        bayer_data_out <= 0;
+        line_valid_out <= 0;
+        frame_valid_out <= 0;
 
         x_counter <= 0;
         y_counter <= 0;
@@ -73,30 +73,30 @@ always @(posedge pixel_clock_in) begin
             (y_counter >= (V_SYNC_PULSE_WIDTH + V_BACK_PORCH)) &&
             (y_counter < (V_SYNC_PULSE_WIDTH + V_BACK_PORCH + Y_RESOLUTION))) begin
                 
-            line_valid <= 1;
+            line_valid_out <= 1;
 
             pixel_counter <= pixel_counter + 1;
         end
 
         else begin
-            line_valid <= 0;
+            line_valid_out <= 0;
         end
 
         // Output frame valid
         if (y_counter >= 0 &&
             y_counter < V_SYNC_PULSE_WIDTH) begin
 
-            frame_valid <= 0;
+            frame_valid_out <= 0;
             pixel_counter <= 0;
 
         end
 
         else begin
-            frame_valid <= 1;
+            frame_valid_out <= 1;
         end
         
         // Output pixel
-        pixel_data_out <= mem[pixel_counter];
+        bayer_data_out <= mem[pixel_counter];
 
     end
 

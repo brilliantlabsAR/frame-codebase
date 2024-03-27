@@ -16,10 +16,10 @@
 module camera_tb;
 
 logic global_reset_n = 0;
-logic clock_spi = 0;
-logic clock_camera_pixel = 0;
-logic reset_spi_n = 0;
-logic reset_camera_pixel_n = 0;
+logic spi_clock = 0;
+logic pixel_clock = 0;
+logic spi_reset_n = 0;
+logic pixel_reset_n = 0;
 
 logic [7:0] opcode;
 logic opcode_valid = 0;
@@ -33,8 +33,8 @@ initial begin
     delay_us(10);
     global_reset_n <= 1;
     delay_us(10);
-    reset_spi_n <= 1;
-    reset_camera_pixel_n <= 1;
+    spi_reset_n <= 1;
+    pixel_reset_n <= 1;
     delay_us(400);
 
     // Capture
@@ -84,29 +84,29 @@ initial begin
     delay_us(100);
 
     // end
-    reset_spi_n <= 0;
-    reset_camera_pixel_n <= 0;
+    spi_reset_n <= 0;
+    pixel_reset_n <= 0;
     global_reset_n <= 0;
     delay_us(10);
     $finish;
 end
 
 initial begin
-    forever #13889 clock_spi <= ~clock_spi;
+    forever #13889 spi_clock <= ~spi_clock;
 end
 
 initial begin
-    forever #6944 clock_camera_pixel <= ~clock_camera_pixel;
+    forever #6944 pixel_clock <= ~pixel_clock;
 end
 
 camera camera (
     .global_reset_n_in(global_reset_n),
 
-    .clock_spi_in(clock_spi),
-    .reset_spi_n_in(reset_spi_n),
+    .spi_clock_in(spi_clock),
+    .spi_reset_n_in(spi_reset_n),
 
-    .clock_pixel_in(clock_camera_pixel),
-    .reset_pixel_n_in(reset_camera_pixel_n),
+    .pixel_clock_in(pixel_clock),
+    .pixel_reset_n_in(pixel_reset_n),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
