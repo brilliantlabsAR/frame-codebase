@@ -68,21 +68,6 @@ image_buffer:
 	@gtkwave simulation/image_buffer_tb.fst \
 			 image_buffer/image_buffer_tb.gtkw
 
-spi:
-	@mkdir -p simulation
-	
-	@iverilog -Wall \
-			  -g2012 \
-			  -I ../../.. \
-			  -o simulation/spi_tb.out \
-			  -i spi/spi_tb.sv
-	exit
-	@vvp simulation/spi_tb.out \
-		 -fst
-
-	@gtkwave simulation/spi_tb.fst \
-			 spi/spi_tb.gtkw
-
 clean:
 	@rm -rf simulation
 	@echo Cleaned
