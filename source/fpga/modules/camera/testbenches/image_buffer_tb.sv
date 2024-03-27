@@ -21,9 +21,9 @@ logic pixel_clock = 0;
 logic spi_reset_n = 0;
 logic pixel_reset_n = 0;
 
-logic [15:0] write_address = 0;
+logic [15:0] write_address = 16'hFFFF;
 logic [16:0] read_address = 0;
-logic [7:0] write_data = 8'hFF;
+logic [7:0] write_data = 8'h00;
 logic [7:0] read_data;
 logic write_enable = 1;
 
@@ -52,8 +52,8 @@ end
 always_ff @(posedge pixel_clock) begin
 
     if (pixel_reset_n == 0) begin
-        write_address <= 0;
-        write_data <= 8'hFF;
+        write_address <= 16'hFFFF;
+        write_data <= 8'h00;
     end
 
     else begin

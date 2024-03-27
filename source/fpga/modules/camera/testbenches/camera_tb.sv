@@ -40,7 +40,7 @@ initial begin
     // Capture
     received_opcode_and_operand('h20);
     done();
-    delay_us(800);
+    delay_us(2000);
 
     // Bytes available
     received_opcode_and_operand('h21);
@@ -92,11 +92,11 @@ initial begin
 end
 
 initial begin
-    forever #13889 spi_clock <= ~spi_clock;
+    forever #6944 spi_clock <= ~spi_clock;
 end
 
 initial begin
-    forever #6944 pixel_clock <= ~pixel_clock;
+    forever #13889 pixel_clock <= ~pixel_clock;
 end
 
 camera camera (

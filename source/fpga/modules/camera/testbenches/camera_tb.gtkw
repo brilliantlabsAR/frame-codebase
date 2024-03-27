@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Wed Mar 27 08:01:58 2024
+[*] Wed Mar 27 10:36:54 2024
 [*]
 [dumpfile] "simulation/camera_tb.fst"
-[dumpfile_mtime] "Wed Mar 27 07:57:33 2024"
-[dumpfile_size] 586683
+[dumpfile_mtime] "Wed Mar 27 10:32:02 2024"
+[dumpfile_size] 919898
 [savefile] "camera_tb.gtkw"
 [timestart] 0
-[size] 1352 1104
-[pos] 688 38
-*-28.628439 421777792 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 2032 1104
+[pos] 10 38
+*-28.525787 2532483744 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -129,9 +129,7 @@ camera_tb.camera.crop.frame_valid_out
 -Image Buffer
 @28
 camera_tb.camera.image_buffer.write_clock_in
-@29
 camera_tb.camera.image_buffer.read_clock_in
-@28
 camera_tb.camera.image_buffer.write_reset_n_in
 camera_tb.camera.image_buffer.read_reset_n_in
 @22
@@ -156,7 +154,7 @@ camera_tb.camera.image_buffer.inferred_lram.\mem[7][31:0]
 -
 @22
 camera_tb.camera.image_buffer.address[13:0]
-@28
-camera_tb.camera.image_buffer.write_enable
+@23
+camera_tb.camera.image_buffer.read_data[31:0]
 [pattern_trace] 1
 [pattern_trace] 0
