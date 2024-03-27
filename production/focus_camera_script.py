@@ -53,7 +53,7 @@ async def capture_and_download(b: Bluetooth, height, width):
             rgb_array[y, x] = [red, green, blue]
 
     image = Image.fromarray(rgb_array)
-    image.save("temp_focus_image.jpg")
+    image.save("temp_focus_image.png")
 
 
 if __name__ == "__main__":
