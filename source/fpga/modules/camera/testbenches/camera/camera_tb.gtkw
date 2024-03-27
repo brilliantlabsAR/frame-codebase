@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Wed Mar 27 16:54:12 2024
+[*] Wed Mar 27 19:20:55 2024
 [*]
 [dumpfile] "simulation/camera_tb.fst"
-[dumpfile_mtime] "Wed Mar 27 16:29:47 2024"
-[dumpfile_size] 784716
+[dumpfile_mtime] "Wed Mar 27 19:20:10 2024"
+[dumpfile_size] 788314
 [savefile] "camera/camera_tb.gtkw"
 [timestart] 0
-[size] 1288 1104
-[pos] 832 38
-*-29.624626 498000000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[size] 1424 852
+[pos] 10 38
+*-29.365425 2638560000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -41,7 +41,7 @@
 [sst_width] 253
 [signals_width] 324
 [sst_expanded] 1
-[sst_vpaned_height] 335
+[sst_vpaned_height] 326
 @200
 -Camera
 @28
@@ -236,9 +236,7 @@ camera_tb.camera.jpeg.frame_valid_in
 camera_tb.camera.jpeg.start_capture_in
 @22
 camera_tb.camera.jpeg.x_size_in[10:0]
-@23
 camera_tb.camera.jpeg.y_size_in[10:0]
-@22
 camera_tb.camera.jpeg.quality_factor_in[7:0]
 @200
 -

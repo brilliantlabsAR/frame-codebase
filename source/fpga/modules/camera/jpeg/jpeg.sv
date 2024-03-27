@@ -68,8 +68,10 @@ always_ff @(posedge clock_in) begin
             end
 
             else if (frame_valid_edge_monitor == 'b10) begin
-                capture_armed <= 0;
-                capture_in_progress <= 0;
+                if (capture_in_progress) begin
+                    capture_armed <= 0;
+                    capture_in_progress <= 0;
+                end
             end
         end
     end

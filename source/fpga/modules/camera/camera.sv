@@ -315,10 +315,10 @@ crop zoom_crop (
     .frame_valid_in(debayered_frame_valid),
 
     `ifdef TESTBENCH
-    .x_crop_start(10),
-    .x_crop_end(25),
-    .y_crop_start(12),
-    .y_crop_end(24),
+    .x_crop_start(0),
+    .x_crop_end(15),
+    .y_crop_start(0),
+    .y_crop_end(12),
     `else
     .x_crop_start(542), // TODO make dynamic
     .x_crop_end(742),   // TODO make dynamic
