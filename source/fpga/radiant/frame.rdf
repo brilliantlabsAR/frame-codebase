@@ -9,7 +9,7 @@
         <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/reset/reset_global.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/reset/global_reset_sync.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/reset/reset_sync.sv" type="Verilog" type_short="Verilog">

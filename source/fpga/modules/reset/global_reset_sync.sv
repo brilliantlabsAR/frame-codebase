@@ -9,7 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module reset_global (
+module global_reset_sync (
     input logic clock_in,
     input logic pll_locked_in,
     output logic pll_reset_out,

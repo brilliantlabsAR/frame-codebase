@@ -4,18 +4,18 @@ module crop #(
     Y_CROP_START = 12,
     Y_CROP_END = 24
 )(
-    input logic pixel_clock_in,
+    input logic clock_in,
     input logic reset_n_in,
 
-    input logic [9:0] pixel_red_data_in,
-    input logic [9:0] pixel_green_data_in,
-    input logic [9:0] pixel_blue_data_in,
+    input logic [9:0] red_data_in,
+    input logic [9:0] green_data_in,
+    input logic [9:0] blue_data_in,
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    output logic [9:0] pixel_red_data_out,
-    output logic [9:0] pixel_green_data_out,
-    output logic [9:0] pixel_blue_data_out,
+    output logic [9:0] red_data_out,
+    output logic [9:0] green_data_out,
+    output logic [9:0] blue_data_out,
     output logic line_valid_out,
     output logic frame_valid_out
 );
@@ -26,7 +26,7 @@ logic [11:0] y_counter;
 
 logic previous_line_valid;
 
-always_ff @(posedge pixel_clock_in) begin
+always_ff @(posedge clock_in) begin
 
     if(reset_n_in == 0 || frame_valid_in == 0) begin
 
@@ -65,18 +65,18 @@ always_ff @(posedge pixel_clock_in) begin
            y_counter < Y_CROP_END) begin
 
             line_valid_out <= 1;
-            pixel_red_data_out <= pixel_red_data_in;
-            pixel_green_data_out <= pixel_green_data_in;
-            pixel_blue_data_out <= pixel_blue_data_in;
+            red_data_out <= red_data_in;
+            green_data_out <= green_data_in;
+            blue_data_out <= blue_data_in;
 
         end
 
         else begin
             
             line_valid_out <= 0;
-            pixel_red_data_out <= 0;
-            pixel_green_data_out <= 0;
-            pixel_blue_data_out <= 0;
+            red_data_out <= 0;
+            green_data_out <= 0;
+            blue_data_out <= 0;
 
         end
 

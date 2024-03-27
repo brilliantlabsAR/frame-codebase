@@ -13,7 +13,7 @@
 `include "modules/camera/camera.sv"
 `include "modules/graphics/graphics.sv"
 `include "modules/pll/pll_wrapper.sv"
-`include "modules/reset/reset_global.sv"
+`include "modules/reset/global_reset_sync.sv"
 `include "modules/reset/reset_sync.sv"
 `include "modules/spi/spi_peripheral.sv"
 `include "modules/spi/spi_register.sv"
@@ -50,13 +50,13 @@ module top (
 );
 
 // Clocking
-logic clock_osc;
-logic clock_camera;
-logic clock_camera_pixel;
-logic clock_display;
-logic clock_spi;
+logic osc_clock;
+logic camera_clock;
+logic camera_pixel_clock;
+logic display_clock;
+logic spi_peripheral_clock;
 logic pll_locked;
-logic reset_pll;
+logic pll_reset;
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -64,48 +64,48 @@ OSCA #(
     .LF_OUTPUT_EN("DISABLED")
     ) osc (
     .HFOUTEN(1'b1),
-    .HFCLKOUT(clock_osc) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
+    .HFCLKOUT(osc_clock) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
 pll_wrapper pll_wrapper (
-    .clki_i(clock_osc),                // 18MHz
-    .reset_i(reset_pll),
-    .clkop_o(clock_camera),            // 24MHz
-    .clkos_o(clock_camera_pixel),      // 36MHz
-    .clkos2_o(clock_display),          // 36MHz
-    .clkos3_o(clock_spi),              // 72MHz
+    .clki_i(osc_clock),                // 18MHz
+    .reset_i(pll_reset),
+    .clkop_o(camera_clock),            // 24MHz
+    .clkos_o(camera_pixel_clock),      // 36MHz
+    .clkos2_o(display_clock),          // 36MHz
+    .clkos3_o(spi_peripheral_clock),              // 72MHz
     .lock_o(pll_locked)
 );
 
 // Reset
 logic global_reset_n;
-logic reset_spi_n;
-logic reset_display_n;
-logic reset_camera_pixel_n;
+logic spi_reset_n;
+logic display_reset_n;
+logic camera_pixel_reset_n;
 
-reset_global reset_global (
-    .clock_in(clock_osc),
+global_reset_sync global_reset_sync (
+    .clock_in(osc_clock),
     .pll_locked_in(pll_locked),
-    .pll_reset_out(reset_pll),
+    .pll_reset_out(pll_reset),
     .global_reset_n_out(global_reset_n)
 );
 
-reset_sync reset_sync_clock_camera_pixel (
-    .clock_in(clock_camera_pixel),
+reset_sync camera_pixel_clock_reset_sync (
+    .clock_in(camera_pixel_clock),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_camera_pixel_n)
+    .sync_reset_n_out(camera_pixel_reset_n)
 );
 
-reset_sync reset_sync_clock_display (
-    .clock_in(clock_display),
+reset_sync display_clock_reset_sync (
+    .clock_in(display_clock),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_display_n)
+    .sync_reset_n_out(display_reset_n)
 );
 
-reset_sync reset_sync_clock_spi (
-    .clock_in(clock_spi),
+reset_sync spi_peripheral_clock_reset_sync (
+    .clock_in(spi_peripheral_clock),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(reset_spi_n)
+    .sync_reset_n_out(spi_reset_n)
 );
 
 // SPI
@@ -122,8 +122,8 @@ logic [7:0] response_3;
 logic response_3_valid;
 
 spi_peripheral spi_peripheral (
-    .clock_in(clock_spi),
-    .reset_n_in(reset_spi_n),
+    .clock_in(spi_peripheral_clock),
+    .reset_n_in(spi_reset_n),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -146,8 +146,8 @@ spi_peripheral spi_peripheral (
 
 // Graphics
 graphics graphics (
-    .clock_in(clock_display),
-    .reset_n_in(reset_display_n),
+    .clock_in(display_clock),
+    .reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -164,16 +164,16 @@ graphics graphics (
 );
 
 // Camera
-assign camera_clock_out = clock_camera;
+assign camera_clock_out = camera_clock;
 
 camera camera (
     .global_reset_n_in(global_reset_n),
 
-    .clock_spi_in(clock_spi),
-    .reset_spi_n_in(reset_spi_n),
+    .spi_clock_in(spi_peripheral_clock),
+    .spi_reset_n_in(spi_reset_n),
 
-    .clock_pixel_in(clock_camera_pixel),
-    .reset_pixel_n_in(reset_camera_pixel_n),
+    .pixel_clock_in(camera_pixel_clock),
+    .pixel_reset_n_in(camera_pixel_reset_n),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
@@ -196,8 +196,8 @@ spi_register #(
     .REGISTER_ADDRESS('hDB),
     .REGISTER_VALUE('h81)
 ) chip_id_1 (
-    .clock_in(clock_spi),
-    .reset_n_in(reset_spi_n),
+    .clock_in(spi_peripheral_clock),
+    .reset_n_in(spi_reset_n),
 
     .opcode_in(opcode),
     .opcode_valid_in(opcode_valid),
