@@ -210,7 +210,7 @@ logic reset_camera_byte_n;
 logic reset_camera_sync_n;
 logic reset_spi_n;
 
-reset_global reset_global (
+global_reset_sync global_reset_sync (
     .clock_in(clock_osc),
     .pll_locked_in(pll_locked),
     .global_reset_n_out(global_reset_n)
