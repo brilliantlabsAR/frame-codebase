@@ -39,13 +39,19 @@
         <Source name="../modules/camera/camera.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
+        <Source name="../modules/camera/spi_registers.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/crop.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
         <Source name="../modules/camera/debayer.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/metering.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/crop.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg/jpeg.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/image_buffer.sv" type="Verilog" type_short="Verilog">
