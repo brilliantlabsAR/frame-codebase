@@ -147,8 +147,10 @@ always_ff @(posedge pixel_clock_in) begin
                 previous_pixel <= pixel_data_in;
 
                 // Always buffer the last 2 line buffer pixels
-                previous_previous_line_buffer_read_data[1:0] <= previous_line_buffer_read_data[1:0];
-                previous_line_buffer_read_data[1:0] <= line_buffer_read_data[1:0];
+                previous_previous_line_buffer_read_data[1] <= previous_line_buffer_read_data[1];
+                previous_previous_line_buffer_read_data[0] <= previous_line_buffer_read_data[0];
+                previous_line_buffer_read_data[1] <= line_buffer_read_data[1];
+                previous_line_buffer_read_data[0] <= line_buffer_read_data[0];
             end
             else begin
                 x_counter <= 0;

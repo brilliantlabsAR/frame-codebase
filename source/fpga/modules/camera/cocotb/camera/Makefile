@@ -24,8 +24,13 @@ export IMAGE_X_SIZE := $(IMAGE_X_SIZE)
 export IMAGE_Y_SIZE := $(IMAGE_Y_SIZE)
 endif
 
+ifeq ($(SIM),iverilog)
+EXTRA_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%)
+EXTRA_ARGS += $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
+else # verilator + modelsim
 EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%)
 EXTRA_ARGS += $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
+endif
 
 # gate level
 FRAME_VO = frame_frame_vo.vo
@@ -88,9 +93,10 @@ VERILOG_FILES += \
 
 endif
 
-ifeq ($(SIM),verilator)
+ifneq ($(SIM),modelsim)
 # inferrable RAM models
 VERILOG_FILES += \
+        ../../jlib/large_ram_dp_q.sv \
         ../../jlib/dp_ram.sv \
         ../../jlib/dp_ram_be.sv
 endif
@@ -118,8 +124,19 @@ endif
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib .)
 
-EXTRA_ARGS += +define+RADIANT
-EXTRA_ARGS += +define+TOP_SIM
+ifeq ($(SIM),icarus)
+        EXTRA_ARGS += -DRADIANT
+        EXTRA_ARGS += -DTOP_SIM
+else # verilator + modelsim
+        EXTRA_ARGS += +define+RADIANT
+        EXTRA_ARGS += +define+TOP_SIM
+endif
+
+ifeq ($(SIM),icarus)
+        EXTRA_ARGS += -DNO_MIPI_IP_SIM            # Simulate Bayer input
+        EXTRA_ARGS += -DNO_PLL_IP_SIM            # Emulate PLL
+        EXTRA_ARGS += -Wall
+endif
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM            # Simulate Bayer input
         EXTRA_ARGS += +define+NO_PLL_IP_SIM            # Emulate PLL
