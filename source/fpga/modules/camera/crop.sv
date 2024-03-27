@@ -1,9 +1,4 @@
-module crop #(
-    X_CROP_START = 10,
-    X_CROP_END = 25,
-    Y_CROP_START = 12,
-    Y_CROP_END = 24
-)(
+module crop (
     input logic clock_in,
     input logic reset_n_in,
 
@@ -13,6 +8,11 @@ module crop #(
     input logic line_valid_in,
     input logic frame_valid_in,
 
+    input logic [10:0] x_crop_start,
+    input logic [10:0] x_crop_end,
+    input logic [10:0] y_crop_start,
+    input logic [10:0] y_crop_end,
+
     output logic [9:0] red_data_out,
     output logic [9:0] green_data_out,
     output logic [9:0] blue_data_out,
@@ -21,8 +21,8 @@ module crop #(
 );
 
 // Allows max 2048 x 2048 pixel input
-logic [11:0] x_counter;
-logic [11:0] y_counter;
+logic [10:0] x_counter;
+logic [10:0] y_counter;
 
 logic previous_line_valid;
 
@@ -59,10 +59,10 @@ always_ff @(posedge clock_in) begin
 
         // Output cropped version
         if(line_valid_in &&
-           x_counter >= X_CROP_START &&
-           x_counter < X_CROP_END &&
-           y_counter >= Y_CROP_START &&
-           y_counter < Y_CROP_END) begin
+           x_counter >= x_crop_start &&
+           x_counter < x_crop_end &&
+           y_counter >= y_crop_start &&
+           y_counter < y_crop_end) begin
 
             line_valid_out <= 1;
             red_data_out <= red_data_in;
