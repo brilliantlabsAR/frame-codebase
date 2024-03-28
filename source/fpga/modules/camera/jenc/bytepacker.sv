@@ -134,7 +134,7 @@ always_comb out_bytes[4] = tbytes==0;
 always @(posedge clk)
 if (!resetn)
     size <= 0;
-else if (out_valid & ~out_hold)
+else if (out_valid & ~out_hold & ~out_tlast)
     size <= size + out_bytes;
 
 endmodule
