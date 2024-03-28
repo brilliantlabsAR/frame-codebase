@@ -2,29 +2,22 @@
 <ipxact:component xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:lattice="http://www.latticesemi.com/lattice" xmlns:lsccip="http://www.latticesemi.com/XMLSchema/Radiant/ip">
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>module</ipxact:library>
-    <ipxact:name>pll_ip</ipxact:name>
+    <ipxact:name>pll_sim_ip</ipxact:name>
     <ipxact:version>1.8.0</ipxact:version>
     <ipxact:model>
         <ipxact:instantiations>
             <ipxact:componentInstantiation>
-                <ipxact:name>pll_ip</ipxact:name>
+                <ipxact:name>pll_sim_ip</ipxact:name>
             </ipxact:componentInstantiation>
             <ipxact:designInstantiation>
-                <ipxact:name>pll_ip_design</ipxact:name>
-                <ipxact:designRef library="module" name="pll_ip" vendor="latticesemi.com" version="1.8.0"/>
+                <ipxact:name>pll_sim_ip_design</ipxact:name>
+                <ipxact:designRef library="module" name="pll_sim_ip" vendor="latticesemi.com" version="1.8.0"/>
             </ipxact:designInstantiation>
         </ipxact:instantiations>
         <ipxact:ports>
             <ipxact:port>
                 <ipxact:name>clki_i</ipxact:name>
                 <ipxact:displayName>clki_i</ipxact:displayName>
-                <ipxact:wire>
-                    <ipxact:direction>in</ipxact:direction>
-                </ipxact:wire>
-            </ipxact:port>
-            <ipxact:port>
-                <ipxact:name>rstn_i</ipxact:name>
-                <ipxact:displayName>rstn_i</ipxact:displayName>
                 <ipxact:wire>
                     <ipxact:direction>in</ipxact:direction>
                 </ipxact:wire>
@@ -51,15 +44,8 @@
                 </ipxact:wire>
             </ipxact:port>
             <ipxact:port>
-                <ipxact:name>clkos3_o</ipxact:name>
-                <ipxact:displayName>clkos3_o</ipxact:displayName>
-                <ipxact:wire>
-                    <ipxact:direction>out</ipxact:direction>
-                </ipxact:wire>
-            </ipxact:port>
-            <ipxact:port>
-                <ipxact:name>clkos4_o</ipxact:name>
-                <ipxact:displayName>clkos4_o</ipxact:displayName>
+                <ipxact:name>clkos5_o</ipxact:name>
+                <ipxact:displayName>clkos5_o</ipxact:displayName>
                 <ipxact:wire>
                     <ipxact:direction>out</ipxact:direction>
                 </ipxact:wire>
@@ -77,27 +63,27 @@
         <ipxact:fileSet>
             <ipxact:name>ipx_file_list</ipxact:name>
             <ipxact:file>
-                <ipxact:name>rtl/pll_ip_bb.v</ipxact:name>
+                <ipxact:name>rtl/pll_sim_ip_bb.v</ipxact:name>
                 <ipxact:fileType user="black_box_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>pll_ip.cfg</ipxact:name>
+                <ipxact:name>pll_sim_ip.cfg</ipxact:name>
                 <ipxact:fileType user="cfg">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>misc/pll_ip_tmpl.v</ipxact:name>
+                <ipxact:name>misc/pll_sim_ip_tmpl.v</ipxact:name>
                 <ipxact:fileType user="template_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>misc/pll_ip_tmpl.vhd</ipxact:name>
+                <ipxact:name>misc/pll_sim_ip_tmpl.vhd</ipxact:name>
                 <ipxact:fileType user="template_vhdl">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>rtl/pll_ip.v</ipxact:name>
+                <ipxact:name>rtl/pll_sim_ip.v</ipxact:name>
                 <ipxact:fileType user="top_level_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>constraints/pll_ip.ldc</ipxact:name>
+                <ipxact:name>constraints/pll_sim_ip.ldc</ipxact:name>
                 <ipxact:fileType user="timing_constraints">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
@@ -128,8 +114,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 03 28 16:28:23</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 03 27 16:35:19</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

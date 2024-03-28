@@ -1,0 +1,7 @@
+-ver "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.v"
+-lib pmi -vhd "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.vhd"
+-ver "/home/rohit/Documents/csi/source/csi/pll_sim_ip/rtl/pll_sim_ip.v"
+-sdc "/home/rohit/Documents/csi/source/csi/pll_sim_ip/constraints/pll_sim_ip.ldc"
+-path "/home/rohit/Documents/csi/source/csi/pll_sim_ip" "/home/rohit/Documents/csi"
+-top pll_sim_ip
+-a "LIFCL"

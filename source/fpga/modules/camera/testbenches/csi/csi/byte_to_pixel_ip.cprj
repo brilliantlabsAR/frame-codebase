@@ -1,0 +1,7 @@
+-ver "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.v"
+-lib pmi -vhd "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.vhd"
+-ver "/home/rohit/Documents/csi/source/csi/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v"
+-sdc "/home/rohit/Documents/csi/source/csi/byte_to_pixel_ip/constraints/byte_to_pixel_ip.ldc"
+-path "/home/rohit/Documents/csi/source/csi/byte_to_pixel_ip" "/home/rohit/Documents/csi"
+-top byte_to_pixel_ip
+-a "LIFCL"

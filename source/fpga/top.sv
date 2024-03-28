@@ -68,20 +68,22 @@ OSCA #(
 );
 
 pll_wrapper pll_wrapper (
-    .clki_i(osc_clock),                // 18MHz
-    .reset_i(pll_reset),
-    .clkop_o(camera_clock),            // 24MHz
-    .clkos_o(camera_pixel_clock),      // 36MHz
-    .clkos2_o(display_clock),          // 36MHz
-    .clkos3_o(spi_peripheral_clock),              // 72MHz
+    .clki_i(osc_clock),                 // 18MHz
+    .rstn_i(pll_reset),
+    .clkop_o(camera_clock),             // 24MHz
+    .clkos_o(camera_pixel_clock),       // 36MHz
+    .clkos2_o(display_clock),           // 36MHz
+    .clkos3_o(spi_peripheral_clock),    // 72MHz
+    .clkos4_o(jpeg_buffer_clock),       // 78MHz
     .lock_o(pll_locked)
 );
 
 // Reset
 logic global_reset_n;
-logic spi_reset_n;
-logic display_reset_n;
 logic camera_pixel_reset_n;
+logic display_reset_n;
+logic spi_reset_n;
+logic jpeg_buffer_reset_n;
 
 global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
@@ -106,6 +108,12 @@ reset_sync spi_peripheral_clock_reset_sync (
     .clock_in(spi_peripheral_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(spi_reset_n)
+);
+
+reset_sync jpeg_buffer_clock_reset_sync (
+    .clock_in(jpeg_buffer_clock),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(jpeg_buffer_reset_n)
 );
 
 // SPI
@@ -174,6 +182,9 @@ camera camera (
 
     .pixel_clock_in(camera_pixel_clock),
     .pixel_reset_n_in(camera_pixel_reset_n),
+
+    .jpeg_buffer_clock_in(jpeg_buffer_clock),
+    .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
