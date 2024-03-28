@@ -1,0 +1,7 @@
+-ver "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.v"
+-lib pmi -vhd "/opt/lscc/radiant/2023.2/ip/pmi/pmi_lifcl.vhd"
+-sver "/home/rohit/Documents/csi/source/csi/csi_tb.sv"
+-path "/home/rohit/Documents/csi"
+-top csi_tb
+-isTop
+-a "LIFCL"
