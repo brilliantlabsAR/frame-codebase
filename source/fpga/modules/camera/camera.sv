@@ -31,6 +31,9 @@ module camera (
     input logic pixel_clock_in, // 36MHz
     input logic pixel_reset_n_in,
 
+    input logic extra_clock_in, // 78MHz
+    input logic extra_reset_n_in,
+
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
@@ -47,13 +50,13 @@ module camera (
 
 // TODO position signals
 logic start_capture_spi_domain;
-logic [7:0] quality_factor_spi_domain;
+logic [3:0] quality_factor_spi_domain;
 
 logic start_capture_metastable;
-logic [7:0] quality_factor_metastable;
+logic [3:0] quality_factor_metastable;
 
 logic start_capture_pixel_domain;
-logic [7:0] quality_factor_pixel_domain;
+logic [3:0] quality_factor_pixel_domain;
 
 logic [15:0] bytes_available = 40000; // TODO connect this
 logic [7:0] image_buffer_data;
@@ -340,6 +343,9 @@ logic final_image_valid;
 jpeg jpeg (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
+
+    .extra_clock_in(extra_clock_in),
+    .extra_reset_n_in(extra_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),

@@ -2,6 +2,9 @@ module jpeg (
     input logic clock_in,
     input logic reset_n_in,
 
+    input logic extra_clock_in,
+    input logic extra_reset_n_in,
+
     input logic [9:0] red_data_in,
     input logic [9:0] green_data_in,
     input logic [9:0] blue_data_in,
@@ -9,9 +12,9 @@ module jpeg (
     input logic frame_valid_in,
 
     input logic start_capture_in,
-    input logic [10:0] x_size_in,
-    input logic [10:0] y_size_in,
-    input logic [7:0] quality_factor_in,
+    input logic [9:0] x_size_in,
+    input logic [9:0] y_size_in,
+    input logic [3:0] quality_factor_in,
 
     output logic [127:0] data_out,
     output logic [3:0] bytes_valid_out,
