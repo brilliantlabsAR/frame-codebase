@@ -26,7 +26,6 @@ module spi_registers (
 logic [15:0] bytes_remaining;
 assign bytes_remaining = bytes_available_in - bytes_read_out;
 
-logic last_op_code_valid_in;
 logic [1:0] operand_valid_in_edge_monitor;
 
 always_ff @(posedge clock_in) begin
@@ -72,7 +71,7 @@ always_ff @(posedge clock_in) begin
                 'h22: begin
                     response_out <= data_in;
 
-                    if (operand_valid_in_edge_monitor == 2'b10) begin
+                    if (operand_valid_in_edge_monitor == 2'b01) begin
                         if (bytes_read_out < bytes_available_in) begin 
                             bytes_read_out <= bytes_read_out + 1;
                         end

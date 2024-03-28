@@ -119,7 +119,6 @@ always @(posedge read_clock_in) begin
         end
 
         else begin
-            packed_write_data <= 0;
             packed_write_enable <= 0;
         end
     end
