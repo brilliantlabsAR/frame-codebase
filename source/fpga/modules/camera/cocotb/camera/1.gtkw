@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Wed Mar 27 23:56:41 2024
+[*] Thu Mar 28 01:08:00 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/dump.vcd"
-[dumpfile_mtime] "Wed Mar 27 23:55:17 2024"
-[dumpfile_size] 40940731
+[dumpfile_mtime] "Thu Mar 28 01:08:00 2024"
+[dumpfile_size] 2245612818
 [savefile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/1.gtkw"
-[timestart] 0
+[timestart] 3990000000
 [size] 1654 823
 [pos] -1 -1
-*-27.961821 1059723660 1059723660 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-30.962246 10047498180 10047498180 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_top.
 [treeopen] tb_top.dut.
 [treeopen] tb_top.dut.camera.
@@ -48,6 +48,7 @@ tb_top.dut.camera.jenc_top.data_valid_out
 @22
 tb_top.dut.camera.jenc_top.data_out[127:0]
 tb_top.dut.camera.jenc_top.bytes_out[4:0]
+tb_top.dut.camera.jenc_top.address_out[15:0]
 @28
 tb_top.dut.camera.jenc_top.image_valid_out
 [pattern_trace] 1
