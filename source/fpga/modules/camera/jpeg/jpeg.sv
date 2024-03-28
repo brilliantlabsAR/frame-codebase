@@ -1,9 +1,9 @@
 module jpeg (
-    input logic clock_in,
-    input logic reset_n_in,
+    input logic pixel_clock_in,
+    input logic pixel_reset_n_in,
 
-    input logic extra_clock_in,
-    input logic extra_reset_n_in,
+    input logic jpeg_buffer_clock_in,
+    input logic jpeg_buffer_reset_n_in,
 
     input logic [9:0] red_data_in,
     input logic [9:0] green_data_in,
@@ -17,7 +17,7 @@ module jpeg (
     input logic [3:0] quality_factor_in,
 
     output logic [127:0] data_out,
-    output logic [3:0] bytes_valid_out,
+    output logic data_valid_out,
     output logic [15:0] address_out, // TODO 32 bit aligned [13:0]
     output logic image_valid_out
 );
@@ -29,8 +29,8 @@ assign data_out = {120'b0,
                    blue_data_in[9:8]};
 
 // Address
-always_ff @(posedge clock_in) begin
-    if (reset_n_in == 0) begin
+always_ff @(posedge pixel_clock_in) begin
+    if (pixel_reset_n_in == 0) begin
         address_out <= 0;
     end
 
@@ -49,8 +49,8 @@ logic capture_armed;
 logic capture_in_progress;
 logic [1:0] frame_valid_edge_monitor;
 
-always_ff @(posedge clock_in) begin
-    if (reset_n_in == 0) begin
+always_ff @(posedge pixel_clock_in) begin
+    if (pixel_reset_n_in == 0) begin
         capture_armed <= 0;
         capture_in_progress <= 0;
         frame_valid_edge_monitor <= 0;
@@ -80,6 +80,6 @@ always_ff @(posedge clock_in) begin
     end
 end
 
-assign image_valid_out = frame_valid_in && line_valid_in && capture_in_progress;
+assign data_valid_out = frame_valid_in && line_valid_in && capture_in_progress;
 
 endmodule

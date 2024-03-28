@@ -31,8 +31,8 @@ module camera (
     input logic pixel_clock_in, // 36MHz
     input logic pixel_reset_n_in,
 
-    input logic extra_clock_in, // 78MHz
-    input logic extra_reset_n_in,
+    input logic jpeg_buffer_clock_in, // 78MHz
+    input logic jpeg_buffer_reset_n_in,
 
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
@@ -338,14 +338,15 @@ crop zoom_crop (
 
 logic [127:0] final_image_data;
 logic [15:0] final_image_address;
-logic final_image_valid;
+logic final_image_data_valid;
+logic final_image_complete;
 
 jpeg jpeg (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
+    .pixel_clock_in(pixel_clock_in),
+    .pixel_reset_n_in(pixel_reset_n_in),
 
-    .extra_clock_in(extra_clock_in),
-    .extra_reset_n_in(extra_reset_n_in),
+    .jpeg_buffer_clock_in(jpeg_buffer_clock_in),
+    .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
@@ -359,9 +360,9 @@ jpeg jpeg (
     .quality_factor_in(quality_factor_pixel_domain),
 
     .data_out(final_image_data),
-    .bytes_valid_out(), // TODO
+    .data_valid_out(final_image_data_valid), // TODO
     .address_out(final_image_address),
-    .image_valid_out(final_image_valid)
+    .image_valid_out(final_image_complete)
 );
 
 image_buffer image_buffer (
@@ -373,7 +374,7 @@ image_buffer image_buffer (
     .read_address_in(image_buffer_address),
     .write_data_in(final_image_data[7:0]),
     .read_data_out(image_buffer_data),
-    .write_read_n_in(final_image_valid)
+    .write_read_n_in(final_image_data_valid)
 );
 
 endmodule
