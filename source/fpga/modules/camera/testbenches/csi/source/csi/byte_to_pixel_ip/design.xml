@@ -1,0 +1,401 @@
+<?xml version="1.0" ?>
+<ipxact:design xmlns:ipxact="http://www.accellera.org/XMLSchema/IPXACT/1685-2014" xmlns:lattice="http://www.latticesemi.com/lattice" xmlns:lsccip="http://www.latticesemi.com/XMLSchema/Radiant/ip">
+    <ipxact:vendor>latticesemi.com</ipxact:vendor>
+    <ipxact:library>ip</ipxact:library>
+    <ipxact:name>byte_to_pixel_ip</ipxact:name>
+    <ipxact:version>1.6.1</ipxact:version>
+    <ipxact:componentInstances>
+        <ipxact:componentInstance>
+            <ipxact:instanceName>lscc_byte2pixel_inst</ipxact:instanceName>
+            <ipxact:componentRef library="ip" name="byte2pixel" vendor="latticesemi.com" version="1.6.1">
+                <ipxact:configurableElementValues>
+                    <ipxact:configurableElementValue referenceId="DATA_TYPE">RAW10</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FAMILY">LIFCL</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PCLK_MAX">200</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_TYPE">CSI-2</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="DSI_MODE">NONBURST_PULSES</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="NUM_RX_LANE">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_GEAR">8</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="BYTE_CLK_FREQ">45.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="AXI4_RX">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="RX_RATE">360.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="NUM_TX_CH_INPUT">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="NUM_TX_CH">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="DT">6'h2B</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PD_BUS_WIDTH">10</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="CTRL_POL">POSITIVE</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="VSA">5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="HSA">8</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="SYNC_DELAY">5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="SYNC_DELAY_CNTR_W">3</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PIX_CLK_FREQ">36.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="AXI4_TX">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="TX_RATE">360.0</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="MAN_ADJ">False</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="THRESHOLD">4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PIX_FIFO_DEPTH">16</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="PIX_FIFO_ADDR_WIDTH">4</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FIFO_IMPL">LUT</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="WORD_CNT_MIN">5</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="WORD_CNT">40</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="DEBUG_EN">True</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="NUM_PIXELS">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="FRAMES_CNT">1</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="LINES_CNT">1</ipxact:configurableElementValue>
+                </ipxact:configurableElementValues>
+            </ipxact:componentRef>
+        </ipxact:componentInstance>
+    </ipxact:componentInstances>
+    <ipxact:adHocConnections>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.reset_byte_n_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="reset_byte_n_i"/>
+                <ipxact:externalPortReference portRef="reset_byte_n_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.clk_byte_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="clk_byte_i"/>
+                <ipxact:externalPortReference portRef="clk_byte_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.sp_en_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="sp_en_i"/>
+                <ipxact:externalPortReference portRef="sp_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.sp2_en_i</ipxact:name>
+            <ipxact:tiedValue>1'b0</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="sp2_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.dt_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="dt_i"/>
+                <ipxact:externalPortReference portRef="dt_i">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>5</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.dt2_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="dt2_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.lp_av_en_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="lp_av_en_i"/>
+                <ipxact:externalPortReference portRef="lp_av_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.lp2_av_en_i</ipxact:name>
+            <ipxact:tiedValue>1'b0</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="lp2_av_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.payload_en_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="payload_en_i"/>
+                <ipxact:externalPortReference portRef="payload_en_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.payload_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="payload_i"/>
+                <ipxact:externalPortReference portRef="payload_i">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>7</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.wc_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="wc_i"/>
+                <ipxact:externalPortReference portRef="wc_i">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>15</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.wc2_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="wc2_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.reset_pixel_n_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="reset_pixel_n_i"/>
+                <ipxact:externalPortReference portRef="reset_pixel_n_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.clk_pixel_i</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="clk_pixel_i"/>
+                <ipxact:externalPortReference portRef="clk_pixel_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.vsync_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="vsync_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.hsync_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="hsync_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.fv_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="fv_o"/>
+                <ipxact:externalPortReference portRef="fv_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.lv_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="lv_o"/>
+                <ipxact:externalPortReference portRef="lv_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.de_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="de_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.pd_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="pd_o"/>
+                <ipxact:externalPortReference portRef="pd_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>9</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.p_odd_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="p_odd_o"/>
+                <ipxact:externalPortReference portRef="p_odd_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_mclk_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_mclk_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_mresetn_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_mresetn_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_mready_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_mready_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_mvalid_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_mvalid_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_mdata_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_mdata_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_sclk_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_sclk_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_sresetn_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_sresetn_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_svalid_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_svalid_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_sdata_i</ipxact:name>
+            <ipxact:tiedValue>1'b1</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_sdata_i"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.axis_sready_o</ipxact:name>
+            <ipxact:tiedValue>open</ipxact:tiedValue>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="axis_sready_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.write_cycle_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="write_cycle_o"/>
+                <ipxact:externalPortReference portRef="write_cycle_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>3</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.mem_we_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="mem_we_o"/>
+                <ipxact:externalPortReference portRef="mem_we_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.mem_re_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="mem_re_o"/>
+                <ipxact:externalPortReference portRef="mem_re_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.read_cycle_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="read_cycle_o"/>
+                <ipxact:externalPortReference portRef="read_cycle_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>1</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.fifo_empty_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="fifo_empty_o"/>
+                <ipxact:externalPortReference portRef="fifo_empty_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.fifo_full_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="fifo_full_o"/>
+                <ipxact:externalPortReference portRef="fifo_full_o"/>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.pixcnt_c_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="pixcnt_c_o"/>
+                <ipxact:externalPortReference portRef="pixcnt_c_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>18</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.pix_out_cntr_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="pix_out_cntr_o"/>
+                <ipxact:externalPortReference portRef="pix_out_cntr_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>15</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+        <ipxact:adHocConnection>
+            <ipxact:name>byte_to_pixel_ip.wc_pix_sync_o</ipxact:name>
+            <ipxact:portReferences>
+                <ipxact:internalPortReference componentRef="byte_to_pixel_ip" portRef="wc_pix_sync_o"/>
+                <ipxact:externalPortReference portRef="wc_pix_sync_o">
+                    <ipxact:partSelect>
+                        <ipxact:range>
+                            <ipxact:left>15</ipxact:left>
+                            <ipxact:right>0</ipxact:right>
+                        </ipxact:range>
+                    </ipxact:partSelect>
+                </ipxact:externalPortReference>
+            </ipxact:portReferences>
+        </ipxact:adHocConnection>
+    </ipxact:adHocConnections>
+</ipxact:design>
