@@ -320,10 +320,10 @@ crop zoom_crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(542), // TODO make dynamic
-    .x_crop_end(742),   // TODO make dynamic
-    .y_crop_start(260), // TODO make dynamic
-    .y_crop_end(460),   // TODO make dynamic
+    .x_crop_start(0), // TODO make dynamic
+    .x_crop_end(200),   // TODO make dynamic
+    .y_crop_start(0), // TODO make dynamic
+    .y_crop_end(200),   // TODO make dynamic
     `endif
 
     .red_data_out(zoomed_red_data),
