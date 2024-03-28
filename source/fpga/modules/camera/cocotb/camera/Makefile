@@ -55,6 +55,7 @@ VERILOG_FILES += \
 
 # JENC
 VERILOG_FILES += \
+        ../../jenc_top.sv \
         ../../jenc/jenc.sv \
         ../../jenc/dct_1d_aan.sv \
         ../../jenc/dct_2d.sv \

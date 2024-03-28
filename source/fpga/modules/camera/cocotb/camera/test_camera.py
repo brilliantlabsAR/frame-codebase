@@ -101,11 +101,12 @@ class Tester(SPITransactor):
         assert self.y%2 == 0
         assert self.x%2 == 0
         
-        #artificial test image
-        #self.img_bgr[:, :, :] = 0
-        #self.img_bgr[9:, 9:, 0] = 255
-        #self.img_bgr[:9, :, 2] = 255
-        #self.img_bgr[:, :9, 1] = 255
+        # artificial test image
+        if False:
+            self.img_bgr[:, :, :] = 0
+            self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
+            self.img_bgr[:9, :, 2] = 255 # red top
+            self.img_bgr[:, :9, 1] = 255 # green left
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        
@@ -114,8 +115,9 @@ class Tester(SPITransactor):
         self.img_bayer[1::2, 0::2] = 0 + self.img_bgr[1::2, 0::2, 1] # bottom left G
         self.img_bayer[1::2, 1::2] = 0 + self.img_bgr[1::2, 1::2, 2] # bottom right R
 
-        self.img_bayer = self.img_bayer[0:, 180:]
-        self.img_bgr = self.img_bgr[0:, 180:, :]
+        if False:
+            self.img_bayer = self.img_bayer[0:, 180:]
+            self.img_bgr = self.img_bgr[0:, 180:, :]
 
         self.y = int(os.environ.get('SENSOR_Y_SIZE', 768))
         self.x = int(os.environ.get('SENSOR_X_SIZE', 1288))

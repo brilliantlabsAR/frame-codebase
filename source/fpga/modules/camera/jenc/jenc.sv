@@ -17,7 +17,6 @@ module jenc #(
     input   logic                   out_hold,
 
     output  logic [19:0]            size,
-    input   logic                   size_clear,
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,

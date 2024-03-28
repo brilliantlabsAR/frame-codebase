@@ -73,13 +73,11 @@ always_ff @(posedge clock_spi_in) X_CROP_END   <= 18;
 always_ff @(posedge clock_spi_in) Y_CROP_START <= 0;
 always_ff @(posedge clock_spi_in) Y_CROP_END   <= 18;
 
-logic[10:0] x_size, x_size_m1;     // Todo: Make SPI register
-logic[9:0] y_size, y_size_m1;      // Todo: Make SPI register
+logic[10:0] x_size;     // Todo: Make SPI register
+logic[9:0] y_size;      // Todo: Make SPI register
 
 always_comb x_size = X_CROP_END - X_CROP_START - 2;
 always_comb y_size = Y_CROP_END - Y_CROP_START - 2;
-always_comb x_size_m1 = x_size - 1;
-always_comb y_size_m1 = y_size - 1;
 
 // Registers to hold the current command operations
 logic capture_flag;
@@ -100,9 +98,7 @@ logic last_op_code_valid_in;
 logic last_operand_valid_in;
 
 // Jpeg
-logic                   jpeg_out_size_clear;
 logic                   rgb_sel, jpeg_sel;
-logic                   jpeg_reset;
 logic [19:0]            jpeg_out_size;
 always_comb jpeg_sel = ~rgb_sel;
 
@@ -118,8 +114,6 @@ always_ff @(posedge clock_spi_in) begin
         last_operand_valid_in <= 0;
 
         rgb_sel <= 0;
-        jpeg_reset <= 0;
-        jpeg_out_size_clear <= 0;
     end
 
     else begin
@@ -156,8 +150,6 @@ always_ff @(posedge clock_spi_in) begin
                 'h30: begin
                     if (operand_valid_in) begin
                         rgb_sel <= operand_in[0]; // flip sense
-                        jpeg_out_size_clear <= operand_in[1];
-                        jpeg_reset <= operand_in[2];
                     end
                 end
                 // JPEG size
@@ -196,7 +188,7 @@ end
 // Capture command logic
 logic [1:0] frame_valid_cdc;
 logic [1:0] capture_in_progress_state;
-logic [1:0] capture_in_progress_cdc;
+logic [2:0] capture_in_progress_cdc;
 
 logic debayered_frame_valid;
 logic cropped_frame_valid;
@@ -389,76 +381,41 @@ metering #(
 );
 
 
-// JPEG Reset just in case
-logic jpeg_reset_n;
-reset_sync reset_sync_jpeg (
-    .clock_in(clock_pixel_in),
-    .async_reset_n_in(~jpeg_reset),
-    .sync_reset_n_out(jpeg_reset_n)
-);
+// JPEG Top
+logic [127:0]       jpeg_out_data;
+logic [15:0]        jpeg_out_address;
+logic [4:0]         jpeg_out_bytes;
+logic               jpeg_out_image_valid;
+logic               jpeg_out_data_valid;
 
-// JPEG ISP (RGB2YUV, 4:4:4 2 4:2:0, 16-line MCU buffer)
-logic signed[7:0]       jpeg_in_data[7:0]; 
-logic                   jpeg_in_valid;
-logic                   jpeg_in_hold;
-logic [2:0]             jpeg_in_cnt;
 
-jisp #(
+jenc_top #(
     .SENSOR_X_SIZE      (1280),
     .SENSOR_Y_SIZE      (720)
-) jisp (
-    .rgb24              ({debayered_blue_data[9:2], debayered_green_data[9:2], debayered_red_data[9:2]}),
-    .rgb24_valid        (jpeg_sel & capture_in_progress_cdc[1] & debayered_line_valid),
-    .rgb24_hold         ( ),
-    .frame_valid_in     (jpeg_sel & capture_in_progress_cdc[1] & debayered_frame_valid),
-    .line_valid_in      (jpeg_sel & capture_in_progress_cdc[1] & debayered_line_valid),
+) jenc_top (
+    .start_capture_in   (capture_in_progress_cdc[2:1] == 2'b01),
 
-    .di                 (jpeg_in_data),
-    .di_valid           (jpeg_in_valid),
-    .di_hold            (jpeg_in_hold),
-    .di_cnt             (jpeg_in_cnt),
+    .red_data_in        (debayered_red_data),
+    .green_data_in      (debayered_green_data),
+    .blue_data_in       (debayered_blue_data),
+    .frame_valid_in     (debayered_frame_valid),
+    .line_valid_in      (debayered_line_valid),
 
-    .x_size_m1          (x_size_m1),
-    .y_size_m1          (y_size_m1),
+    .data_out           (jpeg_out_data),
+    .address_out        (jpeg_out_address),
+    .bytes_out          (jpeg_out_bytes),
+    .image_valid_out    (jpeg_out_image_valid),
+    .data_valid_out     (jpeg_out_data_valid),
 
-    .clk                (clock_pixel_in),
-    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+    .compression_factor_in  ('0),
+    .x_size_in          (x_size),
+    .y_size_in          (y_size),
+
+    .clock_pixel_in,
+    .reset_pixel_n_in,
+    .clk_x22,
+    .resetn_x22
 );
-
-logic [127:0]           jpeg_out_data;
-logic [4:0]             jpeg_out_bytes;
-logic                   jpeg_out_tlast;
-logic                   jpeg_out_valid;
-
-
-jenc #(
-    .SENSOR_X_SIZE      (1280),
-    .SENSOR_Y_SIZE      (720)
-) jenc (
-    .di                 (jpeg_in_data),
-    .di_valid           (jpeg_in_valid),
-    .di_hold            (jpeg_in_hold),
-    .di_cnt             (jpeg_in_cnt),
-
-    .out_data           (jpeg_out_data),
-    .out_bytes          (jpeg_out_bytes),
-    .out_tlast          (jpeg_out_tlast),
-    .out_valid          (jpeg_out_valid),
-    .out_hold           (1'b0),
-
-    .size               (jpeg_out_size),
-    .size_clear         (jpeg_out_size_clear),
-
-    .x_size_m1          (x_size_m1),
-    .y_size_m1          (y_size_m1),
-
-    .clk                (clock_pixel_in),
-    .resetn             (reset_pixel_n_in & jpeg_reset_n),
-    .*
-);
-
-
-
 
 // JPEG CDC for frame buffer
 // CDC first, then split 128 bits into chunks of 32 bits/4 bytes, then write
@@ -467,13 +424,17 @@ jenc #(
 // set false_path -from  -to ... (between clocks)
 // set_max_delay {$clock_spi_in_period} -from [jpeg_out_data, jpeg_out_bytes, jpeg_out_valid, jpeg_out_tlast] -to  [get_clocks clock_spi_in]
 // set_max_delay {$clock_spi_in_period} -from [jpeg_sel] -to [get_clocks clock_pixel_in]
+
+//always_comb jpeg_out_size = jpeg_out_image_valid ? jpeg_out_address + jpeg_out_bytes[3:0] : 0;
+always_comb jpeg_out_size = jpeg_out_image_valid ? jpeg_out_address + 16 : 0;
+
 logic [13:0]            jpeg_buffer_address;
 logic [31:0]            jpeg_buffer_write_data;
 logic                   jpeg_buffer_write_enable;
 
 jenc_cdc jenc_cdc (
-    .reset_pixel_n_in   (reset_pixel_n_in & jpeg_reset_n),
-    .reset_spi_n_in     (reset_spi_n_in & ~jpeg_reset),
+    .reset_pixel_n_in   (reset_pixel_n_in & ~(capture_in_progress_cdc[2:1] == 2'b01)),
+    .reset_spi_n_in     (reset_spi_n_in & ~(capture_in_progress_state==0 & frame_valid_cdc[1] == 0 & capture_flag)),
     .*
 );
 
@@ -494,8 +455,8 @@ rgb_cdc rgb_cdc (
     .red_data           (debayered_red_data),
     .green_data         (debayered_green_data),
     .blue_data          (debayered_blue_data),
-    .reset_pixel_n_in   (reset_pixel_n_in & jpeg_reset_n),
-    .reset_spi_n_in     (reset_spi_n_in & ~jpeg_reset),
+    .reset_pixel_n_in   (reset_pixel_n_in & ~(capture_in_progress_cdc[2:1] == 2'b01)),
+    .reset_spi_n_in     (reset_spi_n_in & ~(capture_in_progress_state==0 & frame_valid_cdc[1] == 0 & capture_flag)),
     .*
 );
 
@@ -511,7 +472,7 @@ always_comb buffer_write_enable = jpeg_sel ? jpeg_buffer_write_enable : rgb_buff
 
 image_buffer image_buffer (
     .clock_in(clock_spi_in),
-    .reset_n_in(reset_spi_n_in & ~jpeg_reset),
+    .reset_n_in(reset_spi_n_in & ~(capture_in_progress_state==0 & frame_valid_cdc[1] == 0 & capture_flag)),
     .write_address_in(buffer_address),
     .read_address_in(buffer_read_address),
     .write_data_in(buffer_write_data),

@@ -12,7 +12,6 @@ module bytepacker (
     output  logic                   out_valid,
     input   logic                   out_hold,
     output  logic [19:0]            size,
-    input   logic                   size_clear,
 
     input   logic                   clk,
     input   logic                   resetn
@@ -61,7 +60,7 @@ else if (~in_hold)
 
 always @(posedge clk)
 if (in_valid & ~in_hold) begin
-    s_data <= in_data_s[7]; 
+    s_data <= ~(in_data_s[7] | ('1 >> (8*in_bytes_s[7]))); 
     s_bytes <= in_bytes_s[7]; 
     s_tlast <= in_tlast; 
 end
@@ -119,7 +118,7 @@ else if (~in_hold)
 always @(posedge clk)
 if (~in_hold & (s_tlast_extend==3 | (s_valid & (next_byte_count >= 16 | s_tlast)))) begin
     out_tlast <= true_s_tlast;
-    out_data <= next_byte_packer;
+    out_data <= ~next_byte_packer;
     if (s_valid & s_tlast & next_byte_count <= 16)
         tbytes <= next_byte_count;
     else if (s_tlast_extend == 3)
@@ -132,22 +131,10 @@ always_comb out_bytes[3:0] = tbytes;
 always_comb out_bytes[4] = tbytes==0;
 
 // Size reg
-logic [19:0]    size_cnt;
 always @(posedge clk)
 if (!resetn)
-    size_cnt <= 0;
-else if (out_valid & ~out_hold)
-    if (out_tlast)
-        size_cnt <= 0;
-    else
-        size_cnt <= size_cnt + out_bytes;
-
-logic [1:0] size_clear_sync;
-always @(posedge clk) size_clear_sync <= {size_clear_sync, size_clear};
-always @(posedge clk)
-if (!resetn | size_clear_sync[1])
     size <= 0;
-else if (out_valid & ~out_hold & out_tlast)
-    size <= size_cnt + out_bytes;
+else if (out_valid & ~out_hold)
+    size <= size + out_bytes;
 
 endmodule
