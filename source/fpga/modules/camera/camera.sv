@@ -392,7 +392,7 @@ jenc_top #(
     .SENSOR_X_SIZE      (1280),
     .SENSOR_Y_SIZE      (720)
 ) jenc_top (
-    .start_capture_in   (capture_in_progress_cdc[2:1] == 2'b01),
+    .start_capture_in   (jpeg_sel & (capture_in_progress_cdc[2:1] == 2'b01)),
 
     .red_data_in        (debayered_red_data),
     .green_data_in      (debayered_green_data),

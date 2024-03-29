@@ -103,10 +103,10 @@ class Tester(SPITransactor):
         
         # artificial test image
         if False:
-            #self.img_bgr[:, :, :] = 0
-            #self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
-            #self.img_bgr[:9, :, 2] = 255 # red top
-            #self.img_bgr[:, :9, 1] = 255 # green left
+            self.img_bgr[:, :, :] = 0
+            self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
+            self.img_bgr[:9, :, 2] = 255 # red top
+            self.img_bgr[:, :9, 1] = 255 # green left
             self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
 
         # make bayer
@@ -194,6 +194,7 @@ class Tester(SPITransactor):
         await RisingEdge(self.dut.cpu_clock_8hmz)
 
         bytes = self.y * self.x
+        print('bytes=',bytes)
         self.rgb332_out = []
         bgr_out = []
 
@@ -296,7 +297,7 @@ async def dct_test(dut):
     await cocotb.triggers.Combine(clk_op, clk_os)
 
     test_image = 'baboon.bmp'  # 256x256
-    test_image = '4.2.07.tiff'  # peppers 512x512
+    #test_image = '4.2.07.tiff'  # peppers 512x512
     #test_image = '4.2.03.tiff'  # baboon 512x512
     
     test_image = '../jenc/' + test_image;
