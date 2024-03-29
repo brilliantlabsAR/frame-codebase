@@ -58,7 +58,7 @@ logic                   b_hold;
 dct_2d dct_2d (
     .q              (d),
     .q_valid        (d_valid),
-    .q_hold         (d_hold),
+    .q_hold         (d_hold & d_valid),
     .q_cnt          (d_cnt),
     .*
 );
@@ -67,6 +67,8 @@ quant quant(
     .di_valid       (d_valid),
     .di_hold        (d_hold),
     .di_cnt         (d_cnt),
+    
+    .q_hold         (q_hold & q_valid),
     .*
 );
 entropy entropy(
@@ -74,7 +76,7 @@ entropy entropy(
     .out_codecoeff          (codecoeff),
     .out_tlast              (codecoeff_tlast),
     .out_valid              (codecoeff_valid),
-    .out_hold               (codecoeff_hold),
+    .out_hold               (codecoeff_hold & codecoeff_valid),
     .*
 );
 
@@ -88,7 +90,7 @@ bitpacker bitpacker(
     .out_bytes              (b_bytes),
     .out_tlast              (b_tlast),
     .out_valid              (b_valid),
-    .out_hold               (b_hold),
+    .out_hold               (b_hold & b_valid),
     .*
 );
 
@@ -97,7 +99,10 @@ bytepacker bytepacker(
     .in_bytes               (b_bytes),
     .in_tlast               (b_tlast),
     .in_valid               (b_valid),
-    .in_hold                (b_hold),    .*
+    .in_hold                (b_hold),
+
+    .out_hold               (out_hold & out_valid),
+    .*
 );
 
 endmodule
