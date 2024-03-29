@@ -3,7 +3,7 @@
     <Options/>
     <Implementation title="frame" dir="frame" description="frame" synthesis="lse" default_strategy="Strategy">
         <Options VERILOG_DIRECTIVES="RADIANT=1 USE_LATTICE_EBR=1" VerilogStandard="System Verilog" def_top="large_ram_dp_w32_d16k_q" hdl_sort="off">
-            <Option name="include path" value="../modules/camera/jlib;../modules/camera/jenc;../modules/camera"/>
+            <Option name="include path" value="../modules/camera/jpeg_encoder/jlib;../modules/camera/jpeg_encoder/jenc;../modules/camera;../modules/camera/jpeg_encoder"/>
             <Option name="top" value="top"/>
         </Options>
         <Source name="../top.sv" type="Verilog" type_short="Verilog">
@@ -66,46 +66,46 @@
         <Source name="sim_only/csi2_transmitter_ip/csi2_transmitter_ip.ipx" type="IPX_Module" type_short="IPX" excluded="TRUE">
             <Options/>
         </Source>
-        <Source name="../modules/camera/jisp/jisp.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jisp/jisp.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jisp/mcu_buffer.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jisp/mcu_buffer.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jisp/rgb2yuv.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jisp/rgb2yuv.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jisp/subsample.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jisp/subsample.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/bitpacker.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/bitpacker.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/bytepacker.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/bytepacker.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/dct_1d_aan.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/dct_1d_aan.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/dct_2d.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/dct_2d.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/entropy.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/entropy.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/huff_tables.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/huff_tables.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/jenc.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/jenc.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/quant_seq_mult_15x13_p4.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/quant.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/quant.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/quant_tables.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/quant_tables.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="jisp/ram_dp_w18_d360/ram_dp_w18_d360.ipx" type="IPX_Module" type_short="IPX">
@@ -117,7 +117,7 @@
         <Source name="jisp/ram_dp_w64_b8_d2880/ram_dp_w64_b8_d2880.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
-        <Source name="../modules/camera/jenc_cdc.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc_cdc.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/rgb_cdc.sv" type="Verilog" type_short="Verilog">
@@ -126,10 +126,10 @@
         <Source name="jenc/ram_dp_w32_b4_d64/ram_dp_w32_b4_d64.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
-        <Source name="../modules/camera/jenc/transpose.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/transpose.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/jenc/zigzag.sv" type="Verilog" type_short="Verilog">
+        <Source name="../modules/camera/jpeg_encoder/jenc/zigzag.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
@@ -137,6 +137,12 @@
         </Source>
         <Source name="image_buffer/large_ram_dp_w32_d16k_q/large_ram_dp_w32_d16k_q.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
+        </Source>
+        <Source name="../modules/camera/jpeg_encoder/jpeg_encoder.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/jpeg_encoder/jenc/pre_cdc.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
             <Options/>

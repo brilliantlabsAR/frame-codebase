@@ -7,7 +7,7 @@
  *
  * Copyright (C) 2024 Robert Metchev
  */
- module jenc_top #(
+ module jpeg_encoder #(
     parameter DW = 8,
     parameter SENSOR_X_SIZE    = 1280,
     parameter SENSOR_Y_SIZE    = 720
@@ -32,9 +32,15 @@
 
     input   logic               clock_pixel_in,
     input   logic               reset_pixel_n_in,
-    input   logic               clk_x22,
-    input   logic               resetn_x22
+    input   logic               jpeg_fast_clock_in,
+    input   logic               jpeg_fast_reset_n_in
 );
+
+// clock
+logic               clk_x22;
+logic               resetn_x22;
+always_comb clk_x22 = jpeg_fast_clock_in;
+always_comb resetn_x22 = jpeg_fast_reset_n_in;
 
 // JPEG FSM
 enum logic [2:0] {IDLE, RESET, WAIT_FOR_FRAME_START, COMPRESS, IMAGE_VALID} state;

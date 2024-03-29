@@ -194,7 +194,6 @@ class Tester(SPITransactor):
         await RisingEdge(self.dut.cpu_clock_8hmz)
 
         bytes = self.y * self.x
-        print('bytes=',bytes)
         self.rgb332_out = []
         bgr_out = []
 

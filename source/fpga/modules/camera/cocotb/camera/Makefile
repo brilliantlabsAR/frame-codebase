@@ -48,33 +48,33 @@ VERILOG_FILES += $(FRAME_VO)
 else
 # JISP
 VERILOG_FILES += \
-        ../../jisp/jisp.sv \
-        ../../jisp/mcu_buffer.sv \
-        ../../jisp/rgb2yuv.sv \
-        ../../jisp/subsample.sv
+        ../../jpeg_encoder/jisp/jisp.sv \
+        ../../jpeg_encoder/jisp/mcu_buffer.sv \
+        ../../jpeg_encoder/jisp/rgb2yuv.sv \
+        ../../jpeg_encoder/jisp/subsample.sv
 
 # JENC
 VERILOG_FILES += \
-        ../../jenc_top.sv \
-        ../../jenc/jenc.sv \
-        ../../jenc/dct_1d_aan.sv \
-        ../../jenc/dct_2d.sv \
-        ../../jenc/transpose.sv \
-        ../../jenc/zigzag.sv \
-        ../../jenc/quant_seq_mult_15x13_p4.sv \
-        ../../jenc/quant.sv \
-        ../../jenc/quant_tables.sv \
-        ../../jenc/entropy.sv \
-        ../../jenc/huff_tables.sv \
-        ../../jenc/bitpacker.sv \
-        ../../jenc/bytepacker.sv \
-        ../../jenc/pre_cdc.sv
+        ../../jpeg_encoder/jpeg_encoder.sv \
+        ../../jpeg_encoder/jenc/jenc.sv \
+        ../../jpeg_encoder/jenc/dct_1d_aan.sv \
+        ../../jpeg_encoder/jenc/dct_2d.sv \
+        ../../jpeg_encoder/jenc/transpose.sv \
+        ../../jpeg_encoder/jenc/zigzag.sv \
+        ../../jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv \
+        ../../jpeg_encoder/jenc/quant.sv \
+        ../../jpeg_encoder/jenc/quant_tables.sv \
+        ../../jpeg_encoder/jenc/entropy.sv \
+        ../../jpeg_encoder/jenc/huff_tables.sv \
+        ../../jpeg_encoder/jenc/bitpacker.sv \
+        ../../jpeg_encoder/jenc/bytepacker.sv \
+        ../../jpeg_encoder/jenc/pre_cdc.sv
 
 # Camera
 VERILOG_FILES += \
         ../../image_buffer.sv \
         ../../rgb_cdc.sv \
-        ../../jenc_cdc.sv \
+        ../../jpeg_encoder/jenc_cdc.sv \
         ../../crop.sv \
         ../../debayer.sv \
         ../../metering.sv \
@@ -98,9 +98,9 @@ endif
 ifneq ($(SIM),modelsim)
 # inferrable RAM models
 VERILOG_FILES += \
-        ../../jlib/large_ram_dp_q.sv \
-        ../../jlib/dp_ram.sv \
-        ../../jlib/dp_ram_be.sv
+        ../../jpeg_encoder/jlib/large_ram_dp_q.sv \
+        ../../jpeg_encoder/jlib/dp_ram.sv \
+        ../../jpeg_encoder/jlib/dp_ram_be.sv
 endif
 
 ifeq ($(SIM),modelsim)
@@ -124,7 +124,7 @@ VERILOG_FILES += \
 endif
 
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
-VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jisp  ../../jenc ../../jlib .)
+VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
 
 ifeq ($(SIM),icarus)
         EXTRA_ARGS += -DRADIANT

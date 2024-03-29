@@ -388,10 +388,10 @@ logic               jpeg_out_image_valid;
 logic               jpeg_out_data_valid;
 
 
-jenc_top #(
+jpeg_encoder #(
     .SENSOR_X_SIZE      (1280),
     .SENSOR_Y_SIZE      (720)
-) jenc_top (
+) jpeg_encoder (
     .start_capture_in   (jpeg_sel & (capture_in_progress_cdc[2:1] == 2'b01)),
 
     .red_data_in        (debayered_red_data),
@@ -411,8 +411,9 @@ jenc_top #(
 
     .clock_pixel_in,
     .reset_pixel_n_in,
-    .clk_x22,
-    .resetn_x22
+
+    .jpeg_fast_clock_in (clk_x22),
+    .jpeg_fast_reset_n_in(resetn_x22)
 );
 
 // JPEG CDC for frame buffer

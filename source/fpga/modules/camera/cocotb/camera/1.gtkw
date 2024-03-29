@@ -1,55 +1,54 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Thu Mar 28 01:08:00 2024
+[*] Fri Mar 29 16:23:41 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/dump.vcd"
-[dumpfile_mtime] "Thu Mar 28 01:08:00 2024"
-[dumpfile_size] 2245612818
+[dumpfile_mtime] "Fri Mar 29 16:20:19 2024"
+[dumpfile_size] 40847441
 [savefile] "/home/rmetchev/workspace/frame-codebase/source/fpga/modules/camera/cocotb/camera/1.gtkw"
-[timestart] 3990000000
+[timestart] 0
 [size] 1654 823
 [pos] -1 -1
-*-30.962246 10047498180 10047498180 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-27.642645 1059918120 10047498180 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_top.
 [treeopen] tb_top.dut.
 [treeopen] tb_top.dut.camera.
-[treeopen] tb_top.dut.camera.jenc_top.
-[treeopen] tb_top.dut.camera.jenc_top.jenc.
+[treeopen] tb_top.dut.camera.jpeg_encoder.
+[treeopen] tb_top.dut.camera.jpeg_encoder.jenc.
 [sst_width] 233
 [signals_width] 214
 [sst_expanded] 1
 [sst_vpaned_height] 183
 @28
-tb_top.dut.camera.jenc_top.clock_pixel_in
-tb_top.dut.camera.jenc_top.reset_pixel_n_in
-tb_top.dut.camera.jenc_top.clk_x22
-tb_top.dut.camera.jenc_top.resetn_x22
+tb_top.dut.camera.jpeg_encoder.clock_pixel_in
+tb_top.dut.camera.jpeg_encoder.reset_pixel_n_in
+tb_top.dut.camera.jpeg_encoder.clk_x22
+tb_top.dut.camera.jpeg_encoder.resetn_x22
 @200
 -
 @28
-tb_top.dut.camera.jenc_top.start_capture_in
+tb_top.dut.camera.jpeg_encoder.start_capture_in
 @24
-tb_top.dut.camera.jenc_top.x_size_in[10:0]
-tb_top.dut.camera.jenc_top.y_size_in[9:0]
+tb_top.dut.camera.jpeg_encoder.x_size_in[10:0]
+tb_top.dut.camera.jpeg_encoder.y_size_in[9:0]
 @200
 -
 @28
-tb_top.dut.camera.jenc_top.frame_valid_in
-tb_top.dut.camera.jenc_top.line_valid_in
+tb_top.dut.camera.jpeg_encoder.frame_valid_in
+tb_top.dut.camera.jpeg_encoder.line_valid_in
 @22
-tb_top.dut.camera.jenc_top.red_data_in[9:0]
-tb_top.dut.camera.jenc_top.green_data_in[9:0]
-tb_top.dut.camera.jenc_top.blue_data_in[9:0]
+tb_top.dut.camera.jpeg_encoder.red_data_in[9:0]
+tb_top.dut.camera.jpeg_encoder.green_data_in[9:0]
+tb_top.dut.camera.jpeg_encoder.blue_data_in[9:0]
 @200
 -
 -
 @28
-tb_top.dut.camera.jenc_top.data_valid_out
+tb_top.dut.camera.jpeg_encoder.data_valid_out
 @22
-tb_top.dut.camera.jenc_top.data_out[127:0]
-tb_top.dut.camera.jenc_top.bytes_out[4:0]
-tb_top.dut.camera.jenc_top.address_out[15:0]
+tb_top.dut.camera.jpeg_encoder.data_out[31:0]
+tb_top.dut.camera.jpeg_encoder.address_out[15:0]
 @28
-tb_top.dut.camera.jenc_top.image_valid_out
+tb_top.dut.camera.jpeg_encoder.image_valid_out
 [pattern_trace] 1
 [pattern_trace] 0
