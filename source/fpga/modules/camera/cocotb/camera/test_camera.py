@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
-import sys, os, time
+import sys, os, time, random
 
 import numpy as np
 
@@ -103,10 +103,11 @@ class Tester(SPITransactor):
         
         # artificial test image
         if False:
-            self.img_bgr[:, :, :] = 0
-            self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
-            self.img_bgr[:9, :, 2] = 255 # red top
-            self.img_bgr[:, :9, 1] = 255 # green left
+            #self.img_bgr[:, :, :] = 0
+            #self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
+            #self.img_bgr[:9, :, 2] = 255 # red top
+            #self.img_bgr[:, :9, 1] = 255 # green left
+            self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        

@@ -132,7 +132,7 @@ always_comb wbe     = {{2{wbe_tmp}}, {2{~wbe_tmp}}};
 always_comb we      = |we_x22;
 
 always_comb ra = {rptr, q_cnt_0, rd_cnt};
-always_comb re = ~empty;
+always_comb re = ~empty & ~q_hold;
 
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
@@ -163,17 +163,9 @@ ram_dp_w32_b4_d64 mem (
 `endif
 
 
-logic           re_qq;
-logic[15:0]     qq[1:0];
-always @(posedge clk) re_qq <= re; 
-always @(posedge clk) 
-if (re_qq) begin
-    qq[0] <= rd[15:0];
-    qq[1] <= rd[31:16];
-end
 always_comb begin
-    q[0] = q_hold ? qq[0] : rd[15:0];
-    q[1] = q_hold ? qq[0] : rd[31:16];
+    q[0] = rd[15:0];
+    q[1] = rd[31:16];
 end
 
 // flop output valid
@@ -181,5 +173,5 @@ always @(posedge clk)
 if (!resetn) 
     q_valid <= 0;
 else if (!q_hold)
-    q_valid <= ~empty;
+    q_valid <= re;
 endmodule

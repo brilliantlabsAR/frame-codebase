@@ -112,7 +112,7 @@ end
 huff_tables ht (
     .rl         (ht_rl),
     .coeff_length (ht_coeff_length),
-    .re         (ht_re),
+    .re         ({2{~out_hold}}),
     .chroma     (ht_chroma),
     .ac         (ht_ac),
     .len        (code_length0),
@@ -233,7 +233,7 @@ always_comb tmp_codecoeff_length1 = out_valid3[1] ? codecoeff_length3[1] : 0;
 always_comb tmp_codecoeff_length = tmp_codecoeff_length0 + tmp_codecoeff_length1;
 
 always @(posedge clk)
-if (|out_valid3) begin
+if (|out_valid3 & !out_hold) begin
     out_codecoeff_length <= tmp_codecoeff_length;
     if (tmp_codecoeff_length > 52 | tmp_codecoeff_length < 2)
         out_codecoeff <= {52{1'hx}};

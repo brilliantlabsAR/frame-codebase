@@ -115,7 +115,7 @@ zigzag #(.QW(QW)) zigzag (
     .q          (q),
     .q_cnt      (q_cnt),
     .q_valid    (q_valid),
-    .q_hold     ('0 ), //q_hold
+    .q_hold     (q_hold),
     .*
 );
 endmodule

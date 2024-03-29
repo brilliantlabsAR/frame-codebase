@@ -49,7 +49,7 @@ if (!resetn) begin
     rd_cnt <= 0;
     q_cnt_0 <= 0;
 end
-else if (~(&rd_cnt & q_hold) & ~empty) begin
+else if (~q_hold & ~empty) begin
     rd_cnt <= rd_cnt + 1;
     if (&rd_cnt)
         q_cnt_0 <= q_cnt_0 + 1;
@@ -127,7 +127,7 @@ always_comb wbe     = {{2{wbe_tmp}}, {2{~wbe_tmp}}};
 always_comb we      = |we_x22;
 
 always_comb ra = {rptr, q_cnt_0, rd_cnt};
-always_comb re = ~empty;
+always_comb re = ~empty & ~q_hold;
 
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
@@ -162,9 +162,9 @@ logic           re_qq;
 logic[1:0]      rd_cnt_qq;
 logic[15:0]     qq[5:0];
 always @(posedge clk) re_qq <= re; 
-always @(posedge clk) if(re) rd_cnt_qq <= rd_cnt; 
+always @(posedge clk) if(re & !q_hold) rd_cnt_qq <= rd_cnt; 
 always @(posedge clk) 
-if (re_qq) begin
+if (re_qq & !q_hold) begin
     qq[2*rd_cnt_qq  ] <= rd[15:0];
     qq[2*rd_cnt_qq+1] <= rd[31:16];
 end
@@ -179,5 +179,5 @@ always @(posedge clk)
 if (!resetn) 
     q_valid <= 0;
 else if (!q_hold)
-    q_valid <= ~empty & &rd_cnt;
+    q_valid <= re & &rd_cnt;
 endmodule

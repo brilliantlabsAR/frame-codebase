@@ -67,7 +67,8 @@ VERILOG_FILES += \
         ../../jenc/entropy.sv \
         ../../jenc/huff_tables.sv \
         ../../jenc/bitpacker.sv \
-        ../../jenc/bytepacker.sv
+        ../../jenc/bytepacker.sv \
+        ../../jenc/pre_cdc.sv
 
 # Camera
 VERILOG_FILES += \

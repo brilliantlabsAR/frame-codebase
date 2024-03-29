@@ -33,7 +33,7 @@ always_comb assert (M_BITS == 13) else $error();
 
 
 logic [2:0]         zigzag_mcu_cnt;     // 0..3 Y, 4..U, 5..V
-always_comb di_hold = ~q_hold;
+always_comb di_hold = q_hold;
 
 always @(posedge clk) 
 if (!resetn)

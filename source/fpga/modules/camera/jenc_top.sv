@@ -20,9 +20,9 @@
     input   logic               frame_valid_in,
     input   logic               line_valid_in,
 
-    output  logic [127:0]       data_out,           // 16 bytes of data
+    output  logic [31:0]        data_out,           // 4 bytes of data
     output  logic [15:0]        address_out,        // Adress of 16-byte data in image buffer (in bytes)
-    output  logic [4:0]         bytes_out,          // Number of valid data bytes. Can be rounded up to 16
+    //output  logic [4:0]         bytes_out,          // Number of valid data bytes. Can be rounded up to 16
     output  logic               image_valid_out,    // Set to 1 when compression finished. If 1, size of encoded data is address_out+bytes_out (or address_out+16)
     output  logic               data_valid_out,     // Qualifier for valid data. Data is invalid if 0.
 
@@ -37,7 +37,7 @@
 );
 
 // JPEG FSM
-enum logic [2:0] {IDLE, RESET, WAIT_FOR_FRAME, COMPRESS, IMAGE_VALID} state;
+enum logic [2:0] {IDLE, RESET, WAIT_FOR_FRAME_START, COMPRESS, IMAGE_VALID} state;
 logic               jpeg_reset_n;
 logic               jpeg_en;
 
@@ -53,9 +53,11 @@ logic [2:0]         di_cnt;
 
 // data out
 logic [127:0]       out_data;
-logic               out_tlast, out_valid;
+logic               out_tlast, out_valid, out_hold;
 logic [4:0]         out_bytes;
-logic [19:0]        size;
+logic [19:0]        out_size;
+
+logic               tlast;
 
 // JPEG FSM
 always @(posedge clock_pixel_in)
@@ -63,14 +65,14 @@ if (!reset_pixel_n_in)
     state <= IDLE;
 else 
     case(state)
-    1: state <= WAIT_FOR_FRAME;                             // reset state (1)
-    2: if (frame_valid_in) state <= COMPRESS;               // compress state (2,3)
-    3: if (out_valid & out_tlast) state <= IMAGE_VALID;     // compress state
+    1: state <= WAIT_FOR_FRAME_START;                       // reset state (1)
+    2: if (frame_valid_in) state <= COMPRESS;               // wait for frame start (2)
+    3: if (data_valid_out & tlast) state <= IMAGE_VALID;    // compress state (3)
     default: if (start_capture_in & ~frame_valid_in) state <= RESET;   // idle state (0) or image valid state (4)
     endcase        
 
 always_comb jpeg_reset_n    = ~(state == RESET);
-always_comb jpeg_en         = state inside {WAIT_FOR_FRAME, COMPRESS};
+always_comb jpeg_en         = state inside {WAIT_FOR_FRAME_START, COMPRESS};
 always_comb image_valid_out = state == IMAGE_VALID;
 
 // image size config
@@ -97,21 +99,29 @@ jenc #(
     .SENSOR_X_SIZE      (SENSOR_X_SIZE),
     .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
 ) jenc (
-    .out_hold           (1'b0),
+    .size               (out_size),
 
     .clk                (clock_pixel_in),
     .resetn             (reset_pixel_n_in & jpeg_reset_n),
     .*
 );
 
-// data out
-// need to reverse data endianness 
-always_comb 
-    for(int i=0; i<16; i++)
-        data_out[8*i +: 8] = out_data[8*(15-i) +: 8];    
+pre_cdc pre_cdc (
+    .in_data            (out_data),
+    .in_bytes           (out_bytes),
+    .in_tlast           (out_tlast),
+    .in_valid           (out_valid),
+    .in_hold            (out_hold),
+    .in_size            (out_size),
 
-always_comb address_out     = (size >> 4) << 4;
-always_comb bytes_out       = out_bytes;
-always_comb data_valid_out  = out_valid;
+    .out_data           (data_out),
+    .out_bytes          ( ), // (bytes_out),
+    .out_tlast          (tlast),
+    .out_valid          (data_valid_out),
+    .out_hold           ('0),
+    .out_size           (address_out),
 
+    .clk                (clock_pixel_in),
+    .resetn             (reset_pixel_n_in & jpeg_reset_n)
+);
 endmodule

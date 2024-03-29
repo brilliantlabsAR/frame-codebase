@@ -28,10 +28,11 @@ for (int i=0; i<2; i++)
 
 logic [4:0]         lenq[1:0];
 always @(posedge clk) 
-for (int i=0; i<2; i++) begin
-    lenq[i] <= rom[addr[i]][19:16];
-    code[i] <= rom[addr[i]][15:0];
-end
+for (int i=0; i<2; i++) 
+    if (re[i]) begin
+        lenq[i] <= rom[addr[i]][19:16];
+        code[i] <= rom[addr[i]][15:0];
+    end
 always_comb
 for (int i=0; i<2; i++)
     len[i] = 1 + lenq[i];

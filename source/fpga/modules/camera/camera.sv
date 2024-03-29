@@ -382,9 +382,8 @@ metering #(
 
 
 // JPEG Top
-logic [127:0]       jpeg_out_data;
+logic [31:0]        jpeg_out_data;
 logic [15:0]        jpeg_out_address;
-logic [4:0]         jpeg_out_bytes;
 logic               jpeg_out_image_valid;
 logic               jpeg_out_data_valid;
 
@@ -403,7 +402,6 @@ jenc_top #(
 
     .data_out           (jpeg_out_data),
     .address_out        (jpeg_out_address),
-    .bytes_out          (jpeg_out_bytes),
     .image_valid_out    (jpeg_out_image_valid),
     .data_valid_out     (jpeg_out_data_valid),
 
@@ -422,11 +420,9 @@ jenc_top #(
 //
 // Important for synthesis:
 // set false_path -from  -to ... (between clocks)
-// set_max_delay {$clock_spi_in_period} -from [jpeg_out_data, jpeg_out_bytes, jpeg_out_valid, jpeg_out_tlast] -to  [get_clocks clock_spi_in]
 // set_max_delay {$clock_spi_in_period} -from [jpeg_sel] -to [get_clocks clock_pixel_in]
 
-//always_comb jpeg_out_size = jpeg_out_image_valid ? jpeg_out_address + jpeg_out_bytes[3:0] : 0;
-always_comb jpeg_out_size = jpeg_out_image_valid ? jpeg_out_address + 16 : 0;
+always_comb jpeg_out_size = jpeg_out_image_valid ? jpeg_out_address + 4 : 0;
 
 logic [13:0]            jpeg_buffer_address;
 logic [31:0]            jpeg_buffer_write_data;
