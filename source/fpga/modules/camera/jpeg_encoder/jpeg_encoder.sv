@@ -90,7 +90,7 @@ jisp #(
     .SENSOR_X_SIZE      (SENSOR_X_SIZE),
     .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
 ) jisp (
-    .rgb24              ({blue_data_in[9:2], green_data_in[9:2], red_data_in[9:2]}),
+    .rgb24              ('{blue_data_in[9:2], green_data_in[9:2], red_data_in[9:2]}),
     .rgb24_valid        (jpeg_en & line_valid_in),
     .frame_valid_in     (jpeg_en & frame_valid_in),
     .line_valid_in      (jpeg_en & line_valid_in),
