@@ -59,6 +59,8 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. To monitor the logs, run the task `RTT Console` and ensure the `Application (J-Link)` launch configuration is running.
 
+1. To debug using [Black Magic Probes](https://black-magic.org/index.html), follow the instructions [here](/production/blackmagic/README.md).
+
 ## Getting started with FPGA development
 
 For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `fpga_application.h` file which contains the entire FPGA application.
