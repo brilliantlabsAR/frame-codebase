@@ -57,7 +57,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 1. A debugging launch is already configured within `.vscode/launch.json`. Run the `Application (J-Link)` launch configuration from the `Run and Debug` panel, or press `F5`. The project will automatically build and flash before launching.
 
-1. To monitor the logs, run the task `RTT Console` and ensure the `Application (J-Link)` launch configuration is running.
+1. To monitor the logs, run the task `RTT Console (J-Link)` and ensure the `Application (J-Link)` launch configuration is running.
 
 1. To debug using [Black Magic Probes](https://black-magic.org/index.html), follow the instructions [here](/production/blackmagic/README.md).
 
