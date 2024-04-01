@@ -33,8 +33,8 @@ tb_top.dut.mipi_data_p_in
 #{tb_top.camera_debayered_green_data[9:2]} tb_top.camera_debayered_green_data[9] tb_top.camera_debayered_green_data[8] tb_top.camera_debayered_green_data[7] tb_top.camera_debayered_green_data[6] tb_top.camera_debayered_green_data[5] tb_top.camera_debayered_green_data[4] tb_top.camera_debayered_green_data[3] tb_top.camera_debayered_green_data[2]
 #{tb_top.camera_debayered_red_data[9:2]} tb_top.camera_debayered_red_data[9] tb_top.camera_debayered_red_data[8] tb_top.camera_debayered_red_data[7] tb_top.camera_debayered_red_data[6] tb_top.camera_debayered_red_data[5] tb_top.camera_debayered_red_data[4] tb_top.camera_debayered_red_data[3] tb_top.camera_debayered_red_data[2]
 @28
-tb_top.camera_debayered_line_valid_keep
-tb_top.camera_debayered_frame_valid_keep
+tb_top.camera_debayered_line_valid
+tb_top.camera_debayered_frame_valid
 tb_top.dut.camera.capture_flag
 tb_top.dut.camera.capture_in_progress_cdc[0]
 tb_top.dut.camera.capture_in_progress_cdc[1]

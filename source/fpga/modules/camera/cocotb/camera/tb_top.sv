@@ -239,8 +239,8 @@ top dut (
 );
 
 `ifdef GATE_SIM
-wire camera_debayered_frame_valid_keep = dut.\camera.debayered_frame_valid_keep ;
-wire camera_debayered_line_valid_keep = dut.\camera.debayered_line_valid_keep ;
+wire camera_debayered_frame_valid = dut.\camera.debayered_frame_valid ;
+wire camera_debayered_line_valid = dut.\camera.debayered_line_valid ;
 wire [9:2] camera_debayered_blue_data = {dut.\camera.debayered_blue_data[9] , dut.\camera.debayered_blue_data[8] , dut.\camera.debayered_blue_data[7] , dut.\camera.debayered_blue_data[6] , dut.\camera.debayered_blue_data[5] , dut.\camera.debayered_blue_data[4] , dut.\camera.debayered_blue_data[3] , dut.\camera.debayered_blue_data[2] };
 wire [9:2] camera_debayered_green_data = {dut.\camera.debayered_green_data[9] , dut.\camera.debayered_green_data[8] , dut.\camera.debayered_green_data[7] , dut.\camera.debayered_green_data[6] , dut.\camera.debayered_green_data[5] , dut.\camera.debayered_green_data[4] , dut.\camera.debayered_green_data[3] , dut.\camera.debayered_green_data[2] };
 wire [9:2] camera_debayered_red_data = {dut.\camera.debayered_red_data[9] , dut.\camera.debayered_red_data[8] , dut.\camera.debayered_red_data[7] , dut.\camera.debayered_red_data[6] , dut.\camera.debayered_red_data[5] , dut.\camera.debayered_red_data[4] , dut.\camera.debayered_red_data[3] , dut.\camera.debayered_red_data[2] };
