@@ -96,6 +96,9 @@ void shutdown(bool enable_imu_wakeup)
     // Put PMIC main bias into low power mode
     check_error(i2c_write(PMIC, 0x10, 0x20, 0x20).fail);
 
+    // Set ICHGIN_LIM to 285mA
+    check_error(i2c_write(PMIC, 0x21, 0x1C, 0x08).fail);
+
     for (uint8_t pin = 0; pin < 16; pin++)
     {
         nrf_gpio_cfg_default(NRF_GPIO_PIN_MAP(0, pin));
@@ -199,9 +202,6 @@ static void hardware_setup(bool *factory_reset)
 
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
         check_error(i2c_write(PMIC, 0x20, 0xFF, 0x2E).fail);
-
-        // Set CHGIN limit to 475mA
-        check_error(i2c_write(PMIC, 0x21, 0x1C, 0x10).fail);
 
         // Charge termination current to 5%, and top-off timer to 30mins
         check_error(i2c_write(PMIC, 0x22, 0x1F, 0x06).fail);
