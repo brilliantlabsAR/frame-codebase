@@ -68,10 +68,10 @@ logic[10:0] X_CROP_END;     // Todo: Make SPI register
 logic[9:0] Y_CROP_START;    // Todo: Make SPI register
 logic[9:0] Y_CROP_END;      // Todo: Make SPI register
 
-always_ff @(posedge clock_spi_in) X_CROP_START <= 0;
-always_ff @(posedge clock_spi_in) X_CROP_END   <= 18;
-always_ff @(posedge clock_spi_in) Y_CROP_START <= 0;
-always_ff @(posedge clock_spi_in) Y_CROP_END   <= 18;
+always_ff @(posedge clock_spi_in) X_CROP_START <=  0;
+always_ff @(posedge clock_spi_in) X_CROP_END   <=  18;
+always_ff @(posedge clock_spi_in) Y_CROP_START <= 1;
+always_ff @(posedge clock_spi_in) Y_CROP_END   <= 19;
 
 logic[10:0] x_size;     // Todo: Make SPI register
 logic[9:0] y_size;      // Todo: Make SPI register
@@ -350,6 +350,9 @@ logic debayered_line_valid;
 debayer debayer (
     .pixel_clock_in(clock_pixel_in),
     .reset_n_in(reset_pixel_n_in),
+    
+    .x_crop_start_lsb(X_CROP_START[0]),
+    .y_crop_start_lsb(Y_CROP_START[0]),
 
     .pixel_data_in(cropped_data),
     .line_valid_in(cropped_line_valid),

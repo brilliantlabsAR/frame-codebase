@@ -70,6 +70,9 @@ module debayer (
     input logic pixel_clock_in,
     input logic reset_n_in,
 
+    input logic x_crop_start_lsb, // Just the LSB to allow odd/even start addresses
+    input logic y_crop_start_lsb, // Just the LSB to allow odd/even start addresses
+
     input logic [9:0] pixel_data_in,
     input logic line_valid_in,
     input logic frame_valid_in,
@@ -126,15 +129,19 @@ always_ff @(posedge pixel_clock_in) begin
         y_counter <= 0;
     end
     else begin
-        last_frame_valid_in <= (y_counter > 1) & frame_valid_in;
+        //last_frame_valid_in <= (y_counter > y_crop_start_lsb ? 2 : 1) & frame_valid_in;
+        last_frame_valid_in <= (y_counter > (1 + y_crop_start_lsb)) & frame_valid_in;
         if(frame_valid_in == 0) begin
             last_line_valid_in <= 0;
             we <= 0;
-            x_counter <= 0;
-            y_counter <= 0;
+            //x_counter <= x_crop_start_lsb ? 1 : 0;
+            //y_counter <= y_crop_start_lsb ? 1 : 0;
+            x_counter <= x_crop_start_lsb;
+            y_counter <= y_crop_start_lsb;
         end
         else begin
-            last_line_valid_in <= (x_counter > 1) & line_valid_in;
+            //last_line_valid_in <= (x_counter > (x_crop_start_lsb ? 2 : 1)) & line_valid_in;
+            last_line_valid_in <= (x_counter > (1 + x_crop_start_lsb)) & line_valid_in;
             we <= line_valid_in;
             if (line_valid_in) begin
                 x_counter <= x_counter + 1;
@@ -153,7 +160,8 @@ always_ff @(posedge pixel_clock_in) begin
                 previous_line_buffer_read_data[0] <= line_buffer_read_data[0];
             end
             else begin
-                x_counter <= 0;
+                //x_counter <= (x_crop_start_lsb ? 1 : 0);
+                x_counter <= x_crop_start_lsb;
 
                 // Increment y at the falling edge of each line_valid
                 if (last_line_valid_in) begin
