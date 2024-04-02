@@ -222,6 +222,7 @@ logic[10:0] x_pan_crop_end;     // Todo: Make SPI register
 logic[10:0] y_pan_crop_start;   // Todo: Make SPI register
 logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
 
+`define COCOTB_SIM 1
 `ifdef COCOTB_SIM
 always_comb x_pan_crop_start    = 1;
 always_comb x_pan_crop_end      = 19;
