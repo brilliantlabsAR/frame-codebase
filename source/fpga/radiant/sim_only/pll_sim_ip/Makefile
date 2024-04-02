@@ -8,4 +8,4 @@ all: ./pll_sim_ip.ipx ./rtl/pll_sim_ip.v
 
 clean:
 	@#rm -rf $(filter-out Makefile pll_ip.cfg pll_ip.ipx component.xml design.xml,$(shell ls))
-	rm -rf constraints misc rtl testbench
+	rm -rf constraints misc rtl testbench pll_sim_ip.ipx *.xml

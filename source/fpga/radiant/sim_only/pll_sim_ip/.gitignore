@@ -1,0 +1,6 @@
+constraints
+misc
+rtl
+testbench
+*.xml
+pll_sim_ip.ipx
