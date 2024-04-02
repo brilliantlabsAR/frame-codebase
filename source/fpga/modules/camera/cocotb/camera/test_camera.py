@@ -102,7 +102,7 @@ class Tester(SPITransactor):
         assert self.x%2 == 0
         
         # artificial test image
-        if True:
+        if False:
             self.img_bgr[:, :, :] = 0
             self.img_bgr[8:, 8:, 0] = 255 # blue right bottom corner
             self.img_bgr[:8, :, 2] = 255 # red top

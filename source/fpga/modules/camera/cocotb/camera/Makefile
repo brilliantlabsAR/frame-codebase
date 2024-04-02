@@ -73,7 +73,7 @@ VERILOG_FILES += \
 # Camera
 VERILOG_FILES += \
         ../../image_buffer.sv \
-        ../../rgb_cdc.sv \
+        ../../spi_registers.sv \
         ../../jpeg_encoder/jenc_cdc.sv \
         ../../crop.sv \
         ../../debayer.sv \
@@ -87,6 +87,7 @@ VERILOG_FILES += \
         ../../../reset/global_reset_sync.sv \
         ../../../spi/spi_peripheral.sv \
         ../../../spi/spi_register.sv \
+        ../../../pll/pll_wrapper.sv \
         ../../../graphics/color_palette.sv \
         ../../../graphics/display_buffers.sv \
         ../../../graphics/display_driver.sv \
@@ -136,20 +137,20 @@ else # verilator + modelsim
 endif
 
 ifeq ($(SIM),icarus)
-        EXTRA_ARGS += -DNO_MIPI_IP_SIM            # Simulate Bayer input
-        EXTRA_ARGS += -DNO_PLL_IP_SIM            # Emulate PLL
+        EXTRA_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
+        EXTRA_ARGS += -DNO_PLL_IP_SIM           # Emulate PLL
         EXTRA_ARGS += -Wall
 endif
 ifeq ($(SIM),verilator)
-        EXTRA_ARGS += +define+NO_MIPI_IP_SIM            # Simulate Bayer input
-        EXTRA_ARGS += +define+NO_PLL_IP_SIM            # Emulate PLL
+        EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
+        EXTRA_ARGS += +define+NO_PLL_IP_SIM     # Emulate PLL
         EXTRA_ARGS += --timing
         EXTRA_ARGS += --trace --trace-structs
         WNO = fatal WIDTHTRUNC WIDTHEXPAND ASCRANGE EOFNEWLINE PINCONNECTEMPTY DECLFILENAME GENUNNAMED VARHIDDEN UNUSEDPARAM
         EXTRA_ARGS += -Wall $(WNO:%=-Wno-%)
 endif
 ifeq ($(SIM),modelsim)
-        #EXTRA_ARGS += +define+INFER_LARGE_RAM           # RTL vs. memory models explicitely
+        #EXTRA_ARGS += +define+USE_LATTICE_LARGE_RAM     # RTL vs. memory models explicitely
         EXTRA_ARGS += +define+USE_LATTICE_EBR           # use EBR explicitely
         EXTRA_ARGS += +define+COCOTB_MODELSIM
         EXTRA_ARGS += -suppress vlog-2244 -suppress  vlog-13314
@@ -175,6 +176,12 @@ export PYTHONPATH := $(realpath ../python_common):$(realpath ../jed):$(PYTHONPAT
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+# Build Lattice IP (CSI, PLL, EBR) as prerequisite
+.PHONY: ip
+ip:
+	make ip -C ../../../../radiant
+sim: ip
 
 g gtkwave:
 	gtkwave dump.vcd -o -a 1.gtkw
