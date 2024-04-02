@@ -61,7 +61,7 @@ logic start_capture_metastable;
 logic start_capture_pixel_domain;
 logic [3:0] compression_factor;
 
-logic [15:0] bytes_available = 40000; // TODO connect this
+logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
 logic [15:0] image_buffer_address;
 
@@ -72,6 +72,7 @@ logic [7:0] blue_metering_spi_clock_domain;
 logic [15:0] image_address;
 logic image_complete;
 
+always_comb bytes_available = image_address + 4;
 spi_registers spi_registers (
     .clock_in(spi_clock_in),
     .reset_n_in(spi_reset_n_in),
