@@ -24,7 +24,7 @@ export IMAGE_X_SIZE := $(IMAGE_X_SIZE)
 export IMAGE_Y_SIZE := $(IMAGE_Y_SIZE)
 endif
 
-ifeq ($(SIM),iverilog)
+ifeq ($(SIM),icarus)
 EXTRA_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%)
 EXTRA_ARGS += $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
 else # verilator + modelsim
@@ -127,11 +127,12 @@ endif
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
 
-EXTRA_ARGS += +define+COCOTB_SIM
 ifeq ($(SIM),icarus)
+        EXTRA_ARGS += -DCOCOTB_SIM
         EXTRA_ARGS += -DRADIANT
         EXTRA_ARGS += -DTOP_SIM
 else # verilator + modelsim
+        EXTRA_ARGS += +define+COCOTB_SIM
         EXTRA_ARGS += +define+RADIANT
         EXTRA_ARGS += +define+TOP_SIM
 endif
@@ -140,6 +141,7 @@ ifeq ($(SIM),icarus)
         EXTRA_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
         EXTRA_ARGS += -DNO_PLL_IP_SIM           # Emulate PLL
         EXTRA_ARGS += -Wall
+        COMPILE_ARGS += -g2005-sv
 endif
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
