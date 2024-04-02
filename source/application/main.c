@@ -75,26 +75,47 @@ static void set_power_rails(bool enable)
 
 void shutdown(bool enable_imu_wakeup)
 {
-    // This helps to debounce and stops the interrupt being called too often
     nrfx_gpiote_trigger_disable(CASE_DETECT_PIN);
-    nrfx_systick_delay_ms(100);
 
     if (stay_awake)
     {
         LOG("Staying awake");
+        // Debounce and avoid the interrupt being called multiple times
+        nrfx_systick_delay_ms(100);
         nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
         return;
     }
 
+    uint8_t display_power_save[2] = {0x00, 0x92};
+    spi_write(DISPLAY, display_power_save, sizeof(display_power_save), false);
+
+    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
+
+    // Put magnetometer into standby
+    check_error(i2c_write(MAGNETOMETER, 0x1B, 0x80, 0x00).fail);
+
+    // Put accelerometer into standby if not needed for wakeup
+    if (!enable_imu_wakeup)
+    {
+        check_error(i2c_write(ACCELEROMETER, 0x07, 0xFF, 0x00).fail);
+    }
+
+    nrf_gpio_pin_clear(FPGA_PROGRAM_PIN);
+    nrfx_systick_delay_ms(100);
+
     check_error(sd_softdevice_disable());
 
     set_power_rails(false);
+    nrfx_systick_delay_ms(100);
 
     // Disconnect AMUX
     check_error(i2c_write(PMIC, 0x28, 0x0F, 0x00).fail);
 
     // Put PMIC main bias into low power mode
     check_error(i2c_write(PMIC, 0x10, 0x20, 0x20).fail);
+
+    // Set ICHGIN_LIM to 285mA
+    check_error(i2c_write(PMIC, 0x21, 0x1C, 0x08).fail);
 
     for (uint8_t pin = 0; pin < 16; pin++)
     {
@@ -199,9 +220,6 @@ static void hardware_setup(bool *factory_reset)
 
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
         check_error(i2c_write(PMIC, 0x20, 0xFF, 0x2E).fail);
-
-        // Set CHGIN limit to 475mA
-        check_error(i2c_write(PMIC, 0x21, 0x1C, 0x10).fail);
 
         // Charge termination current to 5%, and top-off timer to 30mins
         check_error(i2c_write(PMIC, 0x22, 0x1F, 0x06).fail);

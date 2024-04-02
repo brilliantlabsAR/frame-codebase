@@ -56,7 +56,6 @@
             "preLaunchTask": "Build",
             "interface": "swd",
             "device": "nRF52840_XXAA",
-            "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
             "showDevDebugOutput": "none",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
             "internalConsoleOptions": "neverOpen",
@@ -64,9 +63,16 @@
                 "libraries/softdevice/s140_nrf52_7.3.0_softdevice.hex",
             ],
             "preLaunchCommands": [
+                "monitor rtt enable",
                 "monitor erase_mass",
                 "load",
             ],
+            "linux": {
+                "BMPGDBSerialPort": "/dev/ttyACM0",
+            },
+            "osx": {
+                "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
+            }
         },
         {
             "name": "Bootloader (Black Magic Probe)",
@@ -78,7 +84,6 @@
             "preLaunchTask": "Build Bootloader",
             "interface": "swd",
             "device": "nRF52840_XXAA",
-            "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
             "showDevDebugOutput": "none",
             "svdFile": "libraries/nrfx/mdk/nrf52840.svd",
             "internalConsoleOptions": "neverOpen",
@@ -88,9 +93,16 @@
                 "build/settings.hex"
             ],
             "preLaunchCommands": [
+                "monitor rtt enable",
                 "monitor erase_mass",
                 "load",
             ],
+            "linux": {
+                "BMPGDBSerialPort": "/dev/ttyACM0",
+            },
+            "osx": {
+                "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
+            }
         }
     ]
 }

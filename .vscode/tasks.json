@@ -130,9 +130,23 @@
             }
         },
         {
-            "label": "RTT Debug Console",
+            "label": "RTT Debug Console (J-Link)",
             "type": "shell",
             "command": "JLinkRTTClient",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": false,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true
+            }
+        },
+        {
+            "label": "RTT Debug Console (Black-Magic)",
+            "type": "shell",
+            "command": "pkill SCREEN; screen /dev/tty.usbmodem*3",
             "problemMatcher": [],
             "presentation": {
                 "echo": false,
