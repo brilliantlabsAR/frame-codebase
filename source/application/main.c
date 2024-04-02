@@ -221,8 +221,8 @@ static void hardware_setup(bool *factory_reset)
         // Vhot & Vwarm = 45 degrees. Vcool = 15 degrees. Vcold = 0 degrees
         check_error(i2c_write(PMIC, 0x20, 0xFF, 0x2E).fail);
 
-        // Charge termination current to 5%, and top-off timer to 30mins
-        check_error(i2c_write(PMIC, 0x22, 0x1F, 0x06).fail);
+        // Charge termination current to 10%, and top-off timer to 0mins
+        check_error(i2c_write(PMIC, 0x22, 0x1F, 0x10).fail);
 
         // Set junction regulation temperature to 70 degrees
         check_error(i2c_write(PMIC, 0x23, 0xE0, 0x20).fail);
