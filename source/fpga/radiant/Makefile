@@ -13,11 +13,11 @@ lram:
 
 pll:
 	make -C pll_ip
-	make -C sim_only/pll_sim_ip
+	make -C ../modules/camera/testbenches/csi/source/csi/pll_sim_ip
 
 clean:
 	make clean -C jisp
 	make clean -C jenc
 	make clean -C image_buffer
 	make clean -C pll_ip
-	make clean -C sim_only/pll_sim_ip
+	make clean -C ../modules/camera/testbenches/csi/source/csi/pll_sim_ip

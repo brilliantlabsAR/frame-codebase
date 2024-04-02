@@ -7,5 +7,4 @@ all: ./pll_sim_ip.ipx ./rtl/pll_sim_ip.v
 	ipgenwrap -cfg pll_sim_ip.cfg -name pll_sim_ip -o . $(IPGEN_FLAGS)
 
 clean:
-	@#rm -rf $(filter-out Makefile pll_ip.cfg pll_ip.ipx component.xml design.xml,$(shell ls))
-	rm -rf constraints misc rtl testbench pll_sim_ip.ipx *.xml
+	rm -rf $(filter-out Makefile pll_sim_ip.cfg pll_sim_ip.ipx component.xml design.xml,$(shell ls))
