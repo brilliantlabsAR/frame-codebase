@@ -39,12 +39,19 @@ module top (
     output logic display_cb1_out,
     output logic display_cb2_out,
 
+    `ifdef NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/,
+    input logic camera_pixel_clock,
+    `else
     `ifdef RADIANT
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
     `endif
+    `endif //NO_MIPI_IP_SIM
 
     output logic camera_clock_out
 );
@@ -52,12 +59,25 @@ module top (
 // Clocking
 logic osc_clock;
 logic camera_clock;
-logic camera_pixel_clock;
 logic display_clock;
 logic spi_peripheral_clock;
 logic pll_locked;
 logic pll_reset;
+logic jpeg_buffer_clock;
 
+`ifdef NO_PLL_IP_SIM
+initial osc_clock = 0;
+initial camera_clock = 0;
+initial display_clock = 0;
+initial spi_peripheral_clock = 0;
+initial jpeg_buffer_clock = 0;
+initial forever #(27777.778) osc_clock = ~osc_clock;
+initial forever #(20833.333) camera_clock = !pll_reset ? ~camera_clock : 0;
+initial forever #(13999.889) display_clock = !pll_reset ? ~display_clock : 0;
+initial forever #( 6944.444) spi_peripheral_clock = !pll_reset ? ~spi_peripheral_clock : 0;
+initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset ? ~jpeg_buffer_clock : 0;
+always_comb pll_locked = ~pll_reset;
+`else
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -67,6 +87,7 @@ OSCA #(
     .HFCLKOUT(osc_clock) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
 
+logic camera_pixel_clock;
 pll_wrapper pll_wrapper (
     .clki_i(osc_clock),                 // 18MHz
     .rstn_i(pll_reset),
@@ -77,6 +98,7 @@ pll_wrapper pll_wrapper (
     .clkos4_o(jpeg_buffer_clock),       // 78MHz
     .lock_o(pll_locked)
 );
+`endif
 
 // Reset
 logic global_reset_n;
@@ -186,12 +208,18 @@ camera camera (
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
     
+    `ifdef NO_MIPI_IP_SIM
+    .byte_to_pixel_frame_valid,
+    .byte_to_pixel_line_valid,
+    .byte_to_pixel_data,
+    `else
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
     .mipi_clock_n_in(mipi_clock_n_in),
     .mipi_data_p_in(mipi_data_p_in),
     .mipi_data_n_in(mipi_data_n_in),
     `endif
+    `endif //NO_MIPI_IP_SIM
     
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),

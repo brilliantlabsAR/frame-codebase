@@ -34,10 +34,17 @@ module camera (
     input logic jpeg_buffer_clock_in, // 78MHz
     input logic jpeg_buffer_reset_n_in,
 
+`ifndef NO_MIPI_IP_SIM
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
+`else
+    // for NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid,
+    input logic byte_to_pixel_line_valid,
+    input logic [9:0] byte_to_pixel_data,
+`endif //NO_MIPI_IP_SIM
 
     input logic [7:0] op_code_in,
     input logic op_code_valid_in,
@@ -50,13 +57,9 @@ module camera (
 
 // TODO position signals
 logic start_capture_spi_domain;
-logic [3:0] quality_factor_spi_domain;
-
 logic start_capture_metastable;
-logic [3:0] quality_factor_metastable;
-
 logic start_capture_pixel_domain;
-logic [3:0] quality_factor_pixel_domain;
+logic [3:0] compression_factor;
 
 logic [15:0] bytes_available = 40000; // TODO connect this
 logic [7:0] image_buffer_data;
@@ -65,6 +68,9 @@ logic [15:0] image_buffer_address;
 logic [7:0] red_metering_spi_clock_domain;
 logic [7:0] green_metering_spi_clock_domain;
 logic [7:0] blue_metering_spi_clock_domain;
+
+logic [15:0] image_address;
+logic image_complete;
 
 spi_registers spi_registers (
     .clock_in(spi_clock_in),
@@ -80,7 +86,11 @@ spi_registers spi_registers (
 
     .start_capture_out(start_capture_spi_domain),
     // TODO position signals
-    .quality_factor_out(quality_factor_spi_domain),
+    .compression_factor_out(compression_factor),
+
+    // JPEG image
+    .image_address(image_address),
+    .image_complete(image_complete),
 
     .bytes_available_in(bytes_available),
     .data_in(image_buffer_data),
@@ -94,25 +104,22 @@ spi_registers spi_registers (
 always @(posedge pixel_clock_in) begin
     if (pixel_reset_n_in == 0) begin
         start_capture_metastable <= 0;
-        quality_factor_metastable <= 0;
-
         start_capture_pixel_domain <= 0;
-        quality_factor_pixel_domain <= 0;
     end
 
     else begin
         start_capture_metastable <= start_capture_spi_domain;
-        quality_factor_metastable <= quality_factor_spi_domain;
-
         start_capture_pixel_domain <= start_capture_metastable;
-        quality_factor_pixel_domain <= quality_factor_metastable;
     end
 end
 
-logic [9:0] byte_to_pixel_data;
-logic byte_to_pixel_line_valid;
-logic byte_to_pixel_frame_valid;
+`ifndef NO_MIPI_IP_SIM
+logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/;
+logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/;
+`endif //NO_MIPI_IP_SIM
 
+`ifndef NO_MIPI_IP_SIM
 `ifdef RADIANT
 logic mipi_byte_clock;
 logic mipi_byte_reset_n;
@@ -192,6 +199,7 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(byte_to_pixel_data)
 );
 `endif // RADIANT
+`endif //NO_MIPI_IP_SIM
 
 `ifdef TESTBENCH // TESTBENCH
 image_gen image_gen (
@@ -208,29 +216,48 @@ logic [9:0] panned_data;
 logic panned_line_valid;
 logic panned_frame_valid;
 
+logic[10:0] x_pan_crop_start;   // Todo: Make SPI register
+logic[10:0] x_pan_crop_end;     // Todo: Make SPI register
+logic[10:0] y_pan_crop_start;   // Todo: Make SPI register
+logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
+
+`ifdef COCOTB_SIM
+always_comb x_pan_crop_start    = 1;
+always_comb x_pan_crop_end      = 19;
+always_comb y_pan_crop_start    = 1;
+always_comb y_pan_crop_end      = 19;
+`else
+`ifdef TESTBENCH
+always_comb x_pan_crop_start    = 10;
+always_comb x_pan_crop_end      = 25;
+always_comb y_pan_crop_start    = 12;
+always_comb y_pan_crop_end      = 24;
+`else
+always_comb x_pan_crop_start    = 284;
+always_comb x_pan_crop_end      = 1004;
+always_comb y_pan_crop_start    = 4;
+always_comb y_pan_crop_end      = 724;
+`endif
+`endif
+
 crop pan_crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
-    .red_data_in(byte_to_pixel_data),
-    .green_data_in(0),
-    .blue_data_in(0),
+    .red_data_in('0),
+    .green_data_in(byte_to_pixel_data),
+    .blue_data_in('0),
     .line_valid_in(byte_to_pixel_line_valid),
     .frame_valid_in(byte_to_pixel_frame_valid),
 
-    `ifdef TESTBENCH
-    .x_crop_start(10),
-    .x_crop_end(25),
-    .y_crop_start(12),
-    .y_crop_end(24),
-    `else
-    .x_crop_start(284), // TODO make dynamic
-    .x_crop_end(1004),  // TODO make dynamic
-    .y_crop_start(4),
-    .y_crop_end(724),
-    `endif
+    .x_crop_start(x_pan_crop_start),
+    .x_crop_end(x_pan_crop_end),
+    .y_crop_start(y_pan_crop_start),
+    .y_crop_end(y_pan_crop_end),
 
-    .red_data_out(panned_data),
+    .red_data_out( ),
+    .green_data_out(panned_data),
+    .blue_data_out( ),
     .line_valid_out(panned_line_valid),
     .frame_valid_out(panned_frame_valid)
 );
@@ -242,8 +269,11 @@ logic debayered_line_valid;
 logic debayered_frame_valid;
 
 debayer debayer (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
+    .pixel_clock_in(pixel_clock_in),
+    .pixel_reset_n_in(pixel_reset_n_in),
+
+    .x_crop_start_lsb(x_pan_crop_start[0]),
+    .y_crop_start_lsb(y_pan_crop_start[0]),
 
     .bayer_data_in(panned_data),
     .line_valid_in(panned_line_valid),
@@ -307,6 +337,36 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
+logic[10:0] x_zoom_crop_start;  // Todo: Make SPI register
+logic[10:0] x_zoom_crop_end;    // Todo: Make SPI register
+logic[10:0] y_zoom_crop_start;  // Todo: Make SPI register
+logic[10:0] y_zoom_crop_end;    // Todo: Make SPI register
+logic[10:0] x_size;             // Todo: Make SPI register
+logic[10:0] y_size;             // Todo: Make SPI register
+
+always_comb x_size = x_zoom_crop_end - x_zoom_crop_start;
+always_comb y_size = y_zoom_crop_end - y_zoom_crop_start;
+
+`ifdef COCOTB_SIM
+// after debayer
+always_comb x_zoom_crop_start    = 0;
+always_comb x_zoom_crop_end      = 16;
+always_comb y_zoom_crop_start    = 0;
+always_comb y_zoom_crop_end      = 16;
+`else
+`ifdef TESTBENCH
+always_comb x_zoom_crop_start    = 0;
+always_comb x_zoom_crop_end      = 15;
+always_comb y_zoom_crop_start    = 0;
+always_comb y_zoom_crop_end      = 12;
+`else
+always_comb x_zoom_crop_start    = 260;
+always_comb x_zoom_crop_end      = 460;
+always_comb y_zoom_crop_start    = 260;
+always_comb y_zoom_crop_end      = 460;
+`endif
+`endif
+
 crop zoom_crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
@@ -317,17 +377,10 @@ crop zoom_crop (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    `ifdef TESTBENCH
-    .x_crop_start(0),
-    .x_crop_end(15),
-    .y_crop_start(0),
-    .y_crop_end(12),
-    `else
-    .x_crop_start(260), // TODO make dynamic
-    .x_crop_end(460),   // TODO make dynamic
-    .y_crop_start(260), // TODO make dynamic
-    .y_crop_end(460),   // TODO make dynamic
-    `endif
+    .x_crop_start(x_zoom_crop_start),
+    .x_crop_end(x_zoom_crop_end),
+    .y_crop_start(y_zoom_crop_start),
+    .y_crop_end(y_zoom_crop_end),
 
     .red_data_out(zoomed_red_data),
     .green_data_out(zoomed_green_data),
@@ -336,17 +389,17 @@ crop zoom_crop (
     .frame_valid_out(zoomed_frame_valid)
 );
 
-logic [127:0] final_image_data;
-logic [15:0] final_image_address;
-logic final_image_data_valid;
-logic final_image_complete;
+logic [127:0] image_data;
+//logic [15:0] image_address;
+logic image_data_valid;
+//logic image_complete;
 
-jpeg jpeg (
+jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .jpeg_buffer_clock_in(jpeg_buffer_clock_in),
-    .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n_in),
+    .jpeg_fast_clock_in(jpeg_buffer_clock_in),
+    .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
@@ -355,26 +408,23 @@ jpeg jpeg (
     .frame_valid_in(zoomed_frame_valid),
 
     .start_capture_in(start_capture_pixel_domain),
-    .x_size_in(200), // TODO
-    .y_size_in(200),
-    .quality_factor_in(quality_factor_pixel_domain),
+    .x_size_in(x_size),
+    .y_size_in(y_size),
+    .compression_factor_in(compression_factor),
 
-    .data_out(final_image_data),
-    .data_valid_out(final_image_data_valid), // TODO
-    .address_out(final_image_address),
-    .image_valid_out(final_image_complete)
+    .data_out(image_data),
+    .data_valid_out(image_data_valid),
+    .address_out(image_address),
+    .image_valid_out(image_complete)
 );
 
 image_buffer image_buffer (
-    .write_clock_in(pixel_clock_in),
-    .read_clock_in(spi_clock_in),
-    .write_reset_n_in(pixel_reset_n_in),
-    .read_reset_n_in(spi_reset_n_in),
-    .write_address_in(final_image_address),
+    .write_address_in(image_address),
     .read_address_in(image_buffer_address),
-    .write_data_in(final_image_data[7:0]),
+    .write_data_in(image_data),
     .read_data_out(image_buffer_data),
-    .write_read_n_in(final_image_data_valid)
+    .write_read_n_in(image_data_valid),
+    .*
 );
 
 endmodule

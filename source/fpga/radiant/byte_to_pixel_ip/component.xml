@@ -236,11 +236,11 @@
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/tb_top.v</ipxact:name>
+                <ipxact:name>testbench/byte_driver.v</ipxact:name>
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
             <ipxact:file>
-                <ipxact:name>testbench/byte_driver.v</ipxact:name>
+                <ipxact:name>testbench/tb_top.v</ipxact:name>
                 <ipxact:fileType user="testbench_verilog">user</ipxact:fileType>
             </ipxact:file>
         </ipxact:fileSet>
@@ -255,8 +255,8 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 02 08 12:59:18</lsccip:createdTimestamp>
-            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.1.1.200.1</lsccip:radiantBuild>
+            <lsccip:createdTimestamp>2024 04 01 17:47:58</lsccip:createdTimestamp>
+            <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.0.38.1</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>
 </ipxact:component>

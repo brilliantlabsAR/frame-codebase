@@ -4,6 +4,14 @@ build/
 # Ignore simulation files
 simulation/
 abc.history
+obj_dir
+sim_build
+results.xml
+*.vcd
+*.vcd.fst
+*.vcd.fst.hier
+
+__pycache__
 
 # Ignore VSCode user settings
 .vscode/settings.json
@@ -16,6 +24,6 @@ abc.history
 test_scratch_pad*.py
 
 # Temp focusing image and production logs
-production/temp_focus_image.png
+production/temp_focus_image.jpg
 production/log.txt
 production/frame-firmware-*.hex
