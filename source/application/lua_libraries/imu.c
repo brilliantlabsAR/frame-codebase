@@ -138,7 +138,7 @@ static imu_values_t get_imu_data(void)
     values.magnetometer.z = x_mag_msb << 8 | x_mag_lsb;
 
     // Clear PC to put magnetometer back to sleep
-    check_error(i2c_write(MAGNETOMETER, 0x1B, 0x80, 0x80).fail);
+    check_error(i2c_write(MAGNETOMETER, 0x1B, 0x80, 0x00).fail);
 
     // Accelerometer data is always available, so just read it
     int16_t x_accel_lsb = i2c_read(ACCELEROMETER, 0x0D, 0xFF).value;

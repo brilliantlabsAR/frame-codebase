@@ -15,7 +15,7 @@ async def main():
         await b.send_lua("resp = frame.imu.raw()")
         print(
             await b.send_lua(
-                "print(tostring(resp['compass']['x'])..'\t'..tostring(resp['compass']['y'])..'\t'..tostring(resp['compass']['z']))",
+                "print(tostring(resp['accelerometer']['x'])..'\t'..tostring(resp['accelerometer']['y'])..'\t'..tostring(resp['accelerometer']['z'])..'\t'..tostring(resp['compass']['x'])..'\t'..tostring(resp['compass']['y'])..'\t'..tostring(resp['compass']['z']))",
                 await_print=True,
             )
         )
