@@ -12,9 +12,6 @@
         <Source name="../modules/pll/pll_wrapper.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/reset/reset_global.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
         <Source name="../modules/reset/reset_sync.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -120,9 +117,6 @@
         <Source name="../modules/camera/jpeg_encoder/jenc_cdc.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="../modules/camera/rgb_cdc.sv" type="Verilog" type_short="Verilog">
-            <Options VerilogStandard="System Verilog"/>
-        </Source>
         <Source name="jenc/ram_dp_w32_b4_d64/ram_dp_w32_b4_d64.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
@@ -142,6 +136,12 @@
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/jpeg_encoder/jenc/pre_cdc.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/reset/global_reset_sync.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
+        <Source name="../modules/camera/spi_registers.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
