@@ -10,9 +10,9 @@
  */
 
 module metering #(
-    // 512x512 window in the center of a 1280x720 image
-    X_WINDOW_START = 384, 
-    X_WINDOW_END = 896,
+    // 512x512 window in the center of a 720x720 image
+    X_WINDOW_START = 104, 
+    X_WINDOW_END = 616,
     Y_WINDOW_START = 104,
     Y_WINDOW_END = 616
 )(
