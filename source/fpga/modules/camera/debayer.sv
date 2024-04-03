@@ -148,7 +148,7 @@ always_ff @(posedge pixel_clock_in) begin
                 // Always buffer the last 3 input pixels
                 previous_previous_previous_pixel <= previous_previous_pixel;
                 previous_previous_pixel <= previous_pixel;
-                previous_pixel <= bayer_data_in;
+                previous_pixel <= bayer_data_in[9:1] << 1; // truncate to 9 bits right away
 
                 // Always buffer the last 2 line buffer pixels
                 previous_previous_line_buffer_read_data[1] <= previous_line_buffer_read_data[1];

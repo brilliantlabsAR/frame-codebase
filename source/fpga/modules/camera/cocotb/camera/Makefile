@@ -68,7 +68,8 @@ VERILOG_FILES += \
         ../../jpeg_encoder/jenc/huff_tables.sv \
         ../../jpeg_encoder/jenc/bitpacker.sv \
         ../../jpeg_encoder/jenc/bytepacker.sv \
-        ../../jpeg_encoder/jenc/pre_cdc.sv
+        ../../jpeg_encoder/jenc/pre_cdc.sv \
+        ../../jpeg_encoder/jlib/afifo.v
 
 # Camera
 VERILOG_FILES += \

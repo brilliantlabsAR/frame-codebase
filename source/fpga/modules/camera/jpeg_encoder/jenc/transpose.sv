@@ -58,73 +58,43 @@ else if (~q_hold & ~empty) begin
 end
 
 // RAM write side
-logic               d_valid_nrz, d_valid_nrz_pre_cdc;
-logic               nrz0;
-
-logic               wptr_cdc;
-logic[15:0]         wd_cdc[1:0];
-logic[5:0]          d_addr;
-logic[5:0]          d_addr_cdc[1:0];
-
-always_comb     d_valid_nrz =  d_valid ^ nrz0;
-always @(posedge clk) 
-if (!resetn)
-    nrz0 <= 0;
-else if (~full)
-    nrz0 <= d_valid ^ nrz0;
-
-
-always @(negedge clk) 
-if (!resetn)
-    d_valid_nrz_pre_cdc <= 0;
-else if (~full)
-    d_valid_nrz_pre_cdc <= d_valid_nrz;
- 
-always @(posedge clk) 
-if (d_valid & ~full) begin
-    wd_cdc <= {d[2*wr_cnt + 1], d[2*wr_cnt]};
-    wptr_cdc <= wptr[0];
-    d_addr <= {wr_cnt, 1'b0, d_cnt};
-    d_addr_cdc[0] <= {wr_cnt, 1'b0, d_cnt};
-    d_addr_cdc[1] <= {wr_cnt, 1'b1, d_cnt};
-end
-//always_comb d_addr_cdc[0] = d_addr;
-//always_comb d_addr_cdc[1] = d_addr | (1<<$bits(d_cnt));
-
-
-//CDC
-logic [3:0]         we_cdc;
-logic [1:0]         we_x22;
-
-always @(*) we_x22 = {we_cdc[3], ^we_cdc[2:1]};
-always @(posedge clk_x22) 
-if (!resetn_x22)
-    we_cdc <= 0;
-else begin
-    we_cdc[2:0] <= {we_cdc[1:0], d_valid_nrz_pre_cdc};
-    we_cdc[3] <= we_x22[0];
-end
-
-// Address write:
-logic               wptr_x22;
-logic[5:0]          d_addr1_x22;
-logic[15:0]         wd1_x22;
-
-always @(posedge clk_x22) 
-    if(we_x22[0]) 
-        {wptr_x22, d_addr1_x22, wd1_x22} <= {wptr_cdc, d_addr_cdc[1], wd_cdc[1]};
-
 logic[5:0]      wa, ra; 
 logic[31:0]     wd, rd; 
-logic           wbe_tmp; 
 logic[3:0]      wbe; 
 logic           we, re; 
 
-always_comb wd      = {2{we_x22[1] ? wd1_x22 : wd_cdc[0]}};
-always_comb wa      = we_x22[1] ? {wptr_x22, d_addr1_x22[5:1]} : {wptr_cdc, d_addr_cdc[0][5:1]};
-always_comb wbe_tmp = we_x22[1] ? d_addr1_x22[0] : d_addr_cdc[0][0];
-always_comb wbe     = {{2{wbe_tmp}}, {2{~wbe_tmp}}};
-always_comb we      = |we_x22;
+// Async FIFO
+logic           e; // =empty
+logic           wsel;
+logic           wptr_x22;
+logic signed[QW-1:0] wd1_x22, wd0_x22;
+logic[1:0]      wr_cnt_x22;
+logic[2:0]      d_cnt_x22;
+
+afifo #(.DSIZE($bits(wptr[0]) + $bits(wr_cnt) + $bits(d_cnt) + 2*$bits(d[0])), .ASIZE(3)) afifo(
+    .i_wclk(clk),
+    .i_wrst_n(resetn), 
+    .i_wr(d_valid & ~full),
+    .i_wdata({wptr[0], wr_cnt, d_cnt, d[2*wr_cnt + 1], d[2*wr_cnt]}),
+    .o_wfull(),
+    .i_rclk(clk_x22),
+    .i_rrst_n(resetn_x22),
+    .i_rd(wsel),
+    .o_rdata({wptr_x22, wr_cnt_x22, d_cnt_x22, wd1_x22, wd0_x22}),
+    .o_rempty(e)
+);
+
+always @(posedge clk_x22) 
+if (!resetn_x22)
+    wsel <= 0;
+else if (we)
+    wsel <= ~wsel;
+
+always_comb wd[15:0] = wsel ? wd1_x22 : wd0_x22;
+always_comb wd[31:16] = wd[15:0];
+always_comb wa      = {wptr_x22, wr_cnt_x22, wsel, d_cnt_x22} >> 1;
+always_comb wbe     = {{2{d_cnt_x22[0]}}, {2{~d_cnt_x22[0]}}};
+always_comb we      = ~e;
 
 always_comb ra = {rptr, q_cnt_0, rd_cnt};
 always_comb re = ~empty & ~q_hold;
