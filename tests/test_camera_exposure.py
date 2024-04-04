@@ -10,6 +10,7 @@ async def main():
 
     # Lua script of auto-exposure algorithm
     lua_script = """
+    -- Configuration
     setpoint_brightness = 0.686
     exposure_kp = 1600
     gain_kp = 30
@@ -21,9 +22,9 @@ async def main():
     while true do
         -- Get current values
         brightness = frame.camera.get_brightness()
-        r = brightness['r'] / 255
-        g = brightness['g'] / 255
-        b = brightness['b'] / 255
+        r = brightness['r']
+        g = brightness['g']
+        b = brightness['b']
         average = (r + g + b) / 3
 
          -- Calculate error
@@ -105,7 +106,7 @@ async def main():
     # Function that will update the graph when new data arrives
     def update_graph(response: str):
         if response.startswith("Data:") == False:
-            print(response) # Enable for easier debugging
+            # print(response) # Enable for easier debugging
             return
 
         data = response.split(":")
@@ -148,7 +149,7 @@ async def main():
     await b.send_break_signal()
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
     for line in lua_script.splitlines():
-        await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n")')
+        await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)
     await b.send_reset_signal()
