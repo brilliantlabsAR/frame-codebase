@@ -352,9 +352,9 @@ always_comb y_size = y_zoom_crop_end - y_zoom_crop_start;
 `ifdef COCOTB_SIM
 // after debayer
 always_comb x_zoom_crop_start    = 0;
-always_comb x_zoom_crop_end      = 16;
+always_comb x_zoom_crop_end      = x_pan_crop_end - x_pan_crop_start - 2;
 always_comb y_zoom_crop_start    = 0;
-always_comb y_zoom_crop_end      = 16;
+always_comb y_zoom_crop_end      = y_pan_crop_end - y_pan_crop_start - 2;
 `else
 `ifdef TESTBENCH
 always_comb x_zoom_crop_start    = 0;
