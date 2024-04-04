@@ -49,7 +49,7 @@ module debayer_buffer (
     input logic [9:0] previous_pixel
 );
 
-logic [17:0] mem [0:727]; 
+logic [17:0] mem [0:727] /* synthesis ram_style = "Block_RAM" */;
 
 // Read
 always_ff @(posedge pixel_clock_in) if (line_valid_in) begin

@@ -109,17 +109,20 @@ always_comb for (int i=0; i<2; i++) begin
     ht_ac[i] = ~(i==0 & q_cnt==0);
 end
 
+generate
+for (genvar i=0; i<2; i++) begin
 huff_tables ht (
-    .rl         (ht_rl),
-    .coeff_length (ht_coeff_length),
-    .re         ({2{~out_hold}}),
-    .chroma     (ht_chroma),
-    .ac         (ht_ac),
-    .len        (code_length0),
-    .code       (code0),
+    .rl         (ht_rl[i]),
+    .coeff_length (ht_coeff_length[i]),
+    .re         (~out_hold),
+    .chroma     (ht_chroma[i]),
+    .ac         (ht_ac[i]),
+    .len        (code_length0[i]),
+    .code       (code0[i]),
     .clk
 );
-
+end
+endgenerate
 
 /*
 ZRL insertion

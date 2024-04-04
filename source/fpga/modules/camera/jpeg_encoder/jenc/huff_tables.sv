@@ -1,12 +1,12 @@
 module huff_tables  (
     input   logic               clk,
-    input   logic [3:0]         rl[1:0],
-    input   logic [3:0]         coeff_length[1:0],
-    input   logic [1:0]         re,
-    input   logic [1:0]         chroma,
-    input   logic [1:0]         ac,
-    output  logic [4:0]         len[1:0],
-    output  logic [15:0]        code[1:0]
+    input   logic [3:0]         rl,
+    input   logic [3:0]         coeff_length,
+    input   logic               re,
+    input   logic               chroma,
+    input   logic               ac,
+    output  logic [4:0]         len,
+    output  logic [15:0]        code
 );
 
 // Address re-mapping:
@@ -19,23 +19,19 @@ module huff_tables  (
 localparam N_ENTRIES = 2*(1 + 'h bb); // 2x188 = 376
 
 // 20x376
-logic [19:0] rom[N_ENTRIES-1:0]; /* synthesis syn_romstyle = "Block_RAM" */ //previously "Logic"
-logic [8:0] addr[1:0];
-always @(*)  
-for (int i=0; i<2; i++)
-    if (ac[i])  addr[i] = {coeff_length[i],           rl[i], chroma[i]}; // {coeff len, RL,        chroma} - AC coeff len always less than 0xB
-    else        addr[i] = {           4'hb, coeff_length[i], chroma[i]}; // {0xB,       coeff len, chroma}
+logic [19:0] rom[N_ENTRIES-1:0] /* synthesis syn_romstyle = "Block_RAM" */; //previously "Logic"
+logic [8:0] addr;
+always @(*)
+    if (ac)     addr = {coeff_length,           rl, chroma}; // {coeff len, RL,        chroma} - AC coeff len always less than 0xB
+    else        addr = {        4'hb, coeff_length, chroma}; // {0xB,       coeff len, chroma}
 
-logic [4:0]         lenq[1:0];
+logic [19:0]        rom_rd;
 always @(posedge clk) 
-for (int i=0; i<2; i++) 
-    if (re[i]) begin
-        lenq[i] <= rom[addr[i]][19:16];
-        code[i] <= rom[addr[i]][15:0];
-    end
-always_comb
-for (int i=0; i<2; i++)
-    len[i] = 1 + lenq[i];
+    if (re)
+        rom_rd <= rom[addr];
+
+always_comb len  = 1 + rom_rd[19:16];
+always_comb code = rom_rd[15:0];
 
 always_comb begin
     for (int a=0; a<N_ENTRIES; a++) rom[a] = 'hx; // applies to 2x14 entries only

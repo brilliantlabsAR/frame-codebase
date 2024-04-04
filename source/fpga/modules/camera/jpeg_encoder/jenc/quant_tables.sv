@@ -11,7 +11,7 @@ module quant_tables #(
     output  logic [DW-1:0]      rd[N-1:0]
 );
 
-logic [11:0] mem[63:0]; /* synthesis syn_romstyle = "Block_RAM" */ // Was: "Logic"
+logic [11:0] mem[63:0] /* sy   nthesis rom_style = "logic" */;
 
 logic [11:0] mem_rd;
 always @(posedge clk) if (re) mem_rd <=   mem[ra];
