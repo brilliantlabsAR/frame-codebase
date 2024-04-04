@@ -19,7 +19,7 @@ module huff_tables  (
 localparam N_ENTRIES = 2*(1 + 'h bb); // 2x188 = 376
 
 // 20x376
-logic [19:0] rom[N_ENTRIES-1:0]; /* synthesis syn_romstyle = "Logic" */ //previously "Block_RAM"
+logic [19:0] rom[N_ENTRIES-1:0]; /* synthesis syn_romstyle = "Block_RAM" */ //previously "Logic"
 logic [8:0] addr[1:0];
 always @(*)  
 for (int i=0; i<2; i++)
