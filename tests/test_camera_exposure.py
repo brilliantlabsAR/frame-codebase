@@ -10,50 +10,44 @@ async def main():
 
     # Lua script of auto-exposure algorithm
     lua_script = """
-    setpoint_brightness = 175
-    dt = 0.1
-    exposure_kp = 1.5
-    exposure_ki = 0
-    exposure_kd = 0
-    gain_kp = 0.2
-    gain_ki = 0
-    gain_kd = 0
+    setpoint_brightness = 0.686
+    exposure_kp = 1600
+    gain_kp = 30
 
     -- Internal variables
     exposure = 0
     gain = 0
-    last_error = 0
-    last_integral = 0
 
     while true do
         -- Get current values
         brightness = frame.camera.get_brightness()
-        r = brightness['r']
-        g = brightness['g']
-        b = brightness['b']
+        r = brightness['r'] / 255
+        g = brightness['g'] / 255
+        b = brightness['b'] / 255
         average = (r + g + b) / 3
 
          -- Calculate error
         error = setpoint_brightness - average
 
-        -- Calculate I term with clamping
-        integral = last_integral + error * dt
-        last_integral = integral
+        if error > 0 then
+        
+            -- Prioritize exposure over gain when image is too dark
+            exposure = exposure + exposure_kp * error
 
-        -- Calculate D term
-        derivative = (error - last_error) / dt
-        last_error = error
+            if exposure >= 800 then
+                gain = gain + gain_kp * error
+            end
+        
+        else
 
-        -- Apply P gains to exposure and gain
-        exposure = exposure + 
-                   exposure_kp * error +
-                   exposure_ki * integral +
-                   exposure_kd * derivative
+            -- When image is too bright, reduce gain first
+            gain = gain + gain_kp * error
 
-        gain = gain + 
-               gain_kp * error +
-               gain_ki * integral +
-               gain_kd * derivative
+            if gain <= 0 then
+                exposure = exposure + exposure_kp * error
+            end
+
+        end
 
         -- Limit the values
         if exposure > 800 then exposure = 800 end
@@ -62,7 +56,7 @@ async def main():
         if gain > 255 then gain = 255 end
         if gain < 0 then gain = 0 end
 
-        -- Set the new values
+        -- Set the new values (rounded to nearest int)
         frame.camera.set_exposure(math.floor(exposure + 0.5))
         frame.camera.set_gain(math.floor(gain + 0.5))
 
@@ -93,7 +87,7 @@ async def main():
     green_plot, = input_axis.plot(frame_count, g_brightness_values, 'g', label='green')
     blue_plot, = input_axis.plot(frame_count, b_brightness_values, 'b', label='blue')
     average_plot, = input_axis.plot(frame_count, average_brightness_values, 'k', label='average')
-    input_axis.set_ylim([0,260])
+    input_axis.set_ylim([0,1])
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
@@ -104,14 +98,14 @@ async def main():
     setpoint_axis.legend(loc="upper left")
 
     error_plot, = error_axis.plot(frame_count, error_values)
-    error_axis.set_ylim([-200,200])
+    error_axis.set_ylim([-1,1])
     error_axis.set_xlabel("Frame")
     error_axis.set_ylabel("Error")
 
     # Function that will update the graph when new data arrives
     def update_graph(response: str):
         if response.startswith("Data:") == False:
-            # print(response) # Enable for easier debugging
+            print(response) # Enable for easier debugging
             return
 
         data = response.split(":")
