@@ -51,15 +51,13 @@ ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE}
 
 # False paths between clocks for timing
 #set_false_path -from [get_clocks clk_x22] -to [get_clocks clock_camera_pixel]
-set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks jpeg_buffer_clock]
-set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks spi_peripheral_clock]
 set_false_path -from [get_clocks spi_peripheral_clock] -to [get_clocks camera_pixel_clock]
+set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks spi_peripheral_clock]
+set_false_path -from [get_clocks jpeg_buffer_clock] -to [get_clocks camera_pixel_clock]
+set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks jpeg_buffer_clock]
 
 # max delay to prevent run away scenic routes
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/d_valid_nrz_pre_cdc*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/d_addr_cdc*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wptr_cdc*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/wd_cdc*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/afifo/*/Q*]
 
 set_max_delay 10.0 -from [get_pins -hierarchical camera/spi_registers/compression_factor_out*/Q*]
 set_max_delay 10.0 -from [get_pins -hierarchical camera/spi_registers/start_capture_out*/Q*]
