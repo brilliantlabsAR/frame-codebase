@@ -35,8 +35,8 @@
 
 static struct current_camera_settings
 {
-    uint16_t exposure;
-    uint8_t sensor_gain;
+    double exposure;
+    double sensor_gain;
 } current;
 
 static int lua_camera_capture(lua_State *L)
@@ -110,47 +110,74 @@ static int lua_camera_auto(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    uint8_t address = 0x25;
-    spi_write(FPGA, &address, 1, true);
+    // Configuration variables
+    double setpoint_brightness = 0.686;
+    double exposure_kp = 1600;
+    double gain_kp = 30;
 
+    // Get current normalized brightness
+    uint8_t address = 0x25;
     volatile uint8_t brightness_data[3];
+
+    spi_write(FPGA, &address, 1, true);
     spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
 
-    double average_brightness = (brightness_data[0] +
-                                 brightness_data[1] +
-                                 brightness_data[2]) /
+    double average_brightness = (brightness_data[0] / 255.0 +
+                                 brightness_data[1] / 255.0 +
+                                 brightness_data[2] / 255.0) /
                                 3.0;
 
-    double error = 170.0 - average_brightness;
+    // Calculate error
+    double error = setpoint_brightness - average_brightness;
 
-    current.exposure = (uint16_t)(current.exposure + (error * 1.5));
-    current.sensor_gain = (uint8_t)(current.sensor_gain + (error * 0.3));
-
-    if (current.exposure > 800)
+    if (error > 0)
     {
-        current.exposure = 800;
+        // Prioritize exposure over gain when image is too dark
+        current.exposure += exposure_kp * error;
+
+        if (current.exposure >= 800.0)
+        {
+            current.sensor_gain += gain_kp * error;
+        }
+    }
+    else
+    {
+        // When image is too bright, reduce gain first
+        current.sensor_gain += gain_kp * error;
+
+        if (current.sensor_gain <= 0)
+        {
+            current.exposure += exposure_kp * error;
+        }
     }
 
-    if (current.exposure < 20)
+    // Limit the value
+    if (current.exposure > 800.0)
     {
-        current.exposure = 20;
+        current.exposure = 800.0;
+    }
+    if (current.exposure < 20.0)
+    {
+        current.exposure = 20.0;
+    }
+    if (current.sensor_gain > 255.0)
+    {
+        current.sensor_gain = 255.0;
+    }
+    if (current.sensor_gain < 0.0)
+    {
+        current.sensor_gain = 0.0;
     }
 
-    if (current.sensor_gain > 255)
-    {
-        current.sensor_gain = 255;
-    }
-
-    if (current.sensor_gain < 0)
-    {
-        current.sensor_gain = 0;
-    }
+    // Set the output
+    uint16_t exposure = (uint16_t)current.exposure;
+    uint8_t sensor_gain = (uint8_t)current.sensor_gain;
 
     // TODO group hold command
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, current.exposure >> 12).fail);
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, current.exposure >> 4).fail);
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, current.exposure << 4).fail);
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, current.sensor_gain).fail);
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure << 4).fail);
+    check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
 
     return 0;
 }
@@ -182,13 +209,13 @@ static int lua_camera_get_brightness(lua_State *L)
 
     lua_newtable(L);
 
-    lua_pushnumber(L, brightness_data[0]);
+    lua_pushnumber(L, brightness_data[0] / 255.0);
     lua_setfield(L, -2, "r");
 
-    lua_pushnumber(L, brightness_data[1]);
+    lua_pushnumber(L, brightness_data[1] / 255.0);
     lua_setfield(L, -2, "g");
 
-    lua_pushnumber(L, brightness_data[2]);
+    lua_pushnumber(L, brightness_data[2] / 255.0);
     lua_setfield(L, -2, "b");
 
     return 1;
