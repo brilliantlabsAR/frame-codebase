@@ -63,13 +63,11 @@ if (di_valid & !q_hold) begin
 end
 
 logic [M_BITS-1:0]  q_factor[1:0];
-logic [(1+6)-1:0]   q_ra[1:0];
+logic [5:0] q_ra;
 // read the quantizer coefficients 2 at a time
-always_comb
-    for (int i=0; i<2; i++)
-        q_ra[i] = {zigzag_mcu_cnt[2], de_zigzag((di_cnt << 1) | i)};
+always_comb q_ra = {zigzag_mcu_cnt[2], di_cnt};
 
-quant_tables #(.N(2)) quant_tables (
+quant_tables quant_tables (
     .re         (di_valid & ~q_hold),
     .ra         (q_ra),
     .rd         (q_factor),
