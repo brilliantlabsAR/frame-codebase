@@ -10,25 +10,50 @@ async def main():
 
     # Lua script of auto-exposure algorithm
     lua_script = """
-    exposure = 800
-    gain = 240
+    setpoint_brightness = 175
+    dt = 0.1
+    exposure_kp = 1.5
+    exposure_ki = 0
+    exposure_kd = 0
+    gain_kp = 0.2
+    gain_ki = 0
+    gain_kd = 0
+
+    -- Internal variables
+    exposure = 0
+    gain = 0
+    last_error = 0
+    last_integral = 0
 
     while true do
-        resp = frame.camera.get_brightness()
-
-        -- Calculate the average brightness
-        r = resp['r']
-        g = resp['g']
-        b = resp['b']
+        -- Get current values
+        brightness = frame.camera.get_brightness()
+        r = brightness['r']
+        g = brightness['g']
+        b = brightness['b']
         average = (r + g + b) / 3
 
-        -- Calculate the error value
-        target = 175
-        error = target - average
+         -- Calculate error
+        error = setpoint_brightness - average
+
+        -- Calculate I term with clamping
+        integral = last_integral + error * dt
+        last_integral = integral
+
+        -- Calculate D term
+        derivative = (error - last_error) / dt
+        last_error = error
 
         -- Apply P gains to exposure and gain
-        exposure = exposure + (error * 1.5)
-        gain = gain + (error * 0.3)
+        exposure = exposure + 
+                   exposure_kp * error +
+                   exposure_ki * integral +
+                   exposure_kd * derivative
+
+        gain = gain + 
+               gain_kp * error +
+               gain_ki * integral +
+               gain_kd * derivative
 
         -- Limit the values
         if exposure > 800 then exposure = 800 end
