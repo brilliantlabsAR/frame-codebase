@@ -22,9 +22,9 @@ async def main():
     while true do
         -- Get current values
         brightness = fpga.read(25, 6)
-        r = string.byte(brightness, 1)
-        g = string.byte(brightness, 2)
-        b = string.byte(brightness, 3)
+        r = string.byte(brightness, 4)
+        g = string.byte(brightness, 5)
+        b = string.byte(brightness, 6)
         average = frame.camera.get_metering('average')
 
          -- Calculate error

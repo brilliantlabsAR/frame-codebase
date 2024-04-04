@@ -209,14 +209,14 @@ static int lua_camera_get_metering(lua_State *L)
 
     const char *mode = luaL_checkstring(L, 1);
 
-    double spot = (metering_data[3] +
-                   metering_data[4] +
-                   metering_data[5]) /
+    double spot = (metering_data[0] +
+                   metering_data[1] +
+                   metering_data[2]) /
                   3.0;
 
-    double average = (metering_data[0] +
-                      metering_data[1] +
-                      metering_data[2]) /
+    double average = (metering_data[3] +
+                      metering_data[4] +
+                      metering_data[5]) /
                      3.0;
 
     double center_weighted = (spot + spot + spot + average) / 4.0;
