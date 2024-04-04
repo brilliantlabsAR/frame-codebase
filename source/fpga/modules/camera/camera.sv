@@ -91,10 +91,10 @@ spi_registers spi_registers (
 
     .red_center_metering_in(red_center_metering_spi_clock_domain),
     .green_center_metering_in(green_center_metering_spi_clock_domain),
-    .blue_center_metering_in(blue_center_metering_spi_clock_domain)
+    .blue_center_metering_in(blue_center_metering_spi_clock_domain),
     .red_average_metering_in(red_average_metering_spi_clock_domain),
     .green_average_metering_in(green_average_metering_spi_clock_domain),
-    .blue_average_metering_in(blue_average_metering_spi_clock_domain),
+    .blue_average_metering_in(blue_average_metering_spi_clock_domain)
 );
 
 always @(posedge pixel_clock_in) begin
