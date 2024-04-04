@@ -44,7 +44,7 @@ JISP_MEMS := \
 JISP_TARGETS := $(foreach m,$(JISP_MEMS),$(m)/$(m).ipx) $(foreach m,$(JISP_MEMS),$(m)/rtl/$(m).v)
 
 IP := -ip /opt/lscc/radiant/2023.2/ip/common/ram_dp
-VLNV := -vlnv latticesemi.com:module:ram_dp:2.2.0
+VLNV := -vlnv latticesemi.com:module:ram_dp:2.3.0
 IPGEN_FLAGS := $(VLNV) -sp "8_Low-Power_1.0V" -t "WLCSP72" -f "LIFCL" -p "LIFCL-17"
 
 all: $(JISP_TARGETS)
