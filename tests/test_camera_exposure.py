@@ -21,11 +21,11 @@ async def main():
 
     while true do
         -- Get current values
-        brightness = frame.camera.get_brightness()
-        r = brightness['r']
-        g = brightness['g']
-        b = brightness['b']
-        average = (r + g + b) / 3
+        brightness = fpga.read(25, 6)
+        r = string.byte(brightness, 1)
+        g = string.byte(brightness, 2)
+        b = string.byte(brightness, 3)
+        average = frame.camera.get_metering('average')
 
          -- Calculate error
         error = setpoint_brightness - average

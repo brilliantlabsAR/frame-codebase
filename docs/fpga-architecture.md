@@ -26,8 +26,8 @@ Each function is accessed through a register. Registers are always addressed by 
 | 0x22    | `CAMERA_READ_BYTES`         | Reads a number of bytes from the capture memory.<br>**Read: `data[7:0]`**<br>**...**<br>**Read: `data[7:0]`**
 | 0x23    | `CAMERA_ZOOM`               | Sets the zoom factor. A setting of `1` captures a 720x720 image, `2` captures 360x360, `3` captures 240x240, and `4` captures 180x180.<br>**Write: `zoom_factor[7:0]`**
 | 0x24    | `CAMERA_PAN`                | Pans the capture window up or down in discrete steps. A setting of `10` captures the top-most part of the image, `0` is the middle, and `-10` is the bottom-most<br>**Write: `pan_position[7:0]`**
-| 0x25    | `CAMERA_READ_BRIGHTNESS`    | Returns current brightness levels for the red, green and blue channels of the camera.<br>**Read: `red_level[7:0]`**<br>**Read: `green_level[7:0]`**<br>**Read: `blue_level[7:0]`**
-| 0x26    | `CAMERA_COMPRESSION_FACTOR` | Sets the compression factor of the saved image between `0` and `100`.<br>**Write: `compression_factor[7:0]`**
+| 0x25    | `CAMERA_READ_METERING`      | Returns the current brightness levels for the red, green and blue channels of the camera. Two sets of values are returned representing spot and average metering.<br>**Read: `center_red_level[7:0]`**<br>**Read: `center_green_level[7:0]`**<br>**Read: `center_blue_level[7:0]`**<br>**Read: `average_red_level[7:0]`**<br>**Read: `average_green_level[7:0]`**<br>**Read: `average_blue_level[7:0]`**
+| 0x26    | `CAMERA_COMPRESSION_FACTOR` | Sets the compression factor of the saved image between `-10` and `10`.<br>**Write: `compression_factor[7:0]`**
 | 0xDB    | `GET_CHIP_ID`               | Returns the chip ID value.<br>**Read: `0x81`**
 
 ## Graphics

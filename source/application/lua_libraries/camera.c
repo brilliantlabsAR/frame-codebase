@@ -194,7 +194,7 @@ static int lua_camera_wake(lua_State *L)
     return 0;
 }
 
-static int lua_camera_get_brightness(lua_State *L)
+static int lua_camera_get_metering(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
@@ -204,19 +204,42 @@ static int lua_camera_get_brightness(lua_State *L)
     uint8_t address = 0x25;
     spi_write(FPGA, &address, 1, true);
 
-    volatile uint8_t brightness_data[3];
-    spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
+    volatile uint8_t metering_data[6];
+    spi_read(FPGA, (uint8_t *)metering_data, sizeof(metering_data), false);
 
-    lua_newtable(L);
+    const char *mode = luaL_checkstring(L, 1);
 
-    lua_pushnumber(L, brightness_data[0] / 255.0);
-    lua_setfield(L, -2, "r");
+    double spot = (metering_data[3] +
+                   metering_data[4] +
+                   metering_data[5]) /
+                  3.0;
 
-    lua_pushnumber(L, brightness_data[1] / 255.0);
-    lua_setfield(L, -2, "g");
+    double average = (metering_data[0] +
+                      metering_data[1] +
+                      metering_data[2]) /
+                     3.0;
 
-    lua_pushnumber(L, brightness_data[2] / 255.0);
-    lua_setfield(L, -2, "b");
+    double center_weighted = (spot + spot + spot + average) / 4.0;
+
+    if (strcmp(mode, "spot") == 0)
+    {
+        lua_pushnumber(L, spot / 255.0);
+    }
+
+    else if (strcmp(mode, "center_weighted") == 0)
+    {
+        lua_pushnumber(L, center_weighted / 255.0);
+    }
+
+    else if (strcmp(mode, "average") == 0)
+    {
+        lua_pushnumber(L, average / 255.0);
+    }
+
+    else
+    {
+        luaL_error(L, "mode must be either spot, center_weighted or average");
+    }
 
     return 1;
 }
@@ -364,8 +387,8 @@ void lua_open_camera_library(lua_State *L)
     lua_pushcfunction(L, lua_camera_wake);
     lua_setfield(L, -2, "wake");
 
-    lua_pushcfunction(L, lua_camera_get_brightness);
-    lua_setfield(L, -2, "get_brightness");
+    lua_pushcfunction(L, lua_camera_get_metering);
+    lua_setfield(L, -2, "get_metering");
 
     lua_pushcfunction(L, lua_camera_set_exposure);
     lua_setfield(L, -2, "set_exposure");
