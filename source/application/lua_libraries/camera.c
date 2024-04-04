@@ -33,11 +33,24 @@
 #include "pinout.h"
 #include "spi.h"
 
-static struct current_camera_settings
+typedef enum camera_metering_mode
 {
+    SPOT,
+    CENTER_WEIGHTED,
+    AVERAGE
+} camera_metering_mode_t;
+
+static struct camera_auto
+{
+    bool enabled;
+    camera_metering_mode_t mode;
     double exposure;
-    double sensor_gain;
-} current;
+    double gain;
+} camera_auto = {
+    .enabled = false,
+    .exposure = 0,
+    .gain = 0,
+};
 
 static int lua_camera_capture(lua_State *L)
 {
@@ -103,11 +116,16 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
-static int lua_camera_auto(lua_State *L)
+void lua_run_camera_controller(void)
 {
+    if (camera_auto.enabled == false)
+    {
+        return;
+    }
+
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
-        luaL_error(L, "camera is asleep");
+        return;
     }
 
     // Configuration variables
@@ -115,69 +133,121 @@ static int lua_camera_auto(lua_State *L)
     double exposure_kp = 1600;
     double gain_kp = 30;
 
-    // Get current normalized brightness
+    // Get current brightness
     uint8_t address = 0x25;
-    volatile uint8_t brightness_data[3];
-
     spi_write(FPGA, &address, 1, true);
-    spi_read(FPGA, (uint8_t *)brightness_data, sizeof(brightness_data), false);
 
-    double average_brightness = (brightness_data[0] / 255.0 +
-                                 brightness_data[1] / 255.0 +
-                                 brightness_data[2] / 255.0) /
-                                3.0;
+    volatile uint8_t metering_data[6];
+    spi_read(FPGA, (uint8_t *)metering_data, sizeof(metering_data), false);
 
-    // Calculate error
-    double error = setpoint_brightness - average_brightness;
+    double spot = (metering_data[0] +
+                   metering_data[1] +
+                   metering_data[2]) /
+                  3.0;
 
+    double average = (metering_data[3] +
+                      metering_data[4] +
+                      metering_data[5]) /
+                     3.0;
+
+    double center_weighted = (spot + spot + spot + average) / 4.0;
+
+    // Choose error
+    double error;
+    switch (camera_auto.mode)
+    {
+    case SPOT:
+        error = setpoint_brightness - spot;
+        break;
+
+    case CENTER_WEIGHTED:
+        error = setpoint_brightness - center_weighted;
+        break;
+
+    default: // AVERAGE
+        error = setpoint_brightness - average;
+        break;
+    }
+
+    // Run the loop iteration
     if (error > 0)
     {
         // Prioritize exposure over gain when image is too dark
-        current.exposure += exposure_kp * error;
+        camera_auto.exposure += exposure_kp * error;
 
-        if (current.exposure >= 800.0)
+        if (camera_auto.exposure >= 800.0)
         {
-            current.sensor_gain += gain_kp * error;
+            camera_auto.gain += gain_kp * error;
         }
     }
     else
     {
         // When image is too bright, reduce gain first
-        current.sensor_gain += gain_kp * error;
+        camera_auto.gain += gain_kp * error;
 
-        if (current.sensor_gain <= 0)
+        if (camera_auto.gain <= 0)
         {
-            current.exposure += exposure_kp * error;
+            camera_auto.exposure += exposure_kp * error;
         }
     }
 
     // Limit the value
-    if (current.exposure > 800.0)
+    if (camera_auto.exposure > 800.0)
     {
-        current.exposure = 800.0;
+        camera_auto.exposure = 800.0;
     }
-    if (current.exposure < 20.0)
+    if (camera_auto.exposure < 20.0)
     {
-        current.exposure = 20.0;
+        camera_auto.exposure = 20.0;
     }
-    if (current.sensor_gain > 255.0)
+    if (camera_auto.gain > 255.0)
     {
-        current.sensor_gain = 255.0;
+        camera_auto.gain = 255.0;
     }
-    if (current.sensor_gain < 0.0)
+    if (camera_auto.gain < 0.0)
     {
-        current.sensor_gain = 0.0;
+        camera_auto.gain = 0.0;
     }
 
+    // TODO calculate and set auto white-balance
+
     // Set the output
-    uint16_t exposure = (uint16_t)current.exposure;
-    uint8_t sensor_gain = (uint8_t)current.sensor_gain;
+    uint16_t exposure = (uint16_t)camera_auto.exposure;
+    uint8_t gain = (uint8_t)camera_auto.gain;
 
     // TODO group hold command
     check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure >> 12).fail);
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure >> 4).fail);
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure << 4).fail);
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
+    check_error(i2c_write(CAMERA, 0x3505, 0xFF, gain).fail);
+}
+
+static int lua_camera_auto(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TBOOLEAN);
+    camera_auto.enabled = lua_toboolean(L, 1);
+
+    const char *mode = luaL_checkstring(L, 1);
+
+    if (strcmp(mode, "spot") == 0)
+    {
+        camera_auto.mode = SPOT;
+    }
+
+    else if (strcmp(mode, "center_weighted") == 0)
+    {
+        camera_auto.mode = CENTER_WEIGHTED;
+    }
+
+    else if (strcmp(mode, "average") == 0)
+    {
+        camera_auto.mode = AVERAGE;
+    }
+
+    else
+    {
+        luaL_error(L, "mode must be either spot, center_weighted or average");
+    }
 
     return 0;
 }
@@ -192,56 +262,6 @@ static int lua_camera_wake(lua_State *L)
 {
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     return 0;
-}
-
-static int lua_camera_get_metering(lua_State *L)
-{
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
-    {
-        luaL_error(L, "camera is asleep");
-    }
-
-    uint8_t address = 0x25;
-    spi_write(FPGA, &address, 1, true);
-
-    volatile uint8_t metering_data[6];
-    spi_read(FPGA, (uint8_t *)metering_data, sizeof(metering_data), false);
-
-    const char *mode = luaL_checkstring(L, 1);
-
-    double spot = (metering_data[0] +
-                   metering_data[1] +
-                   metering_data[2]) /
-                  3.0;
-
-    double average = (metering_data[3] +
-                      metering_data[4] +
-                      metering_data[5]) /
-                     3.0;
-
-    double center_weighted = (spot + spot + spot + average) / 4.0;
-
-    if (strcmp(mode, "spot") == 0)
-    {
-        lua_pushnumber(L, spot / 255.0);
-    }
-
-    else if (strcmp(mode, "center_weighted") == 0)
-    {
-        lua_pushnumber(L, center_weighted / 255.0);
-    }
-
-    else if (strcmp(mode, "average") == 0)
-    {
-        lua_pushnumber(L, average / 255.0);
-    }
-
-    else
-    {
-        luaL_error(L, "mode must be either spot, center_weighted or average");
-    }
-
-    return 1;
 }
 
 static int lua_camera_set_exposure(lua_State *L)
@@ -279,6 +299,7 @@ static int lua_camera_set_gain(lua_State *L)
         return luaL_error(L, "gain must be less than 0xFF");
     }
 
+    // TODO try to set the 0x350A/B registers instead
     check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
 
     return 0;
@@ -349,24 +370,25 @@ void lua_open_camera_library(lua_State *L)
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     nrfx_systick_delay_ms(10);
 
-    i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
-    i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
-    i2c_response_t exposure_reg_c = i2c_read(CAMERA, 0x3502, 0xF0);
-    i2c_response_t sensor_gain_reg = i2c_read(CAMERA, 0x3505, 0xFF);
+    // TODO remove if not needed
+    // i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
+    // i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
+    // i2c_response_t exposure_reg_c = i2c_read(CAMERA, 0x3502, 0xF0);
+    // i2c_response_t sensor_gain_reg = i2c_read(CAMERA, 0x3505, 0xFF);
 
-    if (exposure_reg_a.fail ||
-        exposure_reg_b.fail ||
-        exposure_reg_c.fail ||
-        sensor_gain_reg.fail)
-    {
-        error();
-    }
+    // if (exposure_reg_a.fail ||
+    //     exposure_reg_b.fail ||
+    //     exposure_reg_c.fail ||
+    //     sensor_gain_reg.fail)
+    // {
+    //     error();
+    // }
 
-    current.exposure = exposure_reg_a.value << 12 |
-                       exposure_reg_b.value << 4 |
-                       exposure_reg_c.value >> 4;
+    // camera_auto.exposure = exposure_reg_a.value << 12 |
+    //                        exposure_reg_b.value << 4 |
+    //                        exposure_reg_c.value >> 4;
 
-    current.sensor_gain = sensor_gain_reg.value;
+    // camera_auto.gain = sensor_gain_reg.value;
 
     lua_getglobal(L, "frame");
 
@@ -386,9 +408,6 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_wake);
     lua_setfield(L, -2, "wake");
-
-    lua_pushcfunction(L, lua_camera_get_metering);
-    lua_setfield(L, -2, "get_metering");
 
     lua_pushcfunction(L, lua_camera_set_exposure);
     lua_setfield(L, -2, "set_exposure");

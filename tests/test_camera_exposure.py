@@ -22,10 +22,16 @@ async def main():
     while true do
         -- Get current values
         brightness = fpga.read(25, 6)
-        r = string.byte(brightness, 4)
-        g = string.byte(brightness, 5)
-        b = string.byte(brightness, 6)
-        average = frame.camera.get_metering('average')
+        center_r = string.byte(brightness, 1)
+        center_g = string.byte(brightness, 2)
+        center_b = string.byte(brightness, 3)
+        average_r = string.byte(brightness, 4)
+        average_g = string.byte(brightness, 5)
+        average_b = string.byte(brightness, 6)
+
+        spot = (center_r +center_g + center_b) / 3
+        average = (average_r + average_g + average_b) / 3
+        center_weighted = (spot + spot + spot + average) / 4
 
          -- Calculate error
         error = setpoint_brightness - average
@@ -61,7 +67,7 @@ async def main():
         frame.camera.set_exposure(math.floor(exposure + 0.5))
         frame.camera.set_gain(math.floor(gain + 0.5))
 
-        print('Data:'..r..':'..g..':'..b..':'..average..':'..exposure..':'..gain..':'..error)
+        print('Data:'..average_r..':'..average_g..':'..average_b..':'..average..':'..exposure..':'..gain..':'..error)
 
         frame.sleep(0.1)
     end
