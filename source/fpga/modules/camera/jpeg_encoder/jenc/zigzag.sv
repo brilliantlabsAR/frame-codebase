@@ -66,33 +66,30 @@ logic           wbe_tmp;
 logic[3:0]      wbe; 
 logic           we, re; 
 
-// Zigzag address
-logic[5:0] zz_addr0, zz_addr1;
-//always_comb zz_addr0 = en_zigzag({wr_cnt, 1'b0, d_cnt});
-//always_comb zz_addr1 = en_zigzag({wr_cnt, 1'b1, d_cnt});
-always_comb zz_addr0 = d_cnt_zig_zag_timing[{wr_cnt, 1'b0}];
-always_comb zz_addr1 = d_cnt_zig_zag_timing[{wr_cnt, 1'b1}];
-
 // Async FIFO
 logic           e; // =empty
 logic           wsel;
 logic           wptr_x22;
 logic signed[QW-1:0] wd1_x22, wd0_x22;
+logic[1:0]      wr_cnt_x22;
+logic[2:0]      d_cnt_x22;
 logic[5:0]      d_addr1_x22, d_addr0_x22;
 
-afifo #(.DSIZE($bits(wptr[0]) + 2*$bits(zz_addr0) + 2*$bits(d[0])), .ASIZE(3)) afifo(
+afifo #(.DSIZE($bits(wptr[0]) + $bits(wr_cnt) + $bits(d_cnt) + 2*$bits(d[0])), .ASIZE(3)) afifo(
     .i_wclk(clk),
     .i_wrst_n(resetn), 
     .i_wr(d_valid & ~full),
-    .i_wdata({wptr[0], zz_addr1, zz_addr0, d[2*wr_cnt + 1], d[2*wr_cnt]}),
+    .i_wdata({wptr[0], wr_cnt, d_cnt, d[2*wr_cnt + 1], d[2*wr_cnt]}),
     .o_wfull(),
     .i_rclk(clk_x22),
     .i_rrst_n(resetn_x22),
     .i_rd(wsel),
-    .o_rdata({wptr_x22, d_addr1_x22, d_addr0_x22, wd1_x22, wd0_x22}),
+    .o_rdata({wptr_x22, wr_cnt_x22, d_cnt_x22, wd1_x22, wd0_x22}),
     .o_rempty(e)
 );
 
+always_comb d_addr0_x22 = en_zigzag({wr_cnt_x22, 1'b0, d_cnt_x22});
+always_comb d_addr1_x22 = en_zigzag({wr_cnt_x22, 1'b1, d_cnt_x22});
 
 always @(posedge clk_x22) 
 if (!resetn_x22)
