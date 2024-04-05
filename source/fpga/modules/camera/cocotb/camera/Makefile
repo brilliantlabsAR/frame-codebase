@@ -109,6 +109,7 @@ ifeq ($(SIM),modelsim)
 # Lattice verif models
 VERILOG_FILES += \
         ../../../reset/reset_sync.sv \
+        ../../../reset/global_reset_sync.sv \
         ../../testbenches/csi/source/csi/csi2_transmitter_ip/rtl/csi2_transmitter_ip.v \
         ../../testbenches/csi/source/csi/pixel_to_byte_ip/rtl/pixel_to_byte_ip.v \
         ../../testbenches/csi/source/csi/pll_sim_ip/rtl/pll_sim_ip.v
