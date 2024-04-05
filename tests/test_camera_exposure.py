@@ -34,7 +34,7 @@ async def main():
         center_weighted = (spot + spot + spot + average) / 4
 
          -- Calculate error
-        error = setpoint_brightness - average
+        error = setpoint_brightness - center_weighted
 
         if error > 0 then
         
