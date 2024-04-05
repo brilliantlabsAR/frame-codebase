@@ -288,9 +288,9 @@ static int lua_camera_set_gain(lua_State *L)
 
     lua_Integer sensor_gain = luaL_checkinteger(L, 1);
 
-    if (sensor_gain > 0xFF)
+    if (sensor_gain < 0 || sensor_gain > 0xFF)
     {
-        return luaL_error(L, "gain must be less than 0xFF");
+        return luaL_error(L, "gain must be between 0 and 255");
     }
 
     // TODO try to set the 0x350A/B registers instead
@@ -310,9 +310,10 @@ static int lua_camera_set_white_balance(lua_State *L)
     lua_Integer green_gain = luaL_checkinteger(L, 2);
     lua_Integer blue_gain = luaL_checkinteger(L, 3);
 
-    if (red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
+    if (red_gain < 0 || green_gain < 0 || blue_gain < 0 ||
+        red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
     {
-        return luaL_error(L, "gain values must be less than 0x3FF");
+        return luaL_error(L, "gain values must be between 0 and 1023");
     }
 
     check_error(i2c_write(CAMERA, 0x5180, 0x0F, red_gain >> 8).fail);
