@@ -160,7 +160,7 @@ static void fpga_send_bitstream_bytes(void *context,
                                       void *data,
                                       size_t data_size)
 {
-    spi_write(FPGA, 0, data, data_size);
+    spi_write_raw(FPGA, data, data_size);
 }
 
 static void hardware_setup(bool *factory_reset)
@@ -316,7 +316,7 @@ static void hardware_setup(bool *factory_reset)
         spi_write(FPGA, 0x46, initialise_address, sizeof(initialise_address));
 
         uint8_t bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
-        spi_write(FPGA, 0, bitstream_burst, sizeof(bitstream_burst));
+        spi_write_raw(FPGA, bitstream_burst, sizeof(bitstream_burst));
 
         int status = compression_decompress(4096,
                                             fpga_application,

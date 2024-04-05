@@ -203,7 +203,8 @@ static void draw_sprite(lua_State *L,
     }
     memcpy(payload, meta_data, sizeof(meta_data));
     memcpy(payload + sizeof(meta_data), pixel_data, pixel_data_length);
-    spi_write(FPGA, 0x12,
+    spi_write(FPGA,
+              0x12,
               payload,
               pixel_data_length + sizeof(meta_data));
     free(payload);

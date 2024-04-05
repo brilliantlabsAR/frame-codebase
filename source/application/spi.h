@@ -44,3 +44,7 @@ void spi_write(spi_device_t device,
                uint8_t address,
                uint8_t *data,
                size_t length);
+
+void spi_write_raw(spi_device_t device,
+                   uint8_t *data,
+                   size_t length);

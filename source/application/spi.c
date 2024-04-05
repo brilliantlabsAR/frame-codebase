@@ -112,10 +112,11 @@ void spi_read(spi_device_t device,
     enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 }
 
-void spi_write(spi_device_t device,
-               uint8_t address,
-               uint8_t *data,
-               size_t length)
+static void _spi_write(spi_device_t device,
+                       uint8_t address,
+                       uint8_t *data,
+                       size_t length,
+                       bool raw_mode)
 {
     nrfx_spim_t instance;
     uint32_t cs_pin = 0xFF;
@@ -143,7 +144,7 @@ void spi_write(spi_device_t device,
     nrf_gpio_pin_clear(cs_pin);
 
     // If address is 0, don't send an address, and don't clear CS pin
-    if (address != 0)
+    if (!raw_mode)
     {
         nrfx_spim_xfer_desc_t tx_address = NRFX_SPIM_XFER_TX(&address, 1);
         check_error(nrfx_spim_xfer(&instance, &tx_address, 0));
@@ -167,11 +168,26 @@ void spi_write(spi_device_t device,
         check_error(nrfx_spim_xfer(&instance, &tx_data, 0));
     }
 
-    if (address != 0)
+    if (!raw_mode)
     {
         nrf_gpio_pin_set(cs_pin);
     }
 
     enable_pin_interrupts_if(pin_interrupts_was_enabled);
     enable_camera_timer_interrupt_if(camera_timer_was_enabled);
+}
+
+void spi_write(spi_device_t device,
+               uint8_t address,
+               uint8_t *data,
+               size_t length)
+{
+    _spi_write(device, address, data, length, false);
+}
+
+void spi_write_raw(spi_device_t device,
+                   uint8_t *data,
+                   size_t length)
+{
+    _spi_write(device, 0x00, data, length, true);
 }
