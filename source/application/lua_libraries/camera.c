@@ -379,26 +379,6 @@ void lua_open_camera_library(lua_State *L)
         nrfx_rtc_enable(&rtc);
     }
 
-    // TODO remove if not needed
-    // i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);
-    // i2c_response_t exposure_reg_b = i2c_read(CAMERA, 0x3501, 0xFF);
-    // i2c_response_t exposure_reg_c = i2c_read(CAMERA, 0x3502, 0xF0);
-    // i2c_response_t sensor_gain_reg = i2c_read(CAMERA, 0x3505, 0xFF);
-
-    // if (exposure_reg_a.fail ||
-    //     exposure_reg_b.fail ||
-    //     exposure_reg_c.fail ||
-    //     sensor_gain_reg.fail)
-    // {
-    //     error();
-    // }
-
-    // camera_auto.exposure = exposure_reg_a.value << 12 |
-    //                        exposure_reg_b.value << 4 |
-    //                        exposure_reg_c.value >> 4;
-
-    // camera_auto.gain = sensor_gain_reg.value;
-
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
