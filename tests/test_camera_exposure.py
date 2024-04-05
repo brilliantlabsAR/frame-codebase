@@ -21,13 +21,13 @@ async def main():
 
     while true do
         -- Get current values
-        brightness = fpga.read(25, 6)
-        center_r = string.byte(brightness, 1)
-        center_g = string.byte(brightness, 2)
-        center_b = string.byte(brightness, 3)
-        average_r = string.byte(brightness, 4)
-        average_g = string.byte(brightness, 5)
-        average_b = string.byte(brightness, 6)
+        brightness = frame.fpga.read(0x25, 6)
+        center_r = string.byte(brightness, 1) / 255
+        center_g = string.byte(brightness, 2) / 255
+        center_b = string.byte(brightness, 3) / 255
+        average_r = string.byte(brightness, 4) / 255
+        average_g = string.byte(brightness, 5) / 255
+        average_b = string.byte(brightness, 6) / 255
 
         spot = (center_r +center_g + center_b) / 3
         average = (average_r + average_g + average_b) / 3
@@ -153,6 +153,7 @@ async def main():
     b = Bluetooth()
     await b.connect(print_response_handler=update_graph)
     await b.send_break_signal()
+    print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
     for line in lua_script.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)

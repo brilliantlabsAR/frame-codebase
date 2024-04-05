@@ -40,9 +40,9 @@ logic [11:0] y_counter;
 logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [BITS:0] average_red_metering;
-logic [BITS:0] average_green_metering;
-logic [BITS:0] average_blue_metering;
+logic [BITS - 1:0] average_red_metering;
+logic [BITS - 1:0] average_green_metering;
+logic [BITS - 1:0] average_blue_metering;
 
 always_ff @(posedge clock_in) begin
 
@@ -55,9 +55,9 @@ always_ff @(posedge clock_in) begin
         previous_line_valid <= 0;
 
         if (previous_frame_valid) begin
-            red_metering_out <= average_red_metering[BITS:BITS - 7];
-            green_metering_out <= average_green_metering[BITS:BITS - 7];
-            blue_metering_out <= average_blue_metering[BITS:BITS - 7];
+            red_metering_out <= average_red_metering[BITS - 1:BITS - 8];
+            green_metering_out <= average_green_metering[BITS - 1:BITS - 8];
+            blue_metering_out <= average_blue_metering[BITS - 1:BITS - 8];
         end
 
         average_red_metering <= 0;
