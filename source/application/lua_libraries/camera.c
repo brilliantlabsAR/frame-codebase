@@ -202,8 +202,6 @@ static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
         camera_auto.gain = 0.0;
     }
 
-    LOG("Exposure: %f, Gain: %f", camera_auto.exposure, camera_auto.gain);
-
     // TODO calculate and set auto white-balance
 
     // Set the output
