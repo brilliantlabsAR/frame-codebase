@@ -36,11 +36,15 @@ typedef enum spi_device_t
 void spi_configure(void);
 
 void spi_read(spi_device_t device,
+              uint8_t address,
               uint8_t *data,
-              size_t length,
-              bool hold_down_cs);
+              size_t length);
 
 void spi_write(spi_device_t device,
+               uint8_t address,
                uint8_t *data,
-               size_t length,
-               bool hold_down_cs);
+               size_t length);
+
+void spi_write_raw(spi_device_t device,
+                   uint8_t *data,
+                   size_t length);

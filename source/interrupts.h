@@ -22,30 +22,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
+#include <stdbool.h>
 
-#define NRFX_CONFIG_H__
-#include "templates/nrfx_config_common.h"
+bool disable_pin_interrupts_if_enabled(void);
+void enable_pin_interrupts_if(bool was_enabled);
 
-#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
-#define NRFX_GPIOTE_ENABLED 1
-
-#define NRFX_PDM_ENABLED 1
-
-#define NRFX_RTC_ENABLED 1
-// RTC0 is used by the softdevice
-#define NRFX_RTC1_ENABLED 1 // Used by lua time library
-#define NRFX_RTC2_ENABLED 1 // Used by lua camera library
-
-#define NRFX_SAADC_ENABLED 1
-
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM1_ENABLED 1
-#define NRFX_SPIM2_ENABLED 1
-
-#define NRFX_SYSTICK_ENABLED 1
-
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-
-#include "templates/nrfx_config_nrf52840.h"
+bool disable_camera_timer_interrupt_if_enabled(void);
+void enable_camera_timer_interrupt_if(bool was_enabled);

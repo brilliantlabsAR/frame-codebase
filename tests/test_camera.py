@@ -26,12 +26,6 @@ async def capture_and_download(b: Bluetooth, height, width):
     global expected_length
     image_buffer = b""
 
-    print("Auto exposing")
-    await b.send_lua(
-        "for i=1,25 do frame.camera.auto(); frame.sleep(0.033) end print(nil)",
-        await_print=True,
-    )
-
     print("Capturing image")
     await b.send_lua("frame.camera.capture()")
     await asyncio.sleep(0.5)
@@ -69,6 +63,9 @@ async def capture_and_download(b: Bluetooth, height, width):
 
 async def main():
     b = Bluetooth()
+
+    await b.send_lua("frame.camera.auto(true, 'average')")
+    await asyncio.sleep(1)
 
     await b.connect(data_response_handler=receive_data)
 

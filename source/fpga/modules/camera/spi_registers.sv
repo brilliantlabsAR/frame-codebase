@@ -18,9 +18,12 @@ module spi_registers (
     input logic [7:0] data_in,
     output logic [15:0] bytes_read_out,
 
-    input logic [7:0] red_metering_in,
-    input logic [7:0] green_metering_in,
-    input logic [7:0] blue_metering_in
+    input logic [7:0] red_center_metering_in,
+    input logic [7:0] green_center_metering_in,
+    input logic [7:0] blue_center_metering_in,
+    input logic [7:0] red_average_metering_in,
+    input logic [7:0] green_average_metering_in,
+    input logic [7:0] blue_average_metering_in
 );
 
 logic [15:0] bytes_remaining;
@@ -97,9 +100,12 @@ always_ff @(posedge clock_in) begin
                 // Metering
                 'h25: begin
                     case (operand_count_in)
-                        0: response_out <= red_metering_in;
-                        1: response_out <= green_metering_in;
-                        2: response_out <= blue_metering_in;
+                        0: response_out <= red_center_metering_in;
+                        1: response_out <= green_center_metering_in;
+                        2: response_out <= blue_center_metering_in;
+                        3: response_out <= red_average_metering_in;
+                        4: response_out <= green_average_metering_in;
+                        5: response_out <= blue_average_metering_in;
                     endcase
 
                     response_valid_out <= 1;

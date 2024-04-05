@@ -21,14 +21,20 @@ async def main():
 
     while true do
         -- Get current values
-        brightness = frame.camera.get_brightness()
-        r = brightness['r']
-        g = brightness['g']
-        b = brightness['b']
-        average = (r + g + b) / 3
+        brightness = frame.fpga.read(0x25, 6)
+        center_r = string.byte(brightness, 1) / 255
+        center_g = string.byte(brightness, 2) / 255
+        center_b = string.byte(brightness, 3) / 255
+        average_r = string.byte(brightness, 4) / 255
+        average_g = string.byte(brightness, 5) / 255
+        average_b = string.byte(brightness, 6) / 255
+
+        spot = (center_r + center_g + center_b) / 3
+        average = (average_r + average_g + average_b) / 3
+        center_weighted = (spot + spot + spot + average) / 4
 
          -- Calculate error
-        error = setpoint_brightness - average
+        error = setpoint_brightness - center_weighted
 
         if error > 0 then
         
@@ -61,7 +67,7 @@ async def main():
         frame.camera.set_exposure(math.floor(exposure + 0.5))
         frame.camera.set_gain(math.floor(gain + 0.5))
 
-        print('Data:'..r..':'..g..':'..b..':'..average..':'..exposure..':'..gain..':'..error)
+        print('Data:'..average_r..':'..average_g..':'..average_b..':'..average..':'..exposure..':'..gain..':'..error)
 
         frame.sleep(0.1)
     end
@@ -147,6 +153,7 @@ async def main():
     b = Bluetooth()
     await b.connect(print_response_handler=update_graph)
     await b.send_break_signal()
+    print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
     for line in lua_script.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)

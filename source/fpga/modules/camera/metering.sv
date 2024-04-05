@@ -10,11 +10,7 @@
  */
 
 module metering #(
-    // 512x512 window in the center of a 720x720 image
-    X_WINDOW_START = 104, 
-    X_WINDOW_END = 616,
-    Y_WINDOW_START = 104,
-    Y_WINDOW_END = 616
+    SIZE = 512 // Must be 512, 256, 128 .. etc
 )(
     input logic clock_in,
     input logic reset_n_in,
@@ -30,15 +26,23 @@ module metering #(
     output logic [7:0] blue_metering_out
 );
 
+// Assumes a 720x720 image
+parameter WINDOW_START = (720/2) - (SIZE/2);
+parameter WINDOW_END = (720/2) + (SIZE/2);
+
+// Max size of a 10bit buffer multiplied in a SIZE by SIZE grid
+// e.g. 512x512 gives 27
+parameter BITS = $clog2(SIZE * SIZE) + 10;
+
 logic [11:0] x_counter;
 logic [11:0] y_counter;
 
 logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [27:0] average_red_metering;
-logic [27:0] average_green_metering;
-logic [27:0] average_blue_metering;
+logic [BITS - 1:0] average_red_metering;
+logic [BITS - 1:0] average_green_metering;
+logic [BITS - 1:0] average_blue_metering;
 
 always_ff @(posedge clock_in) begin
 
@@ -51,9 +55,9 @@ always_ff @(posedge clock_in) begin
         previous_line_valid <= 0;
 
         if (previous_frame_valid) begin
-            red_metering_out <= average_red_metering[27:20];
-            green_metering_out <= average_green_metering[27:20];
-            blue_metering_out <= average_blue_metering[27:20];
+            red_metering_out <= average_red_metering[BITS - 1:BITS - 8];
+            green_metering_out <= average_green_metering[BITS - 1:BITS - 8];
+            blue_metering_out <= average_blue_metering[BITS - 1:BITS - 8];
         end
 
         average_red_metering <= 0;
@@ -81,10 +85,10 @@ always_ff @(posedge clock_in) begin
 
         // Calculate metering only for the window
         if(line_valid_in &&
-           x_counter >= X_WINDOW_START &&
-           x_counter < X_WINDOW_END &&
-           y_counter >= Y_WINDOW_START &&
-           y_counter < Y_WINDOW_END) begin
+           x_counter >= WINDOW_START &&
+           x_counter < WINDOW_END &&
+           y_counter >= WINDOW_START &&
+           y_counter < WINDOW_END) begin
 
             average_red_metering <= average_red_metering + red_data_in;
             average_green_metering <= average_green_metering + green_data_in;

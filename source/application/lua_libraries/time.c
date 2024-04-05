@@ -30,8 +30,6 @@
 #include "lua.h"
 #include "nrfx_rtc.h"
 
-#include "nrfx_log.h"
-
 static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(1);
 
 static uint64_t utc_time_ms = 0;
@@ -171,8 +169,8 @@ void lua_open_time_library(lua_State *L)
     {
         nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
 
-        // 1024Hz = >1ms resolution
-        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
+        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1000);
+        config.interrupt_priority = 6;
 
         check_error(nrfx_rtc_init(&rtc, &config, rtc_event_handler));
 
