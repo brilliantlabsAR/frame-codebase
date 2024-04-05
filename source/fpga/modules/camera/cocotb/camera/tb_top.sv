@@ -1,6 +1,5 @@
 `timescale 1ps/1ps
 module tb_top (
-    input logic global_reset_n,
     input logic camera_pixel_clock,
     input logic cpu_clock_8hmz,
 
@@ -22,6 +21,10 @@ GSR GSR_INST (.GSR_N('1), .CLK('0));
 
 `ifndef NO_MIPI_IP_SIM
 
+logic clock_osc;
+logic clock_camera_sync;
+logic pll_locked;
+
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -41,12 +44,19 @@ pll_sim_ip pll_sim_ip (
 
 
 logic reset_n;
+logic global_reset_n;
 logic reset_camera_pixel_n;
 logic reset_camera_byte_n;
 logic reset_camera_sync_n;
 
 logic clock_camera_byte;
 logic pll_dphy_locked;
+
+global_reset_sync global_reset_sync (
+    .clock_in(clock_osc),
+    .pll_locked_in(pll_locked),
+    .global_reset_n_out(global_reset_n)
+);
 
 assign reset_n = global_reset_n && pll_dphy_locked;
 

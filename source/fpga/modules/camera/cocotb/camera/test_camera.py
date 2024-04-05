@@ -51,7 +51,7 @@ class SPITransactor():
 
     async def spi_write_read(self, op_code, *operands):
         if len(operands) == 0:
-        	operands = [0]
+            operands = [0]
         data_recvd = [0]*len(operands)
 
         await FallingEdge(self.dut.cpu_clock_8hmz)
@@ -210,7 +210,7 @@ async def dct_test(dut):
     initialize_ports(dut)
 
     clk_op = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock
-    clk_os = cocotb.start_soon(clock_n_reset(dut.cpu_clock_8hmz, dut.global_reset_n, f=8*10e6))  # 8 MHz clock
+    clk_os = cocotb.start_soon(clock_n_reset(dut.cpu_clock_8hmz, None, f=8*10e6))  # 8 MHz clock
     await cocotb.triggers.Combine(clk_op, clk_os)
 
     test_image = 'baboon.bmp'  # 256x256
