@@ -26,7 +26,6 @@
 #include <stdbool.h>
 #include <time.h>
 #include "error_logging.h"
-#include "frame_lua_libraries.h"
 #include "lauxlib.h"
 #include "lua.h"
 #include "nrfx_rtc.h"
@@ -40,11 +39,6 @@ static uint8_t time_zone_offset_minutes;
 static void rtc_event_handler(nrfx_rtc_int_type_t int_type)
 {
     utc_time_ms++;
-
-    if (utc_time_ms % 100 == 0)
-    {
-        lua_run_camera_controller();
-    }
 }
 
 static int lua_time_utc(lua_State *L)
@@ -175,8 +169,8 @@ void lua_open_time_library(lua_State *L)
     {
         nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
 
-        // 1024Hz = >1ms resolution
-        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1024);
+        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(1000);
+        config.interrupt_priority = 6;
 
         check_error(nrfx_rtc_init(&rtc, &config, rtc_event_handler));
 

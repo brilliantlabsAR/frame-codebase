@@ -31,6 +31,7 @@
 
 #define nrfx_gpiote_0_irq_handler GPIOTE_IRQHandler
 #define nrfx_rtc_1_irq_handler RTC1_IRQHandler
+#define nrfx_rtc_2_irq_handler RTC2_IRQHandler
 
 #define NRFX_ASSERT(expression)                \
     do                                         \

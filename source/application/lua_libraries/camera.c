@@ -32,6 +32,9 @@
 #include "nrfx_systick.h"
 #include "pinout.h"
 #include "spi.h"
+#include "nrfx_rtc.h"
+
+static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(2);
 
 typedef enum camera_metering_mode
 {
@@ -116,13 +119,15 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
-void lua_run_camera_controller(void)
+static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
 {
     if (camera_auto.enabled == false)
     {
         return;
     }
 
+    LOG("AUTO");
+    return;
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
         return;
@@ -227,26 +232,27 @@ static int lua_camera_auto(lua_State *L)
     luaL_checktype(L, 1, LUA_TBOOLEAN);
     camera_auto.enabled = lua_toboolean(L, 1);
 
-    const char *mode = luaL_checkstring(L, 1);
-
-    if (strcmp(mode, "spot") == 0)
+    if (camera_auto.enabled)
     {
-        camera_auto.mode = SPOT;
-    }
+        if (strcmp(luaL_checkstring(L, 1), "spot") == 0)
+        {
+            camera_auto.mode = SPOT;
+        }
 
-    else if (strcmp(mode, "center_weighted") == 0)
-    {
-        camera_auto.mode = CENTER_WEIGHTED;
-    }
+        else if (strcmp(luaL_checkstring(L, 1), "center_weighted") == 0)
+        {
+            camera_auto.mode = CENTER_WEIGHTED;
+        }
 
-    else if (strcmp(mode, "average") == 0)
-    {
-        camera_auto.mode = AVERAGE;
-    }
+        else if (strcmp(luaL_checkstring(L, 1), "average") == 0)
+        {
+            camera_auto.mode = AVERAGE;
+        }
 
-    else
-    {
-        luaL_error(L, "mode must be either spot, center_weighted or average");
+        else
+        {
+            luaL_error(L, "mode must be spot, center_weighted or average");
+        }
     }
 
     return 0;
@@ -369,6 +375,19 @@ void lua_open_camera_library(lua_State *L)
     // Wake up camera in case it was asleep
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     nrfx_systick_delay_ms(10);
+
+    // Configure the real time clock
+    if (nrfx_rtc_init_check(&rtc) == false)
+    {
+        nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
+
+        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(10);
+
+        check_error(nrfx_rtc_init(&rtc, &config, lua_run_camera_controller));
+
+        nrfx_rtc_tick_enable(&rtc, true);
+        nrfx_rtc_enable(&rtc);
+    }
 
     // TODO remove if not needed
     // i2c_response_t exposure_reg_a = i2c_read(CAMERA, 0x3500, 0x03);

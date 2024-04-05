@@ -396,8 +396,6 @@ static void hardware_setup(bool *factory_reset)
 
 int main(void)
 {
-    LOG(RTT_CTRL_CLEAR);
-
     bool factory_reset = false;
 
     hardware_setup(&factory_reset);

@@ -60,7 +60,7 @@ if __name__ == "__main__":
     b = Bluetooth()
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.new_event_loop()
         loop.run_until_complete(b.connect(data_response_handler=receive_data))
 
         while True:
