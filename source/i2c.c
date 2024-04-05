@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include "error_logging.h"
 #include "i2c.h"
+#include "interrupts.h"
 #include "main.h"
 #include "nrfx_twim.h"
 #include "pinout.h"
@@ -110,13 +111,8 @@ i2c_response_t i2c_read(i2c_device_t device,
                                                           &i2c_response.value,
                                                           1);
 
-    // Disable tap interrupt which can lead to other i2c calls
-    bool gpiote_interrupt_was_enabled = false;
-    if (NRFX_IRQ_IS_ENABLED(GPIOTE_IRQn))
-    {
-        gpiote_interrupt_was_enabled = true;
-        NRFX_IRQ_DISABLE(GPIOTE_IRQn);
-    }
+    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
+    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
 
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
@@ -148,10 +144,8 @@ i2c_response_t i2c_read(i2c_device_t device,
         }
     }
 
-    if (gpiote_interrupt_was_enabled)
-    {
-        NRFX_IRQ_ENABLE(GPIOTE_IRQn);
-    }
+    enable_pin_interrupts_if(pin_interrupts_was_enabled);
+    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 
     i2c_response.value &= register_mask;
 
@@ -225,13 +219,8 @@ i2c_response_t i2c_write(i2c_device_t device,
         i2c_tx.primary_length = 3;
     }
 
-    // Disable tap interrupt which can lead to other i2c calls
-    bool gpiote_interrupt_was_enabled = false;
-    if (NRFX_IRQ_IS_ENABLED(GPIOTE_IRQn))
-    {
-        gpiote_interrupt_was_enabled = true;
-        NRFX_IRQ_DISABLE(GPIOTE_IRQn);
-    }
+    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
+    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
 
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
@@ -260,10 +249,8 @@ i2c_response_t i2c_write(i2c_device_t device,
         }
     }
 
-    if (gpiote_interrupt_was_enabled)
-    {
-        NRFX_IRQ_ENABLE(GPIOTE_IRQn);
-    }
+    enable_pin_interrupts_if(pin_interrupts_was_enabled);
+    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 
     return resp;
 }

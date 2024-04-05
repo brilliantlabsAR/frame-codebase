@@ -62,18 +62,15 @@ static int lua_camera_capture(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    uint8_t address = 0x20;
-    spi_write(FPGA, &address, 1, false);
+    spi_write(FPGA, 0x20, NULL, 0);
     return 0;
 }
 
 static uint16_t get_bytes_available(void)
 {
-    uint8_t address = 0x21;
     uint8_t data[2] = {0, 0};
 
-    spi_write(FPGA, &address, 1, true);
-    spi_read(FPGA, (uint8_t *)data, sizeof(data), false);
+    spi_read(FPGA, 0x21, (uint8_t *)data, sizeof(data));
 
     uint16_t bytes_available = (uint16_t)data[0] << 8 |
                                (uint16_t)data[1];
@@ -98,8 +95,6 @@ static int lua_camera_read(lua_State *L)
         return 1;
     }
 
-    uint8_t address = 0x22;
-
     uint16_t length = bytes_available < bytes_requested
                           ? bytes_available
                           : bytes_requested;
@@ -110,8 +105,7 @@ static int lua_camera_read(lua_State *L)
         luaL_error(L, "not enough memory");
     }
 
-    spi_write(FPGA, &address, 1, true);
-    spi_read(FPGA, data, length, false);
+    spi_read(FPGA, 0x22, data, length);
 
     lua_pushlstring(L, (char *)data, length);
     free(data);
@@ -126,8 +120,6 @@ static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
         return;
     }
 
-    LOG("AUTO");
-    return;
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
         return;
@@ -139,22 +131,18 @@ static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
     double gain_kp = 30;
 
     // Get current brightness
-    uint8_t address = 0x25;
-    spi_write(FPGA, &address, 1, true);
-
     volatile uint8_t metering_data[6];
-    spi_read(FPGA, (uint8_t *)metering_data, sizeof(metering_data), false);
+    spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double spot = (metering_data[0] +
-                   metering_data[1] +
-                   metering_data[2]) /
-                  3.0;
+    double center_r = metering_data[0] / 255.0;
+    double center_g = metering_data[1] / 255.0;
+    double center_b = metering_data[2] / 255.0;
+    double average_r = metering_data[3] / 255.0;
+    double average_g = metering_data[4] / 255.0;
+    double average_b = metering_data[5] / 255.0;
 
-    double average = (metering_data[3] +
-                      metering_data[4] +
-                      metering_data[5]) /
-                     3.0;
-
+    double spot = (center_r + center_g + center_b) / 3.0;
+    double average = (average_r + average_g + average_b) / 3.0;
     double center_weighted = (spot + spot + spot + average) / 4.0;
 
     // Choose error
@@ -213,6 +201,8 @@ static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
     {
         camera_auto.gain = 0.0;
     }
+
+    LOG("Exposure: %f, Gain: %f", camera_auto.exposure, camera_auto.gain);
 
     // TODO calculate and set auto white-balance
 

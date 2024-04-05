@@ -22,25 +22,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
-
 #include <stdbool.h>
-#include <stdint.h>
 
-typedef enum spi_device_t
-{
-    DISPLAY,
-    FPGA,
-} spi_device_t;
+bool disable_pin_interrupts_if_enabled(void);
+void enable_pin_interrupts_if(bool was_enabled);
 
-void spi_configure(void);
-
-void spi_read(spi_device_t device,
-              uint8_t address,
-              uint8_t *data,
-              size_t length);
-
-void spi_write(spi_device_t device,
-               uint8_t address,
-               uint8_t *data,
-               size_t length);
+bool disable_camera_timer_interrupt_if_enabled(void);
+void enable_camera_timer_interrupt_if(bool was_enabled);

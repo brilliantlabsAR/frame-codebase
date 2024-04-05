@@ -163,8 +163,7 @@ static int lua_fpga_read(lua_State *L)
         luaL_error(L, "not enough memory");
     }
 
-    spi_write(FPGA, (uint8_t *)&address, 1, true);
-    spi_read(FPGA, data, length, false);
+    spi_read(FPGA, address, data, length);
     lua_pushlstring(L, (char *)data, length);
     free(data);
 
@@ -182,8 +181,7 @@ static int lua_fpga_write(lua_State *L)
     size_t length;
     const char *data = luaL_checklstring(L, 2, &length);
 
-    spi_write(FPGA, (uint8_t *)&address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, length, false);
+    spi_write(FPGA, address, (uint8_t *)data, length);
 
     return 0;
 }

@@ -29,7 +29,7 @@ async def main():
         average_g = string.byte(brightness, 5) / 255
         average_b = string.byte(brightness, 6) / 255
 
-        spot = (center_r +center_g + center_b) / 3
+        spot = (center_r + center_g + center_b) / 3
         average = (average_r + average_g + average_b) / 3
         center_weighted = (spot + spot + spot + average) / 4
 

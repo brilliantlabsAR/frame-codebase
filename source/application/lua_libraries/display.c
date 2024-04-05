@@ -72,8 +72,6 @@ static uint32_t utf8_decode(const char *string, size_t *index)
 
 static int lua_display_assign_color(lua_State *L)
 {
-    uint8_t address = 0x11;
-
     lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
@@ -108,16 +106,13 @@ static int lua_display_assign_color(lua_State *L)
                        (uint8_t)cb,
                        (uint8_t)cr};
 
-    spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
+    spi_write(FPGA, 0x11, (uint8_t *)data, sizeof(data));
 
     return 0;
 }
 
 static int lua_display_assign_color_ycbcr(lua_State *L)
 {
-    uint8_t address = 0x11;
-
     lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
     lua_Integer y = luaL_checkinteger(L, 2);
     lua_Integer cb = luaL_checkinteger(L, 3);
@@ -148,8 +143,7 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
                        (uint8_t)cb,
                        (uint8_t)cr};
 
-    spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)data, sizeof(data), false);
+    spi_write(FPGA, 0x11, (uint8_t *)data, sizeof(data));
 
     return 0;
 }
@@ -193,8 +187,6 @@ static void draw_sprite(lua_State *L,
     y_position--;
     width--; // TODO this shouldn't be needed, but there's a bug somewhere
 
-    uint8_t address = 0x12;
-
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
                             (uint32_t)x_position,
                             (uint32_t)y_position >> 8,
@@ -204,9 +196,17 @@ static void draw_sprite(lua_State *L,
                             (uint8_t)total_colors,
                             (uint8_t)palette_offset};
 
-    spi_write(FPGA, &address, 1, true);
-    spi_write(FPGA, (uint8_t *)meta_data, sizeof(meta_data), true);
-    spi_write(FPGA, (uint8_t *)pixel_data, pixel_data_length, false);
+    uint8_t *payload = malloc(pixel_data_length + sizeof(meta_data));
+    if (payload == NULL)
+    {
+        error();
+    }
+    memcpy(payload, meta_data, sizeof(meta_data));
+    memcpy(payload + sizeof(meta_data), pixel_data, pixel_data_length);
+    spi_write(FPGA, 0x12,
+              payload,
+              pixel_data_length + sizeof(meta_data));
+    free(payload);
 }
 
 static int lua_display_bitmap(lua_State *L)
@@ -293,15 +293,12 @@ static int lua_display_text(lua_State *L)
 
 static int lua_display_show(lua_State *L)
 {
-    uint8_t show_command = 0x14;
-    uint8_t clear_command = 0x10;
-
     // TODO remove blocking once we have a better solution
 
-    spi_write(FPGA, &show_command, 1, false);
+    spi_write(FPGA, 0x14, NULL, 0);
     nrfx_systick_delay_ms(25);
 
-    spi_write(FPGA, &clear_command, 1, false);
+    spi_write(FPGA, 0x10, NULL, 0);
     nrfx_systick_delay_ms(20);
 
     return 0;

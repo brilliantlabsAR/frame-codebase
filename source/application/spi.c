@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "error_logging.h"
+#include "interrupts.h"
 #include "nrfx_spim.h"
 #include "pinout.h"
 #include "spi.h"
@@ -70,9 +71,9 @@ void spi_configure(void)
 }
 
 void spi_read(spi_device_t device,
+              uint8_t address,
               uint8_t *data,
-              size_t length,
-              bool hold_down_cs)
+              size_t length)
 {
     nrfx_spim_t instance;
     uint32_t cs_pin = 0xFF;
@@ -94,21 +95,27 @@ void spi_read(spi_device_t device,
         break;
     }
 
+    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
+    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
+
     nrf_gpio_pin_clear(cs_pin);
 
-    nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_RX(data, length);
-    check_error(nrfx_spim_xfer(&instance, &xfer, 0));
+    nrfx_spim_xfer_desc_t tx = NRFX_SPIM_XFER_TX(&address, 1);
+    check_error(nrfx_spim_xfer(&instance, &tx, 0));
 
-    if (!hold_down_cs)
-    {
-        nrf_gpio_pin_set(cs_pin);
-    }
+    nrfx_spim_xfer_desc_t rx = NRFX_SPIM_XFER_RX(data, length);
+    check_error(nrfx_spim_xfer(&instance, &rx, 0));
+
+    nrf_gpio_pin_set(cs_pin);
+
+    enable_pin_interrupts_if(pin_interrupts_was_enabled);
+    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 }
 
 void spi_write(spi_device_t device,
+               uint8_t address,
                uint8_t *data,
-               size_t length,
-               bool hold_down_cs)
+               size_t length)
 {
     nrfx_spim_t instance;
     uint32_t cs_pin = 0xFF;
@@ -130,7 +137,17 @@ void spi_write(spi_device_t device,
         break;
     }
 
+    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
+    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
+
     nrf_gpio_pin_clear(cs_pin);
+
+    // If address is 0, don't send an address, and don't clear CS pin
+    if (address != 0)
+    {
+        nrfx_spim_xfer_desc_t tx_address = NRFX_SPIM_XFER_TX(&address, 1);
+        check_error(nrfx_spim_xfer(&instance, &tx_address, 0));
+    }
 
     if (!nrfx_is_in_ram(data))
     {
@@ -140,18 +157,21 @@ void spi_write(spi_device_t device,
             error();
         }
         memcpy(m_data, data, length);
-        nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(m_data, length);
-        check_error(nrfx_spim_xfer(&instance, &xfer, 0));
+        nrfx_spim_xfer_desc_t tx_data = NRFX_SPIM_XFER_TX(m_data, length);
+        check_error(nrfx_spim_xfer(&instance, &tx_data, 0));
         free(m_data);
     }
     else
     {
-        nrfx_spim_xfer_desc_t xfer = NRFX_SPIM_XFER_TX(data, length);
-        check_error(nrfx_spim_xfer(&instance, &xfer, 0));
+        nrfx_spim_xfer_desc_t tx_data = NRFX_SPIM_XFER_TX(data, length);
+        check_error(nrfx_spim_xfer(&instance, &tx_data, 0));
     }
 
-    if (!hold_down_cs)
+    if (address != 0)
     {
         nrf_gpio_pin_set(cs_pin);
     }
+
+    enable_pin_interrupts_if(pin_interrupts_was_enabled);
+    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 }

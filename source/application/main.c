@@ -86,8 +86,8 @@ void shutdown(bool enable_imu_wakeup)
         return;
     }
 
-    uint8_t display_power_save[2] = {0x00, 0x92};
-    spi_write(DISPLAY, display_power_save, sizeof(display_power_save), false);
+    uint8_t display_power_save[1] = {0x92};
+    spi_write(DISPLAY, 0x00, display_power_save, sizeof(display_power_save));
 
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
 
@@ -160,7 +160,7 @@ static void fpga_send_bitstream_bytes(void *context,
                                       void *data,
                                       size_t data_size)
 {
-    spi_write(FPGA, data, data_size, true);
+    spi_write(FPGA, 0, data, data_size);
 }
 
 static void hardware_setup(bool *factory_reset)
@@ -299,24 +299,24 @@ static void hardware_setup(bool *factory_reset)
         set_power_rails(true);
         nrfx_systick_delay_ms(5);
 
-        uint8_t fpga_activation_key[5] = {0xFF, 0xA4, 0xC6, 0xF4, 0x8A};
-        spi_write(FPGA, fpga_activation_key, 5, false);
+        uint8_t activation_key[4] = {0xA4, 0xC6, 0xF4, 0x8A};
+        spi_write(FPGA, 0xFF, activation_key, sizeof(activation_key));
         nrf_gpio_pin_set(FPGA_PROGRAM_PIN);
         nrfx_systick_delay_ms(1);
 
-        uint8_t fpga_enable_programming_mode[4] = {0xC6, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_enable_programming_mode, 4, false);
+        uint8_t enable_programming[3] = {0x00, 0x00, 0x00};
+        spi_write(FPGA, 0xC6, enable_programming, sizeof(enable_programming));
         nrfx_systick_delay_ms(1);
 
-        uint8_t fpga_erase_device[4] = {0x0E, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_erase_device, 4, false);
+        uint8_t erase_device[3] = {0x00, 0x00, 0x00};
+        spi_write(FPGA, 0x0E, erase_device, sizeof(erase_device));
         nrfx_systick_delay_ms(200);
 
-        uint8_t fpga_initialise_address[4] = {0x46, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_initialise_address, 4, false);
+        uint8_t initialise_address[3] = {0x00, 0x00, 0x00};
+        spi_write(FPGA, 0x46, initialise_address, sizeof(initialise_address));
 
-        uint8_t fpga_bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_bitstream_burst, 4, true);
+        uint8_t bitstream_burst[4] = {0x7A, 0x00, 0x00, 0x00};
+        spi_write(FPGA, 0, bitstream_burst, sizeof(bitstream_burst));
 
         int status = compression_decompress(4096,
                                             fpga_application,
@@ -333,13 +333,12 @@ static void hardware_setup(bool *factory_reset)
         nrf_gpio_pin_set(FPGA_SPI_SELECT_PIN);
         nrfx_systick_delay_ms(10);
 
-        uint8_t fpga_exit_programming_mode[4] = {0x26, 0x00, 0x00, 0x00};
-        spi_write(FPGA, fpga_exit_programming_mode, 4, false);
+        uint8_t exit_programming[3] = {0x00, 0x00, 0x00};
+        spi_write(FPGA, 0x26, exit_programming, sizeof(exit_programming));
         nrfx_systick_delay_ms(200);
 
-        uint8_t fpga_chip_id[1] = {0xDB};
-        spi_write(FPGA, fpga_chip_id, 1, true);
-        spi_read(FPGA, fpga_chip_id, 1, false);
+        uint8_t fpga_chip_id[1] = {0x00};
+        spi_read(FPGA, 0xDB, fpga_chip_id, sizeof(fpga_chip_id));
 
         if (not_real_hardware == false)
         {
@@ -356,10 +355,8 @@ static void hardware_setup(bool *factory_reset)
              i < sizeof(display_config) / sizeof(display_config_t);
              i++)
         {
-            uint8_t command[2] = {display_config[i].address,
-                                  display_config[i].value};
-
-            spi_write(DISPLAY, command, sizeof(command), false);
+            uint8_t data[1] = {display_config[i].value};
+            spi_write(DISPLAY, display_config[i].address, data, sizeof(data));
         }
     }
 

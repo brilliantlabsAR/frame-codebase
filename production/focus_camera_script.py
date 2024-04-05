@@ -64,7 +64,9 @@ if __name__ == "__main__":
         loop.run_until_complete(b.connect(data_response_handler=receive_data))
 
         while True:
-            loop.run_until_complete(b.send_lua("frame.camera.auto(true, 'average')"))
+            loop.run_until_complete(
+                b.send_lua("frame.camera.auto(true, 'center_weighted')")
+            )
             loop.run_until_complete(asyncio.sleep(1))
             loop.run_until_complete(capture_and_download(b, 200, 200))
 

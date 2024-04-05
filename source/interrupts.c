@@ -22,25 +22,41 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
-
 #include <stdbool.h>
-#include <stdint.h>
+#include <nrfx.h>
 
-typedef enum spi_device_t
+bool disable_pin_interrupts_if_enabled(void)
 {
-    DISPLAY,
-    FPGA,
-} spi_device_t;
+    if (NRFX_IRQ_IS_ENABLED(GPIOTE_IRQn))
+    {
+        NRFX_IRQ_DISABLE(GPIOTE_IRQn);
+        return true;
+    }
+    return false;
+}
 
-void spi_configure(void);
+void enable_pin_interrupts_if(bool was_enabled)
+{
+    if (was_enabled)
+    {
+        NRFX_IRQ_ENABLE(GPIOTE_IRQn);
+    }
+}
 
-void spi_read(spi_device_t device,
-              uint8_t address,
-              uint8_t *data,
-              size_t length);
+bool disable_camera_timer_interrupt_if_enabled(void)
+{
+    if (NRFX_IRQ_IS_ENABLED(RTC2_IRQn))
+    {
+        NRFX_IRQ_DISABLE(RTC2_IRQn);
+        return true;
+    }
+    return false;
+}
 
-void spi_write(spi_device_t device,
-               uint8_t address,
-               uint8_t *data,
-               size_t length);
+void enable_camera_timer_interrupt_if(bool was_enabled)
+{
+    if (was_enabled)
+    {
+        NRFX_IRQ_ENABLE(RTC2_IRQn);
+    }
+}
