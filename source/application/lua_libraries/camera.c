@@ -126,7 +126,7 @@ static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
     }
 
     // Configuration variables
-    double setpoint_brightness = 0.686;
+    double setpoint_brightness = 0.6;
     double exposure_kp = 1600;
     double gain_kp = 30;
 
@@ -222,17 +222,17 @@ static int lua_camera_auto(lua_State *L)
 
     if (camera_auto.enabled)
     {
-        if (strcmp(luaL_checkstring(L, 1), "spot") == 0)
+        if (strcmp(luaL_checkstring(L, 2), "spot") == 0)
         {
             camera_auto.mode = SPOT;
         }
 
-        else if (strcmp(luaL_checkstring(L, 1), "center_weighted") == 0)
+        else if (strcmp(luaL_checkstring(L, 2), "center_weighted") == 0)
         {
             camera_auto.mode = CENTER_WEIGHTED;
         }
 
-        else if (strcmp(luaL_checkstring(L, 1), "average") == 0)
+        else if (strcmp(luaL_checkstring(L, 2), "average") == 0)
         {
             camera_auto.mode = AVERAGE;
         }
