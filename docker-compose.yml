@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+
+  devcontainer:
+    platform: linux/amd64
+    build:
+      context: .
+      target: devcontainer
+    volumes:
+      - ..:/workspaces
+      - command-history-volume:/home/ubuntu/.history/
+
+  dev:
+    extends: devcontainer
+    stdin_open: true
+    tty: true
+    entrypoint: []
+    command:
+      [
+        "sh",
+        "-c",
+        "sudo chown ubuntu $$SSH_AUTH_SOCK && mkdir -p /workspaces/frame-codebase/.git/hooks/ && zsh"
+      ]
+    environment:
+      - SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock
+    ports:
+      - "8000"
+    volumes:
+      - ~/.gitconfig:/etc/gitconfig
+      - ~/.ssh/known_hosts:/home/ubuntu/.ssh/known_hosts
+      - ${SSH_AGENT_AUTH_SOCK:-/run/host-services/ssh-auth.sock}:/run/host-services/ssh-auth.sock
+    profiles:
+      - dev
+
+volumes:
+  command-history-volume:

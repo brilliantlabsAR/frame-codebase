@@ -1,0 +1,8 @@
+ipykernel
+ruff
+coloredlogs
+pydantic
+typer[all]
+shellcheck-py 
+pre-commit
+coverage
