@@ -111,7 +111,6 @@ end
 
 generate
 for (genvar i=0; i<2; i++) begin
-logic [4:0] len;
 `ifdef INFER_HUFFMAN_CODES_ROM
 huff_tables ht (
     .rl         (ht_rl[i]),
@@ -119,12 +118,12 @@ huff_tables ht (
     .re         (~out_hold),
     .chroma     (ht_chroma[i]),
     .ac         (ht_ac[i]),
-    .len        (len),
+    .len        (code_length0[i]),
     .code       (code0[i]),
     .clk
 );
-always_comb code_length0[i] = 1 + len;
 `else
+logic [4:0] len;
 huff_tables ht (
     .rl         (ht_rl[i]),
     .coeff_length (ht_coeff_length[i]),
