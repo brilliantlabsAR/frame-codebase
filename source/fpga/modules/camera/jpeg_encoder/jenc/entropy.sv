@@ -111,16 +111,49 @@ end
 
 generate
 for (genvar i=0; i<2; i++) begin
+logic [4:0] len;
+`ifdef INFER_HUFFMAN_CODES_ROM
 huff_tables ht (
     .rl         (ht_rl[i]),
     .coeff_length (ht_coeff_length[i]),
     .re         (~out_hold),
     .chroma     (ht_chroma[i]),
     .ac         (ht_ac[i]),
-    .len        (code_length0[i]),
+    .len        (len),
     .code       (code0[i]),
     .clk
 );
+always_comb code_length0[i] = 1 + len;
+`else
+huff_tables ht (
+    .rl         (ht_rl[i]),
+    .coeff_length (ht_coeff_length[i]),
+    .re         (~out_hold),
+    .chroma     (ht_chroma[i]),
+    .ac         (ht_ac[i]),
+    .len        (len),
+    .code       ( ),
+    .clk
+);
+
+logic [17:0] rom_rd;
+logic [8:0] rom_addr;
+always_comb rom_addr[8:5] = ht_ac[i] ? ht_coeff_length[i]  : 4'hb;  
+always_comb rom_addr[4:1] = ht_ac[i] ? ht_rl[i] : ht_coeff_length[i];  
+always_comb rom_addr[0] =  ht_chroma[i];
+
+huffman_codes_rom huffman_codes_rom (
+    .rd_clk_i   (clk), 
+    .rst_i      (1'b0), 
+    .rd_en_i    (~out_hold), 
+    .rd_clk_en_i(~out_hold), 
+    .rd_addr_i  (rom_addr), 
+    .rd_data_o  (rom_rd)
+);
+always_comb code_length0[i][4:2] = len[4:2];
+always_comb code_length0[i][1:0] = 1 + rom_rd[17:16];
+always_comb code0[i] = rom_rd[15:0];
+`endif
 end
 endgenerate
 

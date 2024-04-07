@@ -1,3 +1,5 @@
+import math
+
 class HuffmanTable:
     def __init__(self, table):
         self.offsets = []
@@ -81,8 +83,8 @@ hACTableCbCr = [
     False
 ]
 
-dcTables = [HuffmanTable(i) for i in [hDCTableY, hDCTableCbCr]]
-acTables = [HuffmanTable(i) for i in [hACTableY, hACTableCbCr]]
+dcTables = [HuffmanTable(table) for table in [hDCTableY, hDCTableCbCr]]
+acTables = [HuffmanTable(table) for table in [hACTableY, hACTableCbCr]]
 
 # generate all Huffman codes based on symbols from a Huffman table
 def generateCodes(hTable):
@@ -105,7 +107,7 @@ generateCodes2(dcTables)
 generateCodes2(acTables)
 
 
-def make_vlog(t, x):
+def make_vlog_old(t, x):
     if x == 'dc':
         x = 12
         e = 12
@@ -118,7 +120,7 @@ def make_vlog(t, x):
     #print ('    case(symbol)')
     for i in range(16):
         for j in range(t.offsets[i], t.offsets[i + 1]):
-            k = f'{t.codes[j]:b}'
+            k = S
             k = '0'*(i + 1 - len(k)) + k
             #print (f'        8\'h {t.symbols[j]:02x} : ht = {{1\'b 1, 4\'d {i:>2d}, 16\'b {k:>16s}}};')
             a = f'8\'h {t.symbols[j]:02x}'
@@ -134,7 +136,84 @@ def make_vlog(t, x):
     print ('end')
 
 
-make_vlog(dcTables[0], 'dc')
-make_vlog(dcTables[1], 'dc')
-make_vlog(acTables[0], 'ac')
-make_vlog(acTables[1], 'ac')
+
+
+def make_memfile():
+    """
+    Indexing:
+        Luma/chroma selected with LSB (chroma-flag)
+        DC Table: indexed with SYMBOL = coefficient (0 .. 11)
+        AC Table: indexed with SYMBOL = {runlength (0 .. 15),  coefficient (0 .. 10)}
+            -> Swap for purposes of implementation
+            index = {coefficient (0 .. 10), runlength (0 .. 15), chroma-flag} -> 9 bits
+            Exceptions: Only 2 codes for coefficient==0 are valid: (0,0), (0,15)
+                14 codes are invalid (0,1),.. (0,14)
+        DC Table gets appended after AC table
+            index = {0xB, coefficient (0 .. 11), chroma-flag}}
+            
+            
+        address = {(ac-flag ? {coefficient, runlength} : {0xB, coefficient}), chroma-flag}
+        
+        Order:
+            luma - AC
+            luma - DC
+            chroma - AC
+            chroma - DC
+    """
+    n = 2*(11*16 + 12) #= 2*(176 + 12) = 2*188 = 376
+    n = 2**int(math.log2(n) + 1)
+    
+    mem = [0]*n
+    for color in ['luma', 'chroma']:
+        chroma_flag = 0 if color=='luma' else 1  # select table 
+        for z in ['ac', 'dc']:
+            if z == 'dc':
+                x = 12
+                e = 12
+                t = dcTables[chroma_flag]
+            elif z == 'ac':
+                x = 16
+                e = 256
+                t = acTables[chroma_flag]
+
+            for length_m1 in range(16):
+                length = length_m1 + 1
+                for j in range(t.offsets[length_m1], t.offsets[length]):
+                    code = t.codes[j]
+                    symbol = t.symbols[j]
+                    #print(length, code, f'{code:x}', f' {symbol:x}')
+
+                    if z == 'ac':
+                        address = ((symbol & 0xf) << 5) + ((symbol & 0xf0) >> 3) + chroma_flag
+                    elif z == 'dc':
+                        address = (0xB << 5) + ((symbol & 0xf) << 1) + chroma_flag
+            
+                    #print(symbol, address , length)
+                    mem[address] = [length_m1, code, f"//{z} {color}"]
+
+    for a, m in enumerate(mem):
+        if type(m) is list:
+            (l, c, _) = m
+            dat = (c << (16 - l - 1))
+        else:
+            l = 0
+            dat = 0xdead    
+        print(f'{l:1x}{dat:04x}')    
+#        add = f'{{8\'h {a:2x}, 1\'b 0}}'
+            
+#            print(add, l0, c0, note)
+#        #else    :
+#        #    print(add, 0)
+#    for a, m in enumerate(mem[1::2]):
+#        break
+#        add = 2*a + 1
+#        k = a >> 1
+#        if type(m) is list:
+#            ll, cc, note = m 
+#            print(add, ll >>2, note)
+#        #else    :
+#        #    print(add, 0)
+            
+
+
+make_memfile()

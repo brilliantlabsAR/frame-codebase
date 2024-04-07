@@ -116,6 +116,7 @@ VERILOG_FILES += \
 
 # Lattice models
 VERILOG_FILES += \
+        ../../../../radiant/huffman_codes_rom/ipgen/rtl/huffman_codes_rom.v \
         ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
         ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
         ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
@@ -146,6 +147,7 @@ ifeq ($(SIM),icarus)
         COMPILE_ARGS += -g2005-sv
 endif
 ifeq ($(SIM),verilator)
+        EXTRA_ARGS += +define+INFER_HUFFMAN_CODES_ROM    # rtl version
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
         EXTRA_ARGS += +define+NO_PLL_IP_SIM     # Emulate PLL
         EXTRA_ARGS += --timing

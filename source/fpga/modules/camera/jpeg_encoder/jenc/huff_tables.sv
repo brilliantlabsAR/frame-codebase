@@ -19,19 +19,14 @@ module huff_tables  (
 localparam N_ENTRIES = 2*(1 + 'h bb); // 2x188 = 376
 
 // 20x376
-logic [19:0] rom[N_ENTRIES-1:0] /* synthesis syn_romstyle = "Block_RAM" */; //previously "Logic"
+logic [19:0] rom[N_ENTRIES-1:0] /* synthesis syn_romstyle = "Logic" */; //previously "Logic"
 logic [8:0] addr;
 always @(*)
     if (ac)     addr = {coeff_length,           rl, chroma}; // {coeff len, RL,        chroma} - AC coeff len always less than 0xB
     else        addr = {        4'hb, coeff_length, chroma}; // {0xB,       coeff len, chroma}
 
-logic [19:0]        rom_rd;
-always @(posedge clk) 
-    if (re)
-        rom_rd <= rom[addr];
-
-always_comb len  = 1 + rom_rd[19:16];
-always_comb code = rom_rd[15:0];
+always @(posedge clk) if (re) len <= rom[addr][19:16] + 1;
+always @(posedge clk) if (re) code <= rom[addr][15:0];
 
 always_comb begin
     for (int a=0; a<N_ENTRIES; a++) rom[a] = 'hx; // applies to 2x14 entries only
