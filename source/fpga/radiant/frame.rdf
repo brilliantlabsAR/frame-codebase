@@ -147,6 +147,9 @@
         <Source name="../modules/camera/jpeg_encoder/jlib/afifo.v" type="Verilog" type_short="Verilog">
             <Options/>
         </Source>
+        <Source name="huffman_codes_rom/ipgen/huffman_codes_rom.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">
             <Options/>
         </Source>
