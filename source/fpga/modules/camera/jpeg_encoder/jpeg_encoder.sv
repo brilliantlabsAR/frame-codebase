@@ -39,8 +39,7 @@
 // clock
 logic               clk_x22;
 logic               resetn_x22;
-always_comb clk_x22 = jpeg_fast_clock_in;
-always_comb resetn_x22 = jpeg_fast_reset_n_in;
+logic [1:0]         jpeg_reset_n_x22_cdc;
 
 // JPEG FSM
 enum logic [2:0] {IDLE, RESET, WAIT_FOR_FRAME_START, COMPRESS, IMAGE_VALID} state;
@@ -65,16 +64,26 @@ logic [19:0]        out_size;
 
 logic               tlast;
 
+// x22 reset
+always_comb clk_x22 = jpeg_fast_clock_in;
+always_comb resetn_x22 = jpeg_fast_reset_n_in & jpeg_reset_n_x22_cdc[1];
+
+always @(posedge jpeg_fast_clock_in)
+if (!jpeg_fast_reset_n_in)
+    jpeg_reset_n_x22_cdc <= 0;
+else
+    jpeg_reset_n_x22_cdc <= {jpeg_reset_n_x22_cdc, jpeg_reset_n};
+
 // JPEG FSM
 always @(posedge pixel_clock_in)
 if (!pixel_reset_n_in)
     state <= IDLE;
 else 
     case(state)
-    1: state <= WAIT_FOR_FRAME_START;                       // reset state (1)
+    1: if (~frame_valid_in) state <= WAIT_FOR_FRAME_START;  // reset state (1), hold in reset until end of previous frame
     2: if (frame_valid_in) state <= COMPRESS;               // wait for frame start (2)
     3: if (data_valid_out & tlast) state <= IMAGE_VALID;    // compress state (3)
-    default: if (start_capture_in & ~frame_valid_in) state <= RESET;   // idle state (0) or image valid state (4)
+    default: if (start_capture_in) state <= RESET;          // idle state (0) or image valid state (4)
     endcase        
 
 always_comb jpeg_reset_n    = ~(state == RESET);
