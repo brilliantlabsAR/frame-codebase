@@ -12,7 +12,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 ## Getting started with nRF52 firmware development
 
-1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/gnu-rm) installed.
+1. Ensure you have the [ARM GCC Toolchain](https://developer.arm.com/downloads/-/arm-gnu-toolchain-downloads) installed.
 
 1. Ensure you have the [nRF Command Line Tools](https://www.nordicsemi.com/Products/Development-tools/nRF-Command-Line-Tools) installed.
 
