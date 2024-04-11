@@ -1,3 +1,10 @@
+/*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module bytepacker (
     //packed code+coeff
     input   logic [63:0]            in_data,

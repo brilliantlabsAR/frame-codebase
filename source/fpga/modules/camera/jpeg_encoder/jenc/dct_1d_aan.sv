@@ -1,3 +1,10 @@
+/*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 `include "zigzag.vh"
 // Implementation of AAN 1-D DCT, adopted from from https://unix4lyfe.org/dct-1d/
 module dct_1d_aan #(

@@ -1,3 +1,10 @@
+/*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module entropy (
     input   logic signed[10:0]      q[1:0], 
     input   logic                   q_valid,

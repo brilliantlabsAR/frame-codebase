@@ -1,3 +1,10 @@
+/*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module pre_cdc (
     //128 bits
     input   logic [127:0]           in_data,

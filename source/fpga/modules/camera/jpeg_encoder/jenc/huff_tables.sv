@@ -1,3 +1,10 @@
+/*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module huff_tables  (
     input   logic               clk,
     input   logic [3:0]         rl,

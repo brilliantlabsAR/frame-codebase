@@ -1,5 +1,5 @@
 /*
- * Top level for Jenc related ISP (mainly for simulation purposes)
+ * Top level for JPEG Encoder + ISP
  *
  * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
  *

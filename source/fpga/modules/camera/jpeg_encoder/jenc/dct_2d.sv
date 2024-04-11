@@ -1,4 +1,11 @@
 /*
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
+/*
 Take 8-bit input samples (0..255)
 Subtract 128 (-128..127)
 Do N*N fDCT, where N=8

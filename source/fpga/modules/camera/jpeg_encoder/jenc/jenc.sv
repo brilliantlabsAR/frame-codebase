@@ -1,3 +1,12 @@
+/*
+ * JPEG Encoder Engine top level
+ *
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module jenc #(
     parameter DW = 8,
     parameter QW = 11,

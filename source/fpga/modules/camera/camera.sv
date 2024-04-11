@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -225,9 +226,9 @@ logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
 `define COCOTB_SIM 1
 `ifdef COCOTB_SIM
 always_comb x_pan_crop_start    = 1;
-always_comb x_pan_crop_end      = 19;
+always_comb x_pan_crop_end      = x_pan_crop_start + 200 + 2;
 always_comb y_pan_crop_start    = 1;
-always_comb y_pan_crop_end      = 19;
+always_comb y_pan_crop_end      = y_pan_crop_start + 200 + 2;
 `else
 `ifdef TESTBENCH
 always_comb x_pan_crop_start    = 10;

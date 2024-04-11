@@ -1,3 +1,14 @@
+/*
+ * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+ *
+ * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+ *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright © 2023 Brilliant Labs Limited
+ */
 module spi_registers (
     input logic clock_in,
     input logic reset_n_in,

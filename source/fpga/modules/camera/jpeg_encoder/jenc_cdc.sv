@@ -1,3 +1,12 @@
+/*
+ * Top level for JPEG Encoder + ISP
+ *
+ * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ *
+ * CERN Open Hardware Licence Version 2 - Permissive
+ *
+ * Copyright (C) 2024 Robert Metchev
+ */
 module jenc_cdc (
     // input
     input logic[15:0]   jpeg_out_address,
