@@ -26,12 +26,12 @@
 
 #include "error_logging.h"
 #include "nrfx.h"
+#include "nrf_nvic.h"
 #include <soc/nrfx_atomic.h>
 #include <soc/nrfx_coredep.h>
 
 #define nrfx_gpiote_0_irq_handler GPIOTE_IRQHandler
 #define nrfx_rtc_1_irq_handler RTC1_IRQHandler
-#define nrfx_rtc_2_irq_handler RTC2_IRQHandler
 
 #define NRFX_ASSERT(expression)                \
     do                                         \
@@ -46,31 +46,34 @@
     _Static_assert(expression, "unspecified message")
 
 #define NRFX_IRQ_PRIORITY_SET(irq_number, priority) \
-    NVIC_SetPriority(irq_number, priority)
+    check_error(sd_nvic_SetPriority(irq_number, priority))
 
 #define NRFX_IRQ_ENABLE(irq_number) \
-    NVIC_EnableIRQ(irq_number)
+    check_error(sd_nvic_EnableIRQ(irq_number))
 
 #define NRFX_IRQ_IS_ENABLED(irq_number) \
     (0 != (NVIC->ISER[irq_number / 32] & (1UL << (irq_number % 32))))
 
 #define NRFX_IRQ_DISABLE(irq_number) \
-    NVIC_DisableIRQ(irq_number)
+    check_error(sd_nvic_DisableIRQ(irq_number))
 
 #define NRFX_IRQ_PENDING_SET(irq_number) \
-    NVIC_SetPendingIRQ(irq_number)
+    check_error(sd_nvic_SetPendingIRQ(irq_number))
 
 #define NRFX_IRQ_PENDING_CLEAR(irq_number) \
-    NVIC_ClearPendingIRQ(irq_number)
+    check_error(sd_nvic_ClearPendingIRQ(irq_number))
 
 #define NRFX_IRQ_IS_PENDING(irq_number) \
     NVIC_GetPendingIRQ(irq_number)
 
-#define NRFX_CRITICAL_SECTION_ENTER()
-// TODO
+#define NRFX_CRITICAL_SECTION_ENTER()       \
+    {                                       \
+        uint8_t _is_nested_critical_region; \
+        sd_nvic_critical_region_enter(&_is_nested_critical_region);
 
-#define NRFX_CRITICAL_SECTION_EXIT()
-// TODO
+#define NRFX_CRITICAL_SECTION_EXIT()                          \
+    sd_nvic_critical_region_exit(_is_nested_critical_region); \
+    }
 
 #define NRFX_DELAY_DWT_BASED 0
 
@@ -130,8 +133,6 @@
 #define NRFX_PPI_CHANNELS_USED 0
 
 #define NRFX_PPI_GROUPS_USED 0
-
-#define NRFX_GPIOTE_CHANNELS_USED 0
 
 #define NRFX_EGUS_USED 0
 

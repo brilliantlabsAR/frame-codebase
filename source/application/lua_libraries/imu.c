@@ -57,11 +57,17 @@ static void lua_imu_tap_callback_handler(lua_State *L, lua_Debug *ar)
 {
     lua_sethook(L, NULL, 0, 0);
 
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_imu_callback_function);
+    // Clear the interrupt by reading the status register
+    check_error(i2c_read(ACCELEROMETER, 0x03, 0xFF).fail);
 
-    if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+    if (lua_imu_callback_function != 0)
     {
-        luaL_error(L, "%s", lua_tostring(L, -1));
+        lua_rawgeti(L, LUA_REGISTRYINDEX, lua_imu_callback_function);
+
+        if (lua_pcall(L, 0, 0, 0) != LUA_OK)
+        {
+            luaL_error(L, "%s", lua_tostring(L, -1));
+        }
     }
 }
 
@@ -69,16 +75,10 @@ void imu_tap_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
                                nrfx_gpiote_trigger_t unused_gptiote_trigger,
                                void *unused_gptiote_context_pointer)
 {
-    if (lua_imu_callback_function != 0)
-    {
-        lua_sethook(L_global,
-                    lua_imu_tap_callback_handler,
-                    LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
-                    1);
-    }
-
-    // Clear the interrupt by reading the status register
-    check_error(i2c_read(ACCELEROMETER, 0x03, 0xFF).fail);
+    lua_sethook(L_global,
+                lua_imu_tap_callback_handler,
+                LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
+                1);
 }
 
 static int lua_imu_tap_callback(lua_State *L)

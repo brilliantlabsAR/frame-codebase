@@ -64,10 +64,10 @@ async def capture_and_download(b: Bluetooth, height, width):
 async def main():
     b = Bluetooth()
 
+    await b.connect(data_response_handler=receive_data)
+
     await b.send_lua("frame.camera.auto(true, 'average')")
     await asyncio.sleep(1)
-
-    await b.connect(data_response_handler=receive_data)
 
     await capture_and_download(b, 200, 200)
 

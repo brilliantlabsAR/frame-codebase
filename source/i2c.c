@@ -25,7 +25,6 @@
 #include <stdint.h>
 #include "error_logging.h"
 #include "i2c.h"
-#include "interrupts.h"
 #include "main.h"
 #include "nrfx_twim.h"
 #include "pinout.h"
@@ -111,9 +110,6 @@ i2c_response_t i2c_read(i2c_device_t device,
                                                           &i2c_response.value,
                                                           1);
 
-    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
-    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
-
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
@@ -143,9 +139,6 @@ i2c_response_t i2c_read(i2c_device_t device,
             break;
         }
     }
-
-    enable_pin_interrupts_if(pin_interrupts_was_enabled);
-    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 
     i2c_response.value &= register_mask;
 
@@ -219,9 +212,6 @@ i2c_response_t i2c_write(i2c_device_t device,
         i2c_tx.primary_length = 3;
     }
 
-    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
-    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
-
     // Try several times
     for (uint8_t i = 0; i < 3; i++)
     {
@@ -248,9 +238,6 @@ i2c_response_t i2c_write(i2c_device_t device,
             break;
         }
     }
-
-    enable_pin_interrupts_if(pin_interrupts_was_enabled);
-    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 
     return resp;
 }
