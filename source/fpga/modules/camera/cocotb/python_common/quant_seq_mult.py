@@ -1,3 +1,11 @@
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
+
 import os
 aw = 11 + 4  # 11 bits signed coeff + 4 aan
 bw = 13

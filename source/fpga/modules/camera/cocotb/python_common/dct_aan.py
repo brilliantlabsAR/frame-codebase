@@ -1,4 +1,12 @@
-# from https://unix4lyfe.org/dct-1d/
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#   from https://unix4lyfe.org/dct-1d/
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
+
 import numpy as np
 import re
 

@@ -1,3 +1,11 @@
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
+
 from jpg import *
 import numpy as np
 import getopt, sys

@@ -1,3 +1,10 @@
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
 Lattice IP is internally encryped and thus can be simulated only with the
 Modelsim simulator provided Lattice. This Modelsim simulator is a 32-bit
 executable and requires a 32-bit Python installation with 32-bit Cocotb (and

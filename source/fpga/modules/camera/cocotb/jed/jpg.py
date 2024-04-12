@@ -1,3 +1,11 @@
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
+
 # Start of Frame markers, non-differential, Huffman coding
 SOF0 = 0xC0 # Baseline DCT
 SOF1 = 0xC1 # Extended sequential DCT

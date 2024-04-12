@@ -1,3 +1,10 @@
+#
+# Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
