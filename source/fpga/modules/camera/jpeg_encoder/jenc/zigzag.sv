@@ -11,7 +11,6 @@ module zigzag  #(
 )(
     input logic[QW-1:0]     d[7:0],
     input logic[2:0]        d_cnt,
-    input logic[5:0]        d_cnt_zig_zag_timing[7:0],
     input logic             d_valid,
     output logic            d_hold,
 
