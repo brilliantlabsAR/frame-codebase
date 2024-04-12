@@ -15,6 +15,11 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
+//  Adopted by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+//  for Brilliant Labs Ltd.
+//
+////////////////////////////////////////////////////////////////////////////////
+//
 // The Verilog logic for this project comes from the paper by Clifford E.
 // Cummings, of Sunburst Design, Inc, titled: "Simulation and Synthesis
 // Techniques for Asynchronous FIFO Design".  This paper may be found at
