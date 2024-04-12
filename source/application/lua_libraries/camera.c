@@ -116,11 +116,9 @@ static int lua_camera_auto(lua_State *L)
 
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.6;
-    double shutter_kp = 1600;
-    double shutter_ki = 1600;
+    double shutter_fast_kp = 600;
+    double shutter_slow_kp = 50;
     double gain_kp = 30;
-    double gain_ki = 30;
-    double dt;
 
     if (lua_istable(L, 1))
     {
@@ -148,14 +146,6 @@ static int lua_camera_auto(lua_State *L)
             }
 
             lua_pop(L, 1);
-
-            // TODO white_balance
-
-            // TODO shutter_kp
-            // TODO shutter_ki
-            // TODO gain_kp
-            // TODO gain_ki
-            // TODO dt
         }
 
         if (lua_getfield(L, 1, "target_exposure") != LUA_TNIL)
@@ -168,46 +158,91 @@ static int lua_camera_auto(lua_State *L)
 
             lua_pop(L, 1);
         }
+
+        if (lua_getfield(L, 1, "shutter_fast_kp") != LUA_TNIL)
+        {
+            shutter_fast_kp = luaL_checknumber(L, -1);
+            if (shutter_fast_kp < 0.0)
+            {
+                luaL_error(L, "shutter_fast_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_slow_kp") != LUA_TNIL)
+        {
+            shutter_slow_kp = luaL_checknumber(L, -1);
+            if (shutter_slow_kp < 0.0)
+            {
+                luaL_error(L, "shutter_slow_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "gain_kp") != LUA_TNIL)
+        {
+            gain_kp = luaL_checknumber(L, -1);
+            if (gain_kp < 0.0)
+            {
+                luaL_error(L, "gain_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
     }
 
     // Get current brightness
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double center_r = metering_data[0] / 255.0;
-    double center_g = metering_data[1] / 255.0;
-    double center_b = metering_data[2] / 255.0;
-    double average_r = metering_data[3] / 255.0;
-    double average_g = metering_data[4] / 255.0;
-    double average_b = metering_data[5] / 255.0;
+    double spot_r = metering_data[0] / 255.0;
+    double spot_g = metering_data[1] / 255.0;
+    double spot_b = metering_data[2] / 255.0;
+    double matrix_r = metering_data[3] / 255.0;
+    double matrix_g = metering_data[4] / 255.0;
+    double matrix_b = metering_data[5] / 255.0;
 
-    double spot = (center_r + center_g + center_b) / 3.0;
-    double average = (average_r + average_g + average_b) / 3.0;
-    double center_weighted = (spot + spot + spot + average) / 4.0;
+    double spot_average = (spot_r + spot_g + spot_b) / 3.0;
+    double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
+    double center_weighted_average = (spot_average +
+                                      spot_average +
+                                      spot_average +
+                                      matrix_average) /
+                                     4.0;
 
     // Choose error
     double error;
     switch (metering)
     {
     case SPOT:
-        error = target_exposure - spot;
+        error = target_exposure - spot_average;
         break;
 
     case CENTER_WEIGHTED:
-        error = target_exposure - center_weighted;
+        error = target_exposure - center_weighted_average;
         break;
 
     default: // AVERAGE
-        error = target_exposure - average;
+        error = target_exposure - matrix_average;
         break;
     }
 
     // Run the loop iteration
     if (error > 0)
     {
-        // Prioritize shutter over gain when image is too dark
-        last.shutter += shutter_kp * error;
+        // Use different kp for fast and slow shutters as it's non-linear
+        if (last.shutter < 200)
+        {
+            last.shutter += shutter_fast_kp * error;
+        }
+        else
+        {
+            last.shutter += shutter_slow_kp * error;
+        }
 
+        // Prioritize shutter over gain when image is too dark
         if (last.shutter >= 800.0)
         {
             last.gain += gain_kp * error;
@@ -220,11 +255,19 @@ static int lua_camera_auto(lua_State *L)
 
         if (last.gain <= 0)
         {
-            last.shutter += shutter_kp * error;
+            // Use different kp for fast and slow shutters as it's non-linear
+            if (last.shutter < 200)
+            {
+                last.shutter += shutter_fast_kp * error;
+            }
+            else
+            {
+                last.shutter += shutter_slow_kp * error;
+            }
         }
     }
 
-    // Limit the value
+    // Limit the outputs
     if (last.shutter > 800.0)
     {
         last.shutter = 800.0;
@@ -254,7 +297,63 @@ static int lua_camera_auto(lua_State *L)
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
     check_error(i2c_write(CAMERA, 0x3505, 0xFF, gain).fail);
 
-    return 0;
+    lua_newtable(L);
+
+    {
+        lua_newtable(L);
+
+        {
+            lua_newtable(L);
+
+            lua_pushnumber(L, spot_r);
+            lua_setfield(L, -2, "r");
+
+            lua_pushnumber(L, spot_g);
+            lua_setfield(L, -2, "g");
+
+            lua_pushnumber(L, spot_b);
+            lua_setfield(L, -2, "b");
+
+            lua_pushnumber(L, spot_average);
+            lua_setfield(L, -2, "average");
+
+            lua_setfield(L, -2, "spot");
+        }
+
+        {
+            lua_newtable(L);
+
+            lua_pushnumber(L, matrix_r);
+            lua_setfield(L, -2, "r");
+
+            lua_pushnumber(L, matrix_g);
+            lua_setfield(L, -2, "g");
+
+            lua_pushnumber(L, matrix_b);
+            lua_setfield(L, -2, "b");
+
+            lua_pushnumber(L, matrix_average);
+            lua_setfield(L, -2, "average");
+
+            lua_setfield(L, -2, "matrix");
+        }
+
+        lua_pushnumber(L, center_weighted_average);
+        lua_setfield(L, -2, "center_weighted_average");
+
+        lua_setfield(L, -2, "brightness");
+    }
+
+    lua_pushnumber(L, error);
+    lua_setfield(L, -2, "error");
+
+    lua_pushnumber(L, last.shutter);
+    lua_setfield(L, -2, "shutter");
+
+    lua_pushnumber(L, last.gain);
+    lua_setfield(L, -2, "gain");
+
+    return 1;
 }
 
 static int lua_camera_sleep(lua_State *L)
