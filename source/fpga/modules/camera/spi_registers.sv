@@ -42,6 +42,7 @@ logic [15:0] bytes_remaining;
 assign bytes_remaining = bytes_available_in - bytes_read_out;
 
 logic [1:0] operand_valid_in_edge_monitor;
+logic [1:0] image_complete_cdc;
 
 always_ff @(posedge clock_in) begin
     
@@ -56,11 +57,14 @@ always_ff @(posedge clock_in) begin
         bytes_read_out <= 0;
 
         operand_valid_in_edge_monitor <= 0;
+        image_complete_cdc <= 0;
     end
 
     else begin
         operand_valid_in_edge_monitor <= {operand_valid_in_edge_monitor[0], 
                                           operand_valid_in};
+
+        image_complete_cdc <= {image_complete_cdc, image_complete};
 
         if (op_code_valid_in) begin
 
@@ -129,7 +133,7 @@ always_ff @(posedge clock_in) begin
 
                 // JPEG
                 'h30: begin
-                    response_out <= image_complete;
+                    response_out <= image_complete_cdc[1];
                     response_valid_out <= 1;
                 end
                 // JPEG size
