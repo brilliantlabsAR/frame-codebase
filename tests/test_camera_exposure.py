@@ -88,8 +88,9 @@ async def main():
     lua_script_b = """
     while true do
         -- Get current values
-        e = frame.camera.auto{ target_exposure = 0.6, shutter_slow_kp = 600, 
-                               shutter_fast_kp = 50, gain_kp = 30 }
+        e = frame.camera.auto{ mode = 'CENTER_WEIGHTED', target_exposure = 0.6, 
+                               shutter_slow_kp = 600, shutter_fast_kp = 50, 
+                               gain_kp = 30 }
 
         metrics = 'Data:'
         metrics = metrics..e['brightness']['matrix']['r']..':'
@@ -144,7 +145,7 @@ async def main():
     # Function that will update the graph when new data arrives
     def update_graph(response: str):
         if response.startswith("Data:") == False:
-            print(response) # Enable for easier debugging
+            # print(response) # Enable for easier debugging
             return
 
         data = response.split(":")
