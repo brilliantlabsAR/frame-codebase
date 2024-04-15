@@ -13,9 +13,11 @@ async def main():
     lua_script_a = """
     -- Configuration
     target_exposure = 0.6
-    shutter_slow_kp = 600
     shutter_fast_kp = 50
-    gain_kp = 30
+    shutter_slow_kp = 2000
+    gain_kp = 10
+    shutter_limit = 6000
+    shutter_fast_slow_threshold = 800
 
     -- Internal variables
     shutter = 0
@@ -41,14 +43,14 @@ async def main():
         if error > 0 then
         
             -- Use different kp for fast and slow shutters as it's non-linear
-            if shutter < 200 then
+            if shutter < shutter_fast_slow_threshold then
                 shutter = shutter + shutter_fast_kp * error
             else
                 shutter = shutter + shutter_slow_kp * error
             end
 
             -- Prioritize shutter over gain when image is too dark
-            if shutter >= 800 then
+            if shutter >= shutter_limit then
                 gain = gain + gain_kp * error
             end
         
@@ -59,7 +61,7 @@ async def main():
 
             if gain <= 0 then
                 -- Use different kp for fast and slow shutters as it's non-linear
-                if shutter < 200 then
+                if shutter < shutter_fast_slow_threshold then
                     shutter = shutter + shutter_fast_kp * error
                 else
                     shutter = shutter + shutter_slow_kp * error
@@ -69,7 +71,7 @@ async def main():
         end
                 
         -- Limit the values
-        if shutter > 16383 then shutter = 16383 end
+        if shutter > shutter_limit then shutter = shutter_limit end
         if shutter < 4 then shutter = 4 end
 
         if gain > 248 then gain = 248 end
@@ -89,9 +91,11 @@ async def main():
     lua_script_b = """
     while true do
         -- Get current values
-        e = frame.camera.auto{ mode = 'CENTER_WEIGHTED', target_exposure = 0.6, 
-                               shutter_slow_kp = 600, shutter_fast_kp = 50, 
-                               gain_kp = 30 }
+        e = frame.camera.auto{ metering = 'CENTER_WEIGHTED', 
+                               target_exposure = 0.6, shutter_fast_kp = 50, 
+                               shutter_slow_kp = 2000, gain_kp = 10, 
+                               shutter_limit = 6000, 
+                               shutter_fast_slow_threshold = 800 }
 
         metrics = 'Data:'
         metrics = metrics..e['brightness']['matrix']['r']..':'
@@ -194,7 +198,7 @@ async def main():
     await b.send_break_signal()
     print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
-    for line in lua_script_a.splitlines():
+    for line in lua_script_b.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)

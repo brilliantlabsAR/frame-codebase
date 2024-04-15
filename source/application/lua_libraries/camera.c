@@ -119,22 +119,24 @@ static int lua_camera_auto(lua_State *L)
     double shutter_fast_kp = 600;
     double shutter_slow_kp = 50;
     double gain_kp = 30;
+    double shutter_limit = 6000;
+    double shutter_fast_slow_threshold = 800;
 
     if (lua_istable(L, 1))
     {
         if (lua_getfield(L, 1, "metering") != LUA_TNIL)
         {
-            if (strcmp(luaL_checkstring(L, -1), "spot") == 0)
+            if (strcmp(luaL_checkstring(L, -1), "SPOT") == 0)
             {
                 metering = SPOT;
             }
 
-            else if (strcmp(luaL_checkstring(L, -1), "center_weighted") == 0)
+            else if (strcmp(luaL_checkstring(L, -1), "CENTER_WEIGHTED") == 0)
             {
                 metering = CENTER_WEIGHTED;
             }
 
-            else if (strcmp(luaL_checkstring(L, -1), "average") == 0)
+            else if (strcmp(luaL_checkstring(L, -1), "AVERAGE") == 0)
             {
                 metering = AVERAGE;
             }
@@ -191,6 +193,29 @@ static int lua_camera_auto(lua_State *L)
 
             lua_pop(L, 1);
         }
+
+        if (lua_getfield(L, 1, "shutter_limit") != LUA_TNIL)
+        {
+            shutter_limit = luaL_checknumber(L, -1);
+            if (shutter_limit < 0.0 || shutter_limit > 16383.0)
+            {
+                luaL_error(L, "shutter_limit must be between 0 and 16383");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_fast_slow_threshold") != LUA_TNIL)
+        {
+            shutter_fast_slow_threshold = luaL_checknumber(L, -1);
+            if (shutter_fast_slow_threshold < 0.0 ||
+                shutter_fast_slow_threshold > 16383.0)
+            {
+                luaL_error(L, "shutter_fast_slow_threshold must be between 0 and 16383");
+            }
+
+            lua_pop(L, 1);
+        }
     }
 
     // Get current brightness
@@ -233,7 +258,7 @@ static int lua_camera_auto(lua_State *L)
     if (error > 0)
     {
         // Use different kp for fast and slow shutters as it's non-linear
-        if (last.shutter < 200)
+        if (last.shutter < shutter_fast_slow_threshold)
         {
             last.shutter += shutter_fast_kp * error;
         }
@@ -243,7 +268,7 @@ static int lua_camera_auto(lua_State *L)
         }
 
         // Prioritize shutter over gain when image is too dark
-        if (last.shutter >= 800.0)
+        if (last.shutter >= shutter_limit)
         {
             last.gain += gain_kp * error;
         }
@@ -256,7 +281,7 @@ static int lua_camera_auto(lua_State *L)
         if (last.gain <= 0)
         {
             // Use different kp for fast and slow shutters as it's non-linear
-            if (last.shutter < 200)
+            if (last.shutter < shutter_fast_slow_threshold)
             {
                 last.shutter += shutter_fast_kp * error;
             }
@@ -268,17 +293,17 @@ static int lua_camera_auto(lua_State *L)
     }
 
     // Limit the outputs
-    if (last.shutter > 800.0)
+    if (last.shutter > shutter_limit)
     {
-        last.shutter = 800.0;
+        last.shutter = shutter_limit;
     }
-    if (last.shutter < 20.0)
+    if (last.shutter < 4.0)
     {
-        last.shutter = 20.0;
+        last.shutter = 4.0;
     }
-    if (last.gain > 255.0)
+    if (last.gain > 248.0)
     {
-        last.gain = 255.0;
+        last.gain = 248.0;
     }
     if (last.gain < 0.0)
     {
@@ -291,11 +316,22 @@ static int lua_camera_auto(lua_State *L)
     uint16_t shutter = (uint16_t)last.shutter;
     uint8_t gain = (uint8_t)last.gain;
 
-    // TODO group hold command
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
+    }
+
     check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, gain).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, gain).fail);
 
     lua_newtable(L);
 
