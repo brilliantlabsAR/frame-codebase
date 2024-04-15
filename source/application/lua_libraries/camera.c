@@ -32,9 +32,6 @@
 #include "nrfx_systick.h"
 #include "pinout.h"
 #include "spi.h"
-#include "nrfx_rtc.h"
-
-static const nrfx_rtc_t rtc = NRFX_RTC_INSTANCE(2);
 
 typedef enum camera_metering_mode
 {
@@ -43,15 +40,12 @@ typedef enum camera_metering_mode
     AVERAGE
 } camera_metering_mode_t;
 
-static struct camera_auto
+static struct camera_auto_last_values
 {
-    bool enabled;
-    camera_metering_mode_t mode;
-    double exposure;
+    double shutter;
     double gain;
-} camera_auto = {
-    .enabled = false,
-    .exposure = 0,
+} last = {
+    .shutter = 0,
     .gain = 0,
 };
 
@@ -113,137 +107,289 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
-static void lua_run_camera_controller(nrfx_rtc_int_type_t int_type)
+static int lua_camera_auto(lua_State *L)
 {
-    if (camera_auto.enabled == false)
-    {
-        return;
-    }
-
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
-        return;
+        return 0;
     }
 
-    // Configuration variables
-    double setpoint_brightness = 0.6;
-    double exposure_kp = 1600;
+    camera_metering_mode_t metering = AVERAGE;
+    double target_exposure = 0.6;
+    double shutter_fast_kp = 600;
+    double shutter_slow_kp = 50;
     double gain_kp = 30;
+    double shutter_limit = 6000;
+    double shutter_fast_slow_threshold = 800;
+
+    if (lua_istable(L, 1))
+    {
+        if (lua_getfield(L, 1, "metering") != LUA_TNIL)
+        {
+            if (strcmp(luaL_checkstring(L, -1), "SPOT") == 0)
+            {
+                metering = SPOT;
+            }
+
+            else if (strcmp(luaL_checkstring(L, -1), "CENTER_WEIGHTED") == 0)
+            {
+                metering = CENTER_WEIGHTED;
+            }
+
+            else if (strcmp(luaL_checkstring(L, -1), "AVERAGE") == 0)
+            {
+                metering = AVERAGE;
+            }
+
+            else
+            {
+                luaL_error(L,
+                           "metering must be spot, center_weighted or average");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "target_exposure") != LUA_TNIL)
+        {
+            target_exposure = luaL_checknumber(L, -1);
+            if (target_exposure < 0.0 || target_exposure > 1.0)
+            {
+                luaL_error(L, "target_exposure must be between 0 and 1");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_fast_kp") != LUA_TNIL)
+        {
+            shutter_fast_kp = luaL_checknumber(L, -1);
+            if (shutter_fast_kp < 0.0)
+            {
+                luaL_error(L, "shutter_fast_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_slow_kp") != LUA_TNIL)
+        {
+            shutter_slow_kp = luaL_checknumber(L, -1);
+            if (shutter_slow_kp < 0.0)
+            {
+                luaL_error(L, "shutter_slow_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "gain_kp") != LUA_TNIL)
+        {
+            gain_kp = luaL_checknumber(L, -1);
+            if (gain_kp < 0.0)
+            {
+                luaL_error(L, "gain_kp must be greater than 0");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_limit") != LUA_TNIL)
+        {
+            shutter_limit = luaL_checknumber(L, -1);
+            if (shutter_limit < 0.0 || shutter_limit > 16383.0)
+            {
+                luaL_error(L, "shutter_limit must be between 0 and 16383");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "shutter_fast_slow_threshold") != LUA_TNIL)
+        {
+            shutter_fast_slow_threshold = luaL_checknumber(L, -1);
+            if (shutter_fast_slow_threshold < 0.0 ||
+                shutter_fast_slow_threshold > 16383.0)
+            {
+                luaL_error(L, "shutter_fast_slow_threshold must be between 0 and 16383");
+            }
+
+            lua_pop(L, 1);
+        }
+    }
 
     // Get current brightness
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double center_r = metering_data[0] / 255.0;
-    double center_g = metering_data[1] / 255.0;
-    double center_b = metering_data[2] / 255.0;
-    double average_r = metering_data[3] / 255.0;
-    double average_g = metering_data[4] / 255.0;
-    double average_b = metering_data[5] / 255.0;
+    double spot_r = metering_data[0] / 255.0;
+    double spot_g = metering_data[1] / 255.0;
+    double spot_b = metering_data[2] / 255.0;
+    double matrix_r = metering_data[3] / 255.0;
+    double matrix_g = metering_data[4] / 255.0;
+    double matrix_b = metering_data[5] / 255.0;
 
-    double spot = (center_r + center_g + center_b) / 3.0;
-    double average = (average_r + average_g + average_b) / 3.0;
-    double center_weighted = (spot + spot + spot + average) / 4.0;
+    double spot_average = (spot_r + spot_g + spot_b) / 3.0;
+    double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
+    double center_weighted_average = (spot_average +
+                                      spot_average +
+                                      spot_average +
+                                      matrix_average) /
+                                     4.0;
 
     // Choose error
     double error;
-    switch (camera_auto.mode)
+    switch (metering)
     {
     case SPOT:
-        error = setpoint_brightness - spot;
+        error = target_exposure - spot_average;
         break;
 
     case CENTER_WEIGHTED:
-        error = setpoint_brightness - center_weighted;
+        error = target_exposure - center_weighted_average;
         break;
 
     default: // AVERAGE
-        error = setpoint_brightness - average;
+        error = target_exposure - matrix_average;
         break;
     }
 
     // Run the loop iteration
     if (error > 0)
     {
-        // Prioritize exposure over gain when image is too dark
-        camera_auto.exposure += exposure_kp * error;
-
-        if (camera_auto.exposure >= 800.0)
+        // Use different kp for fast and slow shutters as it's non-linear
+        if (last.shutter < shutter_fast_slow_threshold)
         {
-            camera_auto.gain += gain_kp * error;
+            last.shutter += shutter_fast_kp * error;
+        }
+        else
+        {
+            last.shutter += shutter_slow_kp * error;
+        }
+
+        // Prioritize shutter over gain when image is too dark
+        if (last.shutter >= shutter_limit)
+        {
+            last.gain += gain_kp * error;
         }
     }
     else
     {
         // When image is too bright, reduce gain first
-        camera_auto.gain += gain_kp * error;
+        last.gain += gain_kp * error;
 
-        if (camera_auto.gain <= 0)
+        if (last.gain <= 0)
         {
-            camera_auto.exposure += exposure_kp * error;
+            // Use different kp for fast and slow shutters as it's non-linear
+            if (last.shutter < shutter_fast_slow_threshold)
+            {
+                last.shutter += shutter_fast_kp * error;
+            }
+            else
+            {
+                last.shutter += shutter_slow_kp * error;
+            }
         }
     }
 
-    // Limit the value
-    if (camera_auto.exposure > 800.0)
+    // Limit the outputs
+    if (last.shutter > shutter_limit)
     {
-        camera_auto.exposure = 800.0;
+        last.shutter = shutter_limit;
     }
-    if (camera_auto.exposure < 20.0)
+    if (last.shutter < 4.0)
     {
-        camera_auto.exposure = 20.0;
+        last.shutter = 4.0;
     }
-    if (camera_auto.gain > 255.0)
+    if (last.gain > 248.0)
     {
-        camera_auto.gain = 255.0;
+        last.gain = 248.0;
     }
-    if (camera_auto.gain < 0.0)
+    if (last.gain < 0.0)
     {
-        camera_auto.gain = 0.0;
+        last.gain = 0.0;
     }
 
     // TODO calculate and set auto white-balance
 
     // Set the output
-    uint16_t exposure = (uint16_t)camera_auto.exposure;
-    uint8_t gain = (uint8_t)camera_auto.gain;
+    uint16_t shutter = (uint16_t)last.shutter;
+    uint8_t gain = (uint8_t)last.gain;
 
-    // TODO group hold command
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure >> 12).fail);
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure >> 4).fail);
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure << 4).fail);
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, gain).fail);
-}
-
-static int lua_camera_auto(lua_State *L)
-{
-    luaL_checktype(L, 1, LUA_TBOOLEAN);
-    camera_auto.enabled = lua_toboolean(L, 1);
-
-    if (camera_auto.enabled)
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
     {
-        if (strcmp(luaL_checkstring(L, 2), "spot") == 0)
-        {
-            camera_auto.mode = SPOT;
-        }
-
-        else if (strcmp(luaL_checkstring(L, 2), "center_weighted") == 0)
-        {
-            camera_auto.mode = CENTER_WEIGHTED;
-        }
-
-        else if (strcmp(luaL_checkstring(L, 2), "average") == 0)
-        {
-            camera_auto.mode = AVERAGE;
-        }
-
-        else
-        {
-            luaL_error(L, "mode must be spot, center_weighted or average");
-        }
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
     }
 
-    return 0;
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, gain).fail);
+
+    lua_newtable(L);
+
+    {
+        lua_newtable(L);
+
+        {
+            lua_newtable(L);
+
+            lua_pushnumber(L, spot_r);
+            lua_setfield(L, -2, "r");
+
+            lua_pushnumber(L, spot_g);
+            lua_setfield(L, -2, "g");
+
+            lua_pushnumber(L, spot_b);
+            lua_setfield(L, -2, "b");
+
+            lua_pushnumber(L, spot_average);
+            lua_setfield(L, -2, "average");
+
+            lua_setfield(L, -2, "spot");
+        }
+
+        {
+            lua_newtable(L);
+
+            lua_pushnumber(L, matrix_r);
+            lua_setfield(L, -2, "r");
+
+            lua_pushnumber(L, matrix_g);
+            lua_setfield(L, -2, "g");
+
+            lua_pushnumber(L, matrix_b);
+            lua_setfield(L, -2, "b");
+
+            lua_pushnumber(L, matrix_average);
+            lua_setfield(L, -2, "average");
+
+            lua_setfield(L, -2, "matrix");
+        }
+
+        lua_pushnumber(L, center_weighted_average);
+        lua_setfield(L, -2, "center_weighted_average");
+
+        lua_setfield(L, -2, "brightness");
+    }
+
+    lua_pushnumber(L, error);
+    lua_setfield(L, -2, "error");
+
+    lua_pushnumber(L, last.shutter);
+    lua_setfield(L, -2, "shutter");
+
+    lua_pushnumber(L, last.gain);
+    lua_setfield(L, -2, "gain");
+
+    return 1;
 }
 
 static int lua_camera_sleep(lua_State *L)
@@ -258,23 +404,35 @@ static int lua_camera_wake(lua_State *L)
     return 0;
 }
 
-static int lua_camera_set_exposure(lua_State *L)
+static int lua_camera_set_shutter(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
     {
         luaL_error(L, "camera is asleep");
     }
 
-    lua_Integer exposure = luaL_checkinteger(L, 1);
+    lua_Integer shutter = luaL_checkinteger(L, 1);
 
-    if (exposure < 20 || exposure > 0x3FFF)
+    if (shutter < 4 || shutter > 0x3FFF)
     {
-        return luaL_error(L, "exposure must be between 20us and 25000us");
+        return luaL_error(L, "shutter must be between 4 and 16383");
     }
 
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, exposure >> 12).fail);
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, exposure >> 4).fail);
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, exposure << 4).fail);
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
+    }
+
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
 
     return 0;
 }
@@ -288,13 +446,12 @@ static int lua_camera_set_gain(lua_State *L)
 
     lua_Integer sensor_gain = luaL_checkinteger(L, 1);
 
-    if (sensor_gain > 0xFF)
+    if (sensor_gain < 0 || sensor_gain > 0xF8)
     {
-        return luaL_error(L, "gain must be less than 0xFF");
+        return luaL_error(L, "gain must be between 0 and 248");
     }
 
-    // TODO try to set the 0x350A/B registers instead
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, sensor_gain).fail);
 
     return 0;
 }
@@ -310,9 +467,10 @@ static int lua_camera_set_white_balance(lua_State *L)
     lua_Integer green_gain = luaL_checkinteger(L, 2);
     lua_Integer blue_gain = luaL_checkinteger(L, 3);
 
-    if (red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
+    if (red_gain < 0 || green_gain < 0 || blue_gain < 0 ||
+        red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
     {
-        return luaL_error(L, "gain values must be less than 0x3FF");
+        return luaL_error(L, "gains must be between 0 and 1023");
     }
 
     check_error(i2c_write(CAMERA, 0x5180, 0x0F, red_gain >> 8).fail);
@@ -364,19 +522,6 @@ void lua_open_camera_library(lua_State *L)
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
     nrfx_systick_delay_ms(10);
 
-    // Configure the real time clock
-    if (nrfx_rtc_init_check(&rtc) == false)
-    {
-        nrfx_rtc_config_t config = NRFX_RTC_DEFAULT_CONFIG;
-
-        config.prescaler = NRF_RTC_FREQ_TO_PRESCALER(10);
-
-        check_error(nrfx_rtc_init(&rtc, &config, lua_run_camera_controller));
-
-        nrfx_rtc_tick_enable(&rtc, true);
-        nrfx_rtc_enable(&rtc);
-    }
-
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
@@ -396,8 +541,8 @@ void lua_open_camera_library(lua_State *L)
     lua_pushcfunction(L, lua_camera_wake);
     lua_setfield(L, -2, "wake");
 
-    lua_pushcfunction(L, lua_camera_set_exposure);
-    lua_setfield(L, -2, "set_exposure");
+    lua_pushcfunction(L, lua_camera_set_shutter);
+    lua_setfield(L, -2, "set_shutter");
 
     lua_pushcfunction(L, lua_camera_set_gain);
     lua_setfield(L, -2, "set_gain");

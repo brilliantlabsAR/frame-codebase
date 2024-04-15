@@ -26,7 +26,6 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "error_logging.h"
-#include "interrupts.h"
 #include "nrfx_spim.h"
 #include "pinout.h"
 #include "spi.h"
@@ -95,9 +94,6 @@ void spi_read(spi_device_t device,
         break;
     }
 
-    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
-    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
-
     nrf_gpio_pin_clear(cs_pin);
 
     nrfx_spim_xfer_desc_t tx = NRFX_SPIM_XFER_TX(&address, 1);
@@ -107,9 +103,6 @@ void spi_read(spi_device_t device,
     check_error(nrfx_spim_xfer(&instance, &rx, 0));
 
     nrf_gpio_pin_set(cs_pin);
-
-    enable_pin_interrupts_if(pin_interrupts_was_enabled);
-    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 }
 
 static void _spi_write(spi_device_t device,
@@ -137,9 +130,6 @@ static void _spi_write(spi_device_t device,
         error_with_message("Invalid SPI device selected");
         break;
     }
-
-    bool pin_interrupts_was_enabled = disable_pin_interrupts_if_enabled();
-    bool camera_timer_was_enabled = disable_camera_timer_interrupt_if_enabled();
 
     nrf_gpio_pin_clear(cs_pin);
 
@@ -172,9 +162,6 @@ static void _spi_write(spi_device_t device,
     {
         nrf_gpio_pin_set(cs_pin);
     }
-
-    enable_pin_interrupts_if(pin_interrupts_was_enabled);
-    enable_camera_timer_interrupt_if(camera_timer_was_enabled);
 }
 
 void spi_write(spi_device_t device,

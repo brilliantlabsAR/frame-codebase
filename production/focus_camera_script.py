@@ -23,6 +23,10 @@ async def capture_and_download(b: Bluetooth, height, width):
     global expected_length
     expected_length = height * width
 
+    for _ in range(10):
+        await asyncio.sleep(0.1)
+        await b.send_lua("frame.camera.auto{ metering = 'CENTER_WEIGHTED' }")
+
     await b.send_lua(f"frame.camera.capture()")
     await asyncio.sleep(0.5)
 
@@ -64,10 +68,6 @@ if __name__ == "__main__":
         loop.run_until_complete(b.connect(data_response_handler=receive_data))
 
         while True:
-            loop.run_until_complete(
-                b.send_lua("frame.camera.auto(true, 'center_weighted')")
-            )
-            loop.run_until_complete(asyncio.sleep(1))
             loop.run_until_complete(capture_and_download(b, 200, 200))
 
     except KeyboardInterrupt:

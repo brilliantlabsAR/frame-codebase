@@ -57,10 +57,10 @@ static const camera_config_t camera_config[] = {
     {0x3502, 0x00}, // Long exposure [7:0], bits [3:0] are fractional
     {0x3503, 0x03}, // AEC manual control
     {0x3504, 0x00}, // Manual sensor gain [9:8]
-    {0x3505, 0xE0}, // Manual sensor gain [7:0], TODO: Anything above 0xFF is overflowing
-    {0x3509, 0x18}, // AEC control 9
+    {0x3505, 0x00}, // Manual sensor gain [7:0]
+    {0x3509, 0x10}, // AEC control 9
     {0x350a, 0x00}, // Long gain [9:8]
-    {0x350b, 0x30}, // Long gain [7:0]
+    {0x350b, 0x00}, // Long gain [7:0]
     {0x3600, 0x55},
     {0x3601, 0x02},
     {0x3605, 0x22},

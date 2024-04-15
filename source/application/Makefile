@@ -47,7 +47,6 @@ C_FILES += \
 	lua_libraries/version.c \
 	../error_logging.c \
 	../i2c.c \
-	../interrupts.c \
 	../startup.c \
 	../syscalls.c \
 	$(LIBRARIES)/littlefs/lfs_util.c \
