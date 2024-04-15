@@ -5,6 +5,7 @@ from aioconsole import ainput
 from frameutils import Bluetooth
 import asyncio
 import matplotlib.pyplot as plot
+from matplotlib.ticker import EngFormatter
 
 async def main():
 
@@ -68,10 +69,10 @@ async def main():
         end
                 
         -- Limit the values
-        if shutter > 800 then shutter = 800 end
-        if shutter < 20 then shutter = 20 end
+        if shutter > 16383 then shutter = 16383 end
+        if shutter < 4 then shutter = 4 end
 
-        if gain > 255 then gain = 255 end
+        if gain > 248 then gain = 248 end
         if gain < 0 then gain = 0 end
 
         -- Set the new values (rounded to nearest int)
@@ -120,7 +121,8 @@ async def main():
     error_values = [0]
 
     # Set up the figure
-    figure, (input_axis, setpoint_axis, error_axis) = plot.subplots(3, 1, sharex=True)
+    figure, (input_axis, shutter_axis, error_axis) = plot.subplots(3, 1, sharex=True)
+    gain_axis = shutter_axis.twinx()
     figure.suptitle("Frame auto-exposure tuning tool")
     
     red_plot, = input_axis.plot(frame_count, r_brightness_values, 'r', label='red')
@@ -131,11 +133,15 @@ async def main():
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
-    shutter_plot, = setpoint_axis.plot(frame_count, shutter_values, 'r', label='shutter')
-    gain_plot, = setpoint_axis.plot(frame_count, gain_values, 'b', label='gain')
-    setpoint_axis.set_ylim([0,850])
-    setpoint_axis.set_ylabel("Setpoints")
-    setpoint_axis.legend(loc="upper left")
+    shutter_plot, = shutter_axis.plot(frame_count, shutter_values, 'r', label='shutter')
+    gain_plot, = gain_axis.plot(frame_count, gain_values, 'b', label='gain')
+
+    shutter_axis.set_ylim([0,17000])
+    shutter_axis.set_ylabel("Setpoints")
+    shutter_axis.legend(loc="upper left")
+    shutter_axis.yaxis.set_major_formatter(EngFormatter(sep=""))
+    gain_axis.set_ylim([0,260])
+    gain_axis.legend(loc="upper right")
 
     error_plot, = error_axis.plot(frame_count, error_values)
     error_axis.set_ylim([-1,1])
@@ -188,7 +194,7 @@ async def main():
     await b.send_break_signal()
     print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
-    for line in lua_script_b.splitlines():
+    for line in lua_script_a.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)

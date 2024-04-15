@@ -377,9 +377,21 @@ static int lua_camera_set_shutter(lua_State *L)
 
     lua_Integer shutter = luaL_checkinteger(L, 1);
 
-    if (shutter < 20 || shutter > 0x3FFF)
+    if (shutter < 4 || shutter > 0x3FFF)
     {
-        return luaL_error(L, "shutter must be between 20us and 25000us");
+        return luaL_error(L, "shutter must be between 4 and 16383");
+    }
+
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
     }
 
     check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
@@ -398,13 +410,12 @@ static int lua_camera_set_gain(lua_State *L)
 
     lua_Integer sensor_gain = luaL_checkinteger(L, 1);
 
-    if (sensor_gain < 0 || sensor_gain > 0xFF)
+    if (sensor_gain < 0 || sensor_gain > 0xF8)
     {
-        return luaL_error(L, "gain must be between 0 and 255");
+        return luaL_error(L, "gain must be between 0 and 248");
     }
 
-    // TODO try to set the 0x350A/B registers instead
-    check_error(i2c_write(CAMERA, 0x3505, 0xFF, sensor_gain).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, sensor_gain).fail);
 
     return 0;
 }
@@ -423,7 +434,7 @@ static int lua_camera_set_white_balance(lua_State *L)
     if (red_gain < 0 || green_gain < 0 || blue_gain < 0 ||
         red_gain > 0x3FF || green_gain > 0x3FF || blue_gain > 0x3FF)
     {
-        return luaL_error(L, "gain values must be between 0 and 1023");
+        return luaL_error(L, "gains must be between 0 and 1023");
     }
 
     check_error(i2c_write(CAMERA, 0x5180, 0x0F, red_gain >> 8).fail);
