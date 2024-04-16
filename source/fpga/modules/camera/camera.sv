@@ -13,7 +13,7 @@
 `include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
-`include "modules/camera/jpeg/jpeg.sv"
+`include "modules/camera/jpeg_encoder/jpeg_encoder.sv"
 `include "modules/camera/metering.sv"
 `include "modules/camera/spi_registers.sv"
 `endif
@@ -364,17 +364,16 @@ crop zoom_crop (
     .frame_valid_out(zoomed_frame_valid)
 );
 
-logic [127:0] final_image_data;
+logic [31:0] final_image_data;
 logic [15:0] final_image_address;
 logic final_image_data_valid;
-logic final_image_complete;
 
-jpeg jpeg (
+jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .jpeg_buffer_clock_in(jpeg_buffer_clock_in),
-    .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n_in),
+    .jpeg_fast_clock_in(jpeg_buffer_clock_in),
+    .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
@@ -385,15 +384,15 @@ jpeg jpeg (
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
     .y_size_in(y_resolution),
-    .quality_factor_in(quality_factor),
+    .compression_factor_in(quality_factor),
 
     .data_out(final_image_data),
-    .data_valid_out(final_image_data_valid), // TODO
+    .data_valid_out(final_image_data_valid),
     .address_out(final_image_address),
-    .image_valid_out(final_image_complete)
+    .image_valid_out()
 );
 
-always_comb bytes_available = 40000;//final_image_address + 4;
+always_comb bytes_available = final_image_address + 4;
 
 image_buffer image_buffer (
     .write_clock_in(pixel_clock_in),
@@ -402,7 +401,7 @@ image_buffer image_buffer (
     .read_reset_n_in(spi_reset_n_in),
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),
-    .write_data_in(final_image_data[7:0]),
+    .write_data_in(final_image_data),
     .read_data_out(image_buffer_data),
     .write_read_n_in(final_image_data_valid)
 );
