@@ -72,6 +72,8 @@ class SPITransactor():
             self.dut.spi_clock_in.value = 0
             await RisingEdge(self.dut.cpu_clock_8hmz)
         for j, operand in enumerate(operands):
+            # extra cycle for debug, can be removed
+            await RisingEdge(self.dut.cpu_clock_8hmz)
             for i in range(8)[::-1]:
                 self.dut.spi_data_in.value = (operand >> i) & 0x1
                 self.dut.spi_clock_in.value = 1
@@ -110,11 +112,28 @@ class Tester(SPITransactor):
         
         # artificial test image
         if False:
+            orig = self.img_bgr[:,:,:]
             self.img_bgr[:, :, :] = 0
-            self.img_bgr[8:, 8:, 0] = 255 # blue right bottom corner
-            self.img_bgr[:8, :, 2] = 255 # red top
-            self.img_bgr[:, :8, 1] = 255 # green left
+            self.img_bgr[9:, 9:, 0] = 255 # blue right bottom corner
+            self.img_bgr[:9, :, 2] = 255 # red top
+            self.img_bgr[:, :9, 1] = 255 # green left
             #self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
+            #self.img_bgr[:8, :8, 1] = 255 # ed
+            #self.img_bgr[8:, 8:, 1] = 128 # ed
+            #self.img_bgr[:, :, :] = 128
+            #self.img_bgr[9:, :, :] = 64+32
+            #self.img_bgr[:, :, :] = 128
+            self.img_bgr[9:, 352:368, :] = 0 # green left
+            self.img_bgr[:, 352:368, 1] = 255 # green left
+
+            b=50
+            for i in range(0):
+                a = b + i*20
+                self.img_bgr[:, a:a+8,:] = np.random.randint(0, 256, self.img_bgr[:, a:a+8,:].shape)
+            for i in range(15):
+                a = b + i*20
+                self.img_bgr[a:a+8, :,:] = np.random.randint(0, 256, self.img_bgr[a:a+8, :,:].shape)
+            self.img_bgr[:, :, :] = 128
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        
@@ -183,12 +202,14 @@ class Tester(SPITransactor):
         # read address -> need to add 4 to get size in bytes
         read_data = await self.spi_write_read(0x31, *[0xff]*2)
         bytes = 4 + sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
-        print(bytes)
 
-        self.ecs = []
-        for _ in range(bytes):
-            ecs = await self.spi_write_read(0x22, 0xff)
-            self.ecs.extend(ecs)
+        if True:
+            self.ecs = await self.spi_write_read(0x22, *[0xff]*bytes)
+        else:
+            self.ecs = []
+            for _ in range(bytes):
+                ecs = await self.spi_write_read(0x22, 0xff)
+                self.ecs.extend(ecs)
 
 
     async def write_ecs(self, filename='ecs_out.bin'):
@@ -209,9 +230,9 @@ class Tester(SPITransactor):
             f.write(ftr)
 
 
-    async def write_image(self):
-        await self.write_jpg()
-        await self.write_ecs()
+    async def write_image(self, jfilename='jpeg_out.jpg', efilename='ecs_out.bin'):
+        await self.write_jpg(jfilename)
+        await self.write_ecs(efilename)
 
 
 @cocotb.test()
@@ -229,9 +250,8 @@ async def dct_test(dut):
     test_image = '../images/' + test_image;
     t = Tester(dut, test_image, read_bmp=False)
 
-    #// Wait for reset, 1 frame of 76x76 to end
-    #delay_us('d1250);
-    await Timer(12.5, units='us')
+    # Wait for PLL to lock & global reset
+    await Timer(20, units='us')
 
     for _ in range(1):
         for _ in range(2):
@@ -249,7 +269,24 @@ async def dct_test(dut):
         await t.read_image_buffer()
         await t.write_image()
     
-        await show_image(test_image, 'jpeg_out.jpg' if t.jpeg_sel else 'rgb_out.bmp', t=0)
+        await show_image(test_image, 'jpeg_out.jpg')
 
         await cocotb.triggers.Combine(bayer)  # wait for frame end
+
+        if False:
+            '''Test start capture in the middle of a frame'''
+            bayer  = cocotb.start_soon(t.send_bayer())   
+
+            await ClockCycles(dut.cpu_clock_8hmz, 1000)
+            await t.initialize()    
+            await cocotb.triggers.Combine(bayer)  # wait for frame end
+
+            bayer  = cocotb.start_soon(t.send_bayer())   
+            await t.read_image_buffer()
+            await t.write_image('jpeg_out.frame2.jpg', 'ecs_out.frame2.bin')
+    
+            await show_image(test_image, 'jpeg_out.frame2.jpg')
+
+            await cocotb.triggers.Combine(bayer)  # wait for frame end
+
     await ClockCycles(dut.cpu_clock_8hmz, 100)

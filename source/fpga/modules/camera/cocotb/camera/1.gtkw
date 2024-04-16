@@ -1,22 +1,24 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Tue Apr  2 00:43:12 2024
+[*] Thu Apr 11 02:13:16 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase3/source/fpga/modules/camera/cocotb/camera/dump.vcd"
-[dumpfile_mtime] "Tue Apr  2 00:24:08 2024"
-[dumpfile_size] 42787593
+[dumpfile_mtime] "Thu Apr 11 02:13:16 2024"
+[dumpfile_size] 3132523753
 [savefile] "/home/rmetchev/workspace/frame-codebase3/source/fpga/modules/camera/cocotb/camera/1.gtkw"
-[timestart] 1060660000
-[size] 1649 954
-[pos] 44 -2
-*-22.233440 1073299360 1073299360 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[timestart] 0
+[size] 1654 957
+[pos] 146 19
+*-33.516747 38031097800 1073299360 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb_top.
 [treeopen] tb_top.dut.
 [treeopen] tb_top.dut.camera.
+[treeopen] tb_top.dut.camera.jpeg_encoder.
+[treeopen] tb_top.dut.camera.jpeg_encoder.jenc.
 [sst_width] 301
 [signals_width] 274
 [sst_expanded] 1
-[sst_vpaned_height] 423
+[sst_vpaned_height] 393
 @28
 tb_top.dut.camera.jpeg_buffer_clock_in
 tb_top.dut.camera.pixel_clock_in
@@ -104,25 +106,33 @@ tb_top.dut.camera.jpeg_encoder.jenc.di_hold
 tb_top.dut.camera.jpeg_encoder.jenc.di_valid
 @200
 -
+@24
+tb_top.dut.camera.jpeg_encoder.jenc.quant.x_mcu[6:0]
+tb_top.dut.camera.jpeg_encoder.jenc.quant.y_mcu[5:0]
+@200
+-
 @22
 tb_top.dut.camera.jpeg_encoder.data_out[31:0]
 @28
 tb_top.dut.camera.jpeg_encoder.data_valid_out
-@22
+@24
 tb_top.dut.camera.jpeg_encoder.address_out[15:0]
 @28
 tb_top.dut.camera.jpeg_encoder.image_valid_out
 @200
 -
+@25
+tb_top.dut.camera.spi_registers.bytes_available_in[15:0]
+tb_top.dut.camera.spi_registers.bytes_remaining[15:0]
+@200
+-
 @28
 tb_top.dut.camera.image_buffer.inferred_lram.clock_in
 @22
-tb_top.dut.camera.image_buffer.inferred_lram.write_address_in[13:0]
 tb_top.dut.camera.image_buffer.inferred_lram.write_data_in[31:0]
 @28
 tb_top.dut.camera.image_buffer.inferred_lram.write_enable_in
 @22
-tb_top.dut.camera.image_buffer.inferred_lram.read_address_in[13:0]
 tb_top.dut.camera.image_buffer.inferred_lram.read_data_out[31:0]
 @200
 -
@@ -141,7 +151,7 @@ tb_top.dut.camera.spi_registers.operand_valid_in
 tb_top.dut.camera.spi_registers.response_out[7:0]
 @28
 tb_top.dut.camera.spi_registers.response_valid_out
-@201
+@200
 -
 @28
 tb_top.spi_clock_in

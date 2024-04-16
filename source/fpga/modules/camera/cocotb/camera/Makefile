@@ -161,7 +161,9 @@ ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
         EXTRA_ARGS += +define+NO_PLL_IP_SIM     # Emulate PLL
         EXTRA_ARGS += --timing
-        EXTRA_ARGS += --trace --trace-structs
+        ifneq ($(WAVES),0)
+                EXTRA_ARGS += --trace --trace-structs --trace-fst
+        endif
         WNO = fatal WIDTHTRUNC WIDTHEXPAND ASCRANGE EOFNEWLINE PINCONNECTEMPTY DECLFILENAME GENUNNAMED VARHIDDEN UNUSEDPARAM
         EXTRA_ARGS += -Wall $(WNO:%=-Wno-%)
 endif
@@ -201,17 +203,24 @@ ifeq ($(SIM),modelsim)
 sim: ip
 endif
 
-g gtkwave:
 ifeq ($(SIM),icarus)
-	gtkwave sim_build/tb_top.fst -o -a 1.gtkw
+        DUMP := sim_build/tb_top.fst
 else
-	gtkwave dump.vcd -o -a 1.gtkw
+ifeq ($(SIM),verilator)
+        DUMP := dump.fst
+else #modelsim
+        DUMP := dump.vcd
 endif
+endif
+
+g gtkwave:
+	gtkwave $(DUMP) -o -a 1.gtkw
 
 clean::
 	rm -rf __pycache__ results.xml obj_dir
 	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin rgb332_out.npy
 	rm -rf dump.vcd dump.vcd.fst dump.vcd.fst.hier 
+	rm -rf dump.fst dump.fst.hier 
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
 	rm -rf frame_frame_vo.sdf_*.csd
 
