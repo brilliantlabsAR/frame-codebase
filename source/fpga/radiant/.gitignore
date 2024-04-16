@@ -27,6 +27,7 @@ reportview.xml
 !/huffman_codes_rom/*/*.cfg
 !/huffman_codes_rom/*/*.ipx
 !/huffman_codes_rom/*/*.txt
+/huffman_codes_rom/*/dummy_file.txt
 
 /jenc/*/*
 !/jenc/*/*.xml

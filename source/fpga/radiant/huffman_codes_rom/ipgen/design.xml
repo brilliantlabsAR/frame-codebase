@@ -23,8 +23,8 @@
                     <ipxact:configurableElementValue referenceId="RESETMODE">sync</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="user_init_mode">mem_file</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="INIT_MODE">mem_file</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="user_init_file">/home/raj/frame-codebase/source/fpga/radiant/huffman_codes_rom/ipgen/misc/huffman_codes_rom_huffman_codes_rom_copy.txt</ipxact:configurableElementValue>
-                    <ipxact:configurableElementValue referenceId="INIT_FILE">/home/raj/frame-codebase/source/fpga/radiant/huffman_codes_rom/ipgen/misc/huffman_codes_rom_huffman_codes_rom_copy.txt</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="user_init_file">/home/raj/frame-codebase/source/fpga/radiant/huffman_codes_rom/ipgen/huffman_codes_rom.txt</ipxact:configurableElementValue>
+                    <ipxact:configurableElementValue referenceId="INIT_FILE">/home/raj/frame-codebase/source/fpga/radiant/huffman_codes_rom/ipgen/huffman_codes_rom.txt</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="INIT_FILE_FORMAT">hex</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="buff_init_file">1</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="INIT_DATA_TYPE_IN">True</ipxact:configurableElementValue>
