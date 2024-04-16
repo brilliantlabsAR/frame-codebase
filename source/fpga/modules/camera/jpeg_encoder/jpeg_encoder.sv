@@ -87,7 +87,9 @@ else
     endcase        
 
 always_comb jpeg_reset_n    = ~(state == RESET);
-always_comb jpeg_en         = state inside {WAIT_FOR_FRAME_START, COMPRESS};
+//../../jpeg_encoder/jpeg_encoder.sv:90: sorry: "inside" expressions not supported yet.
+//always_comb jpeg_en         = state inside {WAIT_FOR_FRAME_START, COMPRESS};
+always_comb jpeg_en         = state == WAIT_FOR_FRAME_START | state == COMPRESS;
 always_comb image_valid_out = state == IMAGE_VALID;
 
 // image size config

@@ -33,8 +33,8 @@ export IMAGE_Y_SIZE := $(IMAGE_Y_SIZE)
 endif
 
 ifeq ($(SIM),icarus)
-EXTRA_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%)
-EXTRA_ARGS += $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
+COMPILE_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%)
+COMPILE_ARGS += $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
 else # verilator + modelsim
 EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%)
 EXTRA_ARGS += $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
@@ -139,9 +139,10 @@ VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
 
 ifeq ($(SIM),icarus)
-        EXTRA_ARGS += -DCOCOTB_SIM
-        EXTRA_ARGS += -DRADIANT
-        EXTRA_ARGS += -DTOP_SIM
+        COMPILE_ARGS += -DCOCOTB_SIM
+        COMPILE_ARGS += -DRADIANT
+        COMPILE_ARGS += -DTOP_SIM
+        COMPILE_ARGS += -DCOCOTB_ICARUS
 else # verilator + modelsim
         EXTRA_ARGS += +define+COCOTB_SIM
         EXTRA_ARGS += +define+RADIANT
@@ -149,10 +150,12 @@ else # verilator + modelsim
 endif
 
 ifeq ($(SIM),icarus)
-        EXTRA_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
-        EXTRA_ARGS += -DNO_PLL_IP_SIM           # Emulate PLL
-        EXTRA_ARGS += -Wall
-        COMPILE_ARGS += -g2005-sv
+        COMPILE_ARGS += -DINFER_HUFFMAN_CODES_ROM    # rtl version
+        COMPILE_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
+        COMPILE_ARGS += -DNO_PLL_IP_SIM           # Emulate PLL
+        COMPILE_ARGS += -Wall
+        COMPILE_ARGS += -v
+        #COMPILE_ARGS += -g2005-sv
 endif
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+INFER_HUFFMAN_CODES_ROM    # rtl version
@@ -195,10 +198,17 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 .PHONY: ip
 ip:
 	make ip -C ../../../../radiant
+ifeq ($(SIM),modelsim)
 sim: ip
+endif
 
 g gtkwave:
+ifeq ($(SIM),icarus)
+	gtkwave sim_build/tb_top.fst -o -a 1.gtkw
+else
 	gtkwave dump.vcd -o -a 1.gtkw
+endif
+
 clean::
 	rm -rf __pycache__ results.xml obj_dir
 	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin rgb332_out.npy

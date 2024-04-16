@@ -36,8 +36,8 @@ module jenc #(
     input   logic                   resetn_x22
 );
 
-always_comb if (di_valid) assert (x_size_m1[0]) else $fatal("Enforcing even image dimensions!");
-always_comb if (di_valid) assert (y_size_m1[0]) else $fatal("Enforcing even image dimensions!");
+always_comb if (di_valid) assert (x_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
+always_comb if (di_valid) assert (y_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
 
 logic signed[CW-1:0]    d[1:0];
 logic                   d_valid;

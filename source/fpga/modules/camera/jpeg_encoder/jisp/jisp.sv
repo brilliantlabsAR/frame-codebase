@@ -30,8 +30,8 @@
     input   logic               resetn
 );
 
-always_comb if (frame_valid_in) assert (x_size_m1[0]) else $fatal("Enforcing even image dimensions!");
-always_comb if (frame_valid_in) assert (y_size_m1[0]) else $fatal("Enforcing even image dimensions!");
+always_comb if (frame_valid_in) assert (x_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
+always_comb if (frame_valid_in) assert (y_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
 
 // for EBR simulations
 `ifdef COCOTB_SIM

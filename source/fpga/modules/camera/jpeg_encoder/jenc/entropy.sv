@@ -38,10 +38,16 @@ endfunction
 logic signed[10:0]          previousDC[2:0];
 always @(posedge clk)
 if (!resetn)
-    previousDC <= {'0, '0, '0};
+    //../../jpeg_encoder/jenc/entropy.sv:41: internal error: I don't know how to elaborate(ivl_type_t) this expression: {'d0, 'd0, 'd0}
+    //previousDC <= {'0, '0, '0};
+    for (int c=0; c<3; c++)
+        previousDC[c] <= '0;
 else if (q_valid & !q_hold)
     if (q_last_mcu & &q_cnt)  //  EOF reset
-        previousDC <= {'0, '0, '0};
+        //../../jpeg_encoder/jenc/entropy.sv:44: internal error: I don't know how to elaborate(ivl_type_t) this expression: {'d0, 'd0, 'd0}
+        //previousDC <= {'0, '0, '0};
+        for (int c=0; c<3; c++)
+            previousDC[c] <= '0;
     else if (q_cnt == 0)
         previousDC[q_chroma] <= q[0];
     

@@ -66,7 +66,12 @@ always @(posedge clk)
 if (di_valid & !q_hold) begin
     di0_chroma  <= zigzag_mcu_cnt[2] ? (zigzag_mcu_cnt[0] ? 2 : 1) : 0;
     di0_cnt     <= di_cnt;
-    di0         <= di;
+    // ../../jpeg_encoder/jenc/quant.sv:69: error: the type of the variable 'di' doesn't match the context type.
+    // ../../jpeg_encoder/jenc/quant.sv:69:      : variable type=netvector_t:logic signed[14:0]
+    // ../../jpeg_encoder/jenc/quant.sv:69:      : context type=11netuarray_t
+    //di0         <= di;
+    di0[0]      <= di[0];
+    di0[1]      <= di[1];
 end
 
 logic [M_BITS-1:0]  q_factor[1:0];
