@@ -20,7 +20,6 @@ JPEG_SEL = 1
 export GATE_SIM := $(GATE_SIM)
 export JPEG_SEL := $(JPEG_SEL)
 
-IMG16X16 = 1
 ifeq ($(IMG16X16),1)
 SENSOR_X_SIZE = 20
 SENSOR_Y_SIZE = 20

@@ -127,8 +127,10 @@ class Tester(SPITransactor):
             self.img_bayer = self.img_bayer[0:, 180:]
             self.img_bgr = self.img_bgr[0:, 180:, :]
 
-        self.y = int(os.environ.get('SENSOR_Y_SIZE', 768))
-        self.x = int(os.environ.get('SENSOR_X_SIZE', 1288))
+        #self.y = int(os.environ.get('SENSOR_Y_SIZE', 768))
+        #self.x = int(os.environ.get('SENSOR_X_SIZE', 1288))
+        self.y = int(os.environ.get('SENSOR_Y_SIZE', 208))
+        self.x = int(os.environ.get('SENSOR_X_SIZE', 208))
         self.img_bayer = self.img_bayer[:self.y, :self.x]
         self.y = int(os.environ.get('IMAGE_Y_SIZE', 200))
         self.x = int(os.environ.get('IMAGE_X_SIZE', 200))
@@ -179,7 +181,7 @@ class Tester(SPITransactor):
                     break
 
         # read address -> need to add 4 to get size in bytes
-        read_data = await self.spi_write_read(0x31, *[0xff]*3)
+        read_data = await self.spi_write_read(0x31, *[0xff]*2)
         bytes = 4 + sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
         print(bytes)
 
