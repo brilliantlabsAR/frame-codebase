@@ -48,7 +48,9 @@ module camera (
     output logic response_valid_out
 );
 
-logic start_capture;
+logic start_capture_spi_clock_domain;
+logic start_capture_metastable;
+logic start_capture_pixel_clock_domain;
 logic [10:0] x_resolution = 512;
 logic [10:0] y_resolution = 512;
 logic [10:0] x_pan = 0;
@@ -77,7 +79,7 @@ spi_registers spi_registers (
     .response_out(response_out),
     .response_valid_out(response_valid_out),
 
-    .start_capture_out(start_capture),
+    .start_capture_out(start_capture_spi_clock_domain),
     // .x_resolution_out(x_resolution),
     // .y_resolution_out(y_resolution),
     // .x_pan_out(x_pan),
@@ -94,6 +96,18 @@ spi_registers spi_registers (
     .green_average_metering_in(green_average_metering_spi_clock_domain),
     .blue_average_metering_in(blue_average_metering_spi_clock_domain)
 );
+
+always @(posedge pixel_clock_in) begin
+    if (pixel_reset_n_in == 0) begin
+        start_capture_metastable <= 0;
+        start_capture_pixel_clock_domain <= 0;
+    end
+
+    else begin
+        start_capture_metastable <= start_capture_spi_clock_domain;
+        start_capture_pixel_clock_domain <= start_capture_metastable;
+    end
+end
 
 logic [9:0] byte_to_pixel_data;
 logic byte_to_pixel_line_valid;
@@ -368,7 +382,7 @@ jpeg jpeg (
     .line_valid_in(zoomed_line_valid),
     .frame_valid_in(zoomed_frame_valid),
 
-    .start_capture_in(start_capture),
+    .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
     .y_size_in(y_resolution),
     .quality_factor_in(quality_factor),
@@ -378,6 +392,8 @@ jpeg jpeg (
     .address_out(final_image_address),
     .image_valid_out(final_image_complete)
 );
+
+always_comb bytes_available = 40000;//final_image_address + 4;
 
 image_buffer image_buffer (
     .write_clock_in(pixel_clock_in),
