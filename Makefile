@@ -31,7 +31,7 @@ BUILD := build
 ifeq ($(shell uname), Darwin)
 	PORT = $(shell ls /dev/cu.usbmodem*1 2> /dev/null | grep "cu.")
 else
-	PORT = $(shell uname)
+	PORT = /dev/ttyACM0
 endif
 
 application: 

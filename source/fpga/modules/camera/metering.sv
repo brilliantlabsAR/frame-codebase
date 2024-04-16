@@ -23,7 +23,8 @@ module metering #(
 
     output logic [7:0] red_metering_out,
     output logic [7:0] green_metering_out,
-    output logic [7:0] blue_metering_out
+    output logic [7:0] blue_metering_out,
+    output logic metering_ready_out
 );
 
 // Assumes a 720x720 image
@@ -58,6 +59,10 @@ always_ff @(posedge clock_in) begin
             red_metering_out <= average_red_metering[BITS - 1:BITS - 8];
             green_metering_out <= average_green_metering[BITS - 1:BITS - 8];
             blue_metering_out <= average_blue_metering[BITS - 1:BITS - 8];
+            metering_ready_out <= 0;
+        end
+        else begin
+            metering_ready_out <= 1;
         end
 
         average_red_metering <= 0;
@@ -69,6 +74,7 @@ always_ff @(posedge clock_in) begin
     else begin
 
         previous_line_valid <= line_valid_in;
+        metering_ready_out <= 0;
 
         // Increment counters
         if (line_valid_in) begin
