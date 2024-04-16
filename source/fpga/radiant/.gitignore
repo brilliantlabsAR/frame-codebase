@@ -22,15 +22,21 @@ reportview.xml
 !/csi2_receiver_ip/*.cfg
 !/csi2_receiver_ip/*.ipx
 
-/sim_only/csi2_transmitter_ip/*
-!/sim_only/csi2_transmitter_ip/*.xml
-!/sim_only/csi2_transmitter_ip/*.cfg
-!/sim_only/csi2_transmitter_ip/*.ipx
+/huffman_codes_rom/*/*
+!/huffman_codes_rom/*/*.xml
+!/huffman_codes_rom/*/*.cfg
+!/huffman_codes_rom/*/*.ipx
+!/huffman_codes_rom/*/*.txt
 
-/sim_only/pixel_to_byte_ip/*
-!/sim_only/pixel_to_byte_ip/*.xml
-!/sim_only/pixel_to_byte_ip/*.cfg
-!/sim_only/pixel_to_byte_ip/*.ipx
+/jenc/*/*
+!/jenc/*/*.xml
+!/jenc/*/*.cfg
+!/jenc/*/*.ipx
+
+/jisp/*/*
+!/jisp/*/*.xml
+!/jisp/*/*.cfg
+!/jisp/*/*.ipx
 
 # Logs and reports
 radiantc.*
