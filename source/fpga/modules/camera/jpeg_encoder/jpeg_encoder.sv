@@ -9,7 +9,7 @@
  */
  module jpeg_encoder #(
     parameter DW = 8,
-    parameter SENSOR_X_SIZE    = 1280,
+    parameter SENSOR_X_SIZE    = 720, //1280,
     parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic               start_capture_in,

@@ -8,7 +8,7 @@
  * Copyright (C) 2024 Robert Metchev
  */
  module mcu_buffer #(
-    parameter SENSOR_X_SIZE = 'd1280,
+    parameter SENSOR_X_SIZE = 'd720,
     parameter SENSOR_Y_SIZE = 'd720,
     parameter DW            = 8,
     parameter JPEG_BIAS     = 8'd128
@@ -61,8 +61,8 @@ else if (!full & yuvrgb_in_valid[0] & (yuvrgb_in_line_count[3:0]==15 | yuvrgb_in
 
 400:    Y:  0       U:  -       V:  -
 */
-logic[$clog2(Y_LINE_BUF_SIZE/16)-1:0]    block_count; // 6 bits for 4:2:0, 4:2:2 (7 bits for 4:4:4, 4:0:0)
-logic[$clog2(Y_LINE_BUF_SIZE/16)-1:0]    block_v_count; // 6 bits for 4:2:0 (7 bits for 4:2:2, 4:4:4, 4:0:0)
+logic[$clog2(SENSOR_X_SIZE/16)-1:0]    block_count; // 6 bits for 4:2:0, 4:2:2 (7 bits for 4:4:4, 4:0:0)
+logic[$clog2(SENSOR_Y_SIZE/16)-1:0]    block_v_count; // 6 bits for 4:2:0 (7 bits for 4:2:2, 4:4:4, 4:0:0)
 logic[$clog2(6)-1:0]        mcu_count, mcu_count_0;
 logic[2:0]                  mcu_line_count; // 8 bytes at a time
 logic[(8*DW)-1:0]           rd_y, rd_uv;
@@ -102,21 +102,6 @@ else if (!di_hold & !empty) begin
             mcu_count <= mcu_count + 1;             // 2. count 6 MCUs
 end
 
-// keep track of exact x/y read positions of pixels (for 4:2:0 only for now)
-// here juat for the read side
-/*
-logic[$clog2(SENSOR_X_SIZE)-1:0] r_x_luma;
-logic[$clog2(SENSOR_Y_SIZE)-1:0] r_y_luma;
-logic[$clog2(SENSOR_X_SIZE)-1:0] r_x_chroma;
-logic[$clog2(SENSOR_Y_SIZE)-1:0] r_y_chroma;
-
-always_comb r_x_luma  =  {block_count, mcu_count[0], 3'b000};
-always_comb r_x_chroma  =  {block_count, 3'b000};
-
-always_comb r_y_luma  =  {block_v_count, mcu_count[1], mcu_line_count};
-always_comb r_y_chroma  =  {block_v_count, mcu_line_count};
-*/
-
 // Y buffer
 //
 // Write Address: 
@@ -134,13 +119,39 @@ always_comb r_y_chroma  =  {block_v_count, mcu_line_count};
 //  1 bit 2 8x8 MCU per block horizontally
 //  6 bits block count
 
-/*
-logic [2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/64 - 1:0] ra_luma; //9bits
-logic [2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/64 - 1:0] ra_chroma; //7bits
-//#always_comb
-//#{{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}
-//end
-*/
+// Read addresses
+logic [$clog2(2*Y_LINE_BUF_SIZE*Y_LINE_BUF_HEIGHT/8) - 1:0] ra_luma; //12 bits
+logic [$clog2(2*2*UV_LINE_BUF_SIZE*UV_LINE_BUF_HEIGHT/8) - 1:0] ra_chroma; //11 bits
+
+// X/Y positions tracking
+logic [$clog2(SENSOR_X_SIZE)-1:0] r_x_luma;
+logic [$clog2(SENSOR_Y_SIZE)-1:0] r_y_luma;
+logic [$clog2(SENSOR_X_SIZE)-1:0] r_x_chroma;
+logic [$clog2(SENSOR_Y_SIZE)-1:0] r_y_chroma;
+
+// Partial MCU/Non-aligned sizes
+logic luma_gray_out_x, luma_gray_out_y;
+logic luma_gray_out_z1;
+logic freeze_y;
+
+always_comb ra_luma = {{block_count, mcu_count[0]}, (r_y_luma > y_size_m1) ? y_size_m1[3:0] : {mcu_count[1], mcu_line_count}, rptr[0]};
+always_comb ra_chroma = {block_count, (r_y_chroma > (y_size_m1>>1)) ? y_size_m1[3:1] : mcu_line_count, rptr[0], mcu_count[0]};
+
+always_comb r_x_luma  =  {{block_count, mcu_count[0]}, 3'b000};
+always_comb r_y_luma  =  {block_v_count, {mcu_count[1], mcu_line_count}};
+
+always_comb r_x_chroma  =  {block_count, 3'b000};
+always_comb r_y_chroma  =  {block_v_count, mcu_line_count};
+
+always_comb luma_gray_out_x = (r_x_luma>>3) > (x_size_m1>>3); // only for luma
+always_comb luma_gray_out_y = (r_y_luma>>3) > (y_size_m1>>3); // only for luma
+always_comb freeze_y = (mcu_count <= 3) ? (r_y_luma > y_size_m1) : (r_y_chroma > (y_size_m1>>1));
+
+logic re_luma;
+always_comb re_luma = !di_hold & !empty & mcu_count <= 3;
+
+// delay gray out
+always @(posedge clk) if (re_luma) luma_gray_out_z1 <= luma_gray_out_x | luma_gray_out_y;
 
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
@@ -151,8 +162,8 @@ dp_ram_be  #(
     .wd     ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
     .wbe    ((yuvrgb_in_pixel_count==x_size_m1 ? '1 : 1) << (yuvrgb_in_pixel_count & 7)),
     .we     (yuvrgb_in_valid[0] & !yuvrgb_in_hold),
-    .ra     ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}),
-    .re     (!di_hold & !empty & mcu_count <= 3),
+    .ra     (ra_luma),
+    .re     (re_luma),
     .rd     (rd_y),
     .rclk   (clk),
     .wclk   (clk)
@@ -165,9 +176,9 @@ ram_dp_w64_b8_d2880 y_buf (
     .wr_en_i    (yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
     .wr_clk_en_i(yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
 
-    .rd_addr_i  ({{block_count, mcu_count[0]}, {mcu_count[1], mcu_line_count}, rptr[0]}), 
-    .rd_en_i    (!di_hold & !empty & mcu_count <= 3), 
-    .rd_clk_en_i(!di_hold & !empty & mcu_count <= 3), 
+    .rd_addr_i  (ra_luma), 
+    .rd_en_i    (re_luma), 
+    .rd_clk_en_i(re_luma), 
     .rd_data_o  (rd_y), 
     .wr_clk_i   (clk), 
     .rd_clk_i   (clk), 
@@ -195,7 +206,7 @@ logic               uv_buf_we;
 
 always_comb uv_buf_wa = {(yuvrgb_in_pixel_count >> 4), yuvrgb_in_line_count[3:1], wptr[0], yuvrgb_in_valid[2]}; // LSB selects U/V
 always_comb uv_buf_wd = (yuvrgb_in_valid[2] ? yuvrgb_in[2] : yuvrgb_in[1]) - JPEG_BIAS; // <== JPEG bias!
-always_comb uv_buf_wbe = (yuvrgb_in_pixel_count==x_size_m1 ? '1 : 1) << ((yuvrgb_in_pixel_count >> 1) & 7);
+always_comb uv_buf_wbe = ((yuvrgb_in_pixel_count >> 1) == (x_size_m1 >> 1) ? '1 : 1) << ((yuvrgb_in_pixel_count >> 1) & 7);
 always_comb uv_buf_we = |yuvrgb_in_valid[2:1] & ~yuvrgb_in_hold;
 
 `ifndef USE_LATTICE_EBR
@@ -207,7 +218,7 @@ dp_ram_be  #(
     .wd     ({8{uv_buf_wd}}),
     .wbe    (uv_buf_wbe),
     .we     (uv_buf_we),
-    .ra     ({block_count, mcu_line_count, rptr[0], mcu_count[0]}),
+    .ra     (ra_chroma),
     .re     (!di_hold & !empty & mcu_count > 3 ),
     .rd     (rd_uv),
     .rclk   (clk),
@@ -221,7 +232,7 @@ ram_dp_w64_b8_d1440 uv_buf (
     .wr_en_i    (uv_buf_we),
     .wr_clk_en_i(uv_buf_we),
 
-    .rd_addr_i  ({block_count, mcu_line_count, rptr[0], mcu_count[0]}), 
+    .rd_addr_i  (ra_chroma), 
     .rd_en_i    (!di_hold & !empty & mcu_count > 3), 
     .rd_clk_en_i(!di_hold & !empty & mcu_count > 3), 
     .rd_data_o  (rd_uv), 
@@ -238,22 +249,7 @@ if (!di_hold & !empty)
 
 always_comb 
     for (int i=0; i<8; i++)
-        di[i] = mcu_count_0 < 4 ? rd_y[i*8 +: 8] : rd_uv[i*8 +: 8];
-
-/*
-always_comb begin
-    for (int i=0; i<8; i++)
-        // unaligned image size: replicate
-        if (rsel==0 & (r_x_luma >> 3) == (x_size_m1 >> 3) & i > x_size_m1[2:0])
-            di[i] = rd[rsel][x_size_m1[2:0]];
-        //if ((rsel==0 ? (r_x_luma >> 3) == (x_size_m1 >> 3) : (r_x_chroma >> 3) == (x_size_m1 >> 4)) & i > x_size_m1[2:0])
-        //if ((rsel==0 ? (r_x_luma >> 3) == (x_size_m1 >> 3) : (r_x_chroma >> 3) == (x_size_m1 >> 4)) & i > x_size_m1[2:0])
-        else if (rsel>0 & (r_x_chroma >> 3) == (x_size_m1 >> 4) & i > x_size_m1[3:1])
-            di[i] = rd[rsel][x_size_m1[3:1]];
-        else
-            di[i] = rd[rsel][i*8 +: 8];
-end
-*/
+        di[i] = mcu_count_0 < 4 ? luma_gray_out_z1? 0 : rd_y[i*8 +: 8] : rd_uv[i*8 +: 8];
 
 always @(posedge clk)
 if (!resetn) 
