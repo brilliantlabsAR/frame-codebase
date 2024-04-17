@@ -5,6 +5,38 @@
 #
 # Copyright (C) 2024 Robert Metchev
 #
+
+Instructions:
+1.) RTL sim with verilator: 64-bit environment. Bypassed Lattice IP in test bench and camera.
+$> make clean
+$> make SIM=verilator
+Result: jpeg_out.jpg
+
+2.) RTL sim with modelsim: *32-bit* environment (see below). Includes CSI and other Lattice IP in test bench and camera.
+$> make ip -C ../../../../radiant/      # This uses ipgen to build Lattice IP 
+$> make clean
+$> make SIM=modelsim
+Result: jpeg_out.jpg
+
+3.) Gate sim with modelsim: *32-bit* environment (see below).
+Required: Gate level netlist (frame_frame_vo.v) and SDF file (frame_frame_vo.sdf)
+
+3a.) No SDF: Same as 2.) with
+$> make clean
+$> make SIM=modelsim .... GATE_SIM=1
+
+3b.) With SDF: Same as 3a.) with
+$> make clean
+$> make SIM=modelsim .... GATE_SIM=1 SDF_ANNO=1
+
+4.) RTL sim with icarus verilog: 64-bit environment. Bypassed Lattice IP in test bench and camera.
+$> make clean
+$> make SIM=icarus
+Result: jpeg_out.jpg
+
+
+
+Note:
 Lattice IP is internally encryped and thus can be simulated only with the
 Modelsim simulator provided Lattice. This Modelsim simulator is a 32-bit
 executable and requires a 32-bit Python installation with 32-bit Cocotb (and
@@ -31,39 +63,5 @@ $> make clean
 $> make SIM=verilator
 
 
-
-Instructions:
-1.) RTL sim with verilator: *64 bit* environment (see above). Bypassed Lattice IP in test bench and camera.
-$> make clean
-
-1a.) JPEG 
-$> make SIM=verilator
-Result: jpeg_out.jpg
-
-1b.) RGB
-$> make SIM=verilator JPEG_SEL=0
-Result: rgb_out.bmp
-
-2.) RTL sim with modelsim: *32 bit* environment (see above). Includes SPI and other Lattice IP in test bench and camera.
-$> make ip -C ../../../../radiant/      # This uses ipgen to build Lattice IP 
-$> make clean
-
-2a.) JPEG 
-$> make SIM=modelsim
-Result: jpeg_out.jpg
-
-2b.) RGB
-$> make SIM=modelsim JPEG_SEL=0
-Result: rgb_out.bmp.npy
-Switch to terminal with *64 bit* environment
-$> make bmp
-This will create rgb_out.bmp
-
-3.) Gate sim with modelsim: *32 bit* environment (see above).  
-3a.) No SDF: Same as 2a.) or 2b.) with
-$> make SIM=modelsim .... GATE_SIM=1
-
-3a.) With SDF timing annotation: Same as 2a.) or 2b.) (or 3a.)) with
-$> make SIM=modelsim .... GATE_SIM=1 SDF_ANNO=1
 
 
