@@ -83,7 +83,7 @@ spi_registers spi_registers (
     // .x_resolution_out(x_resolution),
     // .y_resolution_out(y_resolution),
     // .x_pan_out(x_pan),
-    // .compression_factor_out(compression_factor),
+    .compression_factor_out(compression_factor),
 
     .bytes_available_in(bytes_available),
     .data_in(image_buffer_data),
