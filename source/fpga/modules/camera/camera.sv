@@ -372,8 +372,8 @@ jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .jpeg_fast_clock_in(pixel_clock_in),
-    .jpeg_fast_reset_n_in(pixel_reset_n_in),
+    .jpeg_fast_clock_in(jpeg_buffer_clock_in),
+    .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
