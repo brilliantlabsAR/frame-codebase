@@ -17,8 +17,11 @@
 `endif
 
 module graphics (
-    input logic clock_in,
-    input logic reset_n_in,
+    input logic spi_clock_in, // 72MHz
+    input logic spi_reset_n_in,
+
+    input logic display_clock_in, // 36MHz
+    input logic display_reset_n_in,
 
     input logic [7:0] op_code_in,
     input logic op_code_valid_in,
@@ -59,10 +62,10 @@ logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
 logic [3:0] sprite_palette_offset_reg; // 0 - 15
 
 // Handle op-codes as they come in
-always_ff @(posedge clock_in) begin
+always_ff @(posedge spi_clock_in) begin
     
     // Always clear flags after the opcode has been handled
-    if (op_code_valid_in == 0 || reset_n_in == 0) begin
+    if (op_code_valid_in == 0 || spi_reset_n_in == 0) begin
         clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
         sprite_enable_flag <= 0;
@@ -135,9 +138,9 @@ end
 // State machine to clear the screen
 logic [1:0] pixel_pulse_counter;
 
-always_ff @(posedge clock_in) begin
+always_ff @(posedge display_clock_in) begin
     
-    if (reset_n_in == 0) begin
+    if (display_reset_n_in == 0) begin
         clear_buffer_in_progress_flag <= 0;
         clear_buffer_address_reg <= 0;
         pixel_pulse_counter <= 0;
@@ -184,29 +187,35 @@ logic [17:0] pixel_write_address_mux_to_buffer_wire;
 logic [3:0] pixel_write_data_mux_to_buffer_wire;
 
 always_comb begin
-    if (clear_buffer_in_progress_flag) begin
+    case ({
+        clear_buffer_in_progress_flag,
+        pixel_write_enable_sprite_to_mux_wire,
+        pixel_write_enable_vector_to_mux_wire
+    })
+    3'b100: begin
         pixel_write_enable_mux_to_buffer_wire = 1'b1;
         pixel_write_address_mux_to_buffer_wire = clear_buffer_address_reg;
         pixel_write_data_mux_to_buffer_wire = 4'b0;
     end
 
-    else if (pixel_write_enable_sprite_to_mux_wire) begin
+    3'b010: begin
         pixel_write_enable_mux_to_buffer_wire = 1'b1;
         pixel_write_address_mux_to_buffer_wire = pixel_write_address_sprite_to_mux_wire;
         pixel_write_data_mux_to_buffer_wire = pixel_write_data_sprite_to_mux_wire;
     end
 
-    else if (pixel_write_enable_vector_to_mux_wire) begin
+    3'b001: begin
         pixel_write_enable_mux_to_buffer_wire = 1'b1;
         pixel_write_address_mux_to_buffer_wire = pixel_write_address_vector_to_mux_wire;
         pixel_write_data_mux_to_buffer_wire = pixel_write_data_vector_to_mux_wire;
     end
 
-    else begin
+    default: begin
         pixel_write_enable_mux_to_buffer_wire = 1'b0;
         pixel_write_address_mux_to_buffer_wire = 18'b0;
         pixel_write_data_mux_to_buffer_wire = 4'b0;
     end
+    endcase
 end
 
 // Wire address from driver to buffer, with return data going through the palette
@@ -215,8 +224,8 @@ logic [3:0] color_data_buffer_to_palette_wire;
 logic [9:0] color_data_palette_to_driver_wire;
 
 display_buffers display_buffers (
-    .clock_in(clock_in),
-    .reset_n_in(reset_n_in),
+    .clock_in(display_clock_in),
+    .reset_n_in(display_reset_n_in),
 
     .pixel_write_enable_in(pixel_write_enable_mux_to_buffer_wire),
     .pixel_write_address_in(pixel_write_address_mux_to_buffer_wire),
@@ -229,8 +238,8 @@ display_buffers display_buffers (
 );
 
 color_palette color_palette (
-    .clock_in(clock_in),
-    .reset_n_in(reset_n_in),
+    .clock_in(display_clock_in),
+    .reset_n_in(display_reset_n_in),
 
     .pixel_index_in(color_data_buffer_to_palette_wire),
     .yuv_color_out(color_data_palette_to_driver_wire),
@@ -241,8 +250,8 @@ color_palette color_palette (
 );
 
 display_driver display_driver (
-    .clock_in(clock_in),
-    .reset_n_in(reset_n_in),
+    .clock_in(display_clock_in),
+    .reset_n_in(display_reset_n_in),
 
     .pixel_data_address_out(read_address_driver_to_buffer_wire),
     .pixel_data_value_in(color_data_palette_to_driver_wire),
@@ -256,8 +265,8 @@ display_driver display_driver (
 );
 
 sprite_engine sprite_engine (
-    .clock_in(clock_in),
-    .reset_n_in(reset_n_in),
+    .clock_in(display_clock_in),
+    .reset_n_in(display_reset_n_in),
     .enable_in(sprite_enable_flag),
 
     .x_position_in(sprite_x_position_reg),
