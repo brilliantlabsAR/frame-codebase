@@ -55,6 +55,7 @@ logic camera_clock;
 logic camera_pixel_clock;
 logic display_clock;
 logic spi_peripheral_clock;
+logic jpeg_buffer_clock;
 logic pll_locked;
 logic pll_reset;
 

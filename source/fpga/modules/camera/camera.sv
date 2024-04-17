@@ -54,7 +54,7 @@ logic start_capture_pixel_clock_domain;
 logic [10:0] x_resolution = 512;
 logic [10:0] y_resolution = 512;
 logic [10:0] x_pan = 0;
-logic [3:0] quality_factor;
+logic [3:0] compression_factor;
 
 logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
@@ -83,7 +83,7 @@ spi_registers spi_registers (
     // .x_resolution_out(x_resolution),
     // .y_resolution_out(y_resolution),
     // .x_pan_out(x_pan),
-    .quality_factor_out(quality_factor),
+    // .compression_factor_out(compression_factor),
 
     .bytes_available_in(bytes_available),
     .data_in(image_buffer_data),
@@ -372,8 +372,8 @@ jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .jpeg_fast_clock_in(jpeg_buffer_clock_in),
-    .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
+    .jpeg_fast_clock_in(pixel_clock_in),
+    .jpeg_fast_reset_n_in(pixel_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
@@ -384,7 +384,7 @@ jpeg_encoder jpeg_encoder (
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
     .y_size_in(y_resolution),
-    .compression_factor_in(quality_factor),
+    .compression_factor_in(compression_factor),
 
     .data_out(final_image_data),
     .data_valid_out(final_image_data_valid),
