@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include "error_logging.h"
 #include "i2c.h"
+#include "jpeg.h"
 #include "lauxlib.h"
 #include "lua.h"
 #include "nrf_gpio.h"
@@ -49,6 +50,9 @@ static struct camera_auto_last_values
     .gain = 0,
 };
 
+static size_t jpeg_header_bytes_sent_out = 0;
+static size_t jpeg_footer_bytes_sent_out = 0;
+
 static int lua_camera_capture(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
@@ -57,6 +61,8 @@ static int lua_camera_capture(lua_State *L)
     }
 
     spi_write(FPGA, 0x20, NULL, 0);
+    jpeg_header_bytes_sent_out = 0;
+    jpeg_footer_bytes_sent_out = 0;
     return 0;
 }
 
@@ -75,35 +81,99 @@ static uint16_t get_bytes_available(void)
 static int lua_camera_read(lua_State *L)
 {
     lua_Integer bytes_requested = luaL_checkinteger(L, 1);
-
-    uint16_t bytes_available = get_bytes_available();
-
     if (bytes_requested <= 0)
     {
         luaL_error(L, "bytes must be greater than 0");
     }
 
-    if (bytes_available <= 0)
+    size_t bytes_remaining = bytes_requested;
+
+    // LOG("Requested: %llu bytes", bytes_requested);
+
+    uint8_t *payload = malloc(bytes_requested);
+    if (payload == NULL)
+    {
+        luaL_error(L, "bytes requested is too large");
+    }
+
+    // Append JPEG header data
+    if (jpeg_header_bytes_sent_out < sizeof(jpeg_header))
+    {
+        size_t length =
+            sizeof(jpeg_header) - jpeg_header_bytes_sent_out < bytes_requested
+                ? sizeof(jpeg_header) - jpeg_header_bytes_sent_out
+                : bytes_requested;
+
+        // LOG("  written %u bytes of header", length);
+        memcpy(payload, jpeg_header + jpeg_header_bytes_sent_out, length);
+
+        jpeg_header_bytes_sent_out += length;
+        bytes_remaining -= length;
+    }
+
+    else
+    {
+        uint16_t image_bytes_available = get_bytes_available();
+
+        // Append image data
+        if (image_bytes_available > 0)
+        {
+            if (bytes_remaining > 0)
+            {
+
+                // append image data
+                size_t length = bytes_remaining < image_bytes_available
+                                    ? bytes_remaining
+                                    : image_bytes_available;
+
+                spi_read(FPGA,
+                         0x22,
+                         payload + bytes_requested - bytes_remaining,
+                         length);
+
+                bytes_remaining -= length;
+
+                LOG("  written %u bytes of image data", length);
+            }
+        }
+
+        else
+        {
+            // append footer 0xFF
+            if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 0)
+            {
+                payload[bytes_requested - bytes_remaining] = 0xFF;
+                jpeg_footer_bytes_sent_out++;
+                bytes_remaining--;
+                LOG("  written 0xFF of footer");
+            }
+
+            // append footer 0xD9
+            if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 1)
+            {
+                payload[bytes_requested - bytes_remaining] = 0xD9;
+                jpeg_footer_bytes_sent_out++;
+                bytes_remaining--;
+                LOG("  written 0xD9 of footer");
+            }
+        }
+    }
+
+    // Return nill if nothing was written to payload
+    if (bytes_remaining == bytes_requested)
     {
         lua_pushnil(L);
-        return 1;
+        // LOG("  all done");
     }
 
-    uint16_t length = bytes_available < bytes_requested
-                          ? bytes_available
-                          : bytes_requested;
-
-    uint8_t *data = malloc(length);
-    if (data == NULL)
+    // Otherwise return payload
+    else
     {
-        luaL_error(L, "not enough memory");
+        lua_pushlstring(L, (char *)payload, bytes_requested - bytes_remaining);
+        // LOG("  sent");
     }
 
-    spi_read(FPGA, 0x22, data, length);
-
-    lua_pushlstring(L, (char *)data, length);
-    free(data);
-
+    free(payload);
     return 1;
 }
 

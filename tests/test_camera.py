@@ -1,35 +1,32 @@
-"""
-Tests the Frame specific Lua libraries over Bluetooth.
-"""
-
-import asyncio
 from frameutils import Bluetooth
-from PIL import Image
-import numpy as np
+import asyncio
 
 image_buffer = b""
-expected_length = 40000
+done = False
 
 
 def receive_data(data):
     global image_buffer
-    global expected_length
-    image_buffer += data
-    print(
-        f"Received {str(len(image_buffer))} / {str(int(expected_length))} bytes",
-        end="\r",
-    )
+    global done
+
+    if data[0] == 0x00:
+        done = True
+        return
+
+    image_buffer += data[1:]
+    print(f"Received {str(len(image_buffer)-1)} bytes", end="\r")
 
 
 async def capture_and_download(b: Bluetooth, height, width):
     global image_buffer
-    global expected_length
+    global done
     image_buffer = b""
+    done = False
 
     print("Exposing")
     for _ in range(30):
-        await asyncio.sleep(0.1)
         await b.send_lua("frame.camera.auto{ metering = 'CENTER_WEIGHTED' }")
+        await asyncio.sleep(0.1)
 
     print("Capturing image")
     await b.send_lua("frame.camera.capture()")
@@ -37,39 +34,25 @@ async def capture_and_download(b: Bluetooth, height, width):
 
     print("Downloading image")
     await b.send_lua(
-        "while true do local i = frame.camera.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end"
+        "while true do local i=frame.camera.read(frame.bluetooth.max_length()-1) if (i==nil) then break end while true do if pcall(frame.bluetooth.send,'\\x01'..i) then break end end end frame.sleep(0.1); frame.bluetooth.send('\\x00')"
     )
 
-    while len(image_buffer) < expected_length:
+    while done == False:
         await asyncio.sleep(0.001)
 
-    print("\nConverting to image")
+    print("\nDone. Saving image")
 
-    image_data = np.frombuffer(image_buffer, dtype=np.uint8)
-    rgb_array = np.zeros((height, width, 3), dtype=np.uint8)
-
-    for y in range(height):
-        for x in range(width):
-            pixel = image_data[y * width + x]
-
-            red = (pixel & 0b11100000) >> 5
-            green = (pixel & 0b00011100) >> 2
-            blue = pixel & 0b00000011
-
-            red = (0b11111111 / 0b111) * red
-            green = (0b11111111 / 0b111) * green
-            blue = (0b11111111 / 0b11) * blue
-
-            rgb_array[y, x] = [red, green, blue]
-
-    image = Image.fromarray(rgb_array)
-    image.show()
+    with open("test_camera_image.jpg", "wb") as f:
+        f.write(image_buffer)
 
 
 async def main():
     b = Bluetooth()
 
-    await b.connect(data_response_handler=receive_data)
+    await b.connect(
+        data_response_handler=receive_data,
+        print_response_handler=lambda s: print(s),
+    )
 
     await capture_and_download(b, 200, 200)
 
