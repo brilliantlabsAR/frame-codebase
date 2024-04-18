@@ -13,7 +13,7 @@
 `include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
 `include "modules/camera/image_buffer.sv"
-`include "modules/camera/jpeg/jpeg.sv"
+`include "modules/camera/jpeg_encoder/jpeg_encoder.sv"
 `include "modules/camera/metering.sv"
 `include "modules/camera/spi_registers.sv"
 `endif
@@ -48,17 +48,15 @@ module camera (
     output logic response_valid_out
 );
 
-// TODO position signals
-logic start_capture_spi_domain;
-logic [3:0] quality_factor_spi_domain;
-
+logic start_capture_spi_clock_domain;
 logic start_capture_metastable;
-logic [3:0] quality_factor_metastable;
+logic start_capture_pixel_clock_domain;
+logic [10:0] x_resolution = 512;
+logic [10:0] y_resolution = 512;
+logic [10:0] x_pan = 0;
+logic [3:0] compression_factor;
 
-logic start_capture_pixel_domain;
-logic [3:0] quality_factor_pixel_domain;
-
-logic [15:0] bytes_available = 40000; // TODO connect this
+logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
 logic [15:0] image_buffer_address;
 
@@ -81,9 +79,11 @@ spi_registers spi_registers (
     .response_out(response_out),
     .response_valid_out(response_valid_out),
 
-    .start_capture_out(start_capture_spi_domain),
-    // TODO position signals
-    .quality_factor_out(quality_factor_spi_domain),
+    .start_capture_out(start_capture_spi_clock_domain),
+    // .x_resolution_out(x_resolution),
+    // .y_resolution_out(y_resolution),
+    // .x_pan_out(x_pan),
+    .compression_factor_out(compression_factor),
 
     .bytes_available_in(bytes_available),
     .data_in(image_buffer_data),
@@ -100,18 +100,12 @@ spi_registers spi_registers (
 always @(posedge pixel_clock_in) begin
     if (pixel_reset_n_in == 0) begin
         start_capture_metastable <= 0;
-        quality_factor_metastable <= 0;
-
-        start_capture_pixel_domain <= 0;
-        quality_factor_pixel_domain <= 0;
+        start_capture_pixel_clock_domain <= 0;
     end
 
     else begin
-        start_capture_metastable <= start_capture_spi_domain;
-        quality_factor_metastable <= quality_factor_spi_domain;
-
-        start_capture_pixel_domain <= start_capture_metastable;
-        quality_factor_pixel_domain <= quality_factor_metastable;
+        start_capture_metastable <= start_capture_spi_clock_domain;
+        start_capture_pixel_clock_domain <= start_capture_metastable;
     end
 end
 
@@ -265,16 +259,15 @@ debayer debayer (
 logic [7:0] red_center_metering_pixel_clock_domain;
 logic [7:0] green_center_metering_pixel_clock_domain;
 logic [7:0] blue_center_metering_pixel_clock_domain;
+logic center_metering_ready_pixel_clock_domain;
+logic center_metering_ready_metastable;
+logic center_metering_ready_spi_clock_domain;
 logic [7:0] red_average_metering_pixel_clock_domain;
 logic [7:0] green_average_metering_pixel_clock_domain;
 logic [7:0] blue_average_metering_pixel_clock_domain;
-
-logic [7:0] red_center_metering_metastable;
-logic [7:0] green_center_metering_metastable;
-logic [7:0] blue_center_metering_metastable;
-logic [7:0] red_average_metering_metastable;
-logic [7:0] green_average_metering_metastable;
-logic [7:0] blue_average_metering_metastable;
+logic average_metering_ready_pixel_clock_domain;
+logic average_metering_ready_metastable;
+logic average_metering_ready_spi_clock_domain;
 
 metering #(.SIZE(128)) center_metering (
     .clock_in(pixel_clock_in),
@@ -288,7 +281,8 @@ metering #(.SIZE(128)) center_metering (
 
     .red_metering_out(red_center_metering_pixel_clock_domain),
     .green_metering_out(green_center_metering_pixel_clock_domain),
-    .blue_metering_out(blue_center_metering_pixel_clock_domain)
+    .blue_metering_out(blue_center_metering_pixel_clock_domain),
+    .metering_ready_out(center_metering_ready_pixel_clock_domain)
 );
 
 metering #(.SIZE(512)) average_metering (
@@ -303,40 +297,35 @@ metering #(.SIZE(512)) average_metering (
 
     .red_metering_out(red_average_metering_pixel_clock_domain),
     .green_metering_out(green_average_metering_pixel_clock_domain),
-    .blue_metering_out(blue_average_metering_pixel_clock_domain)
+    .blue_metering_out(blue_average_metering_pixel_clock_domain),
+    .metering_ready_out(average_metering_ready_pixel_clock_domain)
 );
 
-always @(posedge spi_clock_in) begin
+always @(posedge spi_clock_in) begin : metering_cdc
     if (spi_reset_n_in == 0) begin
-        red_center_metering_metastable <= 0;
-        green_center_metering_metastable <= 0;
-        blue_center_metering_metastable <= 0;
-        red_average_metering_metastable <= 0;
-        green_average_metering_metastable <= 0;
-        blue_average_metering_metastable <= 0;
-
-        red_center_metering_spi_clock_domain <= 0;
-        green_center_metering_spi_clock_domain <= 0;
-        blue_center_metering_spi_clock_domain <= 0;
-        red_average_metering_spi_clock_domain <= 0;
-        green_average_metering_spi_clock_domain <= 0;
-        blue_average_metering_spi_clock_domain <= 0;
+        center_metering_ready_metastable <= 0;
+        center_metering_ready_spi_clock_domain <= 0;
+        average_metering_ready_metastable <= 0;
+        average_metering_ready_spi_clock_domain <= 0;
     end
 
     else begin
-        red_center_metering_metastable <= red_center_metering_pixel_clock_domain;
-        green_center_metering_metastable <= green_center_metering_pixel_clock_domain;
-        blue_center_metering_metastable <= blue_center_metering_pixel_clock_domain;
-        red_average_metering_metastable <= red_average_metering_pixel_clock_domain;
-        green_average_metering_metastable <= green_average_metering_pixel_clock_domain;
-        blue_average_metering_metastable <= blue_average_metering_pixel_clock_domain;
+        center_metering_ready_metastable <= center_metering_ready_pixel_clock_domain;
+        center_metering_ready_spi_clock_domain <= center_metering_ready_metastable;
+        average_metering_ready_metastable <= average_metering_ready_pixel_clock_domain;
+        average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
 
-        red_center_metering_spi_clock_domain <= red_center_metering_metastable;
-        green_center_metering_spi_clock_domain <= green_center_metering_metastable;
-        blue_center_metering_spi_clock_domain <= blue_center_metering_metastable;
-        red_average_metering_spi_clock_domain <= red_average_metering_metastable;
-        green_average_metering_spi_clock_domain <= green_average_metering_metastable;
-        blue_average_metering_spi_clock_domain <= blue_average_metering_metastable;
+        if (center_metering_ready_spi_clock_domain) begin
+            red_center_metering_spi_clock_domain <= red_center_metering_pixel_clock_domain;
+            green_center_metering_spi_clock_domain <= green_center_metering_pixel_clock_domain;
+            blue_center_metering_spi_clock_domain <= blue_center_metering_pixel_clock_domain;
+        end
+
+        if (average_metering_ready_spi_clock_domain) begin
+            red_average_metering_spi_clock_domain <= red_average_metering_pixel_clock_domain;
+            green_average_metering_spi_clock_domain <= green_average_metering_pixel_clock_domain;
+            blue_average_metering_spi_clock_domain <= blue_average_metering_pixel_clock_domain;
+        end
     end
 end
 
@@ -362,10 +351,10 @@ crop zoom_crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(260), // TODO make dynamic
-    .x_crop_end(460),   // TODO make dynamic
-    .y_crop_start(260), // TODO make dynamic
-    .y_crop_end(460),   // TODO make dynamic
+    .x_crop_start(104), // TODO make dynamic
+    .x_crop_end(616),   // TODO make dynamic
+    .y_crop_start(104), // TODO make dynamic
+    .y_crop_end(616),   // TODO make dynamic
     `endif
 
     .red_data_out(zoomed_red_data),
@@ -375,17 +364,16 @@ crop zoom_crop (
     .frame_valid_out(zoomed_frame_valid)
 );
 
-logic [127:0] final_image_data;
+logic [31:0] final_image_data;
 logic [15:0] final_image_address;
 logic final_image_data_valid;
-logic final_image_complete;
 
-jpeg jpeg (
+jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .jpeg_buffer_clock_in(jpeg_buffer_clock_in),
-    .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n_in),
+    .jpeg_fast_clock_in(jpeg_buffer_clock_in),
+    .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
     .red_data_in(zoomed_red_data),
     .green_data_in(zoomed_green_data),
@@ -393,16 +381,18 @@ jpeg jpeg (
     .line_valid_in(zoomed_line_valid),
     .frame_valid_in(zoomed_frame_valid),
 
-    .start_capture_in(start_capture_pixel_domain),
-    .x_size_in(200), // TODO
-    .y_size_in(200),
-    .quality_factor_in(quality_factor_pixel_domain),
+    .start_capture_in(start_capture_pixel_clock_domain),
+    .x_size_in(x_resolution),
+    .y_size_in(y_resolution),
+    .compression_factor_in(compression_factor),
 
     .data_out(final_image_data),
-    .data_valid_out(final_image_data_valid), // TODO
+    .data_valid_out(final_image_data_valid),
     .address_out(final_image_address),
-    .image_valid_out(final_image_complete)
+    .image_valid_out()
 );
+
+always_comb bytes_available = final_image_address + 4;
 
 image_buffer image_buffer (
     .write_clock_in(pixel_clock_in),
@@ -411,7 +401,7 @@ image_buffer image_buffer (
     .read_reset_n_in(spi_reset_n_in),
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),
-    .write_data_in(final_image_data[7:0]),
+    .write_data_in(final_image_data),
     .read_data_out(image_buffer_data),
     .write_read_n_in(final_image_data_valid)
 );

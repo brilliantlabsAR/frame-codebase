@@ -68,9 +68,13 @@ Vectors can be drawn with the `GRAPHICS_DRAW_VECTOR` command. By setting the con
 
 ## Camera
 
-The complete pipeline for the camera subsection is as follows:
+The complete pipeline for the camera subsystem is as follows:
 
 ![Camera pipeline for Frame](diagrams/camera-pipeline-architecture.drawio.png)
+
+And the JPEG encoding subsystem is further broken down as follows:
+
+![JPEG encoding pipeline for Frame](diagrams/camera-jpeg-encoder-architecture.drawio.png)
 
 ### Capturing Images
 

@@ -1,18 +1,18 @@
 <?xml version="1.0" ?>
-<RadiantModule architecture="LIFCL" date="2024 03 26 18:05:37" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="ip" module="dphy_rx" name="csi2_receiver_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.6.1">
+<RadiantModule architecture="LIFCL" date="2024 04 16 16:25:08" device="LIFCL-17" gen_platform="Radiant" generator="ipgen" library="ip" module="dphy_rx" name="csi2_receiver_ip" package="WLCSP72" source_format="Verilog" speed="8_Low-Power_1.0V" vendor="latticesemi.com" version="1.6.1">
  <Package>
-  <File modified="2024 03 26 18:05:37" name="rtl/csi2_receiver_ip_bb.v" type="black_box_verilog"/>
-  <File modified="2024 03 26 18:05:37" name="csi2_receiver_ip.cfg" type="cfg"/>
-  <File modified="2024 03 26 18:05:37" name="misc/csi2_receiver_ip_tmpl.v" type="template_verilog"/>
-  <File modified="2024 03 26 18:05:37" name="misc/csi2_receiver_ip_tmpl.vhd" type="template_vhdl"/>
-  <File modified="2024 03 26 18:05:37" name="rtl/csi2_receiver_ip.v" type="top_level_verilog"/>
-  <File modified="2024 03 26 18:05:37" name="constraints/csi2_receiver_ip.ldc" type="timing_constraints"/>
-  <File modified="2024 03 26 18:05:37" name="testbench/dut_params.v" type="dependency_file"/>
-  <File modified="2024 03 26 18:05:37" name="testbench/dut_inst.v" type="dependency_file"/>
-  <File modified="2024 03 26 18:05:37" name="eval/dut_params.v" type="dependency_file"/>
-  <File modified="2024 03 26 18:05:37" name="eval/dut_inst.v" type="dependency_file"/>
-  <File modified="2024 03 26 18:05:37" name="component.xml" type="IP-XACT_component"/>
-  <File modified="2024 03 26 18:05:37" name="design.xml" type="IP-XACT_design"/>
+  <File modified="2024 04 16 16:25:08" name="rtl/csi2_receiver_ip_bb.v" type="black_box_verilog"/>
+  <File modified="2024 04 16 16:25:08" name="csi2_receiver_ip.cfg" type="cfg"/>
+  <File modified="2024 04 16 16:25:08" name="misc/csi2_receiver_ip_tmpl.v" type="template_verilog"/>
+  <File modified="2024 04 16 16:25:08" name="misc/csi2_receiver_ip_tmpl.vhd" type="template_vhdl"/>
+  <File modified="2024 04 16 16:25:08" name="rtl/csi2_receiver_ip.v" type="top_level_verilog"/>
+  <File modified="2024 04 16 16:25:08" name="constraints/csi2_receiver_ip.ldc" type="timing_constraints"/>
+  <File modified="2024 04 16 16:25:08" name="testbench/dut_params.v" type="dependency_file"/>
+  <File modified="2024 04 16 16:25:08" name="testbench/dut_inst.v" type="dependency_file"/>
+  <File modified="2024 04 16 16:25:08" name="eval/dut_params.v" type="dependency_file"/>
+  <File modified="2024 04 16 16:25:08" name="eval/dut_inst.v" type="dependency_file"/>
+  <File modified="2024 04 16 16:25:08" name="component.xml" type="IP-XACT_component"/>
+  <File modified="2024 04 16 16:25:08" name="design.xml" type="IP-XACT_design"/>
   <File modified="2023 12 21 13:26:15" name="testbench/tb_top.sv" type="testbench_system_verilog"/>
   <File modified="2023 12 21 13:26:15" name="testbench/clk_driver.sv" type="testbench_system_verilog"/>
   <File modified="2023 12 21 13:26:15" name="testbench/csi2_model.sv" type="testbench_system_verilog"/>

@@ -146,7 +146,12 @@
         {
             "label": "RTT Debug Console (Black-Magic)",
             "type": "shell",
-            "command": "pkill SCREEN; screen /dev/tty.usbmodem*3",
+            "osx": {
+                "command": "pkill SCREEN; screen /dev/tty.usbmodem*3",
+            },
+            "linux": {
+                "command": "pkill screen; screen /dev/ttyACM1",
+            },
             "problemMatcher": [],
             "presentation": {
                 "echo": false,
