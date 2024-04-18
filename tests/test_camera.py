@@ -17,7 +17,7 @@ def receive_data(data):
     print(f"Received {str(len(image_buffer)-1)} bytes", end="\r")
 
 
-async def capture_and_download(b: Bluetooth, height, width):
+async def capture_and_download(b: Bluetooth):
     global image_buffer
     global done
     image_buffer = b""
@@ -49,12 +49,9 @@ async def capture_and_download(b: Bluetooth, height, width):
 async def main():
     b = Bluetooth()
 
-    await b.connect(
-        data_response_handler=receive_data,
-        print_response_handler=lambda s: print(s),
-    )
+    await b.connect(data_response_handler=receive_data)
 
-    await capture_and_download(b, 200, 200)
+    await capture_and_download(b)
 
     await b.disconnect()
 

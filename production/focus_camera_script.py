@@ -1,6 +1,5 @@
 from frameutils import Bluetooth
 import asyncio
-import numpy as np
 import os
 
 JPEG_HEADER = bytes(
@@ -632,23 +631,29 @@ JPEG_HEADER = bytes(
 )
 
 image_buffer = b""
-expected_length = 0
+done = False
 
 
 def receive_data(data):
     global image_buffer
-    global expected_length
-    image_buffer += data
+    global done
+
+    if data[0] == 0x00:
+        done = True
+        return
+
+    image_buffer += data[1:]
     print(
-        f"                        Downloading camera data {str(len(image_buffer))} / {str(int(expected_length))} bytes. Press Ctrl-C when complete      ",
+        f"                        Received {str(len(image_buffer)-1)} bytes. Press Ctrl-C when complete      ",
         end="\r",
     )
 
 
 async def capture_and_download(b: Bluetooth):
     global image_buffer
-    global expected_length
+    global done
     image_buffer = b""
+    done = False
 
     await b.send_lua(f"frame.camera.capture()")
 
@@ -656,27 +661,15 @@ async def capture_and_download(b: Bluetooth):
         await b.send_lua("frame.camera.auto{ metering = 'CENTER_WEIGHTED' }")
         await asyncio.sleep(0.1)
 
-    expected_length = int(
-        await b.send_lua(
-            f"ba=frame.fpga.read(0x21, 2);print(string.byte(ba, 1)<<8 | string.byte(ba, 2))",
-            await_print=True,
-        )
-    )
-
     await b.send_lua(
-        "while true do local i = frame.camera.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end"
+        "while true do local i=frame.camera.read(frame.bluetooth.max_length()-1) if (i==nil) then break end while true do if pcall(frame.bluetooth.send,'\\x01'..i) then break end end end frame.sleep(0.1); frame.bluetooth.send('\\x00')"
     )
 
-    while len(image_buffer) < expected_length:
+    while done == False:
         await asyncio.sleep(0.001)
 
-    jpeg = []
-    jpeg.extend(JPEG_HEADER)
-    jpeg.extend(np.frombuffer(image_buffer, dtype=np.uint8))
-    jpeg.extend(bytes([0xFF, 0xD9]))
-
     with open("temp_focus_image.jpg", "wb") as f:
-        f.write(bytearray(jpeg))
+        f.write(image_buffer)
 
 
 if __name__ == "__main__":

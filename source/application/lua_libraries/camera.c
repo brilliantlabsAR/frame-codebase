@@ -133,7 +133,7 @@ static int lua_camera_read(lua_State *L)
 
                 bytes_remaining -= length;
 
-                LOG("  written %u bytes of image data", length);
+                // LOG("  written %u bytes of image data", length);
             }
         }
 
@@ -145,7 +145,7 @@ static int lua_camera_read(lua_State *L)
                 payload[bytes_requested - bytes_remaining] = 0xFF;
                 jpeg_footer_bytes_sent_out++;
                 bytes_remaining--;
-                LOG("  written 0xFF of footer");
+                // LOG("  written 0xFF of footer");
             }
 
             // append footer 0xD9
@@ -154,7 +154,7 @@ static int lua_camera_read(lua_State *L)
                 payload[bytes_requested - bytes_remaining] = 0xD9;
                 jpeg_footer_bytes_sent_out++;
                 bytes_remaining--;
-                LOG("  written 0xD9 of footer");
+                // LOG("  written 0xD9 of footer");
             }
         }
     }
