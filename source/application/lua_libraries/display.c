@@ -305,6 +305,26 @@ static int lua_display_show(lua_State *L)
     return 0;
 }
 
+static int lua_display_set_register(lua_State *L)
+{
+    lua_Integer address = luaL_checkinteger(L, 1);
+    lua_Integer value = luaL_checkinteger(L, 2);
+
+    if (address < 0 || address > 0xFF)
+    {
+        luaL_error(L, "address must be a 8 bit unsigned number");
+    }
+
+    if (value < 0 || value > 0xFF)
+    {
+        luaL_error(L, "value must be a 8 bit unsigned number");
+    }
+
+    spi_write(DISPLAY, address, value, 1);
+
+    return 0;
+}
+
 void lua_open_display_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -325,6 +345,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");
+
+    lua_pushcfunction(L, lua_display_set_register);
+    lua_setfield(L, -2, "set_register");
 
     lua_setfield(L, -2, "display");
 
