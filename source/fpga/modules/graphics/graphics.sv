@@ -37,35 +37,119 @@ module graphics (
     output logic [2:0] display_cr_out
 );
 
-// TODO add buffers for metastability to inputs
-
 // Registers to hold the current command operations
+logic clear_buffer_flag_metastable;
+logic clear_buffer_in_progress_flag_metastable;
+logic [17:0] clear_buffer_address_reg_metastable;
 logic clear_buffer_flag;
 logic clear_buffer_in_progress_flag;
 logic [17:0] clear_buffer_address_reg;
 
+logic assign_color_enable_flag_metastable;
+logic [3:0] assign_color_index_reg_metastable;
+logic [9:0] assign_color_value_reg_metastable;
 logic assign_color_enable_flag;
 logic [3:0] assign_color_index_reg;
 logic [9:0] assign_color_value_reg;
 
+logic sprite_enable_flag_metastable;
+logic sprite_data_flag_metastable;
+logic [7:0] sprite_data_metastable;
 logic sprite_enable_flag;
 logic sprite_data_flag;
 logic [7:0] sprite_data;
 
+logic show_buffer_flag_metastable;
 logic show_buffer_flag;
 
+logic clear_flags_metastable;
+logic clear_flags;
+
+logic data_valid_metastable;
+logic data_valid;
+
 // Sprite engine related registers
-logic [9:0] sprite_x_position_reg; // 0 - 639
-logic [9:0] sprite_y_position_reg; // 0 - 399
-logic [9:0] sprite_width_reg; // 1 - 640
-logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
-logic [3:0] sprite_palette_offset_reg; // 0 - 15
+logic [9:0] sprite_x_position_reg_metastable; // 0 - 639
+logic [9:0] sprite_y_position_reg_metastable; // 0 - 399
+logic [9:0] sprite_width_reg_metastable; // 1 - 640
+logic [4:0] sprite_total_colors_reg_metastable; // 1, 4 or 16 colors
+logic [3:0] sprite_palette_offset_reg_metastable; // 0 - 15
+logic [9:0] sprite_x_position_reg;
+logic [9:0] sprite_y_position_reg;
+logic [9:0] sprite_width_reg;
+logic [4:0] sprite_total_colors_reg;
+logic [3:0] sprite_palette_offset_reg;
 
 spi_interface spi_interface (
     .clock_in(spi_clock_in),
     .reset_n_in(spi_reset_n_in),
-    .*
+
+    .op_code_in(op_code_in),
+    .op_code_valid_in(op_code_valid_in),
+    .operand_in(operand_in),
+    .operand_valid_in(operand_valid_in),
+    .operand_count_in(operand_count_in),
+
+    .clear_buffer_flag(clear_buffer_flag_metastable),
+
+    .assign_color_enable_flag(assign_color_enable_flag_metastable),
+    .assign_color_index_reg(assign_color_index_reg_metastable),
+    .assign_color_value_reg(assign_color_value_reg_metastable),
+
+    .sprite_enable_flag(sprite_enable_flag_metastable),
+    .sprite_data(sprite_data_metastable),
+    .sprite_x_position_reg(sprite_x_position_reg_metastable),
+    .sprite_y_position_reg(sprite_y_position_reg_metastable),
+    .sprite_width_reg(sprite_width_reg_metastable),
+    .sprite_total_colors_reg(sprite_total_colors_reg_metastable),
+    .sprite_palette_offset_reg(sprite_palette_offset_reg_metastable),
+    
+    .show_buffer_flag(show_buffer_flag_metastable),
+
+    .clear_flags(clear_flags),
+
+    .data_valid(data_valid_metastable)
 );
+
+logic [2:0] data_valid_cdc;
+
+// SPI to display clock CDC
+always_ff @(posedge display_clock_in) begin
+    data_valid_cdc = {data_valid_cdc[1:0], data_valid_metastable};
+
+    // rising data valid, set data
+    if (data_valid_cdc[2:1] == 2'b01) begin
+        data_valid <= 1;
+    
+        clear_buffer_flag <= clear_buffer_flag_metastable;
+
+        assign_color_enable_flag <= assign_color_enable_flag_metastable;
+        assign_color_index_reg <= assign_color_index_reg_metastable;
+        assign_color_value_reg <= assign_color_value_reg_metastable;
+
+        sprite_enable_flag <= sprite_enable_flag_metastable;
+        sprite_data <= sprite_data_metastable;
+        sprite_x_position_reg <= sprite_x_position_reg_metastable;
+        sprite_y_position_reg <= sprite_y_position_reg_metastable;
+        sprite_width_reg <= sprite_width_reg_metastable;
+        sprite_total_colors_reg <= sprite_total_colors_reg_metastable;
+        sprite_palette_offset_reg <= sprite_palette_offset_reg_metastable;
+        
+        show_buffer_flag <= show_buffer_flag_metastable;
+    end
+
+    // falling data valid, clear flags
+    if (data_valid_cdc[2:1] == 2'b10) begin
+        data_valid <= 0;
+        
+        if (clear_flags) begin
+            clear_buffer_flag <= 0;
+            assign_color_enable_flag <= 0;
+            sprite_enable_flag <= 0;
+            show_buffer_flag <= 0;
+        end
+    end
+end
 
 // State machine to clear the screen
 logic [1:0] pixel_pulse_counter;
@@ -207,7 +291,7 @@ sprite_engine sprite_engine (
     .total_colors_in(sprite_total_colors_reg),
     .color_palette_offset_in(sprite_palette_offset_reg),
 
-    .data_valid_in(sprite_data_flag),
+    .data_valid_in(data_valid),
     .data_in(sprite_data),
 
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),

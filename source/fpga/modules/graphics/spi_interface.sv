@@ -26,7 +26,6 @@ module spi_interface (
     output logic [9:0] assign_color_value_reg,
 
     output logic sprite_enable_flag,
-    output logic sprite_data_flag,
     output logic [7:0] sprite_data,
     output logic [9:0] sprite_x_position_reg,
     output logic [9:0] sprite_y_position_reg,
@@ -34,7 +33,10 @@ module spi_interface (
     output logic [4:0] sprite_total_colors_reg,
     output logic [3:0] sprite_palette_offset_reg,
     
-    output logic show_buffer_flag
+    output logic show_buffer_flag,
+
+    output logic data_valid,
+    output logic clear_flags // TODO: can this be merged with data valid
 );
 
 // Handle op-codes as they come in
@@ -45,17 +47,21 @@ always_ff @(posedge clock_in) begin
         clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
         sprite_enable_flag <= 0;
-        sprite_data_flag <= 0;
         show_buffer_flag <= 0;
+        clear_flags <= 1;
+        data_valid <= 0;
     end
 
     else begin
         
+        clear_flags <= 0;
+
         case (op_code_in)
 
             // Clear buffer
             'h10: begin
                 clear_buffer_flag <= 1;
+                data_valid <= 1;
             end
 
             // Assign color
@@ -69,6 +75,12 @@ always_ff @(posedge clock_in) begin
                     endcase
 
                     assign_color_enable_flag <= operand_count_in == 4 ? 1 : 0;
+
+                    data_valid <= 1;
+                end 
+                
+                else begin 
+                    data_valid <= 0;
                 end
             end
 
@@ -88,14 +100,15 @@ always_ff @(posedge clock_in) begin
                         8: sprite_palette_offset_reg <= operand_in[3:0];
                         default begin
                             sprite_enable_flag <= 1;
-                            sprite_data_flag <= 1;
+                            data_valid <= 1;
                             sprite_data <= operand_in;        
                         end
                     endcase
+                    data_valid <= 1;
                 end
 
                 else begin
-                    sprite_data_flag <= 0;
+                    data_valid <= 0;
                 end
 
             end
@@ -103,7 +116,10 @@ always_ff @(posedge clock_in) begin
             // Show buffer
             'h14: begin
                 show_buffer_flag <= 1;
+                data_valid <= 1;
             end
+
+            default: data_valid <= 0;
 
         endcase
 
