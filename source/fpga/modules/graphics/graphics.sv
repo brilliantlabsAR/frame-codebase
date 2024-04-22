@@ -90,25 +90,25 @@ spi_interface spi_interface (
     .operand_valid_in(operand_valid_in),
     .operand_count_in(operand_count_in),
 
-    .clear_buffer_flag(clear_buffer_flag_metastable),
+    .clear_buffer_flag_out(clear_buffer_flag_metastable),
 
-    .assign_color_enable_flag(assign_color_enable_flag_metastable),
-    .assign_color_index_reg(assign_color_index_reg_metastable),
-    .assign_color_value_reg(assign_color_value_reg_metastable),
+    .assign_color_enable_flag_out(assign_color_enable_flag_metastable),
+    .assign_color_index_reg_out(assign_color_index_reg_metastable),
+    .assign_color_value_reg_out(assign_color_value_reg_metastable),
 
-    .sprite_enable_flag(sprite_enable_flag_metastable),
-    .sprite_data(sprite_data_metastable),
-    .sprite_x_position_reg(sprite_x_position_reg_metastable),
-    .sprite_y_position_reg(sprite_y_position_reg_metastable),
-    .sprite_width_reg(sprite_width_reg_metastable),
-    .sprite_total_colors_reg(sprite_total_colors_reg_metastable),
-    .sprite_palette_offset_reg(sprite_palette_offset_reg_metastable),
+    .sprite_enable_flag_out(sprite_enable_flag_metastable),
+    .sprite_data_out(sprite_data_metastable),
+    .sprite_x_position_reg_out(sprite_x_position_reg_metastable),
+    .sprite_y_position_reg_out(sprite_y_position_reg_metastable),
+    .sprite_width_reg_out(sprite_width_reg_metastable),
+    .sprite_total_colors_reg_out(sprite_total_colors_reg_metastable),
+    .sprite_palette_offset_reg_out(sprite_palette_offset_reg_metastable),
     
-    .show_buffer_flag(show_buffer_flag_metastable),
+    .show_buffer_flag_out(show_buffer_flag_metastable),
 
-    .clear_flags(clear_flags),
+    .clear_flags_out(clear_flags),
 
-    .data_valid(data_valid_metastable)
+    .data_valid_out(data_valid_metastable)
 );
 
 logic [2:0] data_valid_cdc;
