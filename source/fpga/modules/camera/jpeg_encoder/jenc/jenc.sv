@@ -12,7 +12,8 @@ module jenc #(
     parameter QW = 11,
     parameter CW = QW + 4,
     parameter SENSOR_X_SIZE    = 1280,
-    parameter SENSOR_Y_SIZE    = 720
+    parameter SENSOR_Y_SIZE    = 720,
+    parameter QF_BITS = 4
 )(
     input   logic signed[DW-1:0]    di[7:0], 
     input   logic                   di_valid,
@@ -25,6 +26,7 @@ module jenc #(
     output  logic                   out_valid,
     input   logic                   out_hold,
 
+    input   logic [QF_BITS-1:0]     compression_factor,  // see doc for details re: quality factor 
     output  logic [19:0]            size,
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,

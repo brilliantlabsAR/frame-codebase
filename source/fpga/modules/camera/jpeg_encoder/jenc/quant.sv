@@ -14,7 +14,8 @@ module quant #(
     parameter QW = DW - 4,
     parameter M_BITS = 13,         // Bit size of Multiplier coefficients
     parameter SENSOR_X_SIZE    = 1280,
-    parameter SENSOR_Y_SIZE    = 720
+    parameter SENSOR_Y_SIZE    = 720,
+    parameter QF_BITS = 4
 )(
     input   logic signed[DW-1:0]    di[1:0], 
     input   logic                   di_valid,
@@ -29,6 +30,7 @@ module quant #(
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
+    input   logic [QF_BITS-1:0]     compression_factor,  // see doc for details re: quality factor 
 
     input   logic                   clk,
     input   logic                   resetn

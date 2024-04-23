@@ -10,7 +10,8 @@
  module jpeg_encoder #(
     parameter DW = 8,
     parameter SENSOR_X_SIZE    = 720, //1280,
-    parameter SENSOR_Y_SIZE    = 720
+    parameter SENSOR_Y_SIZE    = 720,
+    parameter QF_BITS = 4
 )(
     input   logic               start_capture_in,
 
@@ -26,7 +27,7 @@
     output  logic               image_valid_out,    // Set to 1 when compression finished. If 1, size of encoded data is address_out+bytes_out (or address_out+16)
     output  logic               data_valid_out,     // Qualifier for valid data. Data is invalid if 0.
 
-    input   [3:0]               compression_factor_in,  // see doc for details re: quality factor 
+    input   logic [QF_BITS-1:0] compression_factor_in,  // see doc for details re: quality factor 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_in,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_in,
 
@@ -114,9 +115,11 @@ jisp #(
 
 jenc #(
     .SENSOR_X_SIZE      (SENSOR_X_SIZE),
-    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
+    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE),
+    .QF_BITS            (QF_BITS)
 ) jenc (
     .size               (out_size),
+    .compression_factor (compression_factor_in),
 
     .clk                (pixel_clock_in),
     .resetn             (pixel_reset_n_in & jpeg_reset_n),
