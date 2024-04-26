@@ -12,7 +12,7 @@ import getopt, sys
 
 sys.path.append("../python_misc/")
 
-from quant import qt_scale_log
+from quant import qt_scale
 
 
 # helper function to write a 2-byte short integer in big-endian
@@ -88,7 +88,7 @@ def writeAPP0(out_file):
     out_file.append(0)
 
 
-def writeJPG_header(height, width, qf_log=0):
+def writeJPG_header(height, width, qf=0):
     out_file = []
     
     # SOI
@@ -101,8 +101,8 @@ def writeJPG_header(height, width, qf_log=0):
     # DQT
     #writeQuantizationTable(out_file, 0, qTableY100)
     #writeQuantizationTable(out_file, 1, qTableCbCr100)
-    writeQuantizationTable(out_file, 0, [list(qt_scale_log(np.array(qTableY50[0]), qf_log=qf_log)), None])
-    writeQuantizationTable(out_file, 1, [list(qt_scale_log(np.array(qTableCbCr50[0]), qf_log=qf_log)), None])
+    writeQuantizationTable(out_file, 0, [list(qt_scale(np.array(qTableY50[0]), qf=qf)), None])
+    writeQuantizationTable(out_file, 1, [list(qt_scale(np.array(qTableCbCr50[0]), qf=qf)), None])
 
     # SOF
     writeStartOfFrame(out_file, height, width)

@@ -227,8 +227,10 @@ logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
 `ifdef COCOTB_SIM
 always_comb x_pan_crop_start    = 1;
 always_comb x_pan_crop_end      = x_pan_crop_start + 200 + 2;
+//always_comb x_pan_crop_end      = x_pan_crop_start + 16 + 2;
 always_comb y_pan_crop_start    = 1;
 always_comb y_pan_crop_end      = y_pan_crop_start + 200 + 2;
+//always_comb y_pan_crop_end      = y_pan_crop_start + 16 + 2;
 `else
 `ifdef TESTBENCH
 always_comb x_pan_crop_start    = 10;
@@ -354,8 +356,10 @@ always_comb y_size = y_zoom_crop_end - y_zoom_crop_start;
 // after debayer
 always_comb x_zoom_crop_start    = 0;
 always_comb x_zoom_crop_end      = x_pan_crop_end - x_pan_crop_start - 2;
+//always_comb x_zoom_crop_end      = 16;
 always_comb y_zoom_crop_start    = 0;
 always_comb y_zoom_crop_end      = y_pan_crop_end - y_pan_crop_start - 2;
+//always_comb y_zoom_crop_end      = 16;
 `else
 `ifdef TESTBENCH
 always_comb x_zoom_crop_start    = 0;
@@ -413,7 +417,7 @@ jpeg_encoder jpeg_encoder (
     .start_capture_in(start_capture_pixel_domain),
     .x_size_in(x_size),
     .y_size_in(y_size),
-    .compression_factor_in(compression_factor),
+    .qf_select_in(compression_factor[1:0]),
 
     .data_out(image_data),
     .data_valid_out(image_data_valid),

@@ -87,10 +87,11 @@ class SPITransactor():
 
 
 class Tester(SPITransactor):
-    def __init__(self, dut, img_file='baboon.bmp', read_bmp=True, save_bmp_to_array=False):
+    def __init__(self, dut, img_file='baboon.bmp', qf=50, read_bmp=True, save_bmp_to_array=False):
         super(Tester, self).__init__(dut)
         self.dut = dut
         self.jpeg_sel = 1
+        self.qf = qf
         
         # Always Read RGB image
         if read_bmp and os.environ['SIM'] != 'modelsim':
@@ -118,22 +119,6 @@ class Tester(SPITransactor):
             self.img_bgr[:9, :, 2] = 255 # red top
             self.img_bgr[:, :9, 1] = 255 # green left
             #self.img_bgr[:, :, :] = np.random.randint(0, 256, self.img_bgr.shape)
-            #self.img_bgr[:8, :8, 1] = 255 # ed
-            #self.img_bgr[8:, 8:, 1] = 128 # ed
-            #self.img_bgr[:, :, :] = 128
-            #self.img_bgr[9:, :, :] = 64+32
-            #self.img_bgr[:, :, :] = 128
-            self.img_bgr[9:, 352:368, :] = 0 # green left
-            self.img_bgr[:, 352:368, 1] = 255 # green left
-
-            b=50
-            for i in range(0):
-                a = b + i*20
-                self.img_bgr[:, a:a+8,:] = np.random.randint(0, 256, self.img_bgr[:, a:a+8,:].shape)
-            for i in range(15):
-                a = b + i*20
-                self.img_bgr[a:a+8, :,:] = np.random.randint(0, 256, self.img_bgr[a:a+8, :,:].shape)
-            self.img_bgr[:, :, :] = 128
 
         # make bayer
         self.img_bayer = np.empty((self.y, self.x), dtype=np.uint8)        
@@ -163,6 +148,10 @@ class Tester(SPITransactor):
     
     async def initialize(self):
         await RisingEdge(self.dut.cpu_clock_8hmz)
+        # Compression factor flag
+        qf_select = {50: 0, 100: 1, 25: 3, 10: 2}[self.qf] + 0x4
+        
+        await self.spi_write_read(0x26, qf_select)
         # Capture flag
         await self.spi_write_read(0x20)
     
@@ -219,7 +208,7 @@ class Tester(SPITransactor):
 
 
     async def write_jpg(self, filename='jpeg_out.jpg'):
-        hdr = bytearray(writeJPG_header(height=self.y, width=self.x))
+        hdr = bytearray(writeJPG_header(height=self.y, width=self.x, qf=self.qf))
         ecs = bytearray(self.ecs)
         ftr = bytearray(writeJPG_footer())
 
@@ -248,7 +237,8 @@ async def dct_test(dut):
     #test_image = '4.2.03.tiff'  # baboon 512x512
     
     test_image = '../images/' + test_image;
-    t = Tester(dut, test_image, read_bmp=False)
+    qf = int(os.environ.get('QF', 50))
+    t = Tester(dut, test_image, qf=qf, read_bmp=False)
 
     # Wait for PLL to lock & global reset
     await Timer(20, units='us')

@@ -15,7 +15,11 @@ module quant #(
     parameter M_BITS = 13,         // Bit size of Multiplier coefficients
     parameter SENSOR_X_SIZE    = 1280,
     parameter SENSOR_Y_SIZE    = 720,
-    parameter QF_BITS = 4
+    // 4 possible QF
+    parameter QF0 = 50,
+    parameter QF1 = 100,
+    parameter QF2 = 10,
+    parameter QF3 = 25
 )(
     input   logic signed[DW-1:0]    di[1:0], 
     input   logic                   di_valid,
@@ -30,7 +34,7 @@ module quant #(
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
-    input   logic [QF_BITS-1:0]     compression_factor,  // see doc for details re: quality factor 
+    input   logic[1:0]              qf_select,          // select one of the 4 possible QF
 
     input   logic                   clk,
     input   logic                   resetn
@@ -81,7 +85,7 @@ logic [5:0] q_ra;
 // read the quantizer coefficients 2 at a time
 always_comb q_ra = {zigzag_mcu_cnt[2], di_cnt};
 
-quant_tables quant_tables (
+quant_tables #(.QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) quant_tables (
     .re         (di_valid & ~q_hold),
     .ra         (q_ra),
     .rd         (q_factor),
