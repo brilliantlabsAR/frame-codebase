@@ -154,7 +154,7 @@ if __name__ == '__main__':
             elif currentArgument in ("-w", "--Width"):
                 w = int(currentValue)
             elif currentArgument in ("-q", "--QF"):
-                qf = int(currentValues)
+                qf = int(currentValue)
     except getopt.error as err:
         print (str(err))
 
