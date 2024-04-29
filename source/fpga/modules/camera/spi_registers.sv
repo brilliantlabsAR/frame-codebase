@@ -33,9 +33,12 @@
     input logic [7:0] red_center_metering_in,
     input logic [7:0] green_center_metering_in,
     input logic [7:0] blue_center_metering_in,
-    input logic [7:0] red_average_metering_in,
-    input logic [7:0] green_average_metering_in,
-    input logic [7:0] blue_average_metering_in
+    // input logic [7:0] red_average_metering_in,
+    // input logic [7:0] green_average_metering_in,
+    // input logic [7:0] blue_average_metering_in,
+
+    input logic [7:0] histogram_data_in,
+    output logic histogram_read_enable_out
 );
 
 logic [15:0] bytes_remaining;
@@ -115,9 +118,9 @@ always_ff @(posedge clock_in) begin
                         0: response_out <= red_center_metering_in;
                         1: response_out <= green_center_metering_in;
                         2: response_out <= blue_center_metering_in;
-                        3: response_out <= red_average_metering_in;
-                        4: response_out <= green_average_metering_in;
-                        5: response_out <= blue_average_metering_in;
+                        // 3: response_out <= red_average_metering_in;
+                        // 4: response_out <= green_average_metering_in;
+                        // 5: response_out <= blue_average_metering_in;
                     endcase
 
                     response_valid_out <= 1;
@@ -130,6 +133,18 @@ always_ff @(posedge clock_in) begin
                     end
                 end
 
+                'h27: begin
+                    if (operand_valid_in_edge_monitor <= 2'b01) begin
+                        histogram_read_enable_out <= 1;
+                        response_valid_out <= 0;
+                    end
+                    else begin
+                        histogram_read_enable_out <= 0;
+                        response_valid_out <= 1;
+                    end
+
+                    response_out <= histogram_data_in;
+                end
             endcase
 
         end

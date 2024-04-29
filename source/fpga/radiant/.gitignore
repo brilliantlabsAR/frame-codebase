@@ -39,6 +39,11 @@ reportview.xml
 !/jisp/*/*.cfg
 !/jisp/*/*.ipx
 
+/image_buffer_ip/*/*
+!/image_buffer_ip/*/*.xml
+!/image_buffer_ip/*/*.cfg
+!/image_buffer_ip/*/*.ipx
+
 # Logs and reports
 radiantc.*
 *.log

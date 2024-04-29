@@ -51,6 +51,9 @@
         <Source name="../modules/camera/metering.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
+        <Source name="../modules/camera/histogram.sv" type="Verilog" type_short="Verilog">
+            <Options VerilogStandard="System Verilog"/>
+        </Source>
         <Source name="../modules/camera/image_buffer.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
@@ -139,6 +142,9 @@
             <Options/>
         </Source>
         <Source name="jisp/ram_dp_w64_b8_d2880/ram_dp_w64_b8_d2880.ipx" type="IPX_Module" type_short="IPX">
+            <Options/>
+        </Source>
+        <Source name="image_buffer_ip/image_buffer_ip.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">

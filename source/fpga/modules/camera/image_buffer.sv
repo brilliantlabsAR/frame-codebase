@@ -94,12 +94,25 @@ always @(posedge read_clock_in) begin
 end
 
 // Large RAM
-inferred_lram inferred_lram (
-    .clock_in(read_clock_in), // Use the faster clock
-    .address_in(address),
-    .write_data_in(write_data),
-    .read_data_out(read_data),
-    .write_enable_in(write_enable)
+//inferred_lram inferred_lram (
+    //.clock_in(read_clock_in), // Use the faster clock
+    //.address_in(address),
+    //.write_data_in(write_data),
+    //.read_data_out(read_data),
+    //.write_enable_in(write_enable)
+//);
+
+image_buffer_ip lram(
+        .clk_i(read_clock_in),
+        .dps_i(1'b0),
+        .rst_i(1'b0),
+        .clk_en_i(1'b1),
+        .wr_en_i(write_enable),
+        .wr_data_i(write_data),
+        .addr_i(address),
+        .rd_data_o(read_data),
+        .lramready_o( ),
+        .rd_datavalid_o( )
 );
 
 endmodule
