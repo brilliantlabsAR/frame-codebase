@@ -33,11 +33,10 @@
     input logic [7:0] red_center_metering_in,
     input logic [7:0] green_center_metering_in,
     input logic [7:0] blue_center_metering_in,
-    // input logic [7:0] red_average_metering_in,
-    // input logic [7:0] green_average_metering_in,
-    // input logic [7:0] blue_average_metering_in,
 
-    input logic [7:0] histogram_data_in,
+    input logic [7:0] red_histogram_in [0:7],
+    input logic [7:0] green_histogram_in [0:7],
+    input logic [7:0] blue_histogram_in [0:7],
     output logic histogram_read_enable_out
 );
 
@@ -46,7 +45,10 @@ assign bytes_remaining = bytes_available_in - bytes_read_out;
 
 logic [1:0] operand_valid_in_edge_monitor;
 
+integer operand_count;
+
 always_ff @(posedge clock_in) begin
+    operand_count <= operand_count_in;
     
     if (reset_n_in == 0) begin
         response_out <= 0;
@@ -118,9 +120,6 @@ always_ff @(posedge clock_in) begin
                         0: response_out <= red_center_metering_in;
                         1: response_out <= green_center_metering_in;
                         2: response_out <= blue_center_metering_in;
-                        // 3: response_out <= red_average_metering_in;
-                        // 4: response_out <= green_average_metering_in;
-                        // 5: response_out <= blue_average_metering_in;
                     endcase
 
                     response_valid_out <= 1;
@@ -134,16 +133,15 @@ always_ff @(posedge clock_in) begin
                 end
 
                 'h27: begin
-                    if (operand_valid_in_edge_monitor <= 2'b01) begin
-                        histogram_read_enable_out <= 1;
-                        response_valid_out <= 0;
-                    end
-                    else begin
-                        histogram_read_enable_out <= 0;
-                        response_valid_out <= 1;
+                    for (integer i=0; i<8; i++) begin
+                        case (operand_count)
+                        i    : response_out <= red_histogram_in[i];
+                        i+8  : response_out <= green_histogram_in[i];
+                        i+16 : response_out <= blue_histogram_in[i];
+                        endcase
                     end
 
-                    response_out <= histogram_data_in;
+                    response_valid_out <= 1;
                 end
             endcase
 

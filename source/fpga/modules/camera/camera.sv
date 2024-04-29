@@ -68,8 +68,9 @@ logic [7:0] red_average_metering_spi_clock_domain;
 logic [7:0] green_average_metering_spi_clock_domain;
 logic [7:0] blue_average_metering_spi_clock_domain;
 
-logic [7:0] histogram_data_spi_clock_domain;
-logic histogram_read_enable;
+logic [7:0] red_histogram_spi_clock_domain [0:7];
+logic [7:0] green_histogram_spi_clock_domain [0:7];
+logic [7:0] blue_histogram_spi_clock_domain [0:7];
 
 spi_registers spi_registers (
     .clock_in(spi_clock_in),
@@ -96,12 +97,10 @@ spi_registers spi_registers (
     .red_center_metering_in(red_center_metering_spi_clock_domain),
     .green_center_metering_in(green_center_metering_spi_clock_domain),
     .blue_center_metering_in(blue_center_metering_spi_clock_domain),
-    // .red_average_metering_in(red_average_metering_spi_clock_domain),
-    // .green_average_metering_in(green_average_metering_spi_clock_domain),
-    // .blue_average_metering_in(blue_average_metering_spi_clock_domain),
 
-    .histogram_data_in(histogram_data_spi_clock_domain),
-    .histogram_read_enable_out(histogram_read_enable)
+    .red_histogram_in(red_histogram_spi_clock_domain),
+    .green_histogram_in(green_histogram_spi_clock_domain),
+    .blue_histogram_in(blue_histogram_spi_clock_domain)
 );
 
 always @(posedge pixel_clock_in) begin
@@ -269,12 +268,6 @@ logic [7:0] blue_center_metering_pixel_clock_domain;
 logic center_metering_ready_pixel_clock_domain;
 logic center_metering_ready_metastable;
 logic center_metering_ready_spi_clock_domain;
-// logic [7:0] red_average_metering_pixel_clock_domain;
-// logic [7:0] green_average_metering_pixel_clock_domain;
-// logic [7:0] blue_average_metering_pixel_clock_domain;
-// logic average_metering_ready_pixel_clock_domain;
-// logic average_metering_ready_metastable;
-// logic average_metering_ready_spi_clock_domain;
 
 metering #(.SIZE(128)) center_metering (
     .clock_in(pixel_clock_in),
@@ -292,32 +285,17 @@ metering #(.SIZE(128)) center_metering (
     .metering_ready_out(center_metering_ready_pixel_clock_domain)
 );
 
-// metering #(.SIZE(512)) average_metering (
-//     .clock_in(pixel_clock_in),
-//     .reset_n_in(pixel_reset_n_in),
-
-//     .red_data_in(debayered_red_data),
-//     .green_data_in(debayered_green_data),
-//     .blue_data_in(debayered_blue_data),
-//     .line_valid_in(debayered_line_valid),
-//     .frame_valid_in(debayered_frame_valid),
-
-//     .red_metering_out(red_average_metering_pixel_clock_domain),
-//     .green_metering_out(green_average_metering_pixel_clock_domain),
-//     .blue_metering_out(blue_average_metering_pixel_clock_domain),
-//     .metering_ready_out(average_metering_ready_pixel_clock_domain)
-// );
-
 logic histogram_ready_pixel_clock_domain;
 logic histogram_ready_metastable;
 logic histogram_ready_spi_clock_domain;
 
-histogram histogram (
-    .pixel_clock_in(pixel_clock_in),
-    .pixel_reset_n_in(pixel_reset_n_in),
+logic [7:0] red_histogram_pixel_clock_domain [0:7];
+logic [7:0] green_histogram_pixel_clock_domain [0:7];
+logic [7:0] blue_histogram_pixel_clock_domain [0:7];
 
-    .spi_clock_in(spi_clock_in),
-    .spi_reset_n_in(spi_reset_n_in),
+histogram histogram (
+    .clock_in(pixel_clock_in),
+    .reset_n_in(pixel_reset_n_in),
 
     .red_data_in(debayered_red_data),
     .green_data_in(debayered_green_data),
@@ -325,8 +303,9 @@ histogram histogram (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    .read_enable_in(histogram_read_enable),
-    .histogram_data_out(histogram_data_spi_clock_domain),
+    .red_histogram_out(red_histogram_pixel_clock_domain),
+    .green_histogram_out(green_histogram_pixel_clock_domain),
+    .blue_histogram_out(blue_histogram_pixel_clock_domain),
     .histogram_ready_out(histogram_ready_pixel_clock_domain)
 );
 
@@ -334,8 +313,7 @@ always @(posedge spi_clock_in) begin : metering_cdc
     if (spi_reset_n_in == 0) begin
         center_metering_ready_metastable <= 0;
         center_metering_ready_spi_clock_domain <= 0;
-        // average_metering_ready_metastable <= 0;
-        // average_metering_ready_spi_clock_domain <= 0;
+
         histogram_ready_metastable <= 0;
         histogram_ready_spi_clock_domain <= 0;
     end
@@ -343,8 +321,7 @@ always @(posedge spi_clock_in) begin : metering_cdc
     else begin
         center_metering_ready_metastable <= center_metering_ready_pixel_clock_domain;
         center_metering_ready_spi_clock_domain <= center_metering_ready_metastable;
-        // average_metering_ready_metastable <= average_metering_ready_pixel_clock_domain;
-        // average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
+
         histogram_ready_metastable <= histogram_ready_pixel_clock_domain;
         histogram_ready_spi_clock_domain <= histogram_ready_metastable;
 
@@ -354,11 +331,13 @@ always @(posedge spi_clock_in) begin : metering_cdc
             blue_center_metering_spi_clock_domain <= blue_center_metering_pixel_clock_domain;
         end
 
-        // if (average_metering_ready_spi_clock_domain) begin
-        //     red_average_metering_spi_clock_domain <= red_average_metering_pixel_clock_domain;
-        //     green_average_metering_spi_clock_domain <= green_average_metering_pixel_clock_domain;
-        //     blue_average_metering_spi_clock_domain <= blue_average_metering_pixel_clock_domain;
-        // end
+        if (histogram_ready_spi_clock_domain) begin
+            for (integer i=0; i<8; i++) begin
+                red_histogram_spi_clock_domain[i] <= red_histogram_pixel_clock_domain[i];
+                green_histogram_spi_clock_domain[i] <= green_histogram_pixel_clock_domain[i];
+                blue_histogram_spi_clock_domain[i] <= blue_histogram_pixel_clock_domain[i];
+            end
+        end
     end
 end
 
