@@ -41,7 +41,6 @@
 );
 
 logic [15:0] bytes_remaining;
-assign bytes_remaining = bytes_available_in - bytes_read_out;
 
 logic [1:0] operand_valid_in_edge_monitor;
 
@@ -59,6 +58,7 @@ always_ff @(posedge clock_in) begin
         compression_factor_out <= 0;
 
         bytes_read_out <= 0;
+        bytes_remaining <= 0;
 
         operand_valid_in_edge_monitor <= 0;
     end
@@ -66,6 +66,7 @@ always_ff @(posedge clock_in) begin
     else begin
         operand_valid_in_edge_monitor <= {operand_valid_in_edge_monitor[0], 
                                           operand_valid_in};
+        bytes_remaining <= bytes_available_in - bytes_read_out;
 
         if (op_code_valid_in) begin
 
