@@ -586,6 +586,40 @@ static int lua_camera_set_register(lua_State *L)
     return 0;
 }
 
+static int lua_camera_histogram(lua_State *L)
+{
+    uint8_t data[24];
+    spi_read(FPGA, 0x27, data, 24);
+
+    lua_newtable(L);
+
+    lua_newtable(L);
+    {
+        lua_newtable(L);
+        for (int i=0; i<8; i++) {
+            lua_pushnumber(L, data[i]);
+            lua_seti(L, -2, i);
+        }
+        lua_setfield(L, -2, "r");
+
+        lua_newtable(L);
+        for (int i=0; i<8; i++) {
+            lua_pushnumber(L, data[i+8]);
+            lua_seti(L, -2, i);
+        }
+        lua_setfield(L, -2, "g");
+
+        lua_newtable(L);
+        for (int i=0; i<8; i++) {
+            lua_pushnumber(L, data[i+16]);
+            lua_seti(L, -2, i);
+        }
+        lua_setfield(L, -2, "b");
+    }
+
+    return 1;
+}
+
 void lua_open_camera_library(lua_State *L)
 {
     // Wake up camera in case it was asleep
@@ -622,6 +656,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_set_register);
     lua_setfield(L, -2, "set_register");
+
+    lua_pushcfunction(L, lua_camera_histogram);
+    lua_setfield(L, -2, "histogram");
 
     lua_setfield(L, -2, "camera");
 
