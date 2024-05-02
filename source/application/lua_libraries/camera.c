@@ -46,8 +46,8 @@ static struct camera_auto_last_values
     double shutter;
     double gain;
 } last = {
-    .shutter = 0,
-    .gain = 0,
+    .shutter = 4,
+    .gain = 1,
 };
 
 static size_t jpeg_header_bytes_sent_out = 0;
@@ -594,28 +594,122 @@ static int lua_camera_histogram(lua_State *L)
     lua_newtable(L);
 
     lua_newtable(L);
-    {
-        lua_newtable(L);
-        for (int i=0; i<8; i++) {
-            lua_pushnumber(L, data[i]);
-            lua_seti(L, -2, i);
-        }
-        lua_setfield(L, -2, "r");
-
-        lua_newtable(L);
-        for (int i=0; i<8; i++) {
-            lua_pushnumber(L, data[i+8]);
-            lua_seti(L, -2, i);
-        }
-        lua_setfield(L, -2, "g");
-
-        lua_newtable(L);
-        for (int i=0; i<8; i++) {
-            lua_pushnumber(L, data[i+16]);
-            lua_seti(L, -2, i);
-        }
-        lua_setfield(L, -2, "b");
+    lua_newtable(L);
+    for (int i=0; i<8; i++) {
+        lua_pushnumber(L, data[i]);
+        lua_seti(L, -2, i);
     }
+    lua_setfield(L, -2, "r");
+
+    lua_newtable(L);
+    for (int i=0; i<8; i++) {
+        lua_pushnumber(L, data[i+8]);
+        lua_seti(L, -2, i);
+    }
+    lua_setfield(L, -2, "g");
+
+    lua_newtable(L);
+    for (int i=0; i<8; i++) {
+        lua_pushnumber(L, data[i+16]);
+        lua_seti(L, -2, i);
+    }
+    lua_setfield(L, -2, "b");
+
+    lua_newtable(L);
+    uint16_t avg;
+    for (int i=0; i<8; i++) {
+        avg = (data[i] + data[i+8] + data[i+16]) / 3;
+        lua_pushnumber(L, avg);
+        lua_seti(L, -2, i);
+    }
+    lua_setfield(L, -2, "a");
+
+    uint16_t first_avg_bin = (uint16_t)(data[0] + data[8] + data[16]) / 3;
+    uint16_t last_avg_bin = (uint16_t)(data[7] + data[15] + data[23]) / 3;
+
+    int16_t error = 200 - last_avg_bin;
+    if (error < -15) {
+        if (error < -50) {
+            if (last.gain > 1) {
+                last.gain += 0.05 * error;
+            }
+            else {
+                last.shutter += last.shutter * 0.02 * error;
+            }
+        }
+        else {
+            if (last.gain > 1) {
+                last.gain += 0.01 * error;
+            }
+            else {
+                last.shutter += last.shutter * 0.01 * error;
+            }
+        }
+    }
+
+    else if (error > 15) {
+        if (error > 50) {
+            if (last.shutter < 16000) {
+                last.shutter += last.shutter * 0.02 * error;
+            }
+            else {
+                last.gain += 0.05 * error;
+            }
+        }
+        else {
+            if (last.shutter < 16000) {
+                last.shutter += last.shutter * 0.01 * error;
+            }
+            else {
+                last.gain += 0.01 * error;
+            }
+        }
+    }
+
+    else LOG("STOP");
+
+    // Limit the outputs
+    if (last.shutter > 16000)
+    {
+        last.shutter = 16000;
+    }
+    if (last.shutter < 4.0)
+    {
+        last.shutter = 4.0;
+    }
+    if (last.gain > 248.0)
+    {
+        last.gain = 248.0;
+    }
+    if (last.gain < 1.0)
+    {
+        last.gain = 1.0;
+    }
+
+    // TODO calculate and set auto white-balance
+
+    // Set the output
+    uint16_t shutter = (uint16_t)last.shutter;
+    uint8_t gain = (uint8_t)last.gain;
+
+    LOG("error %d  gain %d  shutter %d", error, gain, shutter);
+
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
+    }
+
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, gain).fail);
 
     return 1;
 }
