@@ -38,6 +38,8 @@ always_ff @(posedge clock_in) begin
     if (frame_valid_in == 0 || reset_n_in == 0) begin
 
         if (previous_frame_valid) begin
+            metering_ready_out <= 0;
+
             red_metering_out[0] <= red_counter[0];
             red_metering_out[1] <= red_counter[1];
             red_metering_out[2] <= red_counter[2];
@@ -55,30 +57,30 @@ always_ff @(posedge clock_in) begin
             blue_metering_out[2] <= blue_counter[2];
             blue_metering_out[3] <= blue_counter[3];
             blue_metering_out[4] <= blue_counter[4];
-
-            metering_ready_out <= 0;
         end
+
         else begin
             metering_ready_out <= 1;
+
+            red_counter[0] <= 0;
+            red_counter[1] <= 0;
+            red_counter[2] <= 0;
+            red_counter[3] <= 0;
+            red_counter[4] <= 0;
+
+            green_counter[0] <= 0;
+            green_counter[1] <= 0;
+            green_counter[2] <= 0;
+            green_counter[3] <= 0;
+            green_counter[4] <= 0;
+
+            blue_counter[0] <= 0;
+            blue_counter[1] <= 0;
+            blue_counter[2] <= 0;
+            blue_counter[3] <= 0;
+            blue_counter[4] <= 0;
         end
 
-        red_metering_out[0] <= 0;
-        red_metering_out[1] <= 0;
-        red_metering_out[2] <= 0;
-        red_metering_out[3] <= 0;
-        red_metering_out[4] <= 0;
-
-        green_metering_out[0] <= 0;
-        green_metering_out[1] <= 0;
-        green_metering_out[2] <= 0;
-        green_metering_out[3] <= 0;
-        green_metering_out[4] <= 0;
-
-        blue_metering_out[0] <= 0;
-        blue_metering_out[1] <= 0;
-        blue_metering_out[2] <= 0;
-        blue_metering_out[3] <= 0;
-        blue_metering_out[4] <= 0;
     end
 
     else begin
@@ -86,23 +88,23 @@ always_ff @(posedge clock_in) begin
         metering_ready_out <= 0;
 
         if (line_valid_in) begin
-            if (red_data_in < 204)      red_metering_out[0] <= red_metering_out[0] + 1;
-            else if (red_data_in < 409) red_metering_out[1] <= red_metering_out[1] + 1;
-            else if (red_data_in < 613) red_metering_out[2] <= red_metering_out[2] + 1;
-            else if (red_data_in < 818) red_metering_out[3] <= red_metering_out[3] + 1;
-            else                        red_metering_out[4] <= red_metering_out[4] + 1;
+            if (red_data_in < 204)      red_counter[0] <= red_counter[0] + 1;
+            else if (red_data_in < 409) red_counter[1] <= red_counter[1] + 1;
+            else if (red_data_in < 613) red_counter[2] <= red_counter[2] + 1;
+            else if (red_data_in < 818) red_counter[3] <= red_counter[3] + 1;
+            else                        red_counter[4] <= red_counter[4] + 1;
 
-            if (green_data_in < 204)      green_metering_out[0] <= green_metering_out[0] + 1;
-            else if (green_data_in < 409) green_metering_out[1] <= green_metering_out[1] + 1;
-            else if (green_data_in < 613) green_metering_out[2] <= green_metering_out[2] + 1;
-            else if (green_data_in < 818) green_metering_out[3] <= green_metering_out[3] + 1;
-            else                          green_metering_out[4] <= green_metering_out[4] + 1;
+            if (green_data_in < 204)      green_counter[0] <= green_counter[0] + 1;
+            else if (green_data_in < 409) green_counter[1] <= green_counter[1] + 1;
+            else if (green_data_in < 613) green_counter[2] <= green_counter[2] + 1;
+            else if (green_data_in < 818) green_counter[3] <= green_counter[3] + 1;
+            else                          green_counter[4] <= green_counter[4] + 1;
 
-            if (blue_data_in < 204)      blue_metering_out[0] <= blue_metering_out[0] + 1;
-            else if (blue_data_in < 409) blue_metering_out[1] <= blue_metering_out[1] + 1;
-            else if (blue_data_in < 613) blue_metering_out[2] <= blue_metering_out[2] + 1;
-            else if (blue_data_in < 818) blue_metering_out[3] <= blue_metering_out[3] + 1;
-            else                         blue_metering_out[4] <= blue_metering_out[4] + 1;
+            if (blue_data_in < 204)      blue_counter[0] <= blue_counter[0] + 1;
+            else if (blue_data_in < 409) blue_counter[1] <= blue_counter[1] + 1;
+            else if (blue_data_in < 613) blue_counter[2] <= blue_counter[2] + 1;
+            else if (blue_data_in < 818) blue_counter[3] <= blue_counter[3] + 1;
+            else                         blue_counter[4] <= blue_counter[4] + 1;
         end
 
     end
