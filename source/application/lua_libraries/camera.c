@@ -651,6 +651,7 @@ static int lua_camera_histogram(lua_State *L)
                 last.shutter += 0.05 * error;
             }
         }
+        lua_pushboolean(L, false);
     }
 
     else if (error > 20) {
@@ -670,9 +671,14 @@ static int lua_camera_histogram(lua_State *L)
                 last.gain += 0.01 * error;
             }
         }
+        lua_pushboolean(L, false);
     }
 
-    else LOG("STOP");
+    else {
+        lua_pushboolean(L, true);
+    }
+
+    lua_setfield(L, -2, "ready");
 
     // Limit the outputs
     if (last.shutter > 16000)

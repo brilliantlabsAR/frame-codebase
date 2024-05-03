@@ -13,7 +13,9 @@ avg_bars = None
 
 lua_script_b = """
 count = 0
-while count < 20 do
+h = frame.camera.histogram()
+
+while (count < 30 and h['ready'] == false) do
 h = frame.camera.histogram()
 print('r:'..h['r'][0]..':'..h['r'][1]..':'..h['r'][2]..':'..h['r'][3]..':'..h['r'][4]..':'..h['r'][5]..':'..h['r'][6]..':'..h['r'][7])
 print('g:'..h['g'][0]..':'..h['g'][1]..':'..h['g'][2]..':'..h['g'][3]..':'..h['g'][4]..':'..h['g'][5]..':'..h['g'][6]..':'..h['g'][7])
