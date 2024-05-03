@@ -624,11 +624,17 @@ static int lua_camera_histogram(lua_State *L)
     }
     lua_setfield(L, -2, "a");
 
-    uint16_t first_avg_bin = (uint16_t)(data[0] + data[8] + data[16]) / 3;
-    uint16_t last_avg_bin = (uint16_t)(data[7] + data[15] + data[23]) / 3;
+    // Pick the last bin colour with maximum value
+    uint16_t last_bin;
+    if (data[7] >= data[15] && data[7] >= data[23])
+        last_bin = data[7];
+    else if (data[15] >= data[7] && data[15] >= data[23])
+        last_bin = data[15];
+    else
+        last_bin = data[23];
 
-    int16_t error = 200 - last_avg_bin;
-    if (error < -15) {
+    int16_t error = 128 - last_bin;
+    if (error < -20) {
         if (error < -50) {
             if (last.gain > 1) {
                 last.gain += 0.05 * error;
@@ -642,12 +648,12 @@ static int lua_camera_histogram(lua_State *L)
                 last.gain += 0.01 * error;
             }
             else {
-                last.shutter += last.shutter * 0.01 * error;
+                last.shutter += 0.05 * error;
             }
         }
     }
 
-    else if (error > 15) {
+    else if (error > 20) {
         if (error > 50) {
             if (last.shutter < 16000) {
                 last.shutter += last.shutter * 0.02 * error;
@@ -658,7 +664,7 @@ static int lua_camera_histogram(lua_State *L)
         }
         else {
             if (last.shutter < 16000) {
-                last.shutter += last.shutter * 0.01 * error;
+                last.shutter += 0.05 * error;
             }
             else {
                 last.gain += 0.01 * error;
