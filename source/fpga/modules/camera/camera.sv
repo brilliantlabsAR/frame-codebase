@@ -61,12 +61,9 @@ logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
 logic [15:0] image_buffer_address;
 
-logic [7:0] red_center_metering_spi_clock_domain;
-logic [7:0] green_center_metering_spi_clock_domain;
-logic [7:0] blue_center_metering_spi_clock_domain;
-logic [7:0] red_average_metering_spi_clock_domain;
-logic [7:0] green_average_metering_spi_clock_domain;
-logic [7:0] blue_average_metering_spi_clock_domain;
+logic [23:0] red_metering_spi_clock_domain [4:0];
+logic [23:0] green_metering_spi_clock_domain [4:0];
+logic [23:0] blue_metering_spi_clock_domain [4:0];
 
 spi_registers spi_registers (
     .clock_in(spi_clock_in),
@@ -90,12 +87,9 @@ spi_registers spi_registers (
     .data_in(image_buffer_data),
     .bytes_read_out(image_buffer_address),
 
-    .red_center_metering_in(red_center_metering_spi_clock_domain),
-    .green_center_metering_in(green_center_metering_spi_clock_domain),
-    .blue_center_metering_in(blue_center_metering_spi_clock_domain),
-    .red_average_metering_in(red_average_metering_spi_clock_domain),
-    .green_average_metering_in(green_average_metering_spi_clock_domain),
-    .blue_average_metering_in(blue_average_metering_spi_clock_domain)
+    .red_metering_in(red_metering_spi_clock_domain),
+    .green_metering_in(green_metering_spi_clock_domain),
+    .blue_metering_in(blue_metering_spi_clock_domain)
 );
 
 always @(posedge pixel_clock_in) begin
@@ -257,20 +251,14 @@ debayer debayer (
     .frame_valid_out(debayered_frame_valid)
 );
 
-logic [7:0] red_center_metering_pixel_clock_domain;
-logic [7:0] green_center_metering_pixel_clock_domain;
-logic [7:0] blue_center_metering_pixel_clock_domain;
-logic center_metering_ready_pixel_clock_domain;
-logic center_metering_ready_metastable;
-logic center_metering_ready_spi_clock_domain;
-logic [7:0] red_average_metering_pixel_clock_domain;
-logic [7:0] green_average_metering_pixel_clock_domain;
-logic [7:0] blue_average_metering_pixel_clock_domain;
-logic average_metering_ready_pixel_clock_domain;
-logic average_metering_ready_metastable;
-logic average_metering_ready_spi_clock_domain;
+logic [23:0] red_metering_pixel_clock_domain [4:0];
+logic [23:0] green_metering_pixel_clock_domain [4:0];
+logic [23:0] blue_metering_pixel_clock_domain [4:0];
+logic metering_ready_pixel_clock_domain;
+logic metering_ready_metastable;
+logic metering_ready_spi_clock_domain;
 
-metering #(.SIZE(128)) center_metering (
+metering #(.SIZE(128)) metering (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
@@ -280,52 +268,40 @@ metering #(.SIZE(128)) center_metering (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    .red_metering_out(red_center_metering_pixel_clock_domain),
-    .green_metering_out(green_center_metering_pixel_clock_domain),
-    .blue_metering_out(blue_center_metering_pixel_clock_domain),
-    .metering_ready_out(center_metering_ready_pixel_clock_domain)
-);
-
-metering #(.SIZE(512)) average_metering (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
-
-    .red_data_in(debayered_red_data),
-    .green_data_in(debayered_green_data),
-    .blue_data_in(debayered_blue_data),
-    .line_valid_in(debayered_line_valid),
-    .frame_valid_in(debayered_frame_valid),
-
-    .red_metering_out(red_average_metering_pixel_clock_domain),
-    .green_metering_out(green_average_metering_pixel_clock_domain),
-    .blue_metering_out(blue_average_metering_pixel_clock_domain),
-    .metering_ready_out(average_metering_ready_pixel_clock_domain)
+    .red_metering_out(red_metering_pixel_clock_domain),
+    .green_metering_out(green_metering_pixel_clock_domain),
+    .blue_metering_out(blue_metering_pixel_clock_domain),
+    .metering_ready_out(metering_ready_pixel_clock_domain),
 );
 
 always @(posedge spi_clock_in) begin : metering_cdc
     if (spi_reset_n_in == 0) begin
-        center_metering_ready_metastable <= 0;
-        center_metering_ready_spi_clock_domain <= 0;
-        average_metering_ready_metastable <= 0;
-        average_metering_ready_spi_clock_domain <= 0;
+        metering_ready_metastable <= 0;
+        metering_ready_spi_clock_domain <= 0;
     end
 
     else begin
-        center_metering_ready_metastable <= center_metering_ready_pixel_clock_domain;
-        center_metering_ready_spi_clock_domain <= center_metering_ready_metastable;
-        average_metering_ready_metastable <= average_metering_ready_pixel_clock_domain;
-        average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
+        metering_ready_metastable <= metering_ready_pixel_clock_domain;
+        metering_ready_spi_clock_domain <= metering_ready_metastable;
 
-        if (center_metering_ready_spi_clock_domain) begin
-            red_center_metering_spi_clock_domain <= red_center_metering_pixel_clock_domain;
-            green_center_metering_spi_clock_domain <= green_center_metering_pixel_clock_domain;
-            blue_center_metering_spi_clock_domain <= blue_center_metering_pixel_clock_domain;
-        end
+        if (metering_ready_spi_clock_domain) begin
+            red_metering_spi_clock_domain[0] <= red_metering_pixel_clock_domain[0];
+            red_metering_spi_clock_domain[1] <= red_metering_pixel_clock_domain[1];
+            red_metering_spi_clock_domain[2] <= red_metering_pixel_clock_domain[2];
+            red_metering_spi_clock_domain[3] <= red_metering_pixel_clock_domain[3];
+            red_metering_spi_clock_domain[4] <= red_metering_pixel_clock_domain[4];
 
-        if (average_metering_ready_spi_clock_domain) begin
-            red_average_metering_spi_clock_domain <= red_average_metering_pixel_clock_domain;
-            green_average_metering_spi_clock_domain <= green_average_metering_pixel_clock_domain;
-            blue_average_metering_spi_clock_domain <= blue_average_metering_pixel_clock_domain;
+            green_metering_spi_clock_domain[0] <= green_metering_pixel_clock_domain[0];
+            green_metering_spi_clock_domain[1] <= green_metering_pixel_clock_domain[1];
+            green_metering_spi_clock_domain[2] <= green_metering_pixel_clock_domain[2];
+            green_metering_spi_clock_domain[3] <= green_metering_pixel_clock_domain[3];
+            green_metering_spi_clock_domain[4] <= green_metering_pixel_clock_domain[4];
+
+            blue_metering_spi_clock_domain[0] <= blue_metering_pixel_clock_domain[0];
+            blue_metering_spi_clock_domain[1] <= blue_metering_pixel_clock_domain[1];
+            blue_metering_spi_clock_domain[2] <= blue_metering_pixel_clock_domain[2];
+            blue_metering_spi_clock_domain[3] <= blue_metering_pixel_clock_domain[3];
+            blue_metering_spi_clock_domain[4] <= blue_metering_pixel_clock_domain[4];
         end
     end
 end

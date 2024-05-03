@@ -9,9 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-module metering #(
-    SIZE = 512 // Must be 512, 256, 128 .. etc
-)(
+module metering (
     input logic clock_in,
     input logic reset_n_in,
 
@@ -21,29 +19,17 @@ module metering #(
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    output logic [7:0] red_metering_out,
-    output logic [7:0] green_metering_out,
-    output logic [7:0] blue_metering_out,
+    output logic [23:0] red_metering_out [4:0],
+    output logic [23:0] green_metering_out [4:0],
+    output logic [23:0] blue_metering_out [4:0],
     output logic metering_ready_out
 );
 
-// Assumes a 720x720 image
-parameter WINDOW_START = (720/2) - (SIZE/2);
-parameter WINDOW_END = (720/2) + (SIZE/2);
-
-// Max size of a 10bit buffer multiplied in a SIZE by SIZE grid
-// e.g. 512x512 gives 27
-parameter BITS = $clog2(SIZE * SIZE) + 10;
-
-logic [11:0] x_counter;
-logic [11:0] y_counter;
-
-logic previous_line_valid;
 logic previous_frame_valid;
 
-logic [BITS - 1:0] average_red_metering;
-logic [BITS - 1:0] average_green_metering;
-logic [BITS - 1:0] average_blue_metering;
+logic [23:0] red_counter [4:0];
+logic [23:0] green_counter [4:0];
+logic [23:0] blue_counter [4:0];
 
 always_ff @(posedge clock_in) begin
 
@@ -51,55 +37,72 @@ always_ff @(posedge clock_in) begin
 
     if (frame_valid_in == 0 || reset_n_in == 0) begin
 
-        x_counter <= 0;
-        y_counter <= 0;
-        previous_line_valid <= 0;
-
         if (previous_frame_valid) begin
-            red_metering_out <= average_red_metering[BITS - 1:BITS - 8];
-            green_metering_out <= average_green_metering[BITS - 1:BITS - 8];
-            blue_metering_out <= average_blue_metering[BITS - 1:BITS - 8];
+            red_metering_out[0] <= red_counter[0];
+            red_metering_out[1] <= red_counter[1];
+            red_metering_out[2] <= red_counter[2];
+            red_metering_out[3] <= red_counter[3];
+            red_metering_out[4] <= red_counter[4];
+
+            green_metering_out[0] <= green_counter[0];
+            green_metering_out[1] <= green_counter[1];
+            green_metering_out[2] <= green_counter[2];
+            green_metering_out[3] <= green_counter[3];
+            green_metering_out[4] <= green_counter[4];
+
+            blue_metering_out[0] <= blue_counter[0];
+            blue_metering_out[1] <= blue_counter[1];
+            blue_metering_out[2] <= blue_counter[2];
+            blue_metering_out[3] <= blue_counter[3];
+            blue_metering_out[4] <= blue_counter[4];
+
             metering_ready_out <= 0;
         end
         else begin
             metering_ready_out <= 1;
         end
 
-        average_red_metering <= 0;
-        average_green_metering <= 0;
-        average_blue_metering <= 0;
+        red_metering_out[0] <= 0;
+        red_metering_out[1] <= 0;
+        red_metering_out[2] <= 0;
+        red_metering_out[3] <= 0;
+        red_metering_out[4] <= 0;
 
+        green_metering_out[0] <= 0;
+        green_metering_out[1] <= 0;
+        green_metering_out[2] <= 0;
+        green_metering_out[3] <= 0;
+        green_metering_out[4] <= 0;
+
+        blue_metering_out[0] <= 0;
+        blue_metering_out[1] <= 0;
+        blue_metering_out[2] <= 0;
+        blue_metering_out[3] <= 0;
+        blue_metering_out[4] <= 0;
     end
 
     else begin
 
-        previous_line_valid <= line_valid_in;
         metering_ready_out <= 0;
 
-        // Increment counters
         if (line_valid_in) begin
-            x_counter <= x_counter + 1;
-        end
+            if (red_data_in < 204)      red_metering_out[0] <= red_metering_out[0] + 1;
+            else if (red_data_in < 409) red_metering_out[1] <= red_metering_out[1] + 1;
+            else if (red_data_in < 613) red_metering_out[2] <= red_metering_out[2] + 1;
+            else if (red_data_in < 818) red_metering_out[3] <= red_metering_out[3] + 1;
+            else                        red_metering_out[4] <= red_metering_out[4] + 1;
 
-        else begin
-            x_counter <= 0;
+            if (green_data_in < 204)      green_metering_out[0] <= green_metering_out[0] + 1;
+            else if (green_data_in < 409) green_metering_out[1] <= green_metering_out[1] + 1;
+            else if (green_data_in < 613) green_metering_out[2] <= green_metering_out[2] + 1;
+            else if (green_data_in < 818) green_metering_out[3] <= green_metering_out[3] + 1;
+            else                          green_metering_out[4] <= green_metering_out[4] + 1;
 
-            if (previous_line_valid) begin
-                y_counter <= y_counter + 1;
-            end
-        end
-
-        // Calculate metering only for the window
-        if(line_valid_in &&
-           x_counter >= WINDOW_START &&
-           x_counter < WINDOW_END &&
-           y_counter >= WINDOW_START &&
-           y_counter < WINDOW_END) begin
-
-            average_red_metering <= average_red_metering + red_data_in;
-            average_green_metering <= average_green_metering + green_data_in;
-            average_blue_metering <= average_blue_metering + blue_data_in;
-
+            if (blue_data_in < 204)      blue_metering_out[0] <= blue_metering_out[0] + 1;
+            else if (blue_data_in < 409) blue_metering_out[1] <= blue_metering_out[1] + 1;
+            else if (blue_data_in < 613) blue_metering_out[2] <= blue_metering_out[2] + 1;
+            else if (blue_data_in < 818) blue_metering_out[3] <= blue_metering_out[3] + 1;
+            else                         blue_metering_out[4] <= blue_metering_out[4] + 1;
         end
 
     end
