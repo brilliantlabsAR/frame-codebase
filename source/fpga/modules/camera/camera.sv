@@ -258,7 +258,7 @@ logic metering_ready_pixel_clock_domain;
 logic metering_ready_metastable;
 logic metering_ready_spi_clock_domain;
 
-metering #(.SIZE(128)) metering (
+metering metering (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
@@ -271,7 +271,7 @@ metering #(.SIZE(128)) metering (
     .red_metering_out(red_metering_pixel_clock_domain),
     .green_metering_out(green_metering_pixel_clock_domain),
     .blue_metering_out(blue_metering_pixel_clock_domain),
-    .metering_ready_out(metering_ready_pixel_clock_domain),
+    .metering_ready_out(metering_ready_pixel_clock_domain)
 );
 
 always @(posedge spi_clock_in) begin : metering_cdc
