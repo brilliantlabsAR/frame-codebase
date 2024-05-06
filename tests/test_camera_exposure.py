@@ -12,12 +12,10 @@ async def main():
     # Lua script of auto-exposure algorithm (under the hood)
     lua_script_a = """
     -- Configuration
-    target_exposure = 0.6
-    shutter_fast_kp = 50
-    shutter_slow_kp = 2000
+    target_exposure = 0.3
+    shutter_kp = 1
     gain_kp = 10
     shutter_limit = 6000
-    shutter_fast_slow_threshold = 800
 
     -- Internal variables
     shutter = 0
@@ -35,19 +33,14 @@ async def main():
 
         spot = (center_r + center_g + center_b) / 3
         average = (average_r + average_g + average_b) / 3
-        center_weighted = (spot + spot + spot + average) / 4
+        center_weighted = (spot + spot + average) / 3
 
         -- Calculate error
         error = target_exposure - center_weighted
 
         if error > 0 then
         
-            -- Use different kp for fast and slow shutters as it's non-linear
-            if shutter < shutter_fast_slow_threshold then
-                shutter = shutter + shutter_fast_kp * error
-            else
-                shutter = shutter + shutter_slow_kp * error
-            end
+            shutter = shutter + (shutter_kp * shutter) * error
 
             -- Prioritize shutter over gain when image is too dark
             if shutter >= shutter_limit then
@@ -60,12 +53,7 @@ async def main():
             gain = gain + gain_kp * error
 
             if gain <= 0 then
-                -- Use different kp for fast and slow shutters as it's non-linear
-                if shutter < shutter_fast_slow_threshold then
-                    shutter = shutter + shutter_fast_kp * error
-                else
-                    shutter = shutter + shutter_slow_kp * error
-                end
+                shutter = shutter + (shutter_kp * shutter) * error
             end
 
         end
@@ -92,7 +80,7 @@ async def main():
     while true do
         -- Get current values
         e = frame.camera.auto{ metering = 'CENTER_WEIGHTED', 
-                               target_exposure = 0.6, shutter_fast_kp = 50, 
+                               target_exposure = 0.5, shutter_fast_kp = 50, 
                                shutter_slow_kp = 2000, gain_kp = 10, 
                                shutter_limit = 6000, 
                                shutter_fast_slow_threshold = 800 }
@@ -155,7 +143,7 @@ async def main():
     # Function that will update the graph when new data arrives
     def update_graph(response: str):
         if response.startswith("Data:") == False:
-            # print(response) # Enable for easier debugging
+            print(response) # Enable for easier debugging
             return
 
         data = response.split(":")
@@ -198,7 +186,7 @@ async def main():
     await b.send_break_signal()
     print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
-    for line in lua_script_b.splitlines():
+    for line in lua_script_a.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)
