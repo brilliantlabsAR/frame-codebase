@@ -22,7 +22,7 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
+BUILD_VERSION ?= $(shell TZ= date +v%y.%j.%H%M)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 LIBRARIES := ../../libraries

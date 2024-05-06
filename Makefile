@@ -22,7 +22,8 @@
 # PERFORMANCE OF THIS SOFTWARE.
 #
 
-BUILD_VERSION := $(shell TZ= date +v%y.%j.%H%M)
+BUILD_VERSION ?= $(shell TZ= date +v%y.%j.%H%M)
+BUILD_VERSION := $(BUILD_VERSION)
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 BUILD := build
@@ -35,12 +36,12 @@ else
 endif
 
 application: 
-	@make -C source/application
+	@make -C source/application BUILD_VERSION=$(BUILD_VERSION)
 
 bootloader:
-	@make -C source/application
-	@make -C source/bootloader
-	@make settings-hex-zip
+	@make -C source/application BUILD_VERSION=$(BUILD_VERSION)
+	@make -C source/bootloader BUILD_VERSION=$(BUILD_VERSION)
+	@make settings-hex-zip BUILD_VERSION=$(BUILD_VERSION)
 
 settings-hex-zip:
 	@echo Building settings file...
@@ -75,8 +76,8 @@ settings-hex-zip:
 release:
 	@echo Releasing...
 	@make clean
-	@make application
-	@make settings-hex-zip
+	@make application BUILD_VERSION=$(BUILD_VERSION)
+	@make settings-hex-zip BUILD_VERSION=$(BUILD_VERSION)
 	@echo Released
 
 clean:
