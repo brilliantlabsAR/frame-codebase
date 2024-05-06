@@ -185,12 +185,10 @@ static int lua_camera_auto(lua_State *L)
     }
 
     camera_metering_mode_t metering = AVERAGE;
-    double target_exposure = 0.6;
-    double shutter_fast_kp = 600;
-    double shutter_slow_kp = 50;
-    double gain_kp = 30;
-    double shutter_limit = 6000;
-    double shutter_fast_slow_threshold = 800;
+    double exposure = 0.0;
+    double shutter_kp = 0.1;
+    double gain_kp = 1.0;
+    double shutter_limit = 6000.0;
 
     if (lua_istable(L, 1))
     {
@@ -213,41 +211,29 @@ static int lua_camera_auto(lua_State *L)
 
             else
             {
-                luaL_error(L,
-                           "metering must be spot, center_weighted or average");
+                luaL_error(L, "metering must be SPOT, CENTER_WEIGHTED or AVERAGE");
             }
 
             lua_pop(L, 1);
         }
 
-        if (lua_getfield(L, 1, "target_exposure") != LUA_TNIL)
+        if (lua_getfield(L, 1, "exposure") != LUA_TNIL)
         {
-            target_exposure = luaL_checknumber(L, -1);
-            if (target_exposure < 0.0 || target_exposure > 1.0)
+            exposure = luaL_checknumber(L, -1);
+            if (exposure < -2.0 || exposure > 2.0)
             {
-                luaL_error(L, "target_exposure must be between 0 and 1");
+                luaL_error(L, "exposure must be between -2 and 2");
             }
 
             lua_pop(L, 1);
         }
 
-        if (lua_getfield(L, 1, "shutter_fast_kp") != LUA_TNIL)
+        if (lua_getfield(L, 1, "shutter_kp") != LUA_TNIL)
         {
-            shutter_fast_kp = luaL_checknumber(L, -1);
-            if (shutter_fast_kp < 0.0)
+            shutter_kp = luaL_checknumber(L, -1);
+            if (shutter_kp < 0.0)
             {
-                luaL_error(L, "shutter_fast_kp must be greater than 0");
-            }
-
-            lua_pop(L, 1);
-        }
-
-        if (lua_getfield(L, 1, "shutter_slow_kp") != LUA_TNIL)
-        {
-            shutter_slow_kp = luaL_checknumber(L, -1);
-            if (shutter_slow_kp < 0.0)
-            {
-                luaL_error(L, "shutter_slow_kp must be greater than 0");
+                luaL_error(L, "shutter_kp must be greater than 0");
             }
 
             lua_pop(L, 1);
@@ -274,68 +260,47 @@ static int lua_camera_auto(lua_State *L)
 
             lua_pop(L, 1);
         }
-
-        if (lua_getfield(L, 1, "shutter_fast_slow_threshold") != LUA_TNIL)
-        {
-            shutter_fast_slow_threshold = luaL_checknumber(L, -1);
-            if (shutter_fast_slow_threshold < 0.0 ||
-                shutter_fast_slow_threshold > 16383.0)
-            {
-                luaL_error(L, "shutter_fast_slow_threshold must be between 0 and 16383");
-            }
-
-            lua_pop(L, 1);
-        }
     }
 
     // Get current brightness
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double spot_r = metering_data[0] / 255.0;
-    double spot_g = metering_data[1] / 255.0;
-    double spot_b = metering_data[2] / 255.0;
-    double matrix_r = metering_data[3] / 255.0;
-    double matrix_g = metering_data[4] / 255.0;
-    double matrix_b = metering_data[5] / 255.0;
+    double spot_r = metering_data[0] / 64.0 - 2;
+    double spot_g = metering_data[1] / 64.0 - 2;
+    double spot_b = metering_data[2] / 64.0 - 2;
+    double matrix_r = metering_data[3] / 64.0 - 2;
+    double matrix_g = metering_data[4] / 64.0 - 2;
+    double matrix_b = metering_data[5] / 64.0 - 2;
 
     double spot_average = (spot_r + spot_g + spot_b) / 3.0;
     double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
     double center_weighted_average = (spot_average +
                                       spot_average +
-                                      spot_average +
                                       matrix_average) /
-                                     4.0;
+                                     3.0;
 
     // Choose error
     double error;
     switch (metering)
     {
     case SPOT:
-        error = target_exposure - spot_average;
+        error = exposure - spot_average;
         break;
 
     case CENTER_WEIGHTED:
-        error = target_exposure - center_weighted_average;
+        error = exposure - center_weighted_average;
         break;
 
     default: // AVERAGE
-        error = target_exposure - matrix_average;
+        error = exposure - matrix_average;
         break;
     }
 
     // Run the loop iteration
     if (error > 0)
     {
-        // Use different kp for fast and slow shutters as it's non-linear
-        if (last.shutter < shutter_fast_slow_threshold)
-        {
-            last.shutter += shutter_fast_kp * error;
-        }
-        else
-        {
-            last.shutter += shutter_slow_kp * error;
-        }
+        last.shutter += (shutter_kp * last.shutter) * error;
 
         // Prioritize shutter over gain when image is too dark
         if (last.shutter >= shutter_limit)
@@ -350,15 +315,7 @@ static int lua_camera_auto(lua_State *L)
 
         if (last.gain <= 0)
         {
-            // Use different kp for fast and slow shutters as it's non-linear
-            if (last.shutter < shutter_fast_slow_threshold)
-            {
-                last.shutter += shutter_fast_kp * error;
-            }
-            else
-            {
-                last.shutter += shutter_slow_kp * error;
-            }
+            last.shutter += (shutter_kp * last.shutter) * error;
         }
     }
 

@@ -12,12 +12,10 @@ async def main():
     # Lua script of auto-exposure algorithm (under the hood)
     lua_script_a = """
     -- Configuration
-    target_exposure = 0.6
-    shutter_fast_kp = 50
-    shutter_slow_kp = 2000
-    gain_kp = 10
+    target_exposure = 0.0
+    shutter_kp = 0.1
+    gain_kp = 1
     shutter_limit = 6000
-    shutter_fast_slow_threshold = 800
 
     -- Internal variables
     shutter = 0
@@ -26,28 +24,23 @@ async def main():
     while true do
         -- Get current values
         brightness = frame.fpga.read(0x25, 6)
-        center_r = string.byte(brightness, 1) / 255
-        center_g = string.byte(brightness, 2) / 255
-        center_b = string.byte(brightness, 3) / 255
-        average_r = string.byte(brightness, 4) / 255
-        average_g = string.byte(brightness, 5) / 255
-        average_b = string.byte(brightness, 6) / 255
+        center_r = string.byte(brightness, 1) / 64 - 2
+        center_g = string.byte(brightness, 2) / 64 - 2
+        center_b = string.byte(brightness, 3) / 64 - 2
+        average_r = string.byte(brightness, 4) / 64 - 2
+        average_g = string.byte(brightness, 5) / 64 - 2
+        average_b = string.byte(brightness, 6) / 64 - 2
 
         spot = (center_r + center_g + center_b) / 3
         average = (average_r + average_g + average_b) / 3
-        center_weighted = (spot + spot + spot + average) / 4
+        center_weighted = (spot + spot + average) / 3
 
         -- Calculate error
         error = target_exposure - center_weighted
 
         if error > 0 then
         
-            -- Use different kp for fast and slow shutters as it's non-linear
-            if shutter < shutter_fast_slow_threshold then
-                shutter = shutter + shutter_fast_kp * error
-            else
-                shutter = shutter + shutter_slow_kp * error
-            end
+            shutter = shutter + (shutter_kp * shutter) * error
 
             -- Prioritize shutter over gain when image is too dark
             if shutter >= shutter_limit then
@@ -60,12 +53,7 @@ async def main():
             gain = gain + gain_kp * error
 
             if gain <= 0 then
-                -- Use different kp for fast and slow shutters as it's non-linear
-                if shutter < shutter_fast_slow_threshold then
-                    shutter = shutter + shutter_fast_kp * error
-                else
-                    shutter = shutter + shutter_slow_kp * error
-                end
+                shutter = shutter + (shutter_kp * shutter) * error
             end
 
         end
@@ -92,10 +80,8 @@ async def main():
     while true do
         -- Get current values
         e = frame.camera.auto{ metering = 'CENTER_WEIGHTED', 
-                               target_exposure = 0.6, shutter_fast_kp = 50, 
-                               shutter_slow_kp = 2000, gain_kp = 10, 
-                               shutter_limit = 6000, 
-                               shutter_fast_slow_threshold = 800 }
+                               exposure = 0.0, shutter_kp = 0.1, 
+                               gain_kp = 1, shutter_limit = 6000 }
 
         metrics = 'Data:'
         metrics = metrics..e['brightness']['matrix']['r']..':'
@@ -133,22 +119,22 @@ async def main():
     green_plot, = input_axis.plot(frame_count, g_brightness_values, 'g', label='green')
     blue_plot, = input_axis.plot(frame_count, b_brightness_values, 'b', label='blue')
     average_plot, = input_axis.plot(frame_count, average_brightness_values, 'k', label='average')
-    input_axis.set_ylim([0,1])
+    input_axis.set_ylim([-2.1, 2.1])
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
     shutter_plot, = shutter_axis.plot(frame_count, shutter_values, 'r', label='shutter')
     gain_plot, = gain_axis.plot(frame_count, gain_values, 'b', label='gain')
 
-    shutter_axis.set_ylim([0,17000])
+    shutter_axis.set_ylim([0, 17000])
     shutter_axis.set_ylabel("Setpoints")
     shutter_axis.legend(loc="upper left")
     shutter_axis.yaxis.set_major_formatter(EngFormatter(sep=""))
-    gain_axis.set_ylim([0,260])
+    gain_axis.set_ylim([0 ,260])
     gain_axis.legend(loc="upper right")
 
     error_plot, = error_axis.plot(frame_count, error_values)
-    error_axis.set_ylim([-1,1])
+    error_axis.set_ylim([-2.1, 2.1])
     error_axis.set_xlabel("Frame")
     error_axis.set_ylabel("Error")
 

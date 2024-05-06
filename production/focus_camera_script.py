@@ -658,7 +658,7 @@ async def capture_and_download(b: Bluetooth):
     await b.send_lua(f"frame.camera.capture()")
 
     for _ in range(3):
-        await b.send_lua("frame.camera.auto{ metering = 'CENTER_WEIGHTED' }")
+        await b.send_lua("frame.camera.auto{}")
         await asyncio.sleep(0.1)
 
     await b.send_lua(
