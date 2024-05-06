@@ -12,9 +12,9 @@ async def main():
     # Lua script of auto-exposure algorithm (under the hood)
     lua_script_a = """
     -- Configuration
-    target_exposure = 0.5
-    shutter_kp = 1000
-    gain_kp = 10
+    target_exposure = -0.0
+    shutter_kp = 0.2
+    gain_kp = 1.5
     shutter_limit = 6000
 
     -- Internal variables
@@ -50,12 +50,15 @@ async def main():
         average_3 = (red_3 + green_3 + blue_3) / 3
         average_4 = (red_4 + green_4 + blue_4) / 3
 
+        -- Calculate mean
+        mean = average_0 * -2 + average_1 * -1 + average_3 * 1 + average_4 * 2
+
         -- Calculate error
-        error = target_exposure - average_4
+        error = target_exposure - mean
 
         if error > 0 then
         
-            shutter = shutter + shutter_kp * error
+            shutter = shutter + (shutter_kp * shutter) * error
 
             -- Prioritize shutter over gain when image is too dark
             if shutter >= shutter_limit then
@@ -68,11 +71,11 @@ async def main():
             gain = gain + gain_kp * error
 
             if gain <= 0 then
-                shutter = shutter + shutter_kp * error
+                shutter = shutter + (shutter_kp * shutter) * error
             end
 
         end
-                
+
         -- Limit the values
         if shutter > shutter_limit then shutter = shutter_limit end
         if shutter < 4 then shutter = 4 end
