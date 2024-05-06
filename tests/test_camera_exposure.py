@@ -12,9 +12,9 @@ async def main():
     # Lua script of auto-exposure algorithm (under the hood)
     lua_script_a = """
     -- Configuration
-    target_exposure = 0.3
-    shutter_kp = 1
-    gain_kp = 10
+    target_exposure = 0.0
+    shutter_kp = 0.1
+    gain_kp = 1
     shutter_limit = 6000
 
     -- Internal variables
@@ -24,12 +24,12 @@ async def main():
     while true do
         -- Get current values
         brightness = frame.fpga.read(0x25, 6)
-        center_r = string.byte(brightness, 1) / 255
-        center_g = string.byte(brightness, 2) / 255
-        center_b = string.byte(brightness, 3) / 255
-        average_r = string.byte(brightness, 4) / 255
-        average_g = string.byte(brightness, 5) / 255
-        average_b = string.byte(brightness, 6) / 255
+        center_r = string.byte(brightness, 1) / 64 - 2
+        center_g = string.byte(brightness, 2) / 64 - 2
+        center_b = string.byte(brightness, 3) / 64 - 2
+        average_r = string.byte(brightness, 4) / 64 - 2
+        average_g = string.byte(brightness, 5) / 64 - 2
+        average_b = string.byte(brightness, 6) / 64 - 2
 
         spot = (center_r + center_g + center_b) / 3
         average = (average_r + average_g + average_b) / 3
@@ -80,10 +80,8 @@ async def main():
     while true do
         -- Get current values
         e = frame.camera.auto{ metering = 'CENTER_WEIGHTED', 
-                               target_exposure = 0.5, shutter_fast_kp = 50, 
-                               shutter_slow_kp = 2000, gain_kp = 10, 
-                               shutter_limit = 6000, 
-                               shutter_fast_slow_threshold = 800 }
+                               exposure = 0.0, shutter_kp = 0.1, 
+                               gain_kp = 1, shutter_limit = 6000 }
 
         metrics = 'Data:'
         metrics = metrics..e['brightness']['matrix']['r']..':'
@@ -121,7 +119,7 @@ async def main():
     green_plot, = input_axis.plot(frame_count, g_brightness_values, 'g', label='green')
     blue_plot, = input_axis.plot(frame_count, b_brightness_values, 'b', label='blue')
     average_plot, = input_axis.plot(frame_count, average_brightness_values, 'k', label='average')
-    input_axis.set_ylim([0,1])
+    input_axis.set_ylim([-1,1])
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
@@ -143,7 +141,7 @@ async def main():
     # Function that will update the graph when new data arrives
     def update_graph(response: str):
         if response.startswith("Data:") == False:
-            print(response) # Enable for easier debugging
+            # print(response) # Enable for easier debugging
             return
 
         data = response.split(":")
@@ -186,7 +184,7 @@ async def main():
     await b.send_break_signal()
     print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
-    for line in lua_script_a.splitlines():
+    for line in lua_script_b.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)
