@@ -119,22 +119,22 @@ async def main():
     green_plot, = input_axis.plot(frame_count, g_brightness_values, 'g', label='green')
     blue_plot, = input_axis.plot(frame_count, b_brightness_values, 'b', label='blue')
     average_plot, = input_axis.plot(frame_count, average_brightness_values, 'k', label='average')
-    input_axis.set_ylim([-1,1])
+    input_axis.set_ylim([-2.1, 2.1])
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
     shutter_plot, = shutter_axis.plot(frame_count, shutter_values, 'r', label='shutter')
     gain_plot, = gain_axis.plot(frame_count, gain_values, 'b', label='gain')
 
-    shutter_axis.set_ylim([0,17000])
+    shutter_axis.set_ylim([0, 17000])
     shutter_axis.set_ylabel("Setpoints")
     shutter_axis.legend(loc="upper left")
     shutter_axis.yaxis.set_major_formatter(EngFormatter(sep=""))
-    gain_axis.set_ylim([0,260])
+    gain_axis.set_ylim([0 ,260])
     gain_axis.legend(loc="upper right")
 
     error_plot, = error_axis.plot(frame_count, error_values)
-    error_axis.set_ylim([-1,1])
+    error_axis.set_ylim([-2.1, 2.1])
     error_axis.set_xlabel("Frame")
     error_axis.set_ylabel("Error")
 
