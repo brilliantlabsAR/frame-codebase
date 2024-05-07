@@ -169,7 +169,8 @@ def make_memfile():
             chroma - DC
     """
     n = 2*(11*16 + 12) #= 2*(176 + 12) = 2*188 = 376
-    n = 2**int(math.log2(n) + 1)
+    #n = 2**int(math.log2(n) + 1) # nearest power of 2
+    n = 16*((n + 15)//16) # nearest 16
     
     mem = [0]*n
     for color in ['luma', 'chroma']:
@@ -199,6 +200,7 @@ def make_memfile():
                     #print(symbol, address , length)
                     mem[address] = [length_m1, code, f"//{z} {color}"]
 
+    initvals = []
     for a, m in enumerate(mem):
         if type(m) is list:
             (l, c, _) = m
@@ -206,7 +208,25 @@ def make_memfile():
         else:
             l = 0
             dat = 0xdead    
-        print(f'{l:1x}{dat:04x}')    
+
+        # MEM File
+        #print(a, f'{l:1x}{dat:04x}')    
+        initvals.append(dat | (l << 16))
+
+    i = 0
+    while(len(initvals)):
+        d = initvals[:16]
+        initvals = initvals[16:]
+        
+        m = 0
+        for j, v in enumerate(d):
+            #print(j, f'{v:x}')
+            m |= (((v & 0x1ff) | (((v >> 9) & 0x1ff) << 10)) << j*20)
+        print(f'defparam EBR_inst.INITVAL_{i:02X} = "0x{m:080X}";')
+        i += 1
+
+
+        # 
 #        add = f'{{8\'h {a:2x}, 1\'b 0}}'
             
 #            print(add, l0, c0, note)

@@ -154,6 +154,7 @@ always_comb rom_addr[8:5] = ht_ac[i] ? ht_coeff_length[i]  : 4'hb;
 always_comb rom_addr[4:1] = ht_ac[i] ? ht_rl[i] : ht_coeff_length[i];  
 always_comb rom_addr[0] =  ht_chroma[i];
 
+`ifdef USE_LATTICE_IP
 huffman_codes_rom huffman_codes_rom (
     .rd_clk_i   (clk), 
     .rst_i      (1'b0), 
@@ -162,6 +163,15 @@ huffman_codes_rom huffman_codes_rom (
     .rd_addr_i  (rom_addr), 
     .rd_data_o  (rom_rd)
 );
+`else
+huffman_codes_rom_EBR huffman_codes_rom (
+    .rd_clk_i   (clk), 
+    .rd_en_i    (~out_hold), 
+    .rd_addr_i  (rom_addr), 
+    .rd_data_o  (rom_rd)
+);
+`endif //USE_LATTICE_IP
+
 always_comb code_length0[i][4:2] = len[4:2];
 always_comb code_length0[i][1:0] = 1 + rom_rd[17:16];
 always_comb code0[i] = rom_rd[15:0];

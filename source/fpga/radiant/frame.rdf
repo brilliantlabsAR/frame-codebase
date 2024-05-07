@@ -105,20 +105,8 @@
         <Source name="../modules/camera/jpeg_encoder/jenc/quant_tables.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
         </Source>
-        <Source name="jisp/ram_dp_w18_d360/ram_dp_w18_d360.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="jisp/ram_dp_w64_b8_d1440/ram_dp_w64_b8_d1440.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="jisp/ram_dp_w64_b8_d2880/ram_dp_w64_b8_d2880.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
         <Source name="../modules/camera/jpeg_encoder/jenc_cdc.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
-        </Source>
-        <Source name="jenc/ram_dp_w32_b4_d64/ram_dp_w32_b4_d64.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
         </Source>
         <Source name="../modules/camera/jpeg_encoder/jenc/transpose.sv" type="Verilog" type_short="Verilog">
             <Options VerilogStandard="System Verilog"/>
@@ -127,9 +115,6 @@
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="pll_ip/pll_ip.ipx" type="IPX_Module" type_short="IPX">
-            <Options/>
-        </Source>
-        <Source name="image_buffer/large_ram_dp_w32_d16k_q/large_ram_dp_w32_d16k_q.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
         <Source name="../modules/camera/jpeg_encoder/jpeg_encoder.sv" type="Verilog" type_short="Verilog">
@@ -145,9 +130,6 @@
             <Options VerilogStandard="System Verilog"/>
         </Source>
         <Source name="../modules/camera/jpeg_encoder/jlib/afifo.v" type="Verilog" type_short="Verilog">
-            <Options/>
-        </Source>
-        <Source name="huffman_codes_rom/ipgen/huffman_codes_rom.ipx" type="IPX_Module" type_short="IPX">
             <Options/>
         </Source>
         <Source name="source/frame/frame.ldc" type="LSE Design Constraints File" type_short="LDC">

@@ -77,7 +77,7 @@ dct_2d dct_2d (
     .q_cnt          (d_cnt),
     .*
 );
-quant #(.QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) quant(
+quant #(.SENSOR_X_SIZE(SENSOR_X_SIZE), .SENSOR_Y_SIZE(SENSOR_Y_SIZE), .QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) quant(
     .di             (d),
     .di_valid       (d_valid),
     .di_hold        (d_hold),

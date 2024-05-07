@@ -115,20 +115,28 @@ endif
 ifeq ($(SIM),modelsim)
 # Lattice verif models
 VERILOG_FILES += \
-        ../../../reset/reset_sync.sv \
-        ../../../reset/global_reset_sync.sv \
         ../../testbenches/csi/source/csi/csi2_transmitter_ip/rtl/csi2_transmitter_ip.v \
         ../../testbenches/csi/source/csi/pixel_to_byte_ip/rtl/pixel_to_byte_ip.v \
         ../../testbenches/csi/source/csi/pll_sim_ip/rtl/pll_sim_ip.v
 
-# Lattice models
+# RAM/ROM as EBR
 VERILOG_FILES += \
-        ../../../../radiant/huffman_codes_rom/ipgen/rtl/huffman_codes_rom.v \
-        ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
-        ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
-        ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
-        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
-        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v \
+        ../../jpeg_encoder/jlib/huffman_codes_rom_EBR.sv \
+        ../../jpeg_encoder/jlib/ram_dp_w18_d360_EBR.sv \
+        ../../jpeg_encoder/jlib/ram_dp_w32_b4_d64_EBR.sv \
+        ../../jpeg_encoder/jlib/ram_dp_w64_b8_d1440_EBR.sv \
+        ../../jpeg_encoder/jlib/ram_dp_w64_b8_d2880_EBR.sv 
+
+# Lattice models
+#VERILOG_FILES += \
+#        ../../../../radiant/huffman_codes_rom/ipgen/rtl/huffman_codes_rom.v \
+#        ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
+#        ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
+#        ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
+#        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
+#        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v
+
+VERILOG_FILES += \
         ../../../../radiant/csi2_receiver_ip/rtl/csi2_receiver_ip.v \
         ../../../../radiant/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v \
         ../../../../radiant/pll_ip/rtl/pll_ip.v
@@ -172,7 +180,8 @@ ifeq ($(SIM),modelsim)
         EXTRA_ARGS += +define+USE_LATTICE_EBR           # use EBR explicitely
         EXTRA_ARGS += +define+COCOTB_MODELSIM
         EXTRA_ARGS += -suppress vlog-2244 -suppress  vlog-13314
-        EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work 
+        EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work
+        EXTRA_ARGS += +memory
         export COCOTB_RESOLVE_X=ZEROS    
         
 ifeq ($(GATE_SIM),1)

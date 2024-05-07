@@ -169,6 +169,7 @@ dp_ram_be  #(
     .wclk   (clk)
 );
 `else
+`ifdef USE_LATTICE_IP
 ram_dp_w64_b8_d2880 y_buf (
     .wr_addr_i  ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}), 
     .wr_data_i  ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
@@ -184,7 +185,21 @@ ram_dp_w64_b8_d2880 y_buf (
     .rd_clk_i   (clk), 
     .rst_i      (1'b0)
 );
-`endif
+`else
+ram_dp_w64_b8_d2880_EBR y_buf (
+    .wr_addr_i  ({(yuvrgb_in_pixel_count >> 3), yuvrgb_in_line_count[3:0], wptr[0]}), 
+    .wr_data_i  ({8{yuvrgb_in[0] - JPEG_BIAS}}),            // <== JPEG bias!
+    .ben_i      ((yuvrgb_in_pixel_count==x_size_m1 ? '1 : 1) << (yuvrgb_in_pixel_count & 7)),
+    .wr_en_i    (yuvrgb_in_valid[0] & !yuvrgb_in_hold), 
+
+    .rd_addr_i  (ra_luma), 
+    .rd_en_i    (re_luma), 
+    .rd_data_o  (rd_y), 
+    .wr_clk_i   (clk), 
+    .rd_clk_i   (clk)
+);
+`endif //USE_LATTICE_IP
+`endif //USE_LATTICE_EBR
 
 //U+V buffer
 // Address: 2x320x8 bytes = 5120 bytes -> 12.32 -> 13 bits
@@ -225,6 +240,7 @@ dp_ram_be  #(
     .wclk   (clk)
 );
 `else
+`ifdef USE_LATTICE_IP
 ram_dp_w64_b8_d1440 uv_buf (
     .wr_addr_i  (uv_buf_wa),
     .wr_data_i  ({8{uv_buf_wd}}),
@@ -240,7 +256,21 @@ ram_dp_w64_b8_d1440 uv_buf (
     .rd_clk_i   (clk), 
     .rst_i      (1'b0)
 );
-`endif
+`else
+ram_dp_w64_b8_d1440_EBR uv_buf (
+    .wr_addr_i  (uv_buf_wa),
+    .wr_data_i  ({8{uv_buf_wd}}),
+    .ben_i      (uv_buf_wbe),
+    .wr_en_i    (uv_buf_we),
+
+    .rd_addr_i  (ra_chroma), 
+    .rd_en_i    (!di_hold & !empty & mcu_count > 3), 
+    .rd_data_o  (rd_uv), 
+    .wr_clk_i   (clk), 
+    .rd_clk_i   (clk)
+);
+`endif //USE_LATTICE_IP
+`endif //USE_LATTICE_EBR
 
 // data out reg & mux
 always @(posedge clk)
