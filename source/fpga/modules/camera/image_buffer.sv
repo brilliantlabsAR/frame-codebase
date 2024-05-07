@@ -21,6 +21,7 @@ module inferred_lram (
 );
 
 `ifndef RADIANT (* ram_style="huge" *) `endif logic [31:0] mem [0:16383];
+logic [31:0] read_data;
 
 always @(posedge clock_in) begin
 
@@ -28,7 +29,8 @@ always @(posedge clock_in) begin
         mem[address_in] <= write_data_in;
     end
 
-    read_data_out <= mem[address_in];
+    read_data <= mem[address_in];
+    read_data_out <= read_data;
 
 end
 
