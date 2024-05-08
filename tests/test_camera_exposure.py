@@ -18,8 +18,8 @@ async def main():
     gain_kp = 1
     gain_limit = 248
 
-    -- Internal variables
-    shutter = 0
+    -- Internal variables (defaults)
+    shutter = 3000
     gain = 0
 
     while true do
