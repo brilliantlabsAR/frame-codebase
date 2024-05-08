@@ -46,7 +46,7 @@ static struct camera_auto_last_values
     double shutter;
     double gain;
 } last = {
-    .shutter = 0,
+    .shutter = 3000,
     .gain = 0,
 };
 
@@ -88,8 +88,6 @@ static int lua_camera_read(lua_State *L)
 
     size_t bytes_remaining = bytes_requested;
 
-    // LOG("Requested: %llu bytes", bytes_requested);
-
     uint8_t *payload = malloc(bytes_requested);
     if (payload == NULL)
     {
@@ -104,7 +102,6 @@ static int lua_camera_read(lua_State *L)
                 ? sizeof(jpeg_header) - jpeg_header_bytes_sent_out
                 : bytes_requested;
 
-        // LOG("  written %u bytes of header", length);
         memcpy(payload, jpeg_header + jpeg_header_bytes_sent_out, length);
 
         jpeg_header_bytes_sent_out += length;
@@ -132,8 +129,6 @@ static int lua_camera_read(lua_State *L)
                          length);
 
                 bytes_remaining -= length;
-
-                // LOG("  written %u bytes of image data", length);
             }
         }
 
@@ -145,7 +140,6 @@ static int lua_camera_read(lua_State *L)
                 payload[bytes_requested - bytes_remaining] = 0xFF;
                 jpeg_footer_bytes_sent_out++;
                 bytes_remaining--;
-                // LOG("  written 0xFF of footer");
             }
 
             // append footer 0xD9
@@ -154,7 +148,6 @@ static int lua_camera_read(lua_State *L)
                 payload[bytes_requested - bytes_remaining] = 0xD9;
                 jpeg_footer_bytes_sent_out++;
                 bytes_remaining--;
-                // LOG("  written 0xD9 of footer");
             }
         }
     }
@@ -163,14 +156,12 @@ static int lua_camera_read(lua_State *L)
     if (bytes_remaining == bytes_requested)
     {
         lua_pushnil(L);
-        // LOG("  all done");
     }
 
     // Otherwise return payload
     else
     {
         lua_pushlstring(L, (char *)payload, bytes_requested - bytes_remaining);
-        // LOG("  sent");
     }
 
     free(payload);
@@ -187,8 +178,9 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double exposure = 0.0;
     double shutter_kp = 0.1;
-    double gain_kp = 1.0;
     double shutter_limit = 6000.0;
+    double gain_kp = 1.0;
+    double gain_limit = 248.0;
 
     if (lua_istable(L, 1))
     {
@@ -239,6 +231,17 @@ static int lua_camera_auto(lua_State *L)
             lua_pop(L, 1);
         }
 
+        if (lua_getfield(L, 1, "shutter_limit") != LUA_TNIL)
+        {
+            shutter_limit = luaL_checknumber(L, -1);
+            if (shutter_limit < 4.0 || shutter_limit > 16383.0)
+            {
+                luaL_error(L, "shutter_limit must be between 4 and 16383");
+            }
+
+            lua_pop(L, 1);
+        }
+
         if (lua_getfield(L, 1, "gain_kp") != LUA_TNIL)
         {
             gain_kp = luaL_checknumber(L, -1);
@@ -250,12 +253,12 @@ static int lua_camera_auto(lua_State *L)
             lua_pop(L, 1);
         }
 
-        if (lua_getfield(L, 1, "shutter_limit") != LUA_TNIL)
+        if (lua_getfield(L, 1, "gain_limit") != LUA_TNIL)
         {
-            shutter_limit = luaL_checknumber(L, -1);
-            if (shutter_limit < 0.0 || shutter_limit > 16383.0)
+            gain_limit = luaL_checknumber(L, -1);
+            if (gain_limit < 0.0 || gain_limit > 248.0)
             {
-                luaL_error(L, "shutter_limit must be between 0 and 16383");
+                luaL_error(L, "gain_limit must be between 0 and 248");
             }
 
             lua_pop(L, 1);
@@ -328,9 +331,9 @@ static int lua_camera_auto(lua_State *L)
     {
         last.shutter = 4.0;
     }
-    if (last.gain > 248.0)
+    if (last.gain > gain_limit)
     {
-        last.gain = 248.0;
+        last.gain = gain_limit;
     }
     if (last.gain < 0.0)
     {

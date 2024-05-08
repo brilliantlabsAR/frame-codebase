@@ -31,6 +31,12 @@
 #include "lua.h"
 #include "luaport.h"
 
+static int lua_bluetooth_is_connected(lua_State *L)
+{
+    lua_pushboolean(L, bluetooth_is_connected());
+    return 1;
+}
+
 static int lua_bluetooth_address(lua_State *L)
 {
     ble_gap_addr_t addr;
@@ -141,6 +147,9 @@ void lua_open_bluetooth_library(lua_State *L)
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
+
+    lua_pushcfunction(L, lua_bluetooth_is_connected);
+    lua_setfield(L, -2, "is_connected");
 
     lua_pushcfunction(L, lua_bluetooth_address);
     lua_setfield(L, -2, "address");
