@@ -117,25 +117,6 @@ dp_ram_be  #(
     .*
 );
 `else
-`ifdef USE_LATTICE_IP
-ram_dp_w32_b4_d64 mem (
-    .wr_addr_i  (wa), 
-    .wr_data_i  (wd),
-    .ben_i      (wbe),
-    .wr_en_i    (we), 
-    .wr_clk_en_i(we), 
-
-    .rd_addr_i  (ra), 
-    .rd_en_i    (re), 
-    .rd_clk_en_i(re), 
-    .rd_data_o  (rd), 
-
-    .wr_clk_i   (clk_x22), 
-    .rd_clk_i   (clk), 
-    .rst_i      (1'b0)
-);
-`else
-
 ram_dp_w32_b4_d64_EBR mem (
     .wr_addr_i  (wa), 
     .wr_data_i  (wd),
@@ -149,8 +130,6 @@ ram_dp_w32_b4_d64_EBR mem (
     .wr_clk_i   (clk_x22), 
     .rd_clk_i   (clk) 
 );
-
-`endif //USE_LATTICE_IP
 `endif //USE_LATTICE_EBR
 
 

@@ -70,21 +70,6 @@ dp_ram  #(
     .wclk   (clk)
 );
 `else
-`ifdef USE_LATTICE_IP
-ram_dp_w18_d360 line_buf (
-    .wr_addr_i  (pixel_count >> 1), 
-    .wr_data_i  ({line_buf_in[2], line_buf_in[1]}), 
-    .wr_en_i    (lb_we), 
-    .wr_clk_en_i(lb_we), 
-    .rd_addr_i  (pixel_count >> 1), 
-    .rd_en_i    (lb_re), 
-    .rd_clk_en_i(lb_re), 
-    .rd_data_o  ({line_buf_out[2], line_buf_out[1]}), 
-    .wr_clk_i   (clk), 
-    .rd_clk_i   (clk), 
-    .rst_i      (1'b0)
-);
-`else
 ram_dp_w18_d360_EBR line_buf (
     .wr_addr_i  (pixel_count >> 1), 
     .wr_data_i  ({line_buf_in[2], line_buf_in[1]}), 
@@ -95,7 +80,6 @@ ram_dp_w18_d360_EBR line_buf (
     .wr_clk_i   (clk), 
     .rd_clk_i   (clk) 
 );
-`endif //USE_LATTICE_IP
 `endif //USE_LATTICE_EBR
 
 // Store chroma lines in line buffer
