@@ -8,7 +8,7 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
-import sys, os, time, random
+import sys, os, time, random, logging
 
 import numpy as np
 
@@ -149,7 +149,7 @@ class Tester(SPITransactor):
     async def initialize(self):
         await RisingEdge(self.dut.cpu_clock_8hmz)
         # Compression factor flag
-        qf_select = {50: 0, 100: 1, 25: 3, 10: 2}[self.qf] + 0x4
+        qf_select = {50: 0, 100: 1, 25: 3, 10: 2}[self.qf]
         
         await self.spi_write_read(0x26, qf_select)
         # Capture flag
@@ -161,7 +161,9 @@ class Tester(SPITransactor):
         self.dut.pixel_fv.value = 1
         await ClockCycles(self.dut.camera_pixel_clock, 300)
 
-        for line in self.img_bayer:
+        self.dut.log.debug("******** Frame")
+        for l, line in enumerate(self.img_bayer):
+            self.dut.log.debug(f"         Line={l}")
             await ClockCycles(self.dut.camera_pixel_clock, 300)
             self.dut.pixel_lv.value = 1
             for pix in line:
@@ -226,6 +228,10 @@ class Tester(SPITransactor):
 
 @cocotb.test()
 async def dct_test(dut):
+    level = logging.DEBUG #NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
+    level = logging.INFO
+    dut.log.setLevel(level)
+
     initialize_ports(dut)
 
     clk_op = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock

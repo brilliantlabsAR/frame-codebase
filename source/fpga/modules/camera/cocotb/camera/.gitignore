@@ -9,3 +9,7 @@ orig.bmp
 frame_frame_vo.sdf
 frame_frame_vo.vo
 frame_frame_vo.sdf_*.csd
+
+*.jpg
+*.fst
+*.vcd

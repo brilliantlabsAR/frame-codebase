@@ -146,12 +146,12 @@ VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
 VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
 
 ifeq ($(SIM),icarus)
-        COMPILE_ARGS += -DCOCOTB_SIM
+        COMPILE_ARGS += -DCOCOTB_SIM=1
         COMPILE_ARGS += -DRADIANT
         COMPILE_ARGS += -DTOP_SIM
         COMPILE_ARGS += -DCOCOTB_ICARUS
 else # verilator + modelsim
-        EXTRA_ARGS += +define+COCOTB_SIM
+        EXTRA_ARGS += +define+COCOTB_SIM=1
         EXTRA_ARGS += +define+RADIANT
         EXTRA_ARGS += +define+TOP_SIM
 endif
