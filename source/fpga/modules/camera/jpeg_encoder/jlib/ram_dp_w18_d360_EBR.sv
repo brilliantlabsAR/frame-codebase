@@ -146,11 +146,13 @@ EBR_CORE EBR_inst(
         .TWOERR ( ),
         .WEA    (1'b1),
         .WEB    (1'b0),
+`ifdef COCOTB_MODELSIM
         .DWS0   (1'b1),
         .DWS1   (1'b1),
         .DWS2   (1'b1),
         .DWS3   (1'b1),
         .DWS4   (1'b1),
+`endif
         .FULLF  (),
         .AFULL  (),
         .EMPTYF (),
