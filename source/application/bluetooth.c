@@ -566,6 +566,11 @@ void bluetooth_setup(bool factory_reset)
     check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
 }
 
+bool bluetooth_is_connected(void)
+{
+    return ble_handles.connection == BLE_CONN_HANDLE_INVALID ? false : true;
+}
+
 bool bluetooth_send_data(const uint8_t *data, size_t length)
 {
     if (ble_handles.connection == BLE_CONN_HANDLE_INVALID)

@@ -14,8 +14,9 @@ async def main():
     -- Configuration
     target_exposure = 0.0
     shutter_kp = 0.1
-    gain_kp = 1
     shutter_limit = 6000
+    gain_kp = 1
+    gain_limit = 248
 
     -- Internal variables
     shutter = 0
@@ -62,7 +63,7 @@ async def main():
         if shutter > shutter_limit then shutter = shutter_limit end
         if shutter < 4 then shutter = 4 end
 
-        if gain > 248 then gain = 248 end
+        if gain > gain_limit then gain = gain_limit end
         if gain < 0 then gain = 0 end
 
         -- Set the new values (rounded to nearest int)
@@ -79,9 +80,9 @@ async def main():
     lua_script_b = """
     while true do
         -- Get current values
-        e = frame.camera.auto{ metering = 'CENTER_WEIGHTED', 
-                               exposure = 0.0, shutter_kp = 0.1, 
-                               gain_kp = 1, shutter_limit = 6000 }
+        e = frame.camera.auto { metering = 'CENTER_WEIGHTED', exposure = 0.0, 
+                                shutter_kp = 0.1, shutter_limit = 6000,
+                                gain_kp = 1, gain_limit = 248 }
 
         metrics = 'Data:'
         metrics = metrics..e['brightness']['matrix']['r']..':'

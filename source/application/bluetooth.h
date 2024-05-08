@@ -33,4 +33,6 @@ extern uint16_t ble_negotiated_mtu;
 
 void bluetooth_setup(bool factory_reset);
 
+bool bluetooth_is_connected(void);
+
 bool bluetooth_send_data(const uint8_t *data, size_t length);
