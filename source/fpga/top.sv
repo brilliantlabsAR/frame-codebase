@@ -65,7 +65,7 @@ logic pll_locked;
 logic pll_reset;
 logic jpeg_buffer_clock;
 
-`ifdef NO_PLL_IP_SIM
+`ifdef NO_PLL_SIM
 initial osc_clock = 0;
 initial camera_clock = 0;
 initial display_clock = 0;
@@ -88,7 +88,7 @@ OSCA #(
 );
 
 logic camera_pixel_clock;
-`ifdef USE_PLL_WRAPPER
+
 pll_wrapper pll_wrapper (
     .clki_i(osc_clock),                 // 18MHz
     .rstn_i(pll_reset),
@@ -99,19 +99,8 @@ pll_wrapper pll_wrapper (
     .clkos4_o(jpeg_buffer_clock),       // 78MHz
     .lock_o(pll_locked)
 );
-`else
-pll_ip pll (
-    .clki_i(osc_clock),                 // 18MHz
-    .rstn_i(~pll_reset),
-    .clkop_o(camera_clock),             // 24MHz
-    .clkos_o(camera_pixel_clock),       // 36MHz
-    .clkos2_o(display_clock),           // 36MHz
-    .clkos3_o(spi_peripheral_clock),    // 72MHz
-    .clkos4_o(jpeg_buffer_clock),       // 78MHz
-    .lock_o(pll_locked)
-);
-`endif //USE_PLL_WRAPPER
-`endif //NO_PLL_IP_SIM
+
+`endif //NO_PLL_SIM
 
 // Reset
 logic global_reset_n;

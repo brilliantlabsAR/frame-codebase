@@ -159,7 +159,7 @@ endif
 ifeq ($(SIM),icarus)
         COMPILE_ARGS += -DINFER_HUFFMAN_CODES_ROM    # rtl version
         COMPILE_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
-        COMPILE_ARGS += -DNO_PLL_IP_SIM           # Emulate PLL
+        COMPILE_ARGS += -DNO_PLL_SIM              # Emulate PLL
         COMPILE_ARGS += -Wall
         COMPILE_ARGS += -v
         #COMPILE_ARGS += -g2005-sv
@@ -167,7 +167,7 @@ endif
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+INFER_HUFFMAN_CODES_ROM    # rtl version
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
-        EXTRA_ARGS += +define+NO_PLL_IP_SIM     # Emulate PLL
+        EXTRA_ARGS += +define+NO_PLL_SIM        # Emulate PLL
         EXTRA_ARGS += --timing
         ifneq ($(WAVES),0)
                 EXTRA_ARGS += --trace --trace-structs --trace-fst
@@ -211,7 +211,7 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 # Build Lattice IP (CSI, PLL, EBR) as prerequisite
 .PHONY: ip
 ip:
-	make ip -C ../../../../radiant
+	make -C ../../testbenches/csi/source/csi/pll_sim_ip
 ifeq ($(SIM),modelsim)
 sim: ip
 endif
@@ -236,6 +236,7 @@ clean::
 	rm -rf dump.fst dump.fst.hier 
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
 	rm -rf frame_frame_vo.sdf_*.csd
+	make clean -C ../../testbenches/csi/source/csi/pll_sim_ip
 
 .PHONY: bmp
 bmp: rgb_out.bmp
