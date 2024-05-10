@@ -224,12 +224,16 @@ logic[10:0] y_pan_crop_start;   // Todo: Make SPI register
 logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
 
 `ifdef COCOTB_SIM
+`ifndef IMAGE_X_SIZE
+`define IMAGE_X_SIZE 200
+`endif
+`ifndef IMAGE_Y_SIZE
+`define IMAGE_Y_SIZE 200
+`endif
 always_comb x_pan_crop_start    = 1;
-always_comb x_pan_crop_end      = x_pan_crop_start + 200 + 2;
-//always_comb x_pan_crop_end      = x_pan_crop_start + 16 + 2;
+always_comb x_pan_crop_end      = x_pan_crop_start + `IMAGE_X_SIZE + 2;
 always_comb y_pan_crop_start    = 1;
-always_comb y_pan_crop_end      = y_pan_crop_start + 200 + 2;
-//always_comb y_pan_crop_end      = y_pan_crop_start + 16 + 2;
+always_comb y_pan_crop_end      = y_pan_crop_start + `IMAGE_Y_SIZE + 2;
 `else
 `ifdef TESTBENCH
 always_comb x_pan_crop_start    = 10;
@@ -355,10 +359,8 @@ always_comb y_size = y_zoom_crop_end - y_zoom_crop_start;
 // after debayer
 always_comb x_zoom_crop_start    = 0;
 always_comb x_zoom_crop_end      = x_pan_crop_end - x_pan_crop_start - 2;
-//always_comb x_zoom_crop_end      = 16;
 always_comb y_zoom_crop_start    = 0;
 always_comb y_zoom_crop_end      = y_pan_crop_end - y_pan_crop_start - 2;
-//always_comb y_zoom_crop_end      = 16;
 `else
 `ifdef TESTBENCH
 always_comb x_zoom_crop_start    = 0;

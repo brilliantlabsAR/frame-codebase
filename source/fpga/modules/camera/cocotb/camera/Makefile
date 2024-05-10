@@ -32,11 +32,11 @@ export IMAGE_Y_SIZE := $(IMAGE_Y_SIZE)
 endif
 
 ifeq ($(SIM),icarus)
-COMPILE_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%)
-COMPILE_ARGS += $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
+COMPILE_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%) $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
+COMPILE_ARGS += $(IMAGE_X_SIZE:%=-DIMAGE_X_SIZE=%) $(IMAGE_Y_SIZE:%=-DIMAGE_Y_SIZE=%)
 else # verilator + modelsim
-EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%)
-EXTRA_ARGS += $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
+EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%) $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
+EXTRA_ARGS += $(IMAGE_X_SIZE:%=+define+IMAGE_X_SIZE=%) $(IMAGE_Y_SIZE:%=+define+IMAGE_Y_SIZE=%)
 endif
 
 # gate level
@@ -183,6 +183,10 @@ ifeq ($(SIM),modelsim)
         EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work
         EXTRA_ARGS += +memory
         export COCOTB_RESOLVE_X=ZEROS    
+
+ifeq ($(WAVES),1)
+        EXTRA_ARGS += +DUMP
+endif
         
 ifeq ($(GATE_SIM),1)
         EXTRA_ARGS += +define+GATE_SIM

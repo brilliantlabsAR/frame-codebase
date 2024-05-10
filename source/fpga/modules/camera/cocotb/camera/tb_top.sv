@@ -85,8 +85,14 @@ reset_sync reset_sync_clock_camera_byte (
     .sync_reset_n_out(reset_camera_byte_n)
 );
 
-`define SENSOR_X_SIZE  1288
-`define SENSOR_Y_SIZE  768
+`ifndef SENSOR_X_SIZE 
+//`define SENSOR_X_SIZE  1288
+`define SENSOR_X_SIZE  208
+`endif
+`ifndef SENSOR_Y_SIZE 
+//`define SENSOR_Y_SIZE  768
+`define SENSOR_Y_SIZE  208
+`endif
 parameter WORD_COUNT = `SENSOR_X_SIZE * 10 / 8; // RAW10 in bytes
 
 logic c2d_ready, tx_d_hs_en, byte_data_en;
