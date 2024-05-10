@@ -27,7 +27,7 @@ module quant_tables #(
 `include "quant_tables.vh"
 logic[25:0] qt_mem[3:0][1:0][31:0]; /* synthesis syn_ramstyle="Block_RAM" */
 generate
-for(genvar h=0; h<3; h++) begin: H
+for(genvar h=0; h<4; h++) begin: H
 integer qf;
 always_comb
     case(h)
