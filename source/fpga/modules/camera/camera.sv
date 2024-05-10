@@ -408,7 +408,7 @@ parameter QF1 = 100;
 parameter QF2 = 10;
 parameter QF3 = 25;
 
-jpeg_encoder #(.QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) jpeg_encoder (
+jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 

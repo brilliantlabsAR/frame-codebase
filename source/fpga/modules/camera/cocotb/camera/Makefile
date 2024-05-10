@@ -34,9 +34,11 @@ endif
 ifeq ($(SIM),icarus)
 COMPILE_ARGS += $(SENSOR_X_SIZE:%=-DSENSOR_X_SIZE=%) $(SENSOR_Y_SIZE:%=-DSENSOR_Y_SIZE=%)
 COMPILE_ARGS += $(IMAGE_X_SIZE:%=-DIMAGE_X_SIZE=%) $(IMAGE_Y_SIZE:%=-DIMAGE_Y_SIZE=%)
+COMPILE_ARGS += $(QF0:%=-DQF0=%) $(QF1:%=-DQF1=%) $(QF2:%=-DQF2=%) $(QF3:%=-DQF3=%)
 else # verilator + modelsim
 EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%) $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
 EXTRA_ARGS += $(IMAGE_X_SIZE:%=+define+IMAGE_X_SIZE=%) $(IMAGE_Y_SIZE:%=+define+IMAGE_Y_SIZE=%)
+EXTRA_ARGS += $(QF0:%=+define+QF0=%) $(QF1:%=+define+QF1=%) $(QF2:%=+define+QF2=%) $(DQF3:%=+define+DQF3=%)
 endif
 
 # gate level
@@ -143,7 +145,7 @@ VERILOG_FILES += \
 endif
 
 VERILOG_SOURCES += $(realpath $(VERILOG_FILES))
-VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
+VERILOG_INCLUDE_DIRS += $(realpath ../.. ../../jpeg_encoder ../../jpeg_encoder/jisp  ../../jpeg_encoder/jenc ../../jpeg_encoder/jlib .)
 
 ifeq ($(SIM),icarus)
         COMPILE_ARGS += -DCOCOTB_SIM=1
@@ -236,7 +238,7 @@ clean::
 	rm -rf dump.fst dump.fst.hier 
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
 	rm -rf frame_frame_vo.sdf_*.csd
-	make clean -C ../../testbenches/csi/source/csi/pll_sim_ip
+	#make clean -C ../../testbenches/csi/source/csi/pll_sim_ip
 
 .PHONY: bmp
 bmp: rgb_out.bmp

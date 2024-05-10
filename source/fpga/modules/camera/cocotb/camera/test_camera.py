@@ -154,7 +154,7 @@ class Tester(SPITransactor):
     async def initialize(self):
         await RisingEdge(self.dut.cpu_clock_8hmz)
         # Compression factor flag
-        qf_select = {50: 0, 100: 1, 25: 3, 10: 2}[self.qf]
+        qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([50, 100, 10, 25])}[self.qf]
         
         await self.spi_write_read(0x26, qf_select)
         # Capture flag

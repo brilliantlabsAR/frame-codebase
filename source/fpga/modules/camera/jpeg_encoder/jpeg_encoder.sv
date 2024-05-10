@@ -10,12 +10,7 @@
  module jpeg_encoder #(
     parameter DW = 8,
     parameter SENSOR_X_SIZE    = 720, //1280,
-    parameter SENSOR_Y_SIZE    = 720,
-    // 4 possible QF
-    parameter QF0 = 50,
-    parameter QF1 = 100,
-    parameter QF2 = 10,
-    parameter QF3 = 25
+    parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic               start_capture_in,
 
@@ -119,11 +114,7 @@ jisp #(
 
 jenc #(
     .SENSOR_X_SIZE      (SENSOR_X_SIZE),
-    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE),
-    .QF0                (QF0),
-    .QF1                (QF1),
-    .QF2                (QF2),
-    .QF3                (QF3)
+    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
 ) jenc (
     .size               (out_size),
     .qf_select          (qf_select_in),

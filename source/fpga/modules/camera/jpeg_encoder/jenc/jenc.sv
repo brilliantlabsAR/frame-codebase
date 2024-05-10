@@ -12,12 +12,7 @@ module jenc #(
     parameter QW = 11,
     parameter CW = QW + 4,
     parameter SENSOR_X_SIZE    = 1280,
-    parameter SENSOR_Y_SIZE    = 720,
-    // 4 possible QF
-    parameter QF0 = 50,
-    parameter QF1 = 100,
-    parameter QF2 = 10,
-    parameter QF3 = 25
+    parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic signed[DW-1:0]    di[7:0], 
     input   logic                   di_valid,
@@ -77,7 +72,7 @@ dct_2d dct_2d (
     .q_cnt          (d_cnt),
     .*
 );
-quant #(.SENSOR_X_SIZE(SENSOR_X_SIZE), .SENSOR_Y_SIZE(SENSOR_Y_SIZE), .QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) quant(
+quant #(.SENSOR_X_SIZE(SENSOR_X_SIZE), .SENSOR_Y_SIZE(SENSOR_Y_SIZE)) quant(
     .di             (d),
     .di_valid       (d_valid),
     .di_hold        (d_hold),

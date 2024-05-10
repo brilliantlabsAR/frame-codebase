@@ -6,7 +6,6 @@
  * Copyright (C) 2024 Robert Metchev
  */
 // Jpeg Quatizer
-`include "zigzag.vh"
 module quant #(
     parameter DW = 15,
     // Regular 1-D DCT adds +3 bits to coefficients, but 
@@ -85,7 +84,7 @@ logic [5:0] q_ra;
 // read the quantizer coefficients 2 at a time
 always_comb q_ra = {zigzag_mcu_cnt[2], di_cnt};
 
-quant_tables #(.QF0(QF0), .QF1(QF1), .QF2(QF2), .QF3(QF3)) quant_tables (
+quant_tables quant_tables (
     .re         (di_valid & ~q_hold),
     .ra         (q_ra),
     .rd         (q_factor),
