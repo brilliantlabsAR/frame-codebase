@@ -71,6 +71,8 @@ class SPITransactor():
             await FallingEdge(self.dut.cpu_clock_8hmz)
             self.dut.spi_clock_in.value = 0
             await RisingEdge(self.dut.cpu_clock_8hmz)
+        md = 1000
+        mdm1 = md - 1
         for j, operand in enumerate(operands):
             # extra cycle for debug, can be removed
             await RisingEdge(self.dut.cpu_clock_8hmz)
@@ -81,6 +83,9 @@ class SPITransactor():
                 await FallingEdge(self.dut.cpu_clock_8hmz)
                 self.dut.spi_clock_in.value = 0
                 await RisingEdge(self.dut.cpu_clock_8hmz)
+            if j % md == mdm1:
+            	self.dut._log.debug(f"         Reading byte={j+1}")
+
         self.dut.spi_data_in.value = 0
         self.dut.spi_select_in.value = 1
         return data_recvd
@@ -161,9 +166,9 @@ class Tester(SPITransactor):
         self.dut.pixel_fv.value = 1
         await ClockCycles(self.dut.camera_pixel_clock, 300)
 
-        self.dut.log.debug("******** Frame")
+        self.dut._log.debug("******** Frame")
         for l, line in enumerate(self.img_bayer):
-            self.dut.log.debug(f"         Line={l}")
+            self.dut._log.debug(f"         Line={l}")
             await ClockCycles(self.dut.camera_pixel_clock, 300)
             self.dut.pixel_lv.value = 1
             for pix in line:
@@ -194,6 +199,7 @@ class Tester(SPITransactor):
         read_data = await self.spi_write_read(0x31, *[0xff]*2)
         bytes = 4 + sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
 
+        self.dut._log.debug(f"******** Compressed bytes={bytes}")
         if True:
             self.ecs = await self.spi_write_read(0x22, *[0xff]*bytes)
         else:
@@ -228,9 +234,8 @@ class Tester(SPITransactor):
 
 @cocotb.test()
 async def dct_test(dut):
-    level = logging.DEBUG #NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
-    level = logging.INFO
-    dut.log.setLevel(level)
+    level = os.environ.get('LOG_LEVEL', 'INFO') # NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
+    dut._log.setLevel(level)
 
     initialize_ports(dut)
 
