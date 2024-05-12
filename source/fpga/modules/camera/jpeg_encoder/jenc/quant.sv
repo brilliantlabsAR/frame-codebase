@@ -6,6 +6,7 @@
  * Copyright (C) 2024 Robert Metchev
  */
 // Jpeg Quatizer
+`include "jpeg_encoder.vh"
 module quant #(
     parameter DW = 15,
     // Regular 1-D DCT adds +3 bits to coefficients, but 
@@ -13,12 +14,7 @@ module quant #(
     parameter QW = DW - 4,
     parameter M_BITS = 13,         // Bit size of Multiplier coefficients
     parameter SENSOR_X_SIZE    = 1280,
-    parameter SENSOR_Y_SIZE    = 720,
-    // 4 possible QF
-    parameter QF0 = 50,
-    parameter QF1 = 100,
-    parameter QF2 = 10,
-    parameter QF3 = 25
+    parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic signed[DW-1:0]    di[1:0], 
     input   logic                   di_valid,
@@ -92,26 +88,32 @@ quant_tables quant_tables (
 );
 
 logic signed[DW+M_BITS-1:0]    mult_out[1:0];
-always_comb q[0] = mult_out[0] >> (M_BITS-1);
-always_comb q[1] = mult_out[1] >> (M_BITS-1);
-quant_seq_mult_15x13_p4 mult0 (
-    .a_in       (di0[0]),
-    .b_in       (q_factor[0]),
-    .out        (mult_out[0]),
-    .in_valid   (di0_valid & !q_hold),
-    .out_valid  (q_valid),
-    .en         (~q_hold),
-    .*
-);
-quant_seq_mult_15x13_p4 mult1 (
-    .a_in       (di0[1]),
-    .b_in       (q_factor[1]),
-    .out        (mult_out[1]),
-    .in_valid   (di0_valid & !q_hold),
+`ifdef QUANTIZER_USE_DSP_MULT
+logic signed[M_BITS:0]         sq_factor[1:0]; //signed version to infer signed multiplication
+`endif //QUANTIZER_USE_DSP_MULT
+
+generate
+for(genvar i=0; i<2; i++) begin : mult
+always_comb q[i] = mult_out[i] >> (M_BITS-1);
+`ifdef QUANTIZER_USE_DSP_MULT
+// DSP MULT 18x18 option
+always_comb sq_factor[i] = {1'b0, q_factor[i]};
+always @(posedge clk) 
+if(di0_valid & ~q_hold)
+    mult_out[i] <= (di0[i] * sq_factor[i]) + (1 << (M_BITS-2)); // rounding bit
+`else
+quant_seq_mult_15x13_p4 mult (
+    .a_in       (di0[i]),
+    .b_in       (q_factor[i]),
+    .out        (mult_out[i]),
+    .in_valid   (di0_valid),
     .out_valid  ( ),
     .en         (~q_hold),
     .*
 );
+`endif //QUANTIZER_USE_DSP_MULT
+end
+endgenerate
 
 
 //logic for finding the last block
@@ -147,16 +149,28 @@ always @(posedge clk)
 if (di_valid & !q_hold)
     di0_last_mcu  <= last_mcu;
 
+`ifdef QUANTIZER_USE_DSP_MULT
+always @(posedge clk) 
+if (!resetn) q_valid <= 0;
+else if(~q_hold) q_valid <= di0_valid;
+
+always @(posedge clk) 
+if(di0_valid & ~q_hold) begin
+    q_last_mcu <= di0_last_mcu;
+    q_chroma <= di0_chroma;
+    q_cnt <= di0_cnt;
+end
+`else
 // Hijack multiplier for pipelining for now :)
-logic signed[DW+M_BITS-1:0]    pipe_out;
 quant_seq_mult_15x13_p4 cnt_pipe (
     .a_in       ({di0_last_mcu, di0_chroma, di0_cnt}),
     .b_in       (1),
     .out        ({q_last_mcu, q_chroma, q_cnt}),
-    .in_valid   (di0_valid & !q_hold),
-    .out_valid  ( ),
+    .in_valid   (di0_valid),
+    .out_valid  (q_valid),
     .en         (~q_hold),
     .*
 );
+`endif //QUANTIZER_USE_DSP_MULT
 
 endmodule

@@ -1,6 +1,9 @@
 `ifndef __JPEG_ENCODER_VH__ 
 `define __JPEG_ENCODER_VH__
 
+// USE DSP Slice
+`define QUANTIZER_USE_DSP_MULT
+
 // 4 possible QF
 `ifndef QF0
 `define QF0 50
