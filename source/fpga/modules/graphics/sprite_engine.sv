@@ -73,7 +73,7 @@ always_ff @(posedge clock_in) begin
                 pixels_remaining <= pixels_remaining - 1;
 
                 // Calculate the cursor position and width wrapping
-                if (current_x_pen_position < x_position_in + width_in) begin
+                if (current_x_pen_position < x_position_in + width_in - 1) begin
                     current_x_pen_position <= current_x_pen_position + 1;
                 end
 
@@ -90,30 +90,30 @@ always_ff @(posedge clock_in) begin
                 case (total_colors_in)
                     2: begin
                         case (pixels_remaining[2:0])
-                            'b000: pixel_write_data_out <= data_in[0] + color_palette_offset_in;
-                            'b001: pixel_write_data_out <= data_in[1] + color_palette_offset_in;
-                            'b010: pixel_write_data_out <= data_in[2] + color_palette_offset_in;
-                            'b011: pixel_write_data_out <= data_in[3] + color_palette_offset_in;
-                            'b100: pixel_write_data_out <= data_in[4] + color_palette_offset_in;
-                            'b101: pixel_write_data_out <= data_in[5] + color_palette_offset_in;
-                            'b110: pixel_write_data_out <= data_in[6] + color_palette_offset_in;
-                            'b111: pixel_write_data_out <= data_in[7] + color_palette_offset_in;
+                            'b000: pixel_write_data_out <= data_in[7] + color_palette_offset_in;
+                            'b111: pixel_write_data_out <= data_in[6] + color_palette_offset_in;
+                            'b110: pixel_write_data_out <= data_in[5] + color_palette_offset_in;
+                            'b101: pixel_write_data_out <= data_in[4] + color_palette_offset_in;
+                            'b100: pixel_write_data_out <= data_in[3] + color_palette_offset_in;
+                            'b011: pixel_write_data_out <= data_in[2] + color_palette_offset_in;
+                            'b010: pixel_write_data_out <= data_in[1] + color_palette_offset_in;
+                            'b001: pixel_write_data_out <= data_in[0] + color_palette_offset_in;
                         endcase
                     end
 
                     4: begin
                         case (pixels_remaining[1:0])
-                            'b00: pixel_write_data_out <= data_in[1:0] + color_palette_offset_in;
-                            'b01: pixel_write_data_out <= data_in[3:2] + color_palette_offset_in;
-                            'b10: pixel_write_data_out <= data_in[5:4] + color_palette_offset_in;
-                            'b11: pixel_write_data_out <= data_in[7:6] + color_palette_offset_in;
+                            'b00: pixel_write_data_out <= data_in[7:6] + color_palette_offset_in;
+                            'b11: pixel_write_data_out <= data_in[5:4] + color_palette_offset_in;
+                            'b10: pixel_write_data_out <= data_in[3:2] + color_palette_offset_in;
+                            'b01: pixel_write_data_out <= data_in[1:0] + color_palette_offset_in;
                         endcase
                     end
 
                     16: begin
                         case (pixels_remaining[0])
-                            'b0: pixel_write_data_out <= data_in[3:0] + color_palette_offset_in;
-                            'b1: pixel_write_data_out <= data_in[7:4] + color_palette_offset_in;
+                            'b0: pixel_write_data_out <= data_in[7:4] + color_palette_offset_in;
+                            'b1: pixel_write_data_out <= data_in[3:0] + color_palette_offset_in;
                         endcase
                     end
                 endcase
