@@ -393,6 +393,8 @@ static void hardware_setup(bool *factory_reset)
 
 int main(void)
 {
+    LOG("Frame firmware " BUILD_VERSION " (" GIT_COMMIT ")");
+
     bool factory_reset = false;
 
     hardware_setup(&factory_reset);
