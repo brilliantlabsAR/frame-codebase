@@ -156,8 +156,10 @@ spi_peripheral spi_peripheral (
 
 // Graphics
 graphics graphics (
-    .clock_in(display_clock),
-    .reset_n_in(display_reset_n),
+    .spi_clock_in(spi_peripheral_clock),
+    .spi_reset_n_in(spi_reset_n),
+    .display_clock_in(display_clock),
+    .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),

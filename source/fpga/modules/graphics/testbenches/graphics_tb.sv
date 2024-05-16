@@ -15,8 +15,10 @@
 
 module graphics_tb;
 
-logic clock = 0;
-logic reset_n = 0;
+logic spi_clock = 0;
+logic spi_reset_n = 0;
+logic display_clock = 0;
+logic display_reset_n = 0;
 
 logic [7:0] opcode;
 logic opcode_valid = 0;
@@ -24,50 +26,59 @@ logic [7:0] operand;
 logic operand_valid = 0;
 integer operand_count = 0;
 
+localparam  SPI_HALF_PERIOD = 1;
+
 initial begin
-    #20000
-    reset_n <= 1;
-    #10000
+    #(20000*SPI_HALF_PERIOD)
+    spi_reset_n <= 1;
+    display_reset_n <= 1;
+    #(10000*SPI_HALF_PERIOD)
 
     // Clear command
     send_opcode('h10);
     done();
-    #1200000
+    #(2100000*SPI_HALF_PERIOD)
 
     // Draw pixels
     send_opcode('h12);
     send_operand('h00); // X pos
-    send_operand('h32);
+    send_operand('h00);
     send_operand('h00); // Y pos
-    send_operand('h64);
+    send_operand('h00);
     send_operand('h00); // Width
-    send_operand('h14);
-    send_operand('h10); // Total colors
+    send_operand('d48);
+    send_operand('h2); // Total colors
     send_operand('h00); // palette offset
-    send_operand('h12); // Data
-    send_operand('h34);
-    send_operand('h56);
-    send_operand('h78);
-    send_operand('h9A);
-    send_operand('hBC);
-    send_operand('hDE);
-    send_operand('hF0);
+    send_operand('hFF);
+    send_operand('hFF);
+    send_operand('hFF);
+    send_operand('hFF);
+    send_operand('hFF);
+    send_operand('hFF);
+    send_operand('h80);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h00);
+    send_operand('h01);
     done();
-    #30000
+    #(30000*SPI_HALF_PERIOD)
 
     // Show command
     send_opcode('h14);
     done();
-    #2000000
+    #(2000000*SPI_HALF_PERIOD)
 
-    reset_n <= 0;
-    #20000
+    $writememh("simulation/image_buffer.txt", graphics.display_buffers.buffer_b.mem);
     $finish;
 end
 
 graphics graphics (
-    .clock_in(clock),
-    .reset_n_in(reset_n),
+    .spi_clock_in(spi_clock),
+    .spi_reset_n_in(spi_reset_n),
+
+    .display_clock_in(display_clock),
+    .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -84,7 +95,11 @@ graphics graphics (
 );
 
 initial begin
-    forever #1 clock <= ~clock;
+    forever #SPI_HALF_PERIOD spi_clock <= ~spi_clock;
+end
+
+initial begin
+    forever #(2*SPI_HALF_PERIOD) display_clock <= ~display_clock;
 end
 
 task send_opcode(
@@ -93,7 +108,7 @@ task send_opcode(
     begin
         opcode <= data;
         opcode_valid <= 1;
-        #64;
+        #(64*SPI_HALF_PERIOD);
     end
 endtask
 
@@ -104,9 +119,9 @@ task send_operand(
         operand <= data;
         operand_valid <= 1;
         operand_count <= operand_count + 1;
-        #64;
+        #(64*SPI_HALF_PERIOD);
         operand_valid <= 0;
-        #8;
+        #(8*SPI_HALF_PERIOD);
     end
 endtask
 
@@ -115,7 +130,7 @@ task done;
         opcode_valid <= 0;
         operand_valid <= 0;
         operand_count <= 0;
-        #8;
+        #(8*SPI_HALF_PERIOD);
     end
 endtask
 
