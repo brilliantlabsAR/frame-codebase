@@ -185,7 +185,6 @@ static void draw_sprite(lua_State *L,
     // Remove Lua 1 based offset before sending
     x_position--;
     y_position--;
-    width--; // TODO this shouldn't be needed, but there's a bug somewhere
 
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
                             (uint32_t)x_position,
@@ -207,6 +206,12 @@ static void draw_sprite(lua_State *L,
               0x12,
               payload,
               pixel_data_length + sizeof(meta_data));
+    
+    // for (int i=0; i<pixel_data_length + sizeof(meta_data); i++) {
+    //     LOG("%x", *(payload + i));
+    //     nrfx_systick_delay_ms(1);
+    // }
+    
     free(payload);
 }
 
@@ -356,6 +361,31 @@ static int lua_display_set_register(lua_State *L)
     return 0;
 }
 
+static int lua_display_raw(lua_State *L)
+{
+    lua_Integer data = luaL_checkinteger(L, 1);
+    lua_Integer x_position = luaL_checkinteger(L, 2);
+    lua_Integer y_position = luaL_checkinteger(L, 3);
+    lua_Integer width = luaL_checkinteger(L, 4);
+
+    uint8_t payload[13] = {(uint32_t)x_position >> 8,
+                            (uint32_t)x_position,
+                            (uint32_t)y_position >> 8,
+                            (uint32_t)y_position,
+                            0,
+                            (uint8_t)width,
+                            SPRITE_2_COLORS,
+                            0,
+                            (uint32_t)data >> 24,
+                            (uint32_t)data >> 16,
+                            (uint32_t)data >> 8,
+                            (uint32_t)data};
+    
+    spi_write(FPGA, 0x12, payload, sizeof(payload));
+
+    return 0;
+}
+
 void lua_open_display_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -382,6 +412,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_set_register);
     lua_setfield(L, -2, "set_register");
+    
+    lua_pushcfunction(L, lua_display_raw);
+    lua_setfield(L, -2, "raw");
 
     lua_setfield(L, -2, "display");
 
