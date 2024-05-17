@@ -55,7 +55,7 @@ always_comb lb_en = line_valid_in & yuvrgb_in_valid & !yuvrgb_in_hold;
 always_comb lb_we = line_count[0]==0 & pixel_count[0]==1 & lb_en;
 always_comb lb_re = line_count[0]==1 & pixel_count[0]==0 & lb_en;
 
-`ifndef USE_LATTICE_EBR
+// Inferrable RAM
 dp_ram  #(
     .DW     (2*LW),
     .DEPTH  (SENSOR_X_SIZE/2)    // in bytes
@@ -69,18 +69,6 @@ dp_ram  #(
     .rclk   (clk),
     .wclk   (clk)
 );
-`else
-ram_dp_w18_d360_EBR line_buf (
-    .wr_addr_i  (pixel_count >> 1), 
-    .wr_data_i  ({line_buf_in[2], line_buf_in[1]}), 
-    .wr_en_i    (lb_we), 
-    .rd_addr_i  (pixel_count >> 1), 
-    .rd_en_i    (lb_re), 
-    .rd_data_o  ({line_buf_out[2], line_buf_out[1]}), 
-    .wr_clk_i   (clk), 
-    .rd_clk_i   (clk) 
-);
-`endif //USE_LATTICE_EBR
 
 // Store chroma lines in line buffer
 always @(posedge clk)

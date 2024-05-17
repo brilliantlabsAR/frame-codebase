@@ -24,7 +24,12 @@
 
 BUILD := ../../build
 TOOLCHAIN ?= YOSYS
+
+ifdef LATTICE_ROOT
+RADIANT_PATH = $(LATTICE_ROOT)/bin/lin64
+else
 RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
+endif
 
 fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
