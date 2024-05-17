@@ -45,6 +45,10 @@ always_comb for (int i = 0; i<D; i++) rd_data[i] = {64{rd_en_z[i]}} & rd_data_z[
 
 assign rd_data_o = rd_data[0] | rd_data[1] | rd_data[2] | rd_data[3] | rd_data[4] | rd_data[5];
 
+wire VDD, VSS;
+VLO INST1( .Z(VSS));
+VHI INST2( .Z(VDD));
+
 generate
 for (genvar i = 0; i<D; i++) begin : D2880
 for (genvar j = 0; j<W; j++) begin : W64
@@ -57,7 +61,7 @@ EBR_CORE EBR_inst(
         .DIA5   (wr_data_i[32*j + 5]),
         .DIA6   (wr_data_i[32*j + 6]),
         .DIA7   (wr_data_i[32*j + 7]),
-        .DIA8   (1'b0),
+        .DIA8   (VSS),
         .DIA9   (wr_data_i[32*j + 8]),
         .DIA10  (wr_data_i[32*j + 9]),
         .DIA11  (wr_data_i[32*j + 10]),
@@ -66,7 +70,7 @@ EBR_CORE EBR_inst(
         .DIA14  (wr_data_i[32*j + 13]),
         .DIA15  (wr_data_i[32*j + 14]),
         .DIA16  (wr_data_i[32*j + 15]),
-        .DIA17  (1'b0),
+        .DIA17  (VSS),
         .DIB0   (wr_data_i[32*j + 16]),
         .DIB1   (wr_data_i[32*j + 17]),
         .DIB2   (wr_data_i[32*j + 18]),
@@ -75,7 +79,7 @@ EBR_CORE EBR_inst(
         .DIB5   (wr_data_i[32*j + 21]),
         .DIB6   (wr_data_i[32*j + 22]),
         .DIB7   (wr_data_i[32*j + 23]),
-        .DIB8   (1'b0),
+        .DIB8   (VSS),
         .DIB9   (wr_data_i[32*j + 24]),
         .DIB10  (wr_data_i[32*j + 25]),
         .DIB11  (wr_data_i[32*j + 26]),
@@ -84,12 +88,12 @@ EBR_CORE EBR_inst(
         .DIB14  (wr_data_i[32*j + 29]),
         .DIB15  (wr_data_i[32*j + 30]),
         .DIB16  (wr_data_i[32*j + 31]),
-        .DIB17  (1'b0),
+        .DIB17  (VSS),
         .ADA0   (ben_i[4*j + 0]),
         .ADA1   (ben_i[4*j + 1]),
         .ADA2   (ben_i[4*j + 2]),
         .ADA3   (ben_i[4*j + 3]),
-        .ADA4   (1'b1),
+        .ADA4   (VDD),
         .ADA5   (wr_addr_i[0]),
         .ADA6   (wr_addr_i[1]),
         .ADA7   (wr_addr_i[2]),
@@ -99,11 +103,11 @@ EBR_CORE EBR_inst(
         .ADA11  (wr_addr_i[6]),
         .ADA12  (wr_addr_i[7]),
         .ADA13  (wr_addr_i[8]),
-        .ADB0   (1'b1),
-        .ADB1   (1'b1),
-        .ADB2   (1'b1),
-        .ADB3   (1'b1),
-        .ADB4   (1'b1),
+        .ADB0   (VDD),
+        .ADB1   (VDD),
+        .ADB2   (VDD),
+        .ADB3   (VDD),
+        .ADB4   (VDD),
         .ADB5   (rd_addr_i[0]),
         .ADB6   (rd_addr_i[1]),
         .ADB7   (rd_addr_i[2]),
@@ -123,8 +127,8 @@ EBR_CORE EBR_inst(
         .CSB0   (rd_en[i]),
         .CSB1   (rd_en[i]),
         .CSB2   (rd_en[i]),
-        .RSTA   (1'b0),
-        .RSTB   (1'b0),
+        .RSTA   (VSS),
+        .RSTB   (VSS),
         .DOB0   (rd_data_z[i][32*j + 0]),
         .DOB1   (rd_data_z[i][32*j + 1]),
         .DOB2   (rd_data_z[i][32*j + 2]),
@@ -163,14 +167,14 @@ EBR_CORE EBR_inst(
         .DOA17  ( ),
         .ONEERR ( ),
         .TWOERR ( ),
-        .WEA    (1'b1),
-        .WEB    (1'b0),
+        .WEA    (VDD),
+        .WEB    (VSS),
 `ifdef COCOTB_MODELSIM
-        .DWS0   (1'b1),
-        .DWS1   (1'b1),
-        .DWS2   (1'b1),
-        .DWS3   (1'b1),
-        .DWS4   (1'b1),
+        .DWS0   (VDD),
+        .DWS1   (VDD),
+        .DWS2   (VDD),
+        .DWS3   (VDD),
+        .DWS4   (VDD),
 `endif
         .FULLF  (),
         .AFULL  (),

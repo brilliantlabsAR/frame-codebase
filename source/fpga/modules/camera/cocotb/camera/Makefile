@@ -38,7 +38,7 @@ COMPILE_ARGS += $(QF0:%=-DQF0=%) $(QF1:%=-DQF1=%) $(QF2:%=-DQF2=%) $(QF3:%=-DQF3
 else # verilator + modelsim
 EXTRA_ARGS += $(SENSOR_X_SIZE:%=+define+SENSOR_X_SIZE=%) $(SENSOR_Y_SIZE:%=+define+SENSOR_Y_SIZE=%)
 EXTRA_ARGS += $(IMAGE_X_SIZE:%=+define+IMAGE_X_SIZE=%) $(IMAGE_Y_SIZE:%=+define+IMAGE_Y_SIZE=%)
-EXTRA_ARGS += $(QF0:%=+define+QF0=%) $(QF1:%=+define+QF1=%) $(QF2:%=+define+QF2=%) $(DQF3:%=+define+DQF3=%)
+EXTRA_ARGS += $(QF0:%=+define+QF0=%) $(QF1:%=+define+QF1=%) $(QF2:%=+define+QF2=%) $(QF3:%=+define+QF3=%)
 endif
 
 # gate level
@@ -47,7 +47,9 @@ FRAME_SDF = frame_frame_vo.sdf
 
 # TB Top
 VERILOG_FILES += \
-        tb_top.sv
+        tb_top.sv \
+        ../../../reset/reset_sync.sv \
+        ../../../reset/global_reset_sync.sv
 
 ifeq ($(GATE_SIM),1)
 
@@ -102,12 +104,8 @@ VERILOG_FILES += \
         ../../../graphics/graphics.sv \
         ../../../graphics/sprite_engine.sv \
 
-endif
-
-ifneq ($(SIM),modelsim)
 # inferrable RAM models
 VERILOG_FILES += \
-        ../../jpeg_encoder/jlib/large_ram_dp_q.sv \
         ../../jpeg_encoder/jlib/dp_ram.sv \
         ../../jpeg_encoder/jlib/dp_ram_be.sv
 endif
@@ -122,7 +120,6 @@ VERILOG_FILES += \
 # RAM/ROM as EBR
 VERILOG_FILES += \
         ../../jpeg_encoder/jlib/huffman_codes_rom_EBR.sv \
-        ../../jpeg_encoder/jlib/ram_dp_w18_d360_EBR.sv \
         ../../jpeg_encoder/jlib/ram_dp_w32_b4_d64_EBR.sv \
         ../../jpeg_encoder/jlib/ram_dp_w64_b8_d1440_EBR.sv \
         ../../jpeg_encoder/jlib/ram_dp_w64_b8_d2880_EBR.sv 
@@ -137,8 +134,6 @@ VERILOG_FILES += \
 #        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v
 
 VERILOG_FILES += \
-        ../../../reset/reset_sync.sv \
-        ../../../reset/global_reset_sync.sv \
         ../../../../radiant/csi2_receiver_ip/rtl/csi2_receiver_ip.v \
         ../../../../radiant/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v \
         ../../../../radiant/pll_ip/rtl/pll_ip.v
