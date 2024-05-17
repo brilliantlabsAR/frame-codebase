@@ -203,18 +203,18 @@ always_ff @(posedge clock_in) begin
 end
 
 // RAM writing logic
-always_comb begin
+always_ff @(posedge clock_in) begin
 
-    display_ram_write_data = pixel_write_data_in;
+    display_ram_write_data <= pixel_write_data_in;
 
     // Select one of the four enables based on write address and selected buffer
-    display_ram_write_enable_a = displayed_buffer == BUFFER_B && 
-                                 pixel_write_enable_in == 1
-                               ? 1 : 0;
+    display_ram_write_enable_a <= displayed_buffer == BUFFER_B && 
+                                  pixel_write_enable_in == 1
+                                ? 1 : 0;
 
-    display_ram_write_enable_b = displayed_buffer == BUFFER_A && 
-                                 pixel_write_enable_in == 1
-                               ? 1 : 0;
+    display_ram_write_enable_b <= displayed_buffer == BUFFER_A && 
+                                  pixel_write_enable_in == 1
+                                ? 1 : 0;
 
 end
 
