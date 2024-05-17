@@ -93,8 +93,6 @@ VERILOG_FILES += \
 # Top
 VERILOG_FILES += \
         ../../../../top.sv \
-        ../../../reset/reset_sync.sv \
-        ../../../reset/global_reset_sync.sv \
         ../../../spi/spi_peripheral.sv \
         ../../../spi/spi_register.sv \
         ../../../pll/pll_wrapper.sv \
@@ -139,6 +137,8 @@ VERILOG_FILES += \
 #        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v
 
 VERILOG_FILES += \
+        ../../../reset/reset_sync.sv \
+        ../../../reset/global_reset_sync.sv \
         ../../../../radiant/csi2_receiver_ip/rtl/csi2_receiver_ip.v \
         ../../../../radiant/byte_to_pixel_ip/rtl/byte_to_pixel_ip.v \
         ../../../../radiant/pll_ip/rtl/pll_ip.v
