@@ -185,7 +185,6 @@ static void draw_sprite(lua_State *L,
     // Remove Lua 1 based offset before sending
     x_position--;
     y_position--;
-    width--; // TODO this shouldn't be needed, but there's a bug somewhere
 
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
                             (uint32_t)x_position,
