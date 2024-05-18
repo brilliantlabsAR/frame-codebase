@@ -72,7 +72,6 @@ VERILOG_FILES += \
         ../../jpeg_encoder/jenc/dct_2d.sv \
         ../../jpeg_encoder/jenc/transpose.sv \
         ../../jpeg_encoder/jenc/zigzag.sv \
-        ../../jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv \
         ../../jpeg_encoder/jenc/quant.sv \
         ../../jpeg_encoder/jenc/quant_tables.sv \
         ../../jpeg_encoder/jenc/entropy.sv \
@@ -81,6 +80,8 @@ VERILOG_FILES += \
         ../../jpeg_encoder/jenc/bytepacker.sv \
         ../../jpeg_encoder/jenc/pre_cdc.sv \
         ../../jpeg_encoder/jlib/afifo.v
+
+#        ../../jpeg_encoder/jenc/quant_seq_mult_15x13_p4.sv
 
 # Camera
 VERILOG_FILES += \
@@ -106,8 +107,9 @@ VERILOG_FILES += \
 
 # inferrable RAM models
 VERILOG_FILES += \
-        ../../jpeg_encoder/jlib/dp_ram.sv \
-        ../../jpeg_encoder/jlib/dp_ram_be.sv
+        ../../jpeg_encoder/jlib/dp_ram.sv
+
+#        ../../jpeg_encoder/jlib/dp_ram_be.sv
 endif
 
 ifeq ($(SIM),modelsim)
