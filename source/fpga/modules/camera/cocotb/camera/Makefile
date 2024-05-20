@@ -157,6 +157,7 @@ endif
 
 ifeq ($(SIM),icarus)
         COMPILE_ARGS += -DINFER_HUFFMAN_CODES_ROM    # rtl version
+        COMPILE_ARGS += -DINFER_QUANTIZATION_TABLES_ROM    # rtl version
         COMPILE_ARGS += -DNO_MIPI_IP_SIM          # Simulate Bayer input
         COMPILE_ARGS += -DNO_PLL_SIM              # Emulate PLL
         COMPILE_ARGS += -Wall
@@ -165,6 +166,7 @@ ifeq ($(SIM),icarus)
 endif
 ifeq ($(SIM),verilator)
         EXTRA_ARGS += +define+INFER_HUFFMAN_CODES_ROM    # rtl version
+        EXTRA_ARGS += +define+INFER_QUANTIZATION_TABLES_ROM    # rtl version
         EXTRA_ARGS += +define+NO_MIPI_IP_SIM    # Simulate Bayer input
         EXTRA_ARGS += +define+NO_PLL_SIM        # Emulate PLL
         EXTRA_ARGS += --timing
@@ -179,6 +181,9 @@ ifeq ($(SIM),modelsim)
         EXTRA_ARGS += +define+USE_LATTICE_EBR           # use EBR explicitely
         EXTRA_ARGS += +define+COCOTB_MODELSIM
         EXTRA_ARGS += -suppress vlog-2244 -suppress  vlog-13314
+ifeq ($(GATE_SIM),1)
+        EXTRA_ARGS += -suppress vsim-3620
+endif    
         EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work
         EXTRA_ARGS += +memory
         export COCOTB_RESOLVE_X=ZEROS    

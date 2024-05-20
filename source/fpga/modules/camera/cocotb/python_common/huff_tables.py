@@ -226,9 +226,9 @@ def make_memfile():
         i += 1
 
 
-        # 
+#        # 
 #        add = f'{{8\'h {a:2x}, 1\'b 0}}'
-            
+#            
 #            print(add, l0, c0, note)
 #        #else    :
 #        #    print(add, 0)
