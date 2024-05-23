@@ -24,7 +24,7 @@
 
 BUILD := ../../build
 TOOLCHAIN ?= YOSYS
-RADIANT_PATH ?= /opt/lscc/radiant/2023.1/bin/lin64
+RADIANT_PATH ?= /opt/lscc/radiant/2023.2/bin/lin64
 
 fpga_application.h: $(shell find . | egrep '.sv|.pdc')
 	@mkdir -p $(BUILD)
