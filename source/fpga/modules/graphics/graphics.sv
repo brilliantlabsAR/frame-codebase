@@ -63,7 +63,7 @@ logic [9:0] vector_x0_position_reg;
 logic [9:0] vector_x1_position_reg;
 logic [9:0] vector_y0_position_reg;
 logic [9:0] vector_y1_position_reg;
-logic [3:0] vector_pallete_offset_reg;
+logic [3:0] vector_pallete_index_reg;
 logic vector_enable_flag;
 logic vector_ready_flag;
 
@@ -145,7 +145,7 @@ always_ff @(posedge clock_in) begin
                         7: vector_y1_position_reg[9:8] <= operand_in[1:0];
                         8: vector_y1_position_reg[7:0] <= operand_in;
                         9: begin
-                            vector_pallete_offset_reg <= operand_in[3:0];
+                            vector_pallete_index_reg <= operand_in[3:0];
                             // TODO: move this check to a queue fifo
                             // for consecutive lines / polygon
                             if (vector_ready_flag) begin
@@ -316,7 +316,7 @@ sprite_engine sprite_engine (
 
 // Vector engine
 // TODO: Fix color logic
-assign pixel_write_data_vector_to_mux_wire = vector_pallete_offset_reg;
+assign pixel_write_data_vector_to_mux_wire = vector_pallete_index_reg;
 
 vector_engine vector_engine (
     .clock_in(clock_in),

@@ -61,11 +61,11 @@ initial begin
     send_operand('h00);
     send_operand('h00); // y0
     send_operand('h00);
-    send_operand('h00); // x1
-    send_operand('h20);
-    send_operand('h00); // y1
-    send_operand('h20);
-    send_operand('h01); // palette offset
+    send_operand('h01); // x1
+    send_operand('h00);
+    send_operand('h01); // y1
+    send_operand('h00);
+    send_operand('h03); // palette index
     done();
     @(posedge graphics.vector_ready_flag)
     #20;
