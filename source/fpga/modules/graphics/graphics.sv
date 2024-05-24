@@ -14,6 +14,7 @@
 `include "modules/graphics/display_buffers.sv"
 `include "modules/graphics/display_driver.sv"
 `include "modules/graphics/sprite_engine.sv"
+`include "modules/graphics/vector_engine.sv"
 `endif
 
 module graphics (
@@ -58,6 +59,14 @@ logic [9:0] sprite_width_reg; // 1 - 640
 logic [4:0] sprite_total_colors_reg; // 1, 4 or 16 colors
 logic [3:0] sprite_palette_offset_reg; // 0 - 15
 
+logic [9:0] vector_x0_position_reg;
+logic [9:0] vector_x1_position_reg;
+logic [9:0] vector_y0_position_reg;
+logic [9:0] vector_y1_position_reg;
+logic [3:0] vector_pallete_offset_reg;
+logic vector_enable_flag;
+logic vector_ready_flag;
+
 // Handle op-codes as they come in
 always_ff @(posedge clock_in) begin
     
@@ -68,6 +77,7 @@ always_ff @(posedge clock_in) begin
         sprite_enable_flag <= 0;
         sprite_data_flag <= 0;
         show_buffer_flag <= 0;
+        vector_enable_flag <= 0;
     end
 
     else begin
@@ -126,8 +136,27 @@ always_ff @(posedge clock_in) begin
 
                 if (operand_valid_in) begin
                     case (operand_count_in)
-                        default: begin end
+                        1: vector_x0_position_reg[9:8] <= operand_in[1:0];
+                        2: vector_x0_position_reg[7:0] <= operand_in;
+                        3: vector_y0_position_reg[9:8] <= operand_in[1:0];
+                        4: vector_y0_position_reg[7:0] <= operand_in;
+                        5: vector_x1_position_reg[9:8] <= operand_in[1:0];
+                        6: vector_x1_position_reg[7:0] <= operand_in;
+                        7: vector_y1_position_reg[9:8] <= operand_in[1:0];
+                        8: vector_y1_position_reg[7:0] <= operand_in;
+                        9: begin
+                            vector_pallete_offset_reg <= operand_in[3:0];
+                            // TODO: move this check to a queue fifo
+                            // for consecutive lines / polygon
+                            if (vector_ready_flag) begin
+                                vector_enable_flag <= 1;
+                            end
+                        end
                     endcase
+                end
+
+                else begin
+                    vector_enable_flag <= 0;
                 end
 
             end
@@ -186,7 +215,7 @@ logic pixel_write_enable_sprite_to_mux_wire;
 logic [17:0] pixel_write_address_sprite_to_mux_wire;
 logic [3:0] pixel_write_data_sprite_to_mux_wire;
 
-logic pixel_write_enable_vector_to_mux_wire = 0; // TODO clean this up
+logic pixel_write_enable_vector_to_mux_wire;
 logic [17:0] pixel_write_address_vector_to_mux_wire;
 logic [3:0] pixel_write_data_vector_to_mux_wire;
 
@@ -286,6 +315,20 @@ sprite_engine sprite_engine (
 );
 
 // Vector engine
-// TODO
+// TODO: Fix color logic
+assign pixel_write_data_vector_to_mux_wire = vector_pallete_offset_reg;
+
+vector_engine vector_engine (
+    .clock_in(clock_in),
+    .reset_n_in(reset_n_in),
+    .enable_in(vector_enable_flag),
+    .x0_in(vector_x0_position_reg),
+    .y0_in(vector_y0_position_reg),
+    .x1_in(vector_x1_position_reg),
+    .y1_in(vector_y1_position_reg),
+    .address_out(pixel_write_address_vector_to_mux_wire),
+    .write_enable_out(pixel_write_enable_vector_to_mux_wire),
+    .ready_out(vector_ready_flag)
+);
 
 endmodule
