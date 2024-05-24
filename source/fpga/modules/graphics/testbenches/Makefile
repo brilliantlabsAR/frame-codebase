@@ -37,21 +37,6 @@ display_driver:
 	@gtkwave simulation/display_driver_tb.fst \
 			 display_driver_tb.gtkw
 
-sprite_engine:
-	@mkdir -p simulation
-	
-	@iverilog -Wall \
-			  -g2012 \
-			  -I fpga \
-			  -o simulation/sprite_engine_tb.out \
-			  -i sprite_engine_tb.sv
-	
-	@vvp simulation/sprite_engine_tb.out \
-		 -fst
-
-	@gtkwave simulation/sprite_engine_tb.fst \
-			 sprite_engine_tb.gtkw
-
 graphics:
 	@mkdir -p simulation
 	
