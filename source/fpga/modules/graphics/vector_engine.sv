@@ -11,7 +11,7 @@
  * Based on http://members.chello.at/~easyfilter/bresenham.c by Zingl Alois
  */
 
-module line (
+module vector_engine (
     input logic clock_in,
     input logic reset_n_in,
     input logic enable_in,

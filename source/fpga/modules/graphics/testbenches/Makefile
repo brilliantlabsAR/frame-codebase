@@ -52,20 +52,20 @@ graphics:
 	@gtkwave simulation/graphics_tb.fst \
 			 graphics_tb.gtkw
 
-line:
+vector_engine:
 	@mkdir -p simulation
 	
 	@iverilog -Wall \
 			  -g2012 \
 			  -I ../../.. \
-			  -o simulation/line_tb.out \
-			  -i line_tb.sv
+			  -o simulation/vector_engine_tb.out \
+			  -i vector_engine_tb.sv
 	
-	@vvp simulation/line_tb.out \
+	@vvp simulation/vector_engine_tb.out \
 		 -fst
 
-	@gtkwave simulation/line_tb.fst \
-			 line_tb.gtkw
+	@gtkwave simulation/vector_engine_tb.fst \
+			 vector_engine_tb.gtkw
 
 clean:
 	@rm -rf simulation

@@ -11,9 +11,9 @@
 
 `timescale 10ns / 10ns
 
-`include "../line.sv"
+`include "../vector_engine.sv"
 
-module line_tb;
+module vector_engine_tb;
 
 logic clock = 1;
 logic reset_n = 0;
@@ -47,7 +47,7 @@ initial begin
     $finish;
 end
 
-line line (
+vector_engine vector_engine (
     .clock_in(clock),
     .reset_n_in(reset_n),
     .enable_in(enable),
@@ -66,8 +66,8 @@ initial begin
 end
 
 initial begin
-    $dumpfile("simulation/line_tb.fst");
-    $dumpvars(0, line_tb);
+    $dumpfile("simulation/vector_engine_tb.fst");
+    $dumpvars(0, vector_engine_tb);
 end
 
 endmodule
