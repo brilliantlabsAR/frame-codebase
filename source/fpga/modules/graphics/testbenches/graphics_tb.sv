@@ -26,18 +26,16 @@ logic [7:0] operand;
 logic operand_valid = 0;
 integer operand_count = 0;
 
-localparam  SPI_HALF_PERIOD = 1;
-
 initial begin
-    #(20000*SPI_HALF_PERIOD)
+    #20000
     spi_reset_n <= 1;
     display_reset_n <= 1;
-    #(10000*SPI_HALF_PERIOD)
+    #10000
 
     // Clear command
     send_opcode('h10);
     done();
-    #(2100000*SPI_HALF_PERIOD)
+    #2100000
 
     // Draw pixels
     send_opcode('h12);
@@ -58,12 +56,12 @@ initial begin
     send_operand('hDE);
     send_operand('hF0);
     done();
-    #(30000*SPI_HALF_PERIOD)
+    #30000
 
     // Show command
     send_opcode('h14);
     done();
-    #(2000000*SPI_HALF_PERIOD)
+    #2000000
 
     $writememh("simulation/image_buffer.txt", graphics.display_buffers.buffer_b.mem);
     $finish;
@@ -91,11 +89,11 @@ graphics graphics (
 );
 
 initial begin
-    forever #SPI_HALF_PERIOD spi_clock <= ~spi_clock;
+    forever #1 spi_clock <= ~spi_clock;
 end
 
 initial begin
-    forever #(2*SPI_HALF_PERIOD) display_clock <= ~display_clock;
+    forever #2 display_clock <= ~display_clock;
 end
 
 task send_opcode(
@@ -104,7 +102,7 @@ task send_opcode(
     begin
         opcode <= data;
         opcode_valid <= 1;
-        #(64*SPI_HALF_PERIOD);
+        #64;
     end
 endtask
 
@@ -115,9 +113,9 @@ task send_operand(
         operand <= data;
         operand_valid <= 1;
         operand_count <= operand_count + 1;
-        #(64*SPI_HALF_PERIOD);
+        #64;
         operand_valid <= 0;
-        #(8*SPI_HALF_PERIOD);
+        #8;
     end
 endtask
 
@@ -126,7 +124,7 @@ task done;
         opcode_valid <= 0;
         operand_valid <= 0;
         operand_count <= 0;
-        #(8*SPI_HALF_PERIOD);
+        #8;
     end
 endtask
 
