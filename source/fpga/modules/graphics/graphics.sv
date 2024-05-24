@@ -121,6 +121,17 @@ always_ff @(posedge clock_in) begin
 
             end
 
+            // Draw line
+            'h13: begin
+
+                if (operand_valid_in) begin
+                    case (operand_count_in)
+                        default: begin end
+                    endcase
+                end
+
+            end
+
             // Show buffer
             'h14: begin
                 show_buffer_flag <= 1;

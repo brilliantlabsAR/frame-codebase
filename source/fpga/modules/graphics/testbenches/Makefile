@@ -60,12 +60,27 @@ graphics:
 			  -I ../../.. \
 			  -o simulation/graphics_tb.out \
 			  -i graphics_tb.sv
-	exit
+	
 	@vvp simulation/graphics_tb.out \
 		 -fst
 
 	@gtkwave simulation/graphics_tb.fst \
 			 graphics_tb.gtkw
+
+line:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -o simulation/line_tb.out \
+			  -i line_tb.sv
+	
+	@vvp simulation/line_tb.out \
+		 -fst
+
+	@gtkwave simulation/line_tb.fst \
+			 line_tb.gtkw
 
 clean:
 	@rm -rf simulation

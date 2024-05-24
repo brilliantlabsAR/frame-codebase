@@ -1,0 +1,34 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri May 24 04:45:56 2024
+[*]
+[dumpfile] "simulation/line_tb.fst"
+[dumpfile_mtime] "Fri May 24 04:45:19 2024"
+[dumpfile_size] 1024
+[savefile] "line_tb.gtkw"
+[timestart] 155
+[size] 1920 1016
+[pos] -1 -1
+*-5.455784 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] line_tb.
+[sst_width] 245
+[signals_width] 182
+[sst_expanded] 1
+[sst_vpaned_height] 277
+@28
+line_tb.line.clock_in
+line_tb.line.enable_in
+@22
+line_tb.line.x0_in[9:0]
+line_tb.line.y0_in[8:0]
+line_tb.line.x1_in[9:0]
+line_tb.line.y1_in[8:0]
+@24
+line_tb.line.horizontal_out[9:0]
+@25
+line_tb.line.vertical_out[8:0]
+@28
+line_tb.line.write_enable_out
+line_tb.line.ready_out
+[pattern_trace] 1
+[pattern_trace] 0
