@@ -55,6 +55,21 @@ initial begin
     done();
     #30000
 
+    // Draw line
+    send_opcode('h13);
+    send_operand('h00); // x0
+    send_operand('h00);
+    send_operand('h00); // y0
+    send_operand('h00);
+    send_operand('h00); // x1
+    send_operand('h20);
+    send_operand('h00); // y1
+    send_operand('h20);
+    send_operand('h01); // palette offset
+    done();
+    @(posedge graphics.vector_ready_flag)
+    #20;
+
     // Show command
     send_opcode('h14);
     done();
@@ -62,6 +77,7 @@ initial begin
 
     reset_n <= 0;
     #20000
+    $writememh("simulation/frame_buffer.txt", graphics.display_buffers.buffer_b.mem);
     $finish;
 end
 

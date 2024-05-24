@@ -1,15 +1,15 @@
 [*]
-[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Jan 11 15:57:18 2024
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri May 24 07:43:26 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Thu Jan 11 15:56:46 2024"
-[dumpfile_size] 3732059
+[dumpfile_mtime] "Fri May 24 07:40:31 2024"
+[dumpfile_size] 3704485
 [savefile] "graphics_tb.gtkw"
-[timestart] 12306207
-[size] 2032 1104
+[timestart] 12259470
+[size] 1920 1016
 [pos] 10 38
-*-8.185387 12307205 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-13.913897 12307130 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -115,10 +115,45 @@ graphics_tb.graphics.sprite_engine.current_y_pen_position[9:0]
 graphics_tb.graphics.sprite_engine.pixels_remaining[4:0]
 @200
 -
+-Vector engine
+@c00028
+graphics_tb.graphics.vector_engine.state[1:0]
+@28
+(0)graphics_tb.graphics.vector_engine.state[1:0]
+(1)graphics_tb.graphics.vector_engine.state[1:0]
+@1401200
+-group_end
+@28
+graphics_tb.graphics.vector_engine.enable_in
+@c00022
+graphics_tb.graphics.vector_engine.x0_in[9:0]
+@28
+(0)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(1)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(2)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(3)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(4)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(5)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(6)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(7)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(8)graphics_tb.graphics.vector_engine.x0_in[9:0]
+(9)graphics_tb.graphics.vector_engine.x0_in[9:0]
+@1401200
+-group_end
+@22
+graphics_tb.graphics.vector_engine.y0_in[9:0]
+graphics_tb.graphics.vector_engine.x1_in[9:0]
+graphics_tb.graphics.vector_engine.y1_in[9:0]
+graphics_tb.graphics.vector_engine.x[9:0]
+graphics_tb.graphics.vector_engine.y[8:0]
+@29
+graphics_tb.graphics.vector_engine.ready_out
+@200
+-
 -Display buffer
 @28
 graphics_tb.graphics.display_buffers.pixel_write_enable_in
-@25
+@24
 graphics_tb.graphics.display_buffers.pixel_write_address_in[17:0]
 @22
 graphics_tb.graphics.display_buffers.pixel_write_data_in[3:0]

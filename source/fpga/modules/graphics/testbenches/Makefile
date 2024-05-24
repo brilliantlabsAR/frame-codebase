@@ -49,6 +49,8 @@ graphics:
 	@vvp simulation/graphics_tb.out \
 		 -fst
 
+	@python3 mem_to_image.py
+
 	@gtkwave simulation/graphics_tb.fst \
 			 graphics_tb.gtkw
 
@@ -63,6 +65,8 @@ vector_engine:
 	
 	@vvp simulation/vector_engine_tb.out \
 		 -fst
+
+	@python3 mem_to_image.py
 
 	@gtkwave simulation/vector_engine_tb.fst \
 			 vector_engine_tb.gtkw
