@@ -66,7 +66,8 @@ logic sprite_enable;
 logic switch_buffer_enable_spi_domain;
 logic switch_buffer_enable;
 
-logic [1:0] spi_cdc;
+logic [1:0] spi_op_code_edge_monitor;
+logic [1:0] spi_operand_edge_monitor;
 
 // Handle op-codes as they come in
 always_ff @(posedge spi_clock_in) begin
@@ -134,24 +135,48 @@ end
 // SPI to display clock CDC
 always_ff @(posedge display_clock_in) begin
 
-    spi_cdc = {spi_cdc[0], operand_valid_in};
+    if (display_reset_n_in == 0) begin
+        spi_op_code_edge_monitor <= 0;
+        spi_operand_edge_monitor <= 0;
 
-    // rising data valid, set data
-    if (spi_cdc == 2'b01) begin // TODO do we need one more?
-        assign_color_index <= assign_color_index_spi_domain;
-        assign_color_value <= assign_color_value_spi_domain;
-        assign_color_enable <= assign_color_enable_spi_domain;
+        assign_color_index <= 0;
+        assign_color_value <= 0;
+        assign_color_enable <= 0;
 
-        sprite_x_position <= sprite_x_position_spi_domain;
-        sprite_y_position <= sprite_y_position_spi_domain;
-        sprite_width <= sprite_width_spi_domain;
-        sprite_color_count <= sprite_color_count_spi_domain;
-        sprite_palette_offset <= sprite_palette_offset_spi_domain;
-        sprite_data <= sprite_data_spi_domain;
-        sprite_data_valid <= sprite_data_valid_spi_domain;
-        sprite_enable <= sprite_enable_spi_domain;
+        sprite_x_position <= 0;
+        sprite_y_position <= 0;
+        sprite_width <= 0;
+        sprite_color_count <= 0;
+        sprite_palette_offset <= 0;
+        sprite_data <= 0;
+        sprite_data_valid <= 0;
+        sprite_enable <= 0;
         
-        switch_buffer_enable <= switch_buffer_enable_spi_domain;
+        switch_buffer_enable <= 0;
+    end
+
+    else begin
+        spi_op_code_edge_monitor <= {spi_op_code_edge_monitor[0], op_code_valid_in};
+        spi_operand_edge_monitor <= {spi_operand_edge_monitor[0], operand_valid_in};
+
+        // rising data valid, set data
+        if (spi_op_code_edge_monitor == 2'b01 || 
+            spi_operand_edge_monitor == 2'b01) begin // TODO do we need one more?
+            assign_color_index <= assign_color_index_spi_domain;
+            assign_color_value <= assign_color_value_spi_domain;
+            assign_color_enable <= assign_color_enable_spi_domain;
+
+            sprite_x_position <= sprite_x_position_spi_domain;
+            sprite_y_position <= sprite_y_position_spi_domain;
+            sprite_width <= sprite_width_spi_domain;
+            sprite_color_count <= sprite_color_count_spi_domain;
+            sprite_palette_offset <= sprite_palette_offset_spi_domain;
+            sprite_data <= sprite_data_spi_domain;
+            sprite_data_valid <= sprite_data_valid_spi_domain;
+            sprite_enable <= sprite_enable_spi_domain;
+            
+            switch_buffer_enable <= switch_buffer_enable_spi_domain;
+        end
     end
 end
 

@@ -32,10 +32,10 @@ initial begin
     display_reset_n <= 1;
     #10000
 
-    // Clear command
-    send_opcode('h10);
+    // Switch/clear command
+    send_opcode('h14);
     done();
-    #2100000
+    #1200000
 
     // Draw pixels
     send_opcode('h12);
@@ -61,7 +61,7 @@ initial begin
     // Show command
     send_opcode('h14);
     done();
-    #2000000
+    #5000000
 
     $writememh("simulation/image_buffer.txt", graphics.display_buffers.buffer_b.mem);
     $finish;
