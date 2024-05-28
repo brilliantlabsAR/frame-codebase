@@ -15,8 +15,10 @@
 
 module graphics_tb;
 
-logic clock = 0;
-logic reset_n = 0;
+logic spi_clock = 0;
+logic spi_reset_n = 0;
+logic display_clock = 0;
+logic display_reset_n = 0;
 
 logic [7:0] opcode;
 logic opcode_valid = 0;
@@ -26,11 +28,12 @@ integer operand_count = 0;
 
 initial begin
     #20000
-    reset_n <= 1;
+    spi_reset_n <= 1;
+    display_reset_n <= 1;
     #10000
 
-    // Clear command
-    send_opcode('h10);
+    // Switch/clear command
+    send_opcode('h14);
     done();
     #1200000
 
@@ -58,16 +61,17 @@ initial begin
     // Show command
     send_opcode('h14);
     done();
-    #2000000
+    #5000000
 
-    reset_n <= 0;
-    #20000
     $finish;
 end
 
 graphics graphics (
-    .clock_in(clock),
-    .reset_n_in(reset_n),
+    .spi_clock_in(spi_clock),
+    .spi_reset_n_in(spi_reset_n),
+
+    .display_clock_in(display_clock),
+    .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -84,7 +88,11 @@ graphics graphics (
 );
 
 initial begin
-    forever #1 clock <= ~clock;
+    forever #1 spi_clock <= ~spi_clock;
+end
+
+initial begin
+    forever #2 display_clock <= ~display_clock;
 end
 
 task send_opcode(
