@@ -158,7 +158,7 @@ always_ff @(posedge display_clock_in) begin
 
         switch_buffer <= 0;
     end
-    
+
     else begin
         spi_op_code_edge_monitor <= {spi_op_code_edge_monitor[0], op_code_valid_in};
         spi_operand_edge_monitor <= {spi_operand_edge_monitor[0], operand_valid_in};
