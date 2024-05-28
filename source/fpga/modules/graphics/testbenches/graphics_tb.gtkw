@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Sun May 26 04:56:28 2024
+[*] Tue May 28 07:59:46 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Sun May 26 04:52:20 2024"
+[dumpfile_mtime] "Tue May 28 07:29:38 2024"
 [dumpfile_size] 4040281
 [savefile] "graphics_tb.gtkw"
-[timestart] 0
-[size] 1424 852
-[pos] 10 38
-*-23.958868 36236180 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[timestart] 12292510
+[size] 2040 1110
+[pos] 7 36
+*-12.109202 12312880 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -41,7 +41,7 @@
 [sst_width] 253
 [signals_width] 383
 [sst_expanded] 1
-[sst_vpaned_height] 326
+[sst_vpaned_height] 443
 @28
 graphics_tb.graphics.spi_clock_in
 graphics_tb.graphics.spi_reset_n_in

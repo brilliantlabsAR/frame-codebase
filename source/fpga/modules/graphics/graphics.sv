@@ -177,6 +177,10 @@ always_ff @(posedge display_clock_in) begin
             
             switch_buffer_enable <= switch_buffer_enable_spi_domain;
         end
+
+        if (spi_operand_edge_monitor == 2'b10) begin
+            sprite_data_valid <= sprite_data_valid_spi_domain;
+        end
     end
 end
 
