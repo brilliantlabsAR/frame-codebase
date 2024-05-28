@@ -37,10 +37,6 @@ module graphics (
 // TODO add buffers for metastability to inputs
 
 // Registers to hold the current command operations
-logic clear_buffer_flag;
-logic clear_buffer_in_progress_flag;
-logic [17:0] clear_buffer_address_reg;
-
 logic assign_color_enable_flag;
 logic [3:0] assign_color_index_reg;
 logic [9:0] assign_color_value_reg;
@@ -63,7 +59,6 @@ always_ff @(posedge clock_in) begin
     
     // Always clear flags after the opcode has been handled
     if (op_code_valid_in == 0 || reset_n_in == 0) begin
-        clear_buffer_flag <= 0;
         assign_color_enable_flag <= 0;
         sprite_enable_flag <= 0;
         sprite_data_flag <= 0;
@@ -73,11 +68,6 @@ always_ff @(posedge clock_in) begin
     else begin
         
         case (op_code_in)
-
-            // Clear buffer
-            'h10: begin
-                clear_buffer_flag <= 1;
-            end
 
             // Assign color
             'h11: begin
@@ -132,44 +122,6 @@ always_ff @(posedge clock_in) begin
 
 end
 
-// State machine to clear the screen
-logic [1:0] pixel_pulse_counter;
-
-always_ff @(posedge clock_in) begin
-    
-    if (reset_n_in == 0) begin
-        clear_buffer_in_progress_flag <= 0;
-        clear_buffer_address_reg <= 0;
-        pixel_pulse_counter <= 0;
-    end
-
-    else begin
-
-        pixel_pulse_counter <= pixel_pulse_counter + 1;
-
-        if (clear_buffer_flag) begin
-
-            clear_buffer_in_progress_flag <= 1;
-            clear_buffer_address_reg <= 0;
-
-        end
-
-        else if (clear_buffer_in_progress_flag && 
-                 pixel_pulse_counter == 'b01) begin
-
-            pixel_pulse_counter <= 0;
-            clear_buffer_address_reg <= clear_buffer_address_reg + 1;
-
-            if (clear_buffer_address_reg == 'd256000) begin
-                clear_buffer_in_progress_flag <= 0;
-            end
-
-        end
-        
-    end
-
-end
-
 // Feed display buffer based on active input
 logic pixel_write_enable_sprite_to_mux_wire;
 logic [17:0] pixel_write_address_sprite_to_mux_wire;
@@ -184,13 +136,7 @@ logic [17:0] pixel_write_address_mux_to_buffer_wire;
 logic [3:0] pixel_write_data_mux_to_buffer_wire;
 
 always_comb begin
-    if (clear_buffer_in_progress_flag) begin
-        pixel_write_enable_mux_to_buffer_wire = 1'b1;
-        pixel_write_address_mux_to_buffer_wire = clear_buffer_address_reg;
-        pixel_write_data_mux_to_buffer_wire = 4'b0;
-    end
-
-    else if (pixel_write_enable_sprite_to_mux_wire) begin
+    if (pixel_write_enable_sprite_to_mux_wire) begin
         pixel_write_enable_mux_to_buffer_wire = 1'b1;
         pixel_write_address_mux_to_buffer_wire = pixel_write_address_sprite_to_mux_wire;
         pixel_write_data_mux_to_buffer_wire = pixel_write_data_sprite_to_mux_wire;
