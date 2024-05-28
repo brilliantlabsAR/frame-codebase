@@ -186,21 +186,21 @@ always_ff @(posedge clock_in) begin
 
     else begin
         if (displayed_buffer == BUFFER_A) begin
-            if (clear_flag) begin
-                display_ram_address_b <= clear_address_counter;
-            end else begin
+            // if (clear_flag) begin
+            //     display_ram_address_b <= clear_address_counter;
+            // end else begin
                 display_ram_address_b <= pixel_write_address_in;
-            end
+            // end
 
             display_ram_address_a <= pixel_read_address_in;
         end
 
         else begin
-            if (clear_flag) begin
-                display_ram_address_a <= clear_address_counter;
-            end else begin
+            // if (clear_flag) begin
+            //     display_ram_address_a <= clear_address_counter;
+            // end else begin
                 display_ram_address_a <= pixel_write_address_in;
-            end
+            // end
             
             display_ram_address_b <= pixel_read_address_in;
         end
@@ -229,11 +229,11 @@ end
 // RAM writing logic
 always_ff @(posedge clock_in) begin
 
-    if (clear_flag) begin
-        display_ram_write_data <= 0;
-    end else begin
+    // if (clear_flag) begin
+    //     display_ram_write_data <= 0;
+    // end else begin
         display_ram_write_data <= pixel_write_data_in;
-    end
+    // end
 
     // Select one of the four enables based on write address and selected buffer
     display_ram_write_enable_a <= displayed_buffer == BUFFER_B && 
