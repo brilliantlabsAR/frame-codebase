@@ -208,7 +208,7 @@ always_ff @(posedge display_clock_in) begin
         vector_y0_position <= 0;
         vector_y1_position <= 0;
         vector_pallete_index <= 0;
-        vector_enable_spi_domain <= 0;
+        vector_enable <= 0;
 
         switch_buffer <= 0;
     end
@@ -244,6 +244,7 @@ always_ff @(posedge display_clock_in) begin
 
         if (spi_operand_edge_monitor == 2'b10) begin
             sprite_data_valid <= sprite_data_valid_spi_domain;
+            vector_enable <= vector_enable_spi_domain;
         end
     end
 
@@ -306,8 +307,8 @@ sprite_engine sprite_engine (
 assign pixel_write_data_vector_to_mux_wire = vector_pallete_index_spi_domain;
 
 vector_engine vector_engine (
-    .clock_in(clock_in),
-    .reset_n_in(reset_n_in),
+    .clock_in(spi_clock_in),
+    .reset_n_in(spi_reset_n_in),
     .enable_in(vector_enable),
     .x0_in(vector_x0_position),
     .y0_in(vector_y0_position),
