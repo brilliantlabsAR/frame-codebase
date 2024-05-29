@@ -293,14 +293,7 @@ static int lua_display_text(lua_State *L)
 
 static int lua_display_show(lua_State *L)
 {
-    // TODO remove blocking once we have a better solution
-
     spi_write(FPGA, 0x14, NULL, 0);
-    nrfx_systick_delay_ms(25);
-
-    spi_write(FPGA, 0x10, NULL, 0);
-    nrfx_systick_delay_ms(20);
-
     return 0;
 }
 

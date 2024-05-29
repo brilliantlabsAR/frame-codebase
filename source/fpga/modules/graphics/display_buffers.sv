@@ -101,6 +101,9 @@ logic [3:0] display_ram_write_data;
 logic display_ram_write_enable_a;
 logic display_ram_write_enable_b;
 
+logic clear_flag;
+logic [18:0] clear_address_counter;
+
 display_buffer buffer_a (
     .clock(clock_in),
     .reset_n(reset_n_in),
@@ -121,7 +124,7 @@ display_buffer buffer_b (
     .write_enable(display_ram_write_enable_b)
 );
 
-// Buffer switching logic
+// Buffer switching & clearing logic
 enum logic {BUFFER_A, BUFFER_B} displayed_buffer;
 logic [1:0] switch_write_buffer_edge_monitor;
 logic buffer_switch_pending;
@@ -132,6 +135,8 @@ always_ff @(posedge clock_in) begin
         displayed_buffer <= BUFFER_A;
         switch_write_buffer_edge_monitor <= 'b00;
         buffer_switch_pending <= 0;
+        clear_flag <= 0;
+        clear_address_counter <= 0;
     end
 
     else begin
@@ -155,6 +160,17 @@ always_ff @(posedge clock_in) begin
             end
 
             buffer_switch_pending <= 0;
+
+            clear_flag <= 1;
+            clear_address_counter <= 0;
+        end
+
+        if (clear_flag == 1) begin
+            clear_address_counter <= clear_address_counter + 1;
+
+            if (clear_address_counter == 'd512000) begin
+                clear_flag <= 0;
+            end
         end
 
     end
@@ -171,12 +187,22 @@ always_ff @(posedge clock_in) begin
 
     else begin
         if (displayed_buffer == BUFFER_A) begin
-            display_ram_address_a <= pixel_read_address_in;
-            display_ram_address_b <= pixel_write_address_in;
+            if (clear_flag == 1) begin
+                display_ram_address_b <= clear_address_counter >> 1;
+            end else begin
+                display_ram_address_b <= pixel_write_address_in;
+            end
+
+            display_ram_address_a <= pixel_read_address_in; 
         end
 
         else begin
-            display_ram_address_a <= pixel_write_address_in;
+            if (clear_flag == 1) begin 
+                display_ram_address_a <= clear_address_counter >> 1;
+            end else begin
+               display_ram_address_a <= pixel_write_address_in; 
+            end
+
             display_ram_address_b <= pixel_read_address_in;
         end
     end
@@ -197,7 +223,6 @@ always_ff @(posedge clock_in) begin
 
     else begin
         pixel_read_data_out <= display_ram_read_data_b;
-
     end
 
 end
@@ -205,16 +230,24 @@ end
 // RAM writing logic
 always_ff @(posedge clock_in) begin
 
-    display_ram_write_data <= pixel_write_data_in;
+    if (clear_flag == 1) begin
+        display_ram_write_data <= 0;
+    end else begin
+        display_ram_write_data <= pixel_write_data_in;
+    end
 
-    // Select one of the four enables based on write address and selected buffer
-    display_ram_write_enable_a <= displayed_buffer == BUFFER_B && 
-                                  pixel_write_enable_in == 1
-                                ? 1 : 0;
-
-    display_ram_write_enable_b <= displayed_buffer == BUFFER_A && 
-                                  pixel_write_enable_in == 1
-                                ? 1 : 0;
+    if (pixel_write_enable_in == 1 || clear_flag == 1) begin
+        if (displayed_buffer == BUFFER_A) begin
+            display_ram_write_enable_a <= 0;
+            display_ram_write_enable_b <= 1;
+        end else begin
+            display_ram_write_enable_a <= 1;
+            display_ram_write_enable_b <= 0;
+        end
+    end else begin
+        display_ram_write_enable_a <= 0;
+        display_ram_write_enable_b <= 0;
+    end
 
 end
 

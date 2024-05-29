@@ -84,7 +84,7 @@ pll_wrapper pll_wrapper (
 logic global_reset_n;
 logic camera_pixel_reset_n;
 logic display_reset_n;
-logic spi_reset_n;
+logic spi_peripheral_reset_n;
 logic jpeg_buffer_reset_n;
 
 global_reset_sync global_reset_sync (
@@ -109,7 +109,7 @@ reset_sync display_clock_reset_sync (
 reset_sync spi_peripheral_clock_reset_sync (
     .clock_in(spi_peripheral_clock),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(spi_reset_n)
+    .sync_reset_n_out(spi_peripheral_reset_n)
 );
 
 reset_sync jpeg_buffer_clock_reset_sync (
@@ -133,7 +133,7 @@ logic response_3_valid;
 
 spi_peripheral spi_peripheral (
     .clock_in(spi_peripheral_clock),
-    .reset_n_in(spi_reset_n),
+    .reset_n_in(spi_peripheral_reset_n),
 
     .spi_select_in(spi_select_in),
     .spi_clock_in(spi_clock_in),
@@ -156,8 +156,11 @@ spi_peripheral spi_peripheral (
 
 // Graphics
 graphics graphics (
-    .clock_in(display_clock),
-    .reset_n_in(display_reset_n),
+    .spi_clock_in(spi_peripheral_clock),
+    .spi_reset_n_in(spi_peripheral_reset_n),
+
+    .display_clock_in(display_clock),
+    .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
     .op_code_valid_in(opcode_valid),
@@ -180,7 +183,7 @@ camera camera (
     .global_reset_n_in(global_reset_n),
 
     .spi_clock_in(spi_peripheral_clock),
-    .spi_reset_n_in(spi_reset_n),
+    .spi_reset_n_in(spi_peripheral_reset_n),
 
     .pixel_clock_in(camera_pixel_clock),
     .pixel_reset_n_in(camera_pixel_reset_n),
@@ -210,7 +213,7 @@ spi_register #(
     .REGISTER_VALUE('h81)
 ) chip_id_1 (
     .clock_in(spi_peripheral_clock),
-    .reset_n_in(spi_reset_n),
+    .reset_n_in(spi_peripheral_reset_n),
 
     .opcode_in(opcode),
     .opcode_valid_in(opcode_valid),
