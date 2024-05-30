@@ -90,23 +90,23 @@ always_ff @(posedge clock_in) begin
                 case (total_colors_in)
                     2: begin
                         case (pixels_remaining[2:0])
-                            'b001: pixel_write_data_out <= data_in[0] + color_palette_offset_in;
-                            'b010: pixel_write_data_out <= data_in[1] + color_palette_offset_in;
-                            'b011: pixel_write_data_out <= data_in[2] + color_palette_offset_in;
-                            'b100: pixel_write_data_out <= data_in[3] + color_palette_offset_in;
-                            'b101: pixel_write_data_out <= data_in[4] + color_palette_offset_in;
-                            'b110: pixel_write_data_out <= data_in[5] + color_palette_offset_in;
-                            'b111: pixel_write_data_out <= data_in[6] + color_palette_offset_in;
-                            'b000: pixel_write_data_out <= data_in[7] + color_palette_offset_in;
+                            'b001: pixel_write_data_out <= data_in[0] == 0 ? 0 : data_in[0] + color_palette_offset_in;
+                            'b010: pixel_write_data_out <= data_in[1] == 0 ? 0 : data_in[1] + color_palette_offset_in;
+                            'b011: pixel_write_data_out <= data_in[2] == 0 ? 0 : data_in[2] + color_palette_offset_in;
+                            'b100: pixel_write_data_out <= data_in[3] == 0 ? 0 : data_in[3] + color_palette_offset_in;
+                            'b101: pixel_write_data_out <= data_in[4] == 0 ? 0 : data_in[4] + color_palette_offset_in;
+                            'b110: pixel_write_data_out <= data_in[5] == 0 ? 0 : data_in[5] + color_palette_offset_in;
+                            'b111: pixel_write_data_out <= data_in[6] == 0 ? 0 : data_in[6] + color_palette_offset_in;
+                            'b000: pixel_write_data_out <= data_in[7] == 0 ? 0 : data_in[7] + color_palette_offset_in;
                         endcase
                     end
 
                     4: begin
                         case (pixels_remaining[1:0])
-                            'b01: pixel_write_data_out <= data_in[1:0] + color_palette_offset_in;
-                            'b10: pixel_write_data_out <= data_in[3:2] + color_palette_offset_in;
-                            'b11: pixel_write_data_out <= data_in[5:4] + color_palette_offset_in;
-                            'b00: pixel_write_data_out <= data_in[7:6] + color_palette_offset_in;
+                            'b01: pixel_write_data_out <= data_in[1:0] == 0 ? 0 : data_in[1:0] + color_palette_offset_in;
+                            'b10: pixel_write_data_out <= data_in[3:2] == 0 ? 0 : data_in[3:2] + color_palette_offset_in;
+                            'b11: pixel_write_data_out <= data_in[5:4] == 0 ? 0 : data_in[5:4] + color_palette_offset_in;
+                            'b00: pixel_write_data_out <= data_in[7:6] == 0 ? 0 : data_in[7:6] + color_palette_offset_in;
                         endcase
                     end
 
