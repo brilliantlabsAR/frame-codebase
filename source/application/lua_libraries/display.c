@@ -228,13 +228,13 @@ static int lua_display_bitmap(lua_State *L)
 
 static int lua_display_text(lua_State *L)
 {
-    // TODO color options
     // TODO justification options
     // TODO character spacing
 
     const char *string = luaL_checkstring(L, 1);
     lua_Integer x_position = luaL_checkinteger(L, 2);
     lua_Integer y_position = luaL_checkinteger(L, 3);
+    lua_Integer palette_offset = luaL_checkinteger(L, 4);
     lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
@@ -276,7 +276,7 @@ static int lua_display_text(lua_State *L)
                                     y_position,
                                     sprite_metadata[entry].width,
                                     sprite_metadata[entry].colors,
-                                    0, // TODO
+                                    palette_offset,
                                     sprite_data + data_offset,
                                     data_length);
 
