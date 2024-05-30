@@ -291,6 +291,47 @@ static int lua_display_text(lua_State *L)
     return 0;
 }
 
+static int lua_display_line(lua_State *L)
+{
+    lua_Integer x0 = luaL_checkinteger(L, 1);
+    if (x0 < 0 || x0 > 639) {
+        luaL_error(L, "x0 must be a in the range [0, 639]");
+    }
+
+    lua_Integer y0 = luaL_checkinteger(L, 2);
+    if (y0 < 0 || y0 > 399) {
+        luaL_error(L, "y0 must be a in the range [0, 399]");
+    }
+
+    lua_Integer x1 = luaL_checkinteger(L, 3);
+    if (x1 < 0 || x1 > 639) {
+        luaL_error(L, "x1 must be a in the range [0, 639]");
+    }
+
+    lua_Integer y1 = luaL_checkinteger(L, 4);
+    if (y1 < 0 || y1 > 399) {
+        luaL_error(L, "y1 must be a in the range [0, 399]");
+    }
+
+    lua_Integer color = luaL_checkinteger(L, 5);
+
+    uint8_t line_data[9] = {
+        (uint32_t) x0 >> 8,
+        (uint32_t) x0,
+        (uint32_t) y0 >> 8,
+        (uint32_t) y0,
+        (uint32_t) x1 >> 8,
+        (uint32_t) x1,
+        (uint32_t) y1 >> 8,
+        (uint32_t) y1,
+        (uint8_t) color
+    };
+
+    spi_write(FPGA, 0x13, line_data, sizeof(line_data));
+
+    return 0;
+}
+
 static int lua_display_show(lua_State *L)
 {
     spi_write(FPGA, 0x14, NULL, 0);
@@ -365,6 +406,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_text);
     lua_setfield(L, -2, "text");
+
+    lua_pushcfunction(L, lua_display_line);
+    lua_setfield(L, -2, "line");
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");
