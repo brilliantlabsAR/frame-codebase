@@ -72,12 +72,12 @@ static uint32_t utf8_decode(const char *string, size_t *index)
 
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer pallet_index = luaL_checkinteger(L, 1);
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (pallet_index < 1 || pallet_index > 16)
     {
         luaL_error(L, "pallet_index must be between 1 and 16");
     }
