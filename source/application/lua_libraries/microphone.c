@@ -31,15 +31,14 @@
 #include "nrfx_log.h"
 #include "nrfx_pdm.h"
 #include "pinout.h"
-#include <haly/nrfy_pdm.h>
-#include <haly/nrfy_gpio.h>
 
-#define PDM_BUFFER_SIZE 128
+#define PDM_BUFFER_SIZE 4096
+static int16_t pdm_buffers[2][PDM_BUFFER_SIZE];
 static bool sampling_active = false;
 static lua_Integer sample_rate = 8000;
 static lua_Integer bit_depth = 8;
 
-#define FIFO_TOTAL_SIZE 4096
+#define FIFO_TOTAL_SIZE 32768
 static struct fifo
 {
     int16_t buffer[FIFO_TOTAL_SIZE];
@@ -51,28 +50,34 @@ static struct fifo
 #error "chunks don't fit evenly into fifo"
 #endif
 
-void PDM_IRQHandler(void)
+static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 {
-    uint32_t evt_mask = nrfy_pdm_events_process(
-        NRF_PDM0,
-        NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED),
-        NULL);
-
-    if (evt_mask & NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED))
+    if (p_evt->buffer_released != NULL)
     {
+        LOG("Released 0x%x", p_evt->buffer_released);
+
+        memcpy(fifo.buffer + fifo.head, p_evt->buffer_released, PDM_BUFFER_SIZE);
+
         fifo.head += PDM_BUFFER_SIZE;
 
         if (fifo.head == FIFO_TOTAL_SIZE)
         {
             fifo.head = 0;
         }
+    }
 
-        nrfy_pdm_buffer_t buffer = {
-            .length = PDM_BUFFER_SIZE,
-            .p_buff = fifo.buffer + fifo.head,
-        };
-
-        nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
+    if (p_evt->buffer_requested)
+    {
+        if (p_evt->buffer_released == pdm_buffers[1])
+        {
+            LOG("Request  0x%x (0)", pdm_buffers[0]);
+            check_error(nrfx_pdm_buffer_set(pdm_buffers[0], PDM_BUFFER_SIZE));
+        }
+        else
+        {
+            LOG("Request  0x%x (1)", pdm_buffers[1]);
+            check_error(nrfx_pdm_buffer_set(pdm_buffers[1], PDM_BUFFER_SIZE));
+        }
     }
 }
 
@@ -115,22 +120,16 @@ static int lua_microphone_start(lua_State *L)
     bit_depth = set_bit_depth;
     fifo.head = 0;
     fifo.tail = 0;
-
-    nrfy_pdm_buffer_t buffer = {
-        .length = PDM_BUFFER_SIZE,
-        .p_buff = fifo.buffer};
-
-    nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
-    nrfy_pdm_start(NRF_PDM0, NULL);
-
     sampling_active = true;
+
+    check_error(nrfx_pdm_start());
 
     return 0;
 }
 
 static int lua_microphone_stop(lua_State *L)
 {
-    nrfy_pdm_abort(NRF_PDM0, NULL);
+    check_error(nrfx_pdm_stop());
     sampling_active = false;
     return 0;
 }
@@ -138,11 +137,6 @@ static int lua_microphone_stop(lua_State *L)
 static int lua_microphone_read(lua_State *L)
 {
     lua_Integer bytes = luaL_checkinteger(L, 1);
-
-    if (bytes > 512)
-    {
-        luaL_error(L, "too many bytes requested");
-    }
 
     if (bytes % 2 != 0)
     {
@@ -207,32 +201,18 @@ static int lua_microphone_read(lua_State *L)
 
 void lua_open_microphone_library(lua_State *L)
 {
-    nrfy_pdm_int_init(NRF_PDM0,
-                      NRF_PDM_INT_STARTED,
-                      NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
-                      true);
 
-    nrfy_pdm_config_t config = {
-        .mode = NRF_PDM_MODE_MONO,
-        .edge = NRF_PDM_EDGE_LEFTRISING,
-        .pins =
-            {
-                .clk_pin = MICROPHONE_CLOCK_PIN,
-                .din_pin = MICROPHONE_DATA_PIN,
-            },
-        .clock_freq = NRF_PDM_FREQ_1280K,
-        .gain_l = NRF_PDM_GAIN_DEFAULT,
-        .gain_r = NRF_PDM_GAIN_DEFAULT,
-        .ratio = NRF_PDM_RATIO_80X,
-        .skip_psel_cfg = false,
-    };
+    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
+                                                       MICROPHONE_DATA_PIN);
 
-    nrfy_gpio_pin_clear(config.pins.clk_pin);
-    nrfy_gpio_cfg_output(config.pins.clk_pin);
-    nrfy_gpio_cfg_input(config.pins.din_pin, NRF_GPIO_PIN_NOPULL);
+    config.edge = NRF_PDM_EDGE_LEFTRISING;
+    config.clock_freq = NRF_PDM_FREQ_1280K;
+    config.ratio = NRF_PDM_RATIO_80X;
 
-    nrfy_pdm_periph_configure(NRF_PDM0, &config);
-    nrfy_pdm_enable(NRF_PDM0);
+    if (nrfx_pdm_init_check() == false)
+    {
+        check_error(nrfx_pdm_init(&config, pdm_event_handler));
+    }
 
     lua_getglobal(L, "frame");
 
