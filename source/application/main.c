@@ -243,7 +243,7 @@ static void hardware_setup(bool *factory_reset)
 
     // Configure case detect pin interrupt and check the starting state
     {
-        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY));
+        check_error(nrfx_gpiote_init(NRFX_GPIOTE_DEFAULT_CONFIG_IRQ_PRIORITY)); // TODO is this a problem
 
         nrfx_gpiote_input_config_t input_config = {
             .pull = NRF_GPIO_PIN_NOPULL,
