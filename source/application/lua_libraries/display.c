@@ -371,6 +371,57 @@ static int lua_display_rectangle(lua_State *L)
     return 0;
 }
 
+static int lua_display_filled_rectangle(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette_offset must be between 0 and 14");
+    }
+
+    // round up to nearest byte
+    uint32_t num_bytes = (uint32_t) round((abs(x_1 - x_0) * abs(y_1 - y_0) / 8.0) + 0.5);
+    uint8_t *pixel_data = malloc(num_bytes);
+
+    memset(pixel_data, 0xff, num_bytes);
+
+    uint32_t x_position = x_0 < x_1 ? x_0 : x_1;
+    uint32_t y_position = y_0 < y_1 ? y_0 : y_1;
+    uint32_t width = abs(y_1 - y_0);
+
+    draw_sprite(
+        L,
+        x_position,
+        y_position,
+        width,
+        SPRITE_2_COLORS,
+        palette_offset,
+        pixel_data,
+        num_bytes
+    );
+
+    return 0;
+}
+
 static void draw_arc(uint32_t x_centre, uint32_t y_centre, uint32_t radius, 
                         double theta_0, double theta_1, 
                         uint32_t number_of_segments, uint32_t palette_offset)
@@ -514,6 +565,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_rectangle);
     lua_setfield(L, -2, "rectangle");
+
+    lua_pushcfunction(L, lua_display_filled_rectangle);
+    lua_setfield(L, -2, "filled_rectangle");
 
     lua_pushcfunction(L, lua_display_arc);
     lua_setfield(L, -2, "arc");
