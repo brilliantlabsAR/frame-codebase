@@ -32,7 +32,7 @@
 #include "nrfx_pdm.h"
 #include "pinout.h"
 
-#define PDM_BUFFER_SIZE 4096
+#define PDM_BUFFER_SIZE 128
 static int16_t pdm_buffers[2][PDM_BUFFER_SIZE];
 static bool sampling_active = false;
 static lua_Integer sample_rate = 8000;
@@ -54,9 +54,9 @@ static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 {
     if (p_evt->buffer_released != NULL)
     {
-        LOG("Released 0x%x", p_evt->buffer_released);
-
-        memcpy(fifo.buffer + fifo.head, p_evt->buffer_released, PDM_BUFFER_SIZE);
+        memcpy(fifo.buffer + fifo.head,
+               p_evt->buffer_released,
+               PDM_BUFFER_SIZE * sizeof(int16_t));
 
         fifo.head += PDM_BUFFER_SIZE;
 
@@ -70,12 +70,10 @@ static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
     {
         if (p_evt->buffer_released == pdm_buffers[1])
         {
-            LOG("Request  0x%x (0)", pdm_buffers[0]);
             check_error(nrfx_pdm_buffer_set(pdm_buffers[0], PDM_BUFFER_SIZE));
         }
         else
         {
-            LOG("Request  0x%x (1)", pdm_buffers[1]);
             check_error(nrfx_pdm_buffer_set(pdm_buffers[1], PDM_BUFFER_SIZE));
         }
     }
