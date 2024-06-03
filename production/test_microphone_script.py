@@ -9,43 +9,41 @@ expected_length = 0
 
 def receive_data(data):
     global audio_buffer
-    global expected_length
     audio_buffer += data
     print(
-        f"                        Downloading microphone data {str(len(audio_buffer))} / {str(int(expected_length))} bytes      ",
+        f"                        Downloading microphone data {str(len(audio_buffer))} bytes      ",
         end="\r",
     )
 
 
 async def test_microphone(b: Bluetooth):
     global audio_buffer
-    global expected_length
-    expected_length = 3 * 8000 * (8 / 8)
-
-    await b.send_lua("frame.microphone.record{seconds=3}")
-    await asyncio.sleep(3)
-
     audio_buffer = b""
 
+    await b.send_lua("frame.microphone.start { bit_depth=16 }")
+
     await b.send_lua(
-        "while true do local i = frame.microphone.read(frame.bluetooth.max_length()) if (i == nil) then break end while true do if pcall(frame.bluetooth.send, i) then break end end end"
+        "while true do s=frame.microphone.read(frame.bluetooth.max_length()); if s==nil then break end if s~='' then while true do if (pcall(frame.bluetooth.send,s)) then break end end end end"
     )
 
-    while len(audio_buffer) < expected_length:
-        await asyncio.sleep(0.001)
+    await asyncio.sleep(5)
 
-    audio_data = np.frombuffer(audio_buffer, dtype=np.int8)
+    await b.send_break_signal()
+    await b.send_lua(f"frame.microphone.stop()")
+
+    audio_data = np.frombuffer(audio_buffer, dtype=np.int16)
     audio_data = audio_data.astype(np.float32)
-    audio_data /= np.iinfo(np.int8).max
+    audio_data /= np.iinfo(np.int16).max
 
     sd.play(audio_data, 8000)
     sd.wait()
 
 
-if __name__ == "__main__":
+async def main():
     b = Bluetooth()
+    await b.connect(data_response_handler=receive_data)
+    await test_microphone(b)
+    await b.disconnect()
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(b.connect(data_response_handler=receive_data))
-    loop.run_until_complete(test_microphone(b))
-    loop.run_until_complete(b.disconnect())
+
+asyncio.run(main())

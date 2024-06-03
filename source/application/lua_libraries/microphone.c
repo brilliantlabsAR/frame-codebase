@@ -31,297 +31,163 @@
 #include "nrfx_log.h"
 #include "nrfx_pdm.h"
 #include "pinout.h"
-#include <haly/nrfy_pdm.h>
-#include <haly/nrfy_gpio.h>
 
+#define PDM_BUFFER_SIZE 128
+static int16_t pdm_buffers[2][PDM_BUFFER_SIZE];
+static bool sampling_active = false;
+static lua_Integer sample_rate = 8000;
 static lua_Integer bit_depth = 8;
 
-// Main FIFO where PDM data is written to
-#define FIFO_TOTAL_SIZE 80000
+#define FIFO_TOTAL_SIZE 32768
 static struct fifo
 {
     int16_t buffer[FIFO_TOTAL_SIZE];
-    size_t chunk_size;
     size_t head;
     size_t tail;
-    size_t remaining_samples;
-} fifo = {
-    .chunk_size = 100,
-    .head = 0,
-    .tail = 0,
-    .remaining_samples = 0,
-};
+} fifo;
 
-// Averaging FIFO that's used to down convert samples during microphone.read()
-static struct moving_average
+#if (FIFO_TOTAL_SIZE % PDM_BUFFER_SIZE)
+#error "chunks don't fit evenly into fifo"
+#endif
+
+static void pdm_event_handler(nrfx_pdm_evt_t const *p_evt)
 {
-    int16_t buffer[4];
-    size_t head;
-    size_t window_size;
-} moving_average = {
-    .head = 0,
-};
-
-static nrfy_pdm_config_t config = {
-    .mode = NRF_PDM_MODE_MONO,
-    .edge = NRF_PDM_EDGE_LEFTRISING,
-    .pins =
-        {
-            .clk_pin = MICROPHONE_CLOCK_PIN,
-            .din_pin = MICROPHONE_DATA_PIN,
-        },
-    .clock_freq = NRF_PDM_FREQ_1032K,
-    .gain_l = NRF_PDM_GAIN_DEFAULT,
-    .gain_r = NRF_PDM_GAIN_DEFAULT,
-    .ratio = NRF_PDM_RATIO_64X,
-    .skip_psel_cfg = false,
-};
-
-void PDM_IRQHandler(void)
-{
-    uint32_t evt_mask = nrfy_pdm_events_process(
-        NRF_PDM0,
-        NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED),
-        NULL);
-
-    if (evt_mask & NRFY_EVENT_TO_INT_BITMASK(NRF_PDM_EVENT_STARTED))
+    if (p_evt->buffer_released != NULL)
     {
-        fifo.head += fifo.chunk_size;
-        fifo.remaining_samples -= fifo.chunk_size;
+        memcpy(fifo.buffer + fifo.head,
+               p_evt->buffer_released,
+               PDM_BUFFER_SIZE * sizeof(int16_t));
+
+        fifo.head += PDM_BUFFER_SIZE;
 
         if (fifo.head == FIFO_TOTAL_SIZE)
         {
             fifo.head = 0;
         }
+    }
 
-        nrfy_pdm_buffer_t buffer = {
-            .length = fifo.chunk_size,
-            .p_buff = fifo.buffer + fifo.head};
-
-        nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
-
-        // If the next cycle will cause an overflow, abort early to avoid
-        // corrupting the existing data at the tail
-        if ((fifo.head == fifo.tail - fifo.chunk_size) ||
-            (fifo.tail == 0 && fifo.head + fifo.chunk_size == FIFO_TOTAL_SIZE))
+    if (p_evt->buffer_requested)
+    {
+        if (p_evt->buffer_released == pdm_buffers[1])
         {
-            nrfy_pdm_abort(NRF_PDM0, NULL);
+            check_error(nrfx_pdm_buffer_set(pdm_buffers[0], PDM_BUFFER_SIZE));
         }
-
-        // Stop after the last sample is taken
-        if (fifo.remaining_samples == 0)
+        else
         {
-            nrfy_pdm_abort(NRF_PDM0, NULL);
+            check_error(nrfx_pdm_buffer_set(pdm_buffers[1], PDM_BUFFER_SIZE));
         }
     }
 }
 
-static int lua_microphone_record(lua_State *L)
+static int lua_microphone_start(lua_State *L)
 {
-    lua_Number seconds = 9999.0;
-    lua_Integer sample_rate = 8000;
-    bit_depth = 8;
+    if (sampling_active)
+    {
+        luaL_error(L, "already started");
+    }
+
+    lua_Integer set_sample_rate = 8000;
+    lua_Integer set_bit_depth = 8;
 
     if (lua_istable(L, 1))
     {
-        if (lua_getfield(L, 1, "seconds") != LUA_TNIL)
-        {
-            seconds = luaL_checknumber(L, -1);
-            lua_pop(L, 1);
-        }
-
         if (lua_getfield(L, 1, "sample_rate") != LUA_TNIL)
         {
-            sample_rate = luaL_checkinteger(L, -1);
+            set_sample_rate = luaL_checkinteger(L, -1);
             lua_pop(L, 1);
         }
 
         if (lua_getfield(L, 1, "bit_depth") != LUA_TNIL)
         {
-            bit_depth = luaL_checkinteger(L, -1);
+            set_bit_depth = luaL_checkinteger(L, -1);
             lua_pop(L, 1);
         }
     }
 
-    if (seconds <= 0)
+    if (set_sample_rate != 8000 && set_sample_rate != 16000)
     {
-        luaL_error(L, "seconds must be greater than 0");
+        luaL_error(L, "sample rate must be 8000 or 16000");
     }
 
-    switch (sample_rate)
+    if (set_bit_depth != 16 && set_bit_depth != 8)
     {
-    case 20000:
-    case 10000:
-    case 5000:
-        config.clock_freq = NRF_PDM_FREQ_1280K;
-        config.ratio = NRF_PDM_RATIO_64X;
-        break;
-
-    case 16000:
-    case 8000:
-    case 4000:
-        config.clock_freq = NRF_PDM_FREQ_1280K;
-        config.ratio = NRF_PDM_RATIO_80X;
-        break;
-
-    case 12500:
-        config.clock_freq = NRF_PDM_FREQ_1000K;
-        config.ratio = NRF_PDM_RATIO_80X;
-        break;
-
-    default:
-        luaL_error(L, "invalid sample rate");
-        break;
+        luaL_error(L, "bit depth must be 8 or 16");
     }
 
-    switch (sample_rate)
-    {
-    case 20000:
-    case 16000:
-    case 12500:
-        moving_average.window_size = 1;
-        break;
-
-    case 10000:
-    case 8000:
-        moving_average.window_size = 2;
-        break;
-
-    case 5000:
-    case 4000:
-        moving_average.window_size = 4;
-        break;
-    }
-
-    if (bit_depth != 16 && bit_depth != 8 && bit_depth != 4)
-    {
-        luaL_error(L, "invalid bit depth");
-    }
-
-    // Figure out total samples, and round up to nearest chunksize
-    fifo.remaining_samples =
-        (size_t)ceil(seconds * sample_rate / fifo.chunk_size) *
-        fifo.chunk_size *
-        moving_average.window_size;
-
+    sample_rate = set_sample_rate;
+    bit_depth = set_bit_depth;
     fifo.head = 0;
     fifo.tail = 0;
+    sampling_active = true;
 
-    nrfy_pdm_disable(NRF_PDM0);
-    nrfy_pdm_periph_configure(NRF_PDM0, &config);
-
-    nrfy_pdm_buffer_t buffer = {
-        .length = fifo.chunk_size,
-        .p_buff = fifo.buffer + fifo.head};
-
-    nrfy_pdm_buffer_set(NRF_PDM0, &buffer);
-    nrfy_pdm_enable(NRF_PDM0);
-    nrfy_pdm_start(NRF_PDM0, NULL);
+    check_error(nrfx_pdm_start());
 
     return 0;
 }
 
 static int lua_microphone_stop(lua_State *L)
 {
-    nrfy_pdm_abort(NRF_PDM0, NULL);
+    check_error(nrfx_pdm_stop());
+    sampling_active = false;
     return 0;
-}
-
-static int16_t averaged_sample()
-{
-    for (size_t i = 0; i < moving_average.window_size; i++)
-    {
-        // Pop from main fifo
-        int16_t raw_sample = fifo.buffer[fifo.tail];
-
-        fifo.tail++;
-
-        if (fifo.tail == FIFO_TOTAL_SIZE)
-        {
-            fifo.tail = 0;
-        }
-
-        // Push into averaging fifo
-        moving_average.buffer[moving_average.head] = raw_sample;
-
-        moving_average.head++;
-
-        if (moving_average.head == moving_average.window_size)
-        {
-            moving_average.head = 0;
-        }
-    }
-
-    int32_t sum = 0.0f;
-    for (size_t i = 0; i < moving_average.window_size; i++)
-    {
-        sum += moving_average.buffer[i];
-    }
-
-    float average = roundf((float)sum / moving_average.window_size);
-
-    return (int16_t)average;
 }
 
 static int lua_microphone_read(lua_State *L)
 {
     lua_Integer bytes = luaL_checkinteger(L, 1);
 
-    if (bytes > 512)
+    if (bytes % 2 != 0)
     {
-        luaL_error(L, "too many bytes requested");
+        luaL_error(L, "bytes must be a multiple of 2");
     }
 
-    if (bytes % 4 != 0)
-    {
-        luaL_error(L, "bytes must be a multiple of 4");
-    }
-
-    // Return nil if the fifo is empty
     if (fifo.tail == fifo.head)
     {
+        if (sampling_active)
+        {
+            lua_pushstring(L, "");
+            return 1;
+        }
+
         lua_pushnil(L);
         return 1;
     }
 
-    size_t i = 0;
     char *samples = malloc(bytes);
     if (samples == NULL)
     {
         luaL_error(L, "not enough memory");
     }
 
+    size_t i = 0;
     while (true)
     {
-        if (fifo.tail == fifo.head)
+        if (fifo.tail == fifo.head || i == bytes)
         {
             break;
         }
 
-        switch (bit_depth)
+        int16_t raw_sample = fifo.buffer[fifo.tail++];
+        if (fifo.tail == FIFO_TOTAL_SIZE)
         {
-        case 16:
-            int16_t sample16 = averaged_sample();
-            samples[i++] = sample16 >> 8;
-            samples[i++] = sample16 & 0xFF;
-            break;
-
-        case 8:
-            int16_t sample8 = averaged_sample() >> 8;
-            samples[i++] = sample8;
-            break;
-
-        case 4:
-            int16_t sample4_top = (averaged_sample() >> 12) & 0x0F;
-            int16_t sample4_bot = (averaged_sample() >> 12) & 0x0F;
-            int8_t combined_sample = (sample4_top << 4) | sample4_bot;
-            samples[i++] = combined_sample;
-            break;
+            fifo.tail = 0;
         }
 
-        if (i == bytes)
+        // 8khz simply throws away a sample
+        // TODO 8khz is missing an anti-aliasing filter
+
+        if (sample_rate == 16000 || (sample_rate == 8000 && fifo.tail % 2))
         {
-            break;
+            if (bit_depth == 16)
+            {
+                samples[i++] = raw_sample;
+                samples[i++] = raw_sample >> 8;
+            }
+
+            if (bit_depth == 8)
+            {
+                samples[i++] = raw_sample >> 8;
+            }
         }
     }
 
@@ -333,26 +199,25 @@ static int lua_microphone_read(lua_State *L)
 
 void lua_open_microphone_library(lua_State *L)
 {
-    if (FIFO_TOTAL_SIZE % fifo.chunk_size)
+
+    nrfx_pdm_config_t config = NRFX_PDM_DEFAULT_CONFIG(MICROPHONE_CLOCK_PIN,
+                                                       MICROPHONE_DATA_PIN);
+
+    config.edge = NRF_PDM_EDGE_LEFTRISING;
+    config.clock_freq = NRF_PDM_FREQ_1280K;
+    config.ratio = NRF_PDM_RATIO_80X;
+
+    if (nrfx_pdm_init_check() == false)
     {
-        error_with_message("chunks don't fit evenly into fifo");
+        check_error(nrfx_pdm_init(&config, pdm_event_handler));
     }
-
-    nrfy_gpio_pin_clear(config.pins.clk_pin);
-    nrfy_gpio_cfg_output(config.pins.clk_pin);
-    nrfy_gpio_cfg_input(config.pins.din_pin, NRF_GPIO_PIN_NOPULL);
-
-    nrfy_pdm_int_init(NRF_PDM0,
-                      NRF_PDM_INT_STARTED,
-                      NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY,
-                      true);
 
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
 
-    lua_pushcfunction(L, lua_microphone_record);
-    lua_setfield(L, -2, "record");
+    lua_pushcfunction(L, lua_microphone_start);
+    lua_setfield(L, -2, "start");
 
     lua_pushcfunction(L, lua_microphone_stop);
     lua_setfield(L, -2, "stop");
