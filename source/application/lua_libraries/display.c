@@ -291,43 +291,114 @@ static int lua_display_text(lua_State *L)
     return 0;
 }
 
-static int lua_display_line(lua_State *L)
+static void draw_line(uint32_t x_0, uint32_t y_0, uint32_t x_1, uint32_t y_1, uint32_t color) 
 {
-    lua_Integer x0 = luaL_checkinteger(L, 1);
-    if (x0 < 0 || x0 > 639) {
-        luaL_error(L, "x0 must be a in the range [0, 639]");
-    }
-
-    lua_Integer y0 = luaL_checkinteger(L, 2);
-    if (y0 < 0 || y0 > 399) {
-        luaL_error(L, "y0 must be a in the range [0, 399]");
-    }
-
-    lua_Integer x1 = luaL_checkinteger(L, 3);
-    if (x1 < 0 || x1 > 639) {
-        luaL_error(L, "x1 must be a in the range [0, 639]");
-    }
-
-    lua_Integer y1 = luaL_checkinteger(L, 4);
-    if (y1 < 0 || y1 > 399) {
-        luaL_error(L, "y1 must be a in the range [0, 399]");
-    }
-
-    lua_Integer color = luaL_checkinteger(L, 5);
-
     uint8_t line_data[9] = {
-        (uint32_t) x0 >> 8,
-        (uint32_t) x0,
-        (uint32_t) y0 >> 8,
-        (uint32_t) y0,
-        (uint32_t) x1 >> 8,
-        (uint32_t) x1,
-        (uint32_t) y1 >> 8,
-        (uint32_t) y1,
+        (uint32_t) x_0 >> 8,
+        (uint32_t) x_0,
+        (uint32_t) y_0 >> 8,
+        (uint32_t) y_0,
+        (uint32_t) x_1 >> 8,
+        (uint32_t) x_1,
+        (uint32_t) y_1 >> 8,
+        (uint32_t) y_1,
         (uint8_t) color
     };
 
     spi_write(FPGA, 0x13, line_data, sizeof(line_data));
+}
+
+static int lua_display_line(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be in the range [0, 639]");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be in the range [0, 399]");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be in the range [0, 639]");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be in the range [0, 399]");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette offset must be in the range [0, 14]");
+    }
+
+    draw_line(x_0, y_0, x_1, y_1, palette_offset);
+
+    return 0;
+}
+
+static void draw_arc(uint32_t x_centre, uint32_t y_centre, uint32_t radius, 
+                        double theta_0, double theta_1, 
+                        uint32_t number_of_segments, uint32_t palette_offset)
+{
+    uint32_t x_0, y_0, x_1, y_1;
+    double angle = theta_0;
+    double d_theta = (theta_1 - theta_0) / number_of_segments;
+
+    x_1 = (uint32_t) round ((double)x_centre + (double)radius * cos(angle));
+    y_1 = (uint32_t) round ((double)y_centre + (double)radius * sin(angle));
+
+    for (uint8_t i = 1; i <= number_of_segments; i++) {
+        x_0 = x_1; y_0 = y_1;
+        angle = angle + d_theta;
+        x_1 = (uint32_t) round ((double)x_centre + (double)radius * cos(angle));
+        y_1 = (uint32_t) round ((double)y_centre + (double)radius * sin(angle));
+        draw_line(x_0, y_0, x_1, y_1, palette_offset);
+    }
+}
+
+static int lua_display_arc(lua_State *L)
+{
+    lua_Integer x_centre = luaL_checkinteger(L, 1);
+    if (x_centre < 0 || x_centre > 399) {
+        luaL_error(L, "x_centre must be in the range [0, 399]");
+    }
+
+    lua_Integer y_centre = luaL_checkinteger(L, 2);
+    if (y_centre < 0 || y_centre > 639) {
+        luaL_error(L, "y_centre must be in the range [0, 639]");
+    }
+
+    lua_Integer radius = luaL_checkinteger(L, 3);
+    if (radius < 0 || radius > 639) {
+        luaL_error(L, "radius must be in the range [0, 639]");
+    }
+
+    lua_Number theta_0 = luaL_checknumber(L, 4);
+    if (theta_0 < 0 || theta_0 > 2*M_PI) {
+        luaL_error(L, "theta_0 must be in the range [0, %d]", 2*M_PI);
+    }
+
+    lua_Number theta_1 = luaL_checknumber(L, 5);
+    if (theta_1 < 0 || theta_1 > 2*M_PI) {
+        luaL_error(L, "theta_1 must be in the range [0, %d]", 2*M_PI);
+    }
+
+    lua_Integer number_of_segments = luaL_checkinteger(L, 6);
+    if (number_of_segments < 1 || number_of_segments > 16) {
+        luaL_error(L, "number of segments must be in the range [1, 16]");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 7);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette offset must be in the range [0, 14]");
+    }
+
+    draw_arc(x_centre, y_centre, radius, theta_0, theta_1, 
+                number_of_segments, palette_offset);
 
     return 0;
 }
@@ -409,6 +480,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_line);
     lua_setfield(L, -2, "line");
+
+    lua_pushcfunction(L, lua_display_arc);
+    lua_setfield(L, -2, "arc");
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");
