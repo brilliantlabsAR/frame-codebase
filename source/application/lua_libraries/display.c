@@ -340,6 +340,41 @@ static int lua_display_line(lua_State *L)
     return 0;
 }
 
+static int lua_display_rectangle(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be in the range [0, 639]");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be in the range [0, 399]");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be in the range [0, 639]");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be in the range [0, 399]");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette offset must be in the range [0, 14]");
+    }
+
+    draw_line(x_0, y_0, x_0, y_1, palette_offset);
+    draw_line(x_0, y_0, x_1, y_0, palette_offset);
+    draw_line(x_0, y_1, x_1, y_1, palette_offset);
+    draw_line(x_1, y_0, x_1, y_1, palette_offset);
+
+    return 0;
+}
+
 static void draw_arc(uint32_t x_centre, uint32_t y_centre, uint32_t radius, 
                         double theta_0, double theta_1, 
                         uint32_t number_of_segments, uint32_t palette_offset)
@@ -480,6 +515,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_line);
     lua_setfield(L, -2, "line");
+
+    lua_pushcfunction(L, lua_display_rectangle);
+    lua_setfield(L, -2, "rectangle");
 
     lua_pushcfunction(L, lua_display_arc);
     lua_setfield(L, -2, "arc");
