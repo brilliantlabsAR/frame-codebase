@@ -1,13 +1,13 @@
 /*
- * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
- *
- * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
- *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
- *
- * CERN Open Hardware Licence Version 2 - Permissive
- *
- * Copyright © 2023 Brilliant Labs Limited
- */
+* This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+*
+* Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+*              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+*
+* CERN Open Hardware Licence Version 2 - Permissive
+*
+* Copyright © 2023 Brilliant Labs Limited
+*/
 
 `ifndef RADIANT
 `include "modules/graphics/color_palette.sv"
@@ -109,9 +109,13 @@ always_ff @(posedge spi_clock_in) begin
                         3: assign_color_value_spi_domain[5:3] <= operand_in[7:5];
                         4: begin
                             assign_color_value_spi_domain[2:0] <= operand_in[7:5];
-                            assign_color_enable_spi_domain <= 0;
+                            assign_color_enable_spi_domain <= 1;
                         end
                     endcase
+                end
+
+                else begin
+                    assign_color_enable_spi_domain <= 0;
                 end
             end
 
@@ -245,6 +249,7 @@ always_ff @(posedge display_clock_in) begin
         if (spi_operand_edge_monitor == 2'b10) begin
             sprite_data_valid <= sprite_data_valid_spi_domain;
             vector_enable <= vector_enable_spi_domain;
+            assign_color_enable <= assign_color_enable_spi_domain;
         end
     end
 

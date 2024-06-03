@@ -72,12 +72,12 @@ static uint32_t utf8_decode(const char *string, size_t *index)
 
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer palette_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer palette_index = luaL_checkinteger(L, 1);
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
 
-    if (palette_index < 0 || palette_index > 15)
+    if (palette_index < 1 || palette_index > 15)
     {
         luaL_error(L, "palette_index must be between 1 and 15");
     }
@@ -224,13 +224,13 @@ static int lua_display_bitmap(lua_State *L)
 
 static int lua_display_text(lua_State *L)
 {
-    // TODO color options
     // TODO justification options
     // TODO character spacing
 
     const char *string = luaL_checkstring(L, 1);
     lua_Integer x_position = luaL_checkinteger(L, 2);
     lua_Integer y_position = luaL_checkinteger(L, 3);
+    lua_Integer palette_offset = luaL_checkinteger(L, 4);
     lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
@@ -272,7 +272,7 @@ static int lua_display_text(lua_State *L)
                                     y_position,
                                     sprite_metadata[entry].width,
                                     sprite_metadata[entry].colors,
-                                    0, // TODO
+                                    palette_offset,
                                     sprite_data + data_offset,
                                     data_length);
 

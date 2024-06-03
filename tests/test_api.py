@@ -109,12 +109,12 @@ async def main():
     # Display
 
     ## Text
-    await test.lua_send("frame.display.text('Hello there!', 1, 1)")
-    await test.lua_send("frame.display.text('Red', 100, 100)")
-    await test.lua_send("frame.display.text('Green', 200, 200)")
-    await test.lua_send("frame.display.text('Blue', 300, 300)")
+    await test.lua_send("frame.display.text('Hello there!', 1, 1, 0)")
+    await test.lua_send("frame.display.text('Red', 100, 100, 0)")
+    await test.lua_send("frame.display.text('Green', 200, 200, 0)")
+    await test.lua_send("frame.display.text('Blue', 300, 300, 0)")
     await test.lua_send("frame.display.show()")
-    # TODO alignment and color
+    # TODO alignment
 
     ## Vectors
     # TODO

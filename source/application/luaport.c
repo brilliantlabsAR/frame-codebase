@@ -121,7 +121,7 @@ void run_lua(bool factory_reset)
     }
 
     // Show splash screen
-    status = luaL_dostring(L, "frame.display.text('FRAME', 280, 176);"
+    status = luaL_dostring(L, "frame.display.text('FRAME', 280, 176, 0);"
                               "frame.display.show();");
 
     if (status != LUA_OK)
