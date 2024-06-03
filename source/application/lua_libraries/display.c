@@ -72,14 +72,14 @@ static uint32_t utf8_decode(const char *string, size_t *index)
 
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer palette_index = luaL_checkinteger(L, 1) - 1;
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (palette_index < 0 || palette_index > 15)
     {
-        luaL_error(L, "pallet_index must be between 1 and 16");
+        luaL_error(L, "palette_index must be between 1 and 15");
     }
 
     if (red < 0 || red > 255)
@@ -101,7 +101,7 @@ static int lua_display_assign_color(lua_State *L)
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
 
-    uint8_t data[4] = {(uint8_t)pallet_index,
+    uint8_t data[4] = {(uint8_t)palette_index,
                        (uint8_t)y,
                        (uint8_t)cb,
                        (uint8_t)cr};
@@ -113,14 +113,14 @@ static int lua_display_assign_color(lua_State *L)
 
 static int lua_display_assign_color_ycbcr(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer palette_index = luaL_checkinteger(L, 1) - 1;
     lua_Integer y = luaL_checkinteger(L, 2);
     lua_Integer cb = luaL_checkinteger(L, 3);
     lua_Integer cr = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (palette_index < 1 || palette_index > 15)
     {
-        luaL_error(L, "pallet_index must be between 1 and 16");
+        luaL_error(L, "palette_index must be between 1 and 15");
     }
 
     if (y < 0 || y > 255)
@@ -138,7 +138,7 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
         luaL_error(L, "Cr component must be between 0 and 255");
     }
 
-    uint8_t data[4] = {(uint8_t)pallet_index,
+    uint8_t data[4] = {(uint8_t)palette_index,
                        (uint8_t)y,
                        (uint8_t)cb,
                        (uint8_t)cr};
@@ -157,19 +157,19 @@ static void draw_sprite(lua_State *L,
                         const uint8_t *pixel_data,
                         size_t pixel_data_length)
 {
-    if (x_position < 1 || x_position > 640)
+    if (x_position < 0 || x_position > 639)
     {
-        luaL_error(L, "x_position must be between 1 and 640 pixels");
+        luaL_error(L, "x_position must be between 0 and 639 pixels");
     }
 
-    if (y_position < 1 || y_position > 400)
+    if (y_position < 0 || y_position > 399)
     {
-        luaL_error(L, "y_position must be between 1 and 400 pixels");
+        luaL_error(L, "y_position must be between 0 and 399 pixels");
     }
 
-    if (width < 1 || width > 640)
+    if (width < 0 || width > 639)
     {
-        luaL_error(L, "width must be between 1 and 640 pixels");
+        luaL_error(L, "width must be between 0 and 639 pixels");
     }
 
     if (total_colors != 2 && total_colors != 4 && total_colors != 16)
@@ -177,14 +177,10 @@ static void draw_sprite(lua_State *L,
         luaL_error(L, "total_colors must be either 2, 4 or 16");
     }
 
-    if (palette_offset < 0 || palette_offset > 15)
+    if (palette_offset < 0 || palette_offset > 14)
     {
-        luaL_error(L, "palette_offset must be between 0 and 15");
+        luaL_error(L, "palette_offset must be between 0 and 14");
     }
-
-    // Remove Lua 1 based offset before sending
-    x_position--;
-    y_position--;
 
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
                             (uint32_t)x_position,
@@ -312,27 +308,27 @@ static int lua_display_line(lua_State *L)
 {
     lua_Integer x_0 = luaL_checkinteger(L, 1);
     if (x_0 < 0 || x_0 > 639) {
-        luaL_error(L, "x_0 must be in the range [0, 639]");
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
     }
 
     lua_Integer y_0 = luaL_checkinteger(L, 2);
     if (y_0 < 0 || y_0 > 399) {
-        luaL_error(L, "y_0 must be in the range [0, 399]");
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
     }
 
     lua_Integer x_1 = luaL_checkinteger(L, 3);
     if (x_1 < 0 || x_1 > 639) {
-        luaL_error(L, "x_1 must be in the range [0, 639]");
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
     }
 
     lua_Integer y_1 = luaL_checkinteger(L, 4);
     if (y_1 < 0 || y_1 > 399) {
-        luaL_error(L, "y_1 must be in the range [0, 399]");
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
     }
 
     lua_Integer palette_offset = luaL_checkinteger(L, 5);
     if (palette_offset < 0 || palette_offset > 14) {
-        luaL_error(L, "palette offset must be in the range [0, 14]");
+        luaL_error(L, "palette_offset must be between 0 and 14");
     }
 
     draw_line(x_0, y_0, x_1, y_1, palette_offset);
@@ -344,27 +340,27 @@ static int lua_display_rectangle(lua_State *L)
 {
     lua_Integer x_0 = luaL_checkinteger(L, 1);
     if (x_0 < 0 || x_0 > 639) {
-        luaL_error(L, "x_0 must be in the range [0, 639]");
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
     }
 
     lua_Integer y_0 = luaL_checkinteger(L, 2);
     if (y_0 < 0 || y_0 > 399) {
-        luaL_error(L, "y_0 must be in the range [0, 399]");
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
     }
 
     lua_Integer x_1 = luaL_checkinteger(L, 3);
     if (x_1 < 0 || x_1 > 639) {
-        luaL_error(L, "x_1 must be in the range [0, 639]");
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
     }
 
     lua_Integer y_1 = luaL_checkinteger(L, 4);
     if (y_1 < 0 || y_1 > 399) {
-        luaL_error(L, "y_1 must be in the range [0, 399]");
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
     }
 
     lua_Integer palette_offset = luaL_checkinteger(L, 5);
     if (palette_offset < 0 || palette_offset > 14) {
-        luaL_error(L, "palette offset must be in the range [0, 14]");
+        luaL_error(L, "palette_offset must be between 0 and 14");
     }
 
     draw_line(x_0, y_0, x_0, y_1, palette_offset);
@@ -399,37 +395,37 @@ static int lua_display_arc(lua_State *L)
 {
     lua_Integer x_centre = luaL_checkinteger(L, 1);
     if (x_centre < 0 || x_centre > 399) {
-        luaL_error(L, "x_centre must be in the range [0, 399]");
+        luaL_error(L, "x_centre must be between 0 and 399 pixels");
     }
 
     lua_Integer y_centre = luaL_checkinteger(L, 2);
     if (y_centre < 0 || y_centre > 639) {
-        luaL_error(L, "y_centre must be in the range [0, 639]");
+        luaL_error(L, "y_centre must be between 0 and 639 pixels");
     }
 
     lua_Integer radius = luaL_checkinteger(L, 3);
     if (radius < 0 || radius > 639) {
-        luaL_error(L, "radius must be in the range [0, 639]");
+        luaL_error(L, "radius must be between 0 and 639 pixels");
     }
 
     lua_Number theta_0 = luaL_checknumber(L, 4);
     if (theta_0 < 0 || theta_0 > 2*M_PI) {
-        luaL_error(L, "theta_0 must be in the range [0, %d]", 2*M_PI);
+        luaL_error(L, "theta_0 must be between 0 and %f radians", 2*M_PI);
     }
 
     lua_Number theta_1 = luaL_checknumber(L, 5);
     if (theta_1 < 0 || theta_1 > 2*M_PI) {
-        luaL_error(L, "theta_1 must be in the range [0, %d]", 2*M_PI);
+        luaL_error(L, "theta_1 must be between 0 and %f radians", 2*M_PI);
     }
 
     lua_Integer number_of_segments = luaL_checkinteger(L, 6);
     if (number_of_segments < 1 || number_of_segments > 16) {
-        luaL_error(L, "number of segments must be in the range [1, 16]");
+        luaL_error(L, "number of segments must be between 1 and 16");
     }
 
     lua_Integer palette_offset = luaL_checkinteger(L, 7);
     if (palette_offset < 0 || palette_offset > 14) {
-        luaL_error(L, "palette offset must be in the range [0, 14]");
+        luaL_error(L, "palette_offset must be between 0 and 14");
     }
 
     draw_arc(x_centre, y_centre, radius, theta_0, theta_1, 
