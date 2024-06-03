@@ -140,47 +140,30 @@ async def main():
 
     # Microphone
 
-    ## Expected sizes for different record options
-    await test.lua_send(
-        "frame.microphone.record{seconds=0.0125, sample_rate=16000, bit_depth=16}"
-    )
-    await asyncio.sleep(0.1)
-    await test.lua_equals("#frame.microphone.read(512)", "400")
+    ## Start and stop mic in different modes
+    await test.lua_send("frame.microphone.start{}")
+    await test.lua_send("frame.microphone.stop()")
 
-    await test.lua_send("frame.microphone.record{seconds=0.05}")
-    await asyncio.sleep(0.1)
-    await test.lua_equals("#frame.microphone.read(512)", "400")
+    await test.lua_send("frame.microphone.start{sample_rate=16000}")
+    await test.lua_send("frame.microphone.stop()")
 
-    await test.lua_send(
-        "frame.microphone.record{seconds=0.05, sample_rate=4000, bit_depth=4}"
-    )
-    await asyncio.sleep(0.1)
-    await test.lua_equals("#frame.microphone.read(512)", "100")
+    await test.lua_send("frame.microphone.start{bit_depth=16}")
+    await test.lua_send("frame.microphone.stop()")
+
+    await test.lua_send("frame.microphone.start{sample_rate=16000, bit_depth=16}")
+    await test.lua_send("frame.microphone.stop()")
 
     ## Unexpected parameters
-    await test.lua_error("frame.microphone.record{seconds=0, sample_rate=16000}")
-    await test.lua_error("frame.microphone.record{seconds=-3, sample_rate=16000}")
-    await test.lua_error("frame.microphone.record{seconds=5, sample_rate=12000}")
-    await test.lua_error(
-        "frame.microphone.record{seconds=5, sample_rate=16000, bit_depth=12}"
-    )
+    await test.lua_error("frame.microphone.start{sample_rate=24000}")
+    await test.lua_error("frame.microphone.start{bit_depth=32}")
 
-    ## Restarted recording
-    await test.lua_send(
-        "frame.microphone.record{seconds=0.0125, sample_rate=16000, bit_depth=16}"
-    )
-    await asyncio.sleep(1)
-    await test.lua_send(
-        "frame.microphone.record{seconds=0.0125, sample_rate=16000, bit_depth=16}"
-    )
-    await asyncio.sleep(0.1)
-    await test.lua_equals("#frame.microphone.read(512)", "400")
-
-    ## Continuous readout
-    # TODO
-
-    ## FIFO overflow
-    # TODO
+    ## Read some data
+    await test.lua_send("frame.microphone.start{}")
+    await asyncio.sleep(0.25)
+    await test.lua_equals("#frame.microphone.read(10)", "10")
+    await test.lua_equals("#frame.microphone.read(256)", "256")
+    await test.lua_error("frame.microphone.read(11)")
+    await test.lua_send("frame.microphone.stop()")
 
     # IMU
 
