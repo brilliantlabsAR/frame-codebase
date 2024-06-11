@@ -55,7 +55,7 @@ logic start_capture_pixel_clock_domain;
 logic [10:0] x_resolution = 512;
 logic [10:0] y_resolution = 512;
 logic [10:0] x_pan = 0;
-logic [3:0] compression_factor;
+logic [1:0] compression_factor;
 
 logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
@@ -385,7 +385,7 @@ jpeg_encoder jpeg_encoder (
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
     .y_size_in(y_resolution),
-    .compression_factor_in(compression_factor),
+    .qf_select_in(compression_factor),
 
     .data_out(final_image_data),
     .data_valid_out(final_image_data_valid),

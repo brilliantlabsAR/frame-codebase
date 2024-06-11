@@ -9,7 +9,7 @@
  */
  module jpeg_encoder #(
     parameter DW = 8,
-    parameter SENSOR_X_SIZE    = 1280,
+    parameter SENSOR_X_SIZE    = 720, //1280,
     parameter SENSOR_Y_SIZE    = 720
 )(
     input   logic               start_capture_in,
@@ -26,7 +26,7 @@
     output  logic               image_valid_out,    // Set to 1 when compression finished. If 1, size of encoded data is address_out+bytes_out (or address_out+16)
     output  logic               data_valid_out,     // Qualifier for valid data. Data is invalid if 0.
 
-    input   [3:0]               compression_factor_in,  // see doc for details re: quality factor 
+    input   logic[1:0]          qf_select_in,       // select one of the 4 possible QF
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_in,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_in,
 
@@ -87,7 +87,9 @@ else
     endcase        
 
 always_comb jpeg_reset_n    = ~(state == RESET);
-always_comb jpeg_en         = state inside {WAIT_FOR_FRAME_START, COMPRESS};
+//../../jpeg_encoder/jpeg_encoder.sv:90: sorry: "inside" expressions not supported yet.
+//always_comb jpeg_en         = state inside {WAIT_FOR_FRAME_START, COMPRESS};
+always_comb jpeg_en         = state == WAIT_FOR_FRAME_START | state == COMPRESS;
 always_comb image_valid_out = state == IMAGE_VALID;
 
 // image size config
@@ -115,6 +117,7 @@ jenc #(
     .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
 ) jenc (
     .size               (out_size),
+    .qf_select          (qf_select_in),
 
     .clk                (pixel_clock_in),
     .resetn             (pixel_reset_n_in & jpeg_reset_n),

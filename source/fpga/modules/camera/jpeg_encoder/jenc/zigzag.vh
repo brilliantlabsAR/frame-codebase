@@ -16,8 +16,8 @@
  [35 36 48 49 57 58 62 63]]
 */
 // `include guards
-`ifndef __ZIGZAG__ 
-`define __ZIGZAG__
+`ifndef __ZIGZAG_VH__ 
+`define __ZIGZAG_VH__
 
 
 
@@ -224,4 +224,4 @@ function automatic [5:0] de_zigzag(input [5:0] i);
         63: de_zigzag = 63;
     endcase
 endfunction
-`endif // __ZIGZAG__  _
+`endif // __ZIGZAG_VH__
