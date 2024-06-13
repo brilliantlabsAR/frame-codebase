@@ -72,14 +72,14 @@ static uint32_t utf8_decode(const char *string, size_t *index)
 
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer palette_index = luaL_checkinteger(L, 1);
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (palette_index < 1 || palette_index > 15)
     {
-        luaL_error(L, "pallet_index must be between 1 and 16");
+        luaL_error(L, "palette_index must be between 1 and 15");
     }
 
     if (red < 0 || red > 255)
@@ -101,7 +101,7 @@ static int lua_display_assign_color(lua_State *L)
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
 
-    uint8_t data[4] = {(uint8_t)pallet_index,
+    uint8_t data[4] = {(uint8_t)palette_index,
                        (uint8_t)y,
                        (uint8_t)cb,
                        (uint8_t)cr};
@@ -113,14 +113,14 @@ static int lua_display_assign_color(lua_State *L)
 
 static int lua_display_assign_color_ycbcr(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    lua_Integer palette_index = luaL_checkinteger(L, 1) - 1;
     lua_Integer y = luaL_checkinteger(L, 2);
     lua_Integer cb = luaL_checkinteger(L, 3);
     lua_Integer cr = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (palette_index < 1 || palette_index > 15)
     {
-        luaL_error(L, "pallet_index must be between 1 and 16");
+        luaL_error(L, "palette_index must be between 1 and 15");
     }
 
     if (y < 0 || y > 255)
@@ -138,7 +138,7 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
         luaL_error(L, "Cr component must be between 0 and 255");
     }
 
-    uint8_t data[4] = {(uint8_t)pallet_index,
+    uint8_t data[4] = {(uint8_t)palette_index,
                        (uint8_t)y,
                        (uint8_t)cb,
                        (uint8_t)cr};
@@ -157,19 +157,19 @@ static void draw_sprite(lua_State *L,
                         const uint8_t *pixel_data,
                         size_t pixel_data_length)
 {
-    if (x_position < 1 || x_position > 640)
+    if (x_position < 0 || x_position > 639)
     {
-        luaL_error(L, "x_position must be between 1 and 640 pixels");
+        luaL_error(L, "x_position must be between 0 and 639 pixels");
     }
 
-    if (y_position < 1 || y_position > 400)
+    if (y_position < 0 || y_position > 399)
     {
-        luaL_error(L, "y_position must be between 1 and 400 pixels");
+        luaL_error(L, "y_position must be between 0 and 399 pixels");
     }
 
-    if (width < 1 || width > 640)
+    if (width < 0 || width > 639)
     {
-        luaL_error(L, "width must be between 1 and 640 pixels");
+        luaL_error(L, "width must be between 0 and 639 pixels");
     }
 
     if (total_colors != 2 && total_colors != 4 && total_colors != 16)
@@ -177,14 +177,10 @@ static void draw_sprite(lua_State *L,
         luaL_error(L, "total_colors must be either 2, 4 or 16");
     }
 
-    if (palette_offset < 0 || palette_offset > 15)
+    if (palette_offset < 0 || palette_offset > 14)
     {
-        luaL_error(L, "palette_offset must be between 0 and 15");
+        luaL_error(L, "palette_offset must be between 0 and 14");
     }
-
-    // Remove Lua 1 based offset before sending
-    x_position--;
-    y_position--;
 
     uint8_t meta_data[8] = {(uint32_t)x_position >> 8,
                             (uint32_t)x_position,
@@ -228,13 +224,13 @@ static int lua_display_bitmap(lua_State *L)
 
 static int lua_display_text(lua_State *L)
 {
-    // TODO color options
     // TODO justification options
     // TODO character spacing
 
     const char *string = luaL_checkstring(L, 1);
     lua_Integer x_position = luaL_checkinteger(L, 2);
     lua_Integer y_position = luaL_checkinteger(L, 3);
+    lua_Integer palette_offset = luaL_checkinteger(L, 4);
     lua_Integer character_spacing = 4;
 
     for (size_t index = 0; index < strlen(string);)
@@ -276,7 +272,7 @@ static int lua_display_text(lua_State *L)
                                     y_position,
                                     sprite_metadata[entry].width,
                                     sprite_metadata[entry].colors,
-                                    0, // TODO
+                                    palette_offset,
                                     sprite_data + data_offset,
                                     data_length);
 
@@ -287,6 +283,204 @@ static int lua_display_text(lua_State *L)
             }
         }
     }
+
+    return 0;
+}
+
+static void draw_line(uint32_t x_0, uint32_t y_0, uint32_t x_1, uint32_t y_1, uint32_t color) 
+{
+    uint8_t line_data[9] = {
+        (uint32_t) x_0 >> 8,
+        (uint32_t) x_0,
+        (uint32_t) y_0 >> 8,
+        (uint32_t) y_0,
+        (uint32_t) x_1 >> 8,
+        (uint32_t) x_1,
+        (uint32_t) y_1 >> 8,
+        (uint32_t) y_1,
+        (uint8_t) color
+    };
+
+    spi_write(FPGA, 0x13, line_data, sizeof(line_data));
+}
+
+static int lua_display_line(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette_offset must be between 0 and 14");
+    }
+
+    draw_line(x_0, y_0, x_1, y_1, palette_offset);
+
+    return 0;
+}
+
+static int lua_display_rectangle(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette_offset must be between 0 and 14");
+    }
+
+    draw_line(x_0, y_0, x_0, y_1, palette_offset);
+    draw_line(x_0, y_0, x_1, y_0, palette_offset);
+    draw_line(x_0, y_1, x_1, y_1, palette_offset);
+    draw_line(x_1, y_0, x_1, y_1, palette_offset);
+
+    return 0;
+}
+
+static int lua_display_filled_rectangle(lua_State *L)
+{
+    lua_Integer x_0 = luaL_checkinteger(L, 1);
+    if (x_0 < 0 || x_0 > 639) {
+        luaL_error(L, "x_0 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_0 = luaL_checkinteger(L, 2);
+    if (y_0 < 0 || y_0 > 399) {
+        luaL_error(L, "y_0 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer x_1 = luaL_checkinteger(L, 3);
+    if (x_1 < 0 || x_1 > 639) {
+        luaL_error(L, "x_1 must be between 0 and 639 pixels");
+    }
+
+    lua_Integer y_1 = luaL_checkinteger(L, 4);
+    if (y_1 < 0 || y_1 > 399) {
+        luaL_error(L, "y_1 must be between 0 and 399 pixels");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 5);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette_offset must be between 0 and 14");
+    }
+
+    // round up to nearest byte
+    uint32_t num_bytes = (uint32_t) round((abs(x_1 - x_0) * abs(y_1 - y_0) / 8.0) + 0.5);
+    uint8_t *pixel_data = malloc(num_bytes);
+
+    memset(pixel_data, 0xff, num_bytes);
+
+    uint32_t x_position = x_0 < x_1 ? x_0 : x_1;
+    uint32_t y_position = y_0 < y_1 ? y_0 : y_1;
+    uint32_t width = abs(y_1 - y_0);
+
+    draw_sprite(
+        L,
+        x_position,
+        y_position,
+        width,
+        SPRITE_2_COLORS,
+        palette_offset,
+        pixel_data,
+        num_bytes
+    );
+
+    return 0;
+}
+
+static void draw_arc(uint32_t x_centre, uint32_t y_centre, uint32_t radius, 
+                        double theta_0, double theta_1, 
+                        uint32_t number_of_segments, uint32_t palette_offset)
+{
+    uint32_t x_0, y_0, x_1, y_1;
+    double angle = theta_0;
+    double d_theta = (theta_1 - theta_0) / number_of_segments;
+
+    x_1 = (uint32_t) round ((double)x_centre + (double)radius * cos(angle));
+    y_1 = (uint32_t) round ((double)y_centre + (double)radius * sin(angle));
+
+    for (uint8_t i = 1; i <= number_of_segments; i++) {
+        x_0 = x_1; y_0 = y_1;
+        angle = angle + d_theta;
+        x_1 = (uint32_t) round ((double)x_centre + (double)radius * cos(angle));
+        y_1 = (uint32_t) round ((double)y_centre + (double)radius * sin(angle));
+        draw_line(x_0, y_0, x_1, y_1, palette_offset);
+    }
+}
+
+static int lua_display_arc(lua_State *L)
+{
+    lua_Integer x_centre = luaL_checkinteger(L, 1);
+    if (x_centre < 0 || x_centre > 399) {
+        luaL_error(L, "x_centre must be between 0 and 399 pixels");
+    }
+
+    lua_Integer y_centre = luaL_checkinteger(L, 2);
+    if (y_centre < 0 || y_centre > 639) {
+        luaL_error(L, "y_centre must be between 0 and 639 pixels");
+    }
+
+    lua_Integer radius = luaL_checkinteger(L, 3);
+    if (radius < 0 || radius > 639) {
+        luaL_error(L, "radius must be between 0 and 639 pixels");
+    }
+
+    lua_Number theta_0 = luaL_checknumber(L, 4);
+    if (theta_0 < 0 || theta_0 > 2*M_PI) {
+        luaL_error(L, "theta_0 must be between 0 and %f radians", 2*M_PI);
+    }
+
+    lua_Number theta_1 = luaL_checknumber(L, 5);
+    if (theta_1 < 0 || theta_1 > 2*M_PI) {
+        luaL_error(L, "theta_1 must be between 0 and %f radians", 2*M_PI);
+    }
+
+    lua_Integer number_of_segments = luaL_checkinteger(L, 6);
+    if (number_of_segments < 1 || number_of_segments > 16) {
+        luaL_error(L, "number of segments must be between 1 and 16");
+    }
+
+    lua_Integer palette_offset = luaL_checkinteger(L, 7);
+    if (palette_offset < 0 || palette_offset > 14) {
+        luaL_error(L, "palette_offset must be between 0 and 14");
+    }
+
+    draw_arc(x_centre, y_centre, radius, theta_0, theta_1, 
+                number_of_segments, palette_offset);
 
     return 0;
 }
@@ -365,6 +559,18 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_text);
     lua_setfield(L, -2, "text");
+
+    lua_pushcfunction(L, lua_display_line);
+    lua_setfield(L, -2, "line");
+
+    lua_pushcfunction(L, lua_display_rectangle);
+    lua_setfield(L, -2, "rectangle");
+
+    lua_pushcfunction(L, lua_display_filled_rectangle);
+    lua_setfield(L, -2, "filled_rectangle");
+
+    lua_pushcfunction(L, lua_display_arc);
+    lua_setfield(L, -2, "arc");
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");

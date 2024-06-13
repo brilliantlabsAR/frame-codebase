@@ -37,21 +37,6 @@ display_driver:
 	@gtkwave simulation/display_driver_tb.fst \
 			 display_driver_tb.gtkw
 
-sprite_engine:
-	@mkdir -p simulation
-	
-	@iverilog -Wall \
-			  -g2012 \
-			  -I fpga \
-			  -o simulation/sprite_engine_tb.out \
-			  -i sprite_engine_tb.sv
-	
-	@vvp simulation/sprite_engine_tb.out \
-		 -fst
-
-	@gtkwave simulation/sprite_engine_tb.fst \
-			 sprite_engine_tb.gtkw
-
 graphics:
 	@mkdir -p simulation
 	
@@ -60,12 +45,31 @@ graphics:
 			  -I ../../.. \
 			  -o simulation/graphics_tb.out \
 			  -i graphics_tb.sv
-	exit
+	
 	@vvp simulation/graphics_tb.out \
 		 -fst
 
+	@python3 mem_to_image.py
+
 	@gtkwave simulation/graphics_tb.fst \
 			 graphics_tb.gtkw
+
+vector_engine:
+	@mkdir -p simulation
+	
+	@iverilog -Wall \
+			  -g2012 \
+			  -I ../../.. \
+			  -o simulation/vector_engine_tb.out \
+			  -i vector_engine_tb.sv
+	
+	@vvp simulation/vector_engine_tb.out \
+		 -fst
+
+	@python3 mem_to_image.py
+
+	@gtkwave simulation/vector_engine_tb.fst \
+			 vector_engine_tb.gtkw
 
 clean:
 	@rm -rf simulation

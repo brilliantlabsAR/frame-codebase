@@ -35,7 +35,8 @@ initial begin
     // Switch/clear command
     send_opcode('h14);
     done();
-    #1200000
+    @(negedge graphics.display_buffers.clear_flag);
+    #20
 
     // Draw pixels
     send_opcode('h12);
@@ -58,11 +59,27 @@ initial begin
     done();
     #30000
 
+    // Draw line
+    send_opcode('h13);
+    send_operand('h00); // x0
+    send_operand('h00);
+    send_operand('h00); // y0
+    send_operand('h00);
+    send_operand('h01); // x1
+    send_operand('h00);
+    send_operand('h01); // y1
+    send_operand('h00);
+    send_operand('h03); // palette index
+    done();
+    @(posedge graphics.vector_ready);
+    #20
+
     // Show command
     send_opcode('h14);
     done();
-    #5000000
+    @(negedge graphics.display_buffers.clear_flag);
 
+    $writememh("simulation/frame_buffer.txt", graphics.display_buffers.buffer_a.mem);
     $finish;
 end
 

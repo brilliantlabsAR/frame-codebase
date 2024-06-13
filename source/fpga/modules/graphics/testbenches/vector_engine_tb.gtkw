@@ -1,0 +1,36 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri May 24 06:01:26 2024
+[*]
+[dumpfile] "simulation/vector_engine_tb.fst"
+[dumpfile_mtime] "Fri May 24 05:59:11 2024"
+[dumpfile_size] 1086
+[savefile] "vector_engine_tb.gtkw"
+[timestart] 582
+[size] 1920 1016
+[pos] -1 -1
+*-5.455784 640 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] vector_engine_tb.
+[sst_width] 245
+[signals_width] 223
+[sst_expanded] 1
+[sst_vpaned_height] 277
+@28
+vector_engine_tb.vector_engine.clock_in
+vector_engine_tb.vector_engine.enable_in
+vector_engine_tb.vector_engine.ready_out
+@29
+vector_engine_tb.vector_engine.state[1:0]
+@22
+vector_engine_tb.vector_engine.x0_in[9:0]
+vector_engine_tb.vector_engine.y0_in[9:0]
+vector_engine_tb.vector_engine.x1_in[9:0]
+vector_engine_tb.vector_engine.y1_in[9:0]
+@24
+vector_engine_tb.vector_engine.x[9:0]
+vector_engine_tb.vector_engine.y[8:0]
+vector_engine_tb.vector_engine.address_out[17:0]
+@28
+vector_engine_tb.vector_engine.write_enable_out
+[pattern_trace] 1
+[pattern_trace] 0

@@ -1,19 +1,20 @@
 /*
- * This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
- *
- * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
- *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
- *
- * CERN Open Hardware Licence Version 2 - Permissive
- *
- * Copyright © 2023 Brilliant Labs Limited
- */
+* This file is a part of: https://github.com/brilliantlabsAR/frame-codebase
+*
+* Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
+*              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+*
+* CERN Open Hardware Licence Version 2 - Permissive
+*
+* Copyright © 2023 Brilliant Labs Limited
+*/
 
 `ifndef RADIANT
 `include "modules/graphics/color_palette.sv"
 `include "modules/graphics/display_buffers.sv"
 `include "modules/graphics/display_driver.sv"
 `include "modules/graphics/sprite_engine.sv"
+`include "modules/graphics/vector_engine.sv"
 `endif
 
 module graphics (
@@ -63,11 +64,26 @@ logic [7:0] sprite_data;
 logic sprite_data_valid;
 logic sprite_enable;
 
-logic switch_buffer_spi_domain;
-logic switch_buffer;
-
 logic [1:0] spi_op_code_edge_monitor;
 logic [1:0] spi_operand_edge_monitor;
+
+logic [9:0] vector_x0_position_spi_domain;
+logic [9:0] vector_x1_position_spi_domain;
+logic [9:0] vector_y0_position_spi_domain;
+logic [9:0] vector_y1_position_spi_domain;
+logic [3:0] vector_pallete_index_spi_domain;
+logic vector_enable_spi_domain;
+
+logic [9:0] vector_x0_position;
+logic [9:0] vector_x1_position;
+logic [9:0] vector_y0_position;
+logic [9:0] vector_y1_position;
+logic [3:0] vector_pallete_index;
+logic vector_enable;
+logic vector_ready;
+
+logic switch_buffer_spi_domain;
+logic switch_buffer;
 
 // SPI registers
 always_ff @(posedge spi_clock_in) begin
@@ -77,6 +93,7 @@ always_ff @(posedge spi_clock_in) begin
         assign_color_enable_spi_domain <= 0;
         sprite_enable_spi_domain <= 0;
         switch_buffer_spi_domain <= 0;
+        vector_enable_spi_domain <= 0;
     end
 
     else begin
@@ -92,9 +109,13 @@ always_ff @(posedge spi_clock_in) begin
                         3: assign_color_value_spi_domain[5:3] <= operand_in[7:5];
                         4: begin
                             assign_color_value_spi_domain[2:0] <= operand_in[7:5];
-                            assign_color_enable_spi_domain <= 0;
+                            assign_color_enable_spi_domain <= 1;
                         end
                     endcase
+                end
+
+                else begin
+                    assign_color_enable_spi_domain <= 0;
                 end
             end
 
@@ -122,6 +143,36 @@ always_ff @(posedge spi_clock_in) begin
                 else begin
                     sprite_data_valid_spi_domain <= 0;
                 end
+            end
+
+            // Draw line
+            'h13: begin
+
+                if (operand_valid_in) begin
+                    case (operand_count_in)
+                        1: vector_x0_position_spi_domain[9:8] <= operand_in[1:0];
+                        2: vector_x0_position_spi_domain[7:0] <= operand_in;
+                        3: vector_y0_position_spi_domain[9:8] <= operand_in[1:0];
+                        4: vector_y0_position_spi_domain[7:0] <= operand_in;
+                        5: vector_x1_position_spi_domain[9:8] <= operand_in[1:0];
+                        6: vector_x1_position_spi_domain[7:0] <= operand_in;
+                        7: vector_y1_position_spi_domain[9:8] <= operand_in[1:0];
+                        8: vector_y1_position_spi_domain[7:0] <= operand_in;
+                        9: begin
+                            vector_pallete_index_spi_domain <= operand_in[3:0];
+                            // TODO: move this check to a queue fifo
+                            // for consecutive lines / polygon
+                            if (vector_ready) begin
+                                vector_enable_spi_domain <= 1;
+                            end
+                        end
+                    endcase
+                end
+
+                else begin
+                    vector_enable_spi_domain <= 0;
+                end
+
             end
 
             // Switch buffer
@@ -156,6 +207,13 @@ always_ff @(posedge display_clock_in) begin
         sprite_data_valid <= 0;
         sprite_enable <= 0;
 
+        vector_x0_position <= 0;
+        vector_x1_position <= 0;
+        vector_y0_position <= 0;
+        vector_y1_position <= 0;
+        vector_pallete_index <= 0;
+        vector_enable <= 0;
+
         switch_buffer <= 0;
     end
 
@@ -178,11 +236,20 @@ always_ff @(posedge display_clock_in) begin
             sprite_data_valid <= sprite_data_valid_spi_domain;
             sprite_enable <= sprite_enable_spi_domain;
 
+            vector_x0_position <= vector_x0_position_spi_domain;
+            vector_x1_position <= vector_x1_position_spi_domain;
+            vector_y0_position <= vector_y0_position_spi_domain;
+            vector_y1_position <= vector_y1_position_spi_domain;
+            vector_pallete_index <= vector_pallete_index_spi_domain;
+            vector_enable <= vector_enable_spi_domain;
+
             switch_buffer <= switch_buffer_spi_domain;
         end
 
         if (spi_operand_edge_monitor == 2'b10) begin
             sprite_data_valid <= sprite_data_valid_spi_domain;
+            vector_enable <= vector_enable_spi_domain;
+            assign_color_enable <= assign_color_enable_spi_domain;
         end
     end
 
@@ -193,7 +260,7 @@ logic pixel_write_enable_sprite_to_mux_wire;
 logic [17:0] pixel_write_address_sprite_to_mux_wire;
 logic [3:0] pixel_write_data_sprite_to_mux_wire;
 
-logic pixel_write_enable_vector_to_mux_wire = 0; // TODO wire this up
+logic pixel_write_enable_vector_to_mux_wire;
 logic [17:0] pixel_write_address_vector_to_mux_wire;
 logic [3:0] pixel_write_data_vector_to_mux_wire;
 
@@ -241,7 +308,21 @@ sprite_engine sprite_engine (
 );
 
 // Vector engine
-// TODO
+// TODO: Fix color logic
+assign pixel_write_data_vector_to_mux_wire = vector_pallete_index_spi_domain;
+
+vector_engine vector_engine (
+    .clock_in(spi_clock_in),
+    .reset_n_in(spi_reset_n_in),
+    .enable_in(vector_enable),
+    .x0_in(vector_x0_position),
+    .y0_in(vector_y0_position),
+    .x1_in(vector_x1_position),
+    .y1_in(vector_y1_position),
+    .address_out(pixel_write_address_vector_to_mux_wire),
+    .write_enable_out(pixel_write_enable_vector_to_mux_wire),
+    .ready_out(vector_ready)
+);
 
 logic [17:0] read_address_driver_to_buffer_wire;
 logic [3:0] color_data_buffer_to_palette_wire;
@@ -287,5 +368,6 @@ display_driver display_driver (
     .display_cb_out(display_cb_out),
     .display_cr_out(display_cr_out)
 );
+
 
 endmodule
