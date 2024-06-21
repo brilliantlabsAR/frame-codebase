@@ -10,6 +10,10 @@ from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
 import sys, os, time, random, logging
 
+from cocotbext.spi import SpiBus
+from cocotbext.spi import SpiConfig
+from cocotbext.spi import SpiMaster
+
 import numpy as np
 
 if os.environ['SIM'] != 'modelsim':
@@ -239,6 +243,23 @@ async def dct_test(dut):
     dut._log.setLevel(level)
 
     initialize_ports(dut)
+    
+    #Instantiate SPI BFM - WIP
+    spi_bus = SpiBus.from_entity(dut, sclk_name="CC", cs_name="spi_select_in")
+    
+    print(spi_bus._signals)
+    raise
+
+    spi_config = SpiConfig(
+        word_width=8,
+#        sclk_freq=25e6,
+#        cpol=False,
+#        cpha=True,
+        msb_first=True,
+        cs_active_low=True,
+    )
+#
+#        self.source = SpiMaster(self.bus, self.config)
 
     clk_op = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock
     clk_os = cocotb.start_soon(clock_n_reset(dut.cpu_clock_8hmz, None, f=8*10e6))  # 8 MHz clock

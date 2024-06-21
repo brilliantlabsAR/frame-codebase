@@ -6,6 +6,17 @@
 # Copyright (C) 2024 Robert Metchev
 #
 
+Prerequisites:
+- Python3
+- Cocotb
+- OpenCV
+- cocotbext-spi
+    https://github.com/schang412/cocotbext-spi
+    pip install cocotbext-spi
+- Verilator
+- Icarus Verilog
+- Modelsim
+
 Instructions:
 1.) RTL sim with verilator: 64-bit environment. Bypassed Lattice IP in test bench and camera.
 $> make clean
