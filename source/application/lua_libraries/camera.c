@@ -126,12 +126,43 @@ static int lua_camera_read(lua_State *L)
         luaL_error(L, "bytes requested is too large");
     }
 
+    // TODO this ends up placing the arrays in RAM. Make it static somehow
+    uint8_t *jpeg_header = NULL;
+    size_t jpeg_header_length = 0;
+
+    switch (camera_quality_factor)
+    {
+    case 100:
+        jpeg_header = (uint8_t *)jpeg_header_qf_100;
+        jpeg_header_length = sizeof(jpeg_header_qf_100);
+        break;
+
+    case 50:
+        jpeg_header = (uint8_t *)jpeg_header_qf_50;
+        jpeg_header_length = sizeof(jpeg_header_qf_50);
+        break;
+
+    case 25:
+        jpeg_header = (uint8_t *)jpeg_header_qf_25;
+        jpeg_header_length = sizeof(jpeg_header_qf_25);
+        break;
+
+    case 10:
+        jpeg_header = (uint8_t *)jpeg_header_qf_10;
+        jpeg_header_length = sizeof(jpeg_header_qf_10);
+        break;
+
+    default:
+        error_with_message("Invalid camera_quality_factor");
+        break;
+    }
+
     // Append JPEG header data
-    if (jpeg_header_bytes_sent_out < sizeof(jpeg_header))
+    if (jpeg_header_bytes_sent_out < jpeg_header_length)
     {
         size_t length =
-            sizeof(jpeg_header) - jpeg_header_bytes_sent_out < bytes_requested
-                ? sizeof(jpeg_header) - jpeg_header_bytes_sent_out
+            jpeg_header_length - jpeg_header_bytes_sent_out < bytes_requested
+                ? jpeg_header_length - jpeg_header_bytes_sent_out
                 : bytes_requested;
 
         memcpy(payload, jpeg_header + jpeg_header_bytes_sent_out, length);
