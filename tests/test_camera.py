@@ -24,10 +24,10 @@ async def capture_and_download(b: Bluetooth):
     done = False
 
     print("Capturing image")
-    await b.send_lua("frame.camera.set_shutter(6000)")
-    await b.send_lua("frame.camera.set_gain(50)")
+    await b.send_lua("frame.camera.set_shutter(50)")
+    await b.send_lua("frame.camera.set_gain(0)")
     await asyncio.sleep(0.1)
-    await b.send_lua("frame.camera.capture()")
+    await b.send_lua("frame.camera.capture{quality_factor=10}")
     await asyncio.sleep(0.5)
 
     print("Downloading image")
@@ -47,7 +47,9 @@ async def capture_and_download(b: Bluetooth):
 async def main():
     b = Bluetooth()
 
-    await b.connect(data_response_handler=receive_data)
+    await b.connect(
+        data_response_handler=receive_data, print_response_handler=lambda s: print(s)
+    )
 
     await capture_and_download(b)
 

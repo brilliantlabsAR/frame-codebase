@@ -50,6 +50,7 @@ static struct camera_auto_last_values
     .gain = 0,
 };
 
+static lua_Integer camera_quality_factor = 50;
 static size_t jpeg_header_bytes_sent_out = 0;
 static size_t jpeg_footer_bytes_sent_out = 0;
 
@@ -60,7 +61,38 @@ static int lua_camera_capture(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
+    lua_Integer quality_factor = 50;
+
+    if (lua_getfield(L, 1, "quality_factor") != LUA_TNIL)
+    {
+        quality_factor = luaL_checkinteger(L, -1);
+
+        switch (quality_factor)
+        {
+        case 100:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x01", 1);
+            break;
+
+        case 50:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x00", 1);
+            break;
+
+        case 25:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x03", 1);
+            break;
+
+        case 10:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x02", 1);
+            break;
+
+        default:
+            luaL_error(L, "quality_factor must be either 100, 50, 25 or 10");
+            break;
+        }
+    }
+
     spi_write(FPGA, 0x20, NULL, 0);
+    camera_quality_factor = quality_factor;
     jpeg_header_bytes_sent_out = 0;
     jpeg_footer_bytes_sent_out = 0;
     return 0;
