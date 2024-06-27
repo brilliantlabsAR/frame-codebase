@@ -27,7 +27,7 @@ async def capture_and_download(b: Bluetooth):
     image_buffer = b""
     done = False
 
-    await b.send_lua(f"frame.camera.capture()")
+    await b.send_lua("frame.camera.capture{}")
 
     for _ in range(3):
         await b.send_lua("frame.camera.auto{}")
