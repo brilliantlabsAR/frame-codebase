@@ -25,6 +25,7 @@ module jenc #(
     output  logic                   out_valid,
     input   logic                   out_hold,
 
+    input   logic[1:0]              qf_select,          // select one of the 4 possible QF
     output  logic [19:0]            size,
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
@@ -36,8 +37,8 @@ module jenc #(
     input   logic                   resetn_x22
 );
 
-always_comb if (di_valid) assert (x_size_m1[0]) else $fatal("Enforcing even image dimensions!");
-always_comb if (di_valid) assert (y_size_m1[0]) else $fatal("Enforcing even image dimensions!");
+always_comb if (di_valid) assert (x_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
+always_comb if (di_valid) assert (y_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
 
 logic signed[CW-1:0]    d[1:0];
 logic                   d_valid;
@@ -71,7 +72,7 @@ dct_2d dct_2d (
     .q_cnt          (d_cnt),
     .*
 );
-quant quant(
+quant #(.SENSOR_X_SIZE(SENSOR_X_SIZE), .SENSOR_Y_SIZE(SENSOR_Y_SIZE)) quant(
     .di             (d),
     .di_valid       (d_valid),
     .di_hold        (d_hold),

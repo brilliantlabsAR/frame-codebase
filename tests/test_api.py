@@ -124,18 +124,36 @@ async def main():
 
     # Camera
 
-    ## Capture and read
+    ## Capture in different modes
+    await test.lua_send("frame.camera.capture{}")
+    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_send("frame.camera.capture{quality_factor=10}")
+    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_send("frame.camera.capture{quality_factor=25}")
+    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_send("frame.camera.capture{quality_factor=50}")
+    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_send("frame.camera.capture{quality_factor=100}")
+    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_error("frame.camera.capture{quality_factor=75}")
+
+    ## Read
+    await test.lua_equals("#frame.camera.read(123)", "123")
+
+    ## Test sleep prevents captures
+    await test.lua_send("frame.camera.sleep()")
+    await test.lua_error("frame.camera.capture{}")
     await test.lua_send("frame.camera.wake()")
     await test.lua_send("frame.sleep(0.1)")
-    await test.lua_send("frame.camera.capture()")
-    await test.lua_equals("#frame.camera.read(123)", "123")
-    await test.lua_send("frame.camera.sleep()")
-    await test.lua_error("frame.camera.capture()")
+    await test.lua_send("frame.camera.capture{}")
 
-    ## Resolution, scale & color format
+    ## Zoom & pan
     # TODO
 
-    ## Exposure
+    ## Manual exposure & gain
+    # TODO
+
+    ## Auto exposure & gain
     # TODO
 
     # Microphone

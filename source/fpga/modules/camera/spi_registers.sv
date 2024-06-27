@@ -24,7 +24,7 @@
 
     output logic start_capture_out,
     // TODO position signals
-    output logic [3:0] compression_factor_out,
+    output logic [1:0] compression_factor_out,
 
     input logic [15:0] bytes_available_in,
     input logic [7:0] data_in,
@@ -126,7 +126,7 @@ always_ff @(posedge clock_in) begin
                 // Compression factor
                 'h26: begin
                     if (operand_valid_in) begin 
-                        compression_factor_out <= operand_in[3:0];
+                        compression_factor_out <= operand_in[1:0];
                     end
                 end
 

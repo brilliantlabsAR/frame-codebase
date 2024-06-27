@@ -7,13 +7,13 @@
  */
 module huff_tables  (
     input   logic               clk,
-    input   logic [3:0]         rl,
-    input   logic [3:0]         coeff_length,
+    input   logic [3:0]         rl[1:0],
+    input   logic [3:0]         coeff_length[1:0],
     input   logic               re,
     input   logic               chroma,
-    input   logic               ac,
-    output  logic [4:0]         len,
-    output  logic [15:0]        code
+    input   logic [1:0]         ac,
+    output  logic [4:0]         len[1:0],
+    output  logic [15:0]        code[1:0]
 );
 
 // Address re-mapping:
@@ -27,14 +27,15 @@ localparam N_ENTRIES = 2*(1 + 'h bb); // 2x188 = 376
 
 // 20x376
 logic [19:0] rom[N_ENTRIES-1:0] /* synthesis syn_romstyle = "Logic" */; //previously "Logic"
-logic [8:0] addr;
-always @(*)
-    if (ac)     addr = {coeff_length,           rl, chroma}; // {coeff len, RL,        chroma} - AC coeff len always less than 0xB
-    else        addr = {        4'hb, coeff_length, chroma}; // {0xB,       coeff len, chroma}
-
-always @(posedge clk) if (re) len <= rom[addr][19:16] + 1;
-always @(posedge clk) if (re) code <= rom[addr][15:0];
-
+logic [8:0] addr[1:0];
+always @(*) for (int i=0; i<2; i++) begin
+    if (ac[i])  addr[i] = {coeff_length[i],           rl[i], chroma}; // {coeff len, RL,        chroma} - AC coeff len always less than 0xB
+    else        addr[i] = {           4'hb, coeff_length[i], chroma}; // {0xB,       coeff len, chroma}
+end
+always @(posedge clk) for (int i=0; i<2; i++) begin
+    if (re) len[i] <= rom[addr[i]][19:16] + 1;
+    if (re) code[i] <= rom[addr[i]][15:0];
+end
 always_comb begin
     for (int a=0; a<N_ENTRIES; a++) rom[a] = 'hx; // applies to 2x14 entries only
 

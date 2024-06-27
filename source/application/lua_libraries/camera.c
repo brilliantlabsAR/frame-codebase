@@ -50,6 +50,7 @@ static struct camera_auto_last_values
     .gain = 0,
 };
 
+static lua_Integer camera_quality_factor = 50;
 static size_t jpeg_header_bytes_sent_out = 0;
 static size_t jpeg_footer_bytes_sent_out = 0;
 
@@ -60,7 +61,38 @@ static int lua_camera_capture(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
+    lua_Integer quality_factor = 50;
+
+    if (lua_getfield(L, 1, "quality_factor") != LUA_TNIL)
+    {
+        quality_factor = luaL_checkinteger(L, -1);
+
+        switch (quality_factor)
+        {
+        case 100:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x01", 1);
+            break;
+
+        case 50:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x00", 1);
+            break;
+
+        case 25:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x03", 1);
+            break;
+
+        case 10:
+            spi_write(FPGA, 0x26, (uint8_t *)"\x02", 1);
+            break;
+
+        default:
+            luaL_error(L, "quality_factor must be either 100, 50, 25 or 10");
+            break;
+        }
+    }
+
     spi_write(FPGA, 0x20, NULL, 0);
+    camera_quality_factor = quality_factor;
     jpeg_header_bytes_sent_out = 0;
     jpeg_footer_bytes_sent_out = 0;
     return 0;
@@ -94,12 +126,43 @@ static int lua_camera_read(lua_State *L)
         luaL_error(L, "bytes requested is too large");
     }
 
+    // TODO this ends up placing the arrays in RAM. Make it static somehow
+    uint8_t *jpeg_header = NULL;
+    size_t jpeg_header_length = 0;
+
+    switch (camera_quality_factor)
+    {
+    case 100:
+        jpeg_header = (uint8_t *)jpeg_header_qf_100;
+        jpeg_header_length = sizeof(jpeg_header_qf_100);
+        break;
+
+    case 50:
+        jpeg_header = (uint8_t *)jpeg_header_qf_50;
+        jpeg_header_length = sizeof(jpeg_header_qf_50);
+        break;
+
+    case 25:
+        jpeg_header = (uint8_t *)jpeg_header_qf_25;
+        jpeg_header_length = sizeof(jpeg_header_qf_25);
+        break;
+
+    case 10:
+        jpeg_header = (uint8_t *)jpeg_header_qf_10;
+        jpeg_header_length = sizeof(jpeg_header_qf_10);
+        break;
+
+    default:
+        error_with_message("Invalid camera_quality_factor");
+        break;
+    }
+
     // Append JPEG header data
-    if (jpeg_header_bytes_sent_out < sizeof(jpeg_header))
+    if (jpeg_header_bytes_sent_out < jpeg_header_length)
     {
         size_t length =
-            sizeof(jpeg_header) - jpeg_header_bytes_sent_out < bytes_requested
-                ? sizeof(jpeg_header) - jpeg_header_bytes_sent_out
+            jpeg_header_length - jpeg_header_bytes_sent_out < bytes_requested
+                ? jpeg_header_length - jpeg_header_bytes_sent_out
                 : bytes_requested;
 
         memcpy(payload, jpeg_header + jpeg_header_bytes_sent_out, length);

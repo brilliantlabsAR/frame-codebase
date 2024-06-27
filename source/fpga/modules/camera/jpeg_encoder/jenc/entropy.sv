@@ -38,10 +38,16 @@ endfunction
 logic signed[10:0]          previousDC[2:0];
 always @(posedge clk)
 if (!resetn)
-    previousDC <= {'0, '0, '0};
+    //../../jpeg_encoder/jenc/entropy.sv:41: internal error: I don't know how to elaborate(ivl_type_t) this expression: {'d0, 'd0, 'd0}
+    //previousDC <= {'0, '0, '0};
+    for (int c=0; c<3; c++)
+        previousDC[c] <= '0;
 else if (q_valid & !q_hold)
     if (q_last_mcu & &q_cnt)  //  EOF reset
-        previousDC <= {'0, '0, '0};
+        //../../jpeg_encoder/jenc/entropy.sv:44: internal error: I don't know how to elaborate(ivl_type_t) this expression: {'d0, 'd0, 'd0}
+        //previousDC <= {'0, '0, '0};
+        for (int c=0; c<3; c++)
+            previousDC[c] <= '0;
     else if (q_cnt == 0)
         previousDC[q_chroma] <= q[0];
     
@@ -101,7 +107,7 @@ always_comb
 logic [7:0]         ht_symbol[1:0];  // for debug
 logic [3:0]         ht_rl[1:0], ht_coeff_length[1:0];
 logic [1:0]         ht_re;
-logic [1:0]         ht_chroma;
+logic               ht_chroma;
 logic [1:0]         ht_ac;
 logic [4:0]         code_length0[1:0];
 logic [15:0]        code0[1:0];
@@ -112,56 +118,55 @@ always_comb for (int i=0; i<2; i++) begin
     ht_symbol[i] = {ht_rl[i], ht_coeff_length[i]}; // for debug
 
     ht_re[i] = q_valid & !q_hold & (rl_valid[i] | rl[i]==13-i | rl[i]==12-i); // Read 0xF0: i==1: 11|12, i==0: 12|13
-    ht_chroma[i] = |q_chroma;
     ht_ac[i] = ~(i==0 & q_cnt==0);
 end
+always_comb ht_chroma = |q_chroma;
+
+`ifndef INFER_HUFFMAN_CODES_ROM
+logic [4:0] rom_len[1:0];
+`endif //INFER_HUFFMAN_CODES_ROM 
+
+huff_tables ht (
+    .rl         (ht_rl),
+    .coeff_length (ht_coeff_length),
+    .re         (~out_hold),
+    .chroma     (ht_chroma),
+    .ac         (ht_ac),
+`ifdef INFER_HUFFMAN_CODES_ROM
+    .len        (code_length0),
+    .code       (code0),
+`else
+    .len        (rom_len), // use huff_tables for top 3 bits of len only
+    .code       ( ),
+`endif //INFER_HUFFMAN_CODES_ROM 
+    .clk
+);
+
+`ifndef INFER_HUFFMAN_CODES_ROM
+logic [17:0] rom_rd[1:0];
+logic [8:0] rom_addr[1:0];
 
 generate
 for (genvar i=0; i<2; i++) begin
-`ifdef INFER_HUFFMAN_CODES_ROM
-huff_tables ht (
-    .rl         (ht_rl[i]),
-    .coeff_length (ht_coeff_length[i]),
-    .re         (~out_hold),
-    .chroma     (ht_chroma[i]),
-    .ac         (ht_ac[i]),
-    .len        (code_length0[i]),
-    .code       (code0[i]),
-    .clk
-);
-`else
-logic [4:0] len;
-huff_tables ht (
-    .rl         (ht_rl[i]),
-    .coeff_length (ht_coeff_length[i]),
-    .re         (~out_hold),
-    .chroma     (ht_chroma[i]),
-    .ac         (ht_ac[i]),
-    .len        (len),
-    .code       ( ),
-    .clk
-);
+always_comb rom_addr[i][8:5] = ht_ac[i] ? ht_coeff_length[i]  : 4'hb;  
+always_comb rom_addr[i][4:1] = ht_ac[i] ? ht_rl[i] : ht_coeff_length[i];  
+always_comb rom_addr[i][0] =  ht_chroma;
 
-logic [17:0] rom_rd;
-logic [8:0] rom_addr;
-always_comb rom_addr[8:5] = ht_ac[i] ? ht_coeff_length[i]  : 4'hb;  
-always_comb rom_addr[4:1] = ht_ac[i] ? ht_rl[i] : ht_coeff_length[i];  
-always_comb rom_addr[0] =  ht_chroma[i];
-
-huffman_codes_rom huffman_codes_rom (
-    .rd_clk_i   (clk), 
-    .rst_i      (1'b0), 
-    .rd_en_i    (~out_hold), 
-    .rd_clk_en_i(~out_hold), 
-    .rd_addr_i  (rom_addr), 
-    .rd_data_o  (rom_rd)
-);
-always_comb code_length0[i][4:2] = len[4:2];
-always_comb code_length0[i][1:0] = 1 + rom_rd[17:16];
-always_comb code0[i] = rom_rd[15:0];
-`endif
+always_comb code_length0[i][4:2] = rom_len[i][4:2];
+always_comb code_length0[i][1:0] = 1 + rom_rd[i][17:16];
+always_comb code0[i] = rom_rd[i][15:0];
 end
 endgenerate
+
+huffman_codes_rom_EBR huffman_codes_rom (
+    .rd_clk_i   (clk), 
+    .rd_en_i    (~out_hold), 
+    .rd_addr0_i (rom_addr[0]), 
+    .rd_addr1_i (rom_addr[1]), 
+    .rd_data0_o (rom_rd[0]),
+    .rd_data1_o (rom_rd[1])
+);
+`endif //INFER_HUFFMAN_CODES_ROM 
 
 /*
 ZRL insertion

@@ -30,8 +30,8 @@
     input   logic               resetn
 );
 
-always_comb if (frame_valid_in) assert (x_size_m1[0]) else $fatal("Enforcing even image dimensions!");
-always_comb if (frame_valid_in) assert (y_size_m1[0]) else $fatal("Enforcing even image dimensions!");
+always_comb if (frame_valid_in) assert (x_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
+always_comb if (frame_valid_in) assert (y_size_m1[0]) else $fatal(1, "Enforcing even image dimensions!");
 
 // for EBR simulations
 `ifdef COCOTB_SIM
@@ -62,7 +62,10 @@ rgb2yuv rgb2yuv(
     .*
 );
 
-subsample subsample (
+subsample #(
+    .SENSOR_X_SIZE      (SENSOR_X_SIZE),
+    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
+) subsample (
     .yuvrgb_in              (yuv),
     .yuvrgb_in_valid        (yuv_valid),
     .yuvrgb_in_hold         (yuv_hold),
@@ -79,7 +82,10 @@ subsample subsample (
     .*
 );
 
-mcu_buffer mcu_buffer(
+mcu_buffer #(
+    .SENSOR_X_SIZE      (SENSOR_X_SIZE),
+    .SENSOR_Y_SIZE      (SENSOR_Y_SIZE)
+) mcu_buffer(
     .yuvrgb_in              (yuv420),
     .yuvrgb_in_valid        (yuv420_valid),
     .yuvrgb_in_hold         (yuv420_hold),

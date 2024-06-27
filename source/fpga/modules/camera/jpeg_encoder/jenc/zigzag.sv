@@ -81,7 +81,8 @@ logic[1:0]      wr_cnt_x22;
 logic[2:0]      d_cnt_x22;
 logic[5:0]      d_addr1_x22, d_addr0_x22;
 
-afifo #(.DSIZE($bits(wptr[0]) + $bits(wr_cnt) + $bits(d_cnt) + 2*$bits(d[0])), .ASIZE(3)) afifo(
+parameter DSIZE = 6 + 2*QW;
+afifo #(.DSIZE(DSIZE), .ASIZE(3)) afifo(
     .i_wclk(clk),
     .i_wrst_n(resetn), 
     .i_wr(d_valid & ~full),
@@ -124,23 +125,20 @@ dp_ram_be  #(
     .*
 );
 `else
-ram_dp_w32_b4_d64 mem (
+ram_dp_w32_b4_d64_EBR mem (
     .wr_addr_i  (wa), 
     .wr_data_i  (wd),
     .ben_i      (wbe),
     .wr_en_i    (we), 
-    .wr_clk_en_i(we), 
 
     .rd_addr_i  (ra), 
     .rd_en_i    (re), 
-    .rd_clk_en_i(re), 
     .rd_data_o  (rd), 
 
     .wr_clk_i   (clk_x22), 
-    .rd_clk_i   (clk), 
-    .rst_i      (1'b0)
+    .rd_clk_i   (clk) 
 );
-`endif
+`endif //USE_LATTICE_EBR
 
 
 always_comb begin
