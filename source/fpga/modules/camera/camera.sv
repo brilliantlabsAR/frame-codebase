@@ -272,17 +272,16 @@ logic [15:0] buffer_write_address;
 // Capture command logic
 logic capture_in_progress_flag;
 logic [1:0] cropped_frame_valid_edge_monitor;
-logic cropped_frame_valid_raw;
 
-always_ff @(posedge clock_spi_in) begin
-    if (reset_spi_n_in == 0) begin
+always_ff @(posedge spi_clock_in) begin
+    if (spi_reset_n_in == 0) begin
         capture_in_progress_flag <= 0;
         cropped_frame_valid_edge_monitor <= 0;
     end
 
     else begin
         cropped_frame_valid_edge_monitor <= {cropped_frame_valid_edge_monitor[0],
-                                             cropped_frame_valid_raw};
+                                             panned_frame_valid_raw};
 
         if (start_capture_spi_clock_domain && cropped_frame_valid_edge_monitor == 'b01) begin
             capture_in_progress_flag <= 1;
@@ -294,17 +293,17 @@ always_ff @(posedge clock_spi_in) begin
     end
 end
 
-always_ff @(posedge clock_pixel_in) begin
+always_ff @(posedge pixel_clock_in) begin
 
-    if (reset_pixel_n_in == 0) begin
+    if (pixel_reset_n_in == 0) begin
         buffer_write_address <= 0;
     end
 
     else begin
-        if (cropped_frame_valid == 0) begin
+        if (panned_frame_valid_raw == 0) begin
             buffer_write_address <= 0;
         end
-        else if (panned_line_valid_raw && panned_line_valid_raw) begin
+        else if (panned_line_valid_raw && panned_frame_valid_raw) begin
             buffer_write_address <= buffer_write_address + 1;
         end
     end
@@ -320,7 +319,7 @@ image_buffer image_buffer (
     .write_address_in(buffer_write_address),
     .read_address_in(image_buffer_address),
 
-    .write_data_in(panned_data_raw[9:2]}),
+    .write_data_in(panned_data_raw[9:2]),
     .read_data_out(image_buffer_data),
 
     .write_read_n_in(panned_frame_valid_raw && panned_line_valid_raw && capture_in_progress_flag)
