@@ -231,6 +231,79 @@ static int lua_camera_read(lua_State *L)
     return 1;
 }
 
+static int lua_camera_read_raw(lua_State *L)
+{
+    lua_Integer bytes_requested = luaL_checkinteger(L, 1);
+    if (bytes_requested <= 0)
+    {
+        luaL_error(L, "bytes must be greater than 0");
+    }
+
+    size_t bytes_remaining = bytes_requested;
+
+    uint8_t *payload = malloc(bytes_requested);
+    if (payload == NULL)
+    {
+        luaL_error(L, "bytes requested is too large");
+    }
+
+    uint16_t image_bytes_available = get_bytes_available();
+
+    // Append image data
+    if (image_bytes_available > 0)
+    {
+        if (bytes_remaining > 0)
+        {
+
+            // append image data
+            size_t length = bytes_remaining < image_bytes_available
+                                ? bytes_remaining
+                                : image_bytes_available;
+
+            spi_read(FPGA,
+                     0x22,
+                     payload + bytes_requested - bytes_remaining,
+                     length);
+
+            bytes_remaining -= length;
+        }
+    }
+
+    else
+    {
+        // append footer 0xFF
+        if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 0)
+        {
+            payload[bytes_requested - bytes_remaining] = 0xFF;
+            jpeg_footer_bytes_sent_out++;
+            bytes_remaining--;
+        }
+
+        // append footer 0xD9
+        if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 1)
+        {
+            payload[bytes_requested - bytes_remaining] = 0xD9;
+            jpeg_footer_bytes_sent_out++;
+            bytes_remaining--;
+        }
+    }
+
+    // Return nill if nothing was written to payload
+    if (bytes_remaining == bytes_requested)
+    {
+        lua_pushnil(L);
+    }
+
+    // Otherwise return payload
+    else
+    {
+        lua_pushlstring(L, (char *)payload, bytes_requested - bytes_remaining);
+    }
+
+    free(payload);
+    return 1;
+}
+
 static int lua_camera_auto(lua_State *L)
 {
     if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
@@ -624,6 +697,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_read);
     lua_setfield(L, -2, "read");
+
+    lua_pushcfunction(L, lua_camera_read_raw);
+    lua_setfield(L, -2, "read_raw");
 
     lua_pushcfunction(L, lua_camera_auto);
     lua_setfield(L, -2, "auto");
