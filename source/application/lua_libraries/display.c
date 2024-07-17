@@ -265,7 +265,7 @@ static int lua_display_text(lua_State *L)
     const char *string = luaL_checkstring(L, 1);
     lua_Integer x_position = luaL_checkinteger(L, 2);
     lua_Integer y_position = luaL_checkinteger(L, 3);
-    lua_Integer color = 1;
+    lua_Integer color_palette_offset = 0;
     lua_Integer character_spacing = 4;
     // TODO justification options
 
@@ -273,7 +273,7 @@ static int lua_display_text(lua_State *L)
     {
         if (lua_getfield(L, 4, "color") != LUA_TNIL)
         {
-            for (size_t i = 0; i <= 16; i++)
+            for (size_t i = 1; i <= 16; i++)
             {
                 if (i == 16)
                 {
@@ -282,7 +282,7 @@ static int lua_display_text(lua_State *L)
 
                 if (strcmp(luaL_checkstring(L, -1), colors[i].name) == 0)
                 {
-                    color = i;
+                    color_palette_offset = i - 1;
                     break;
                 }
             }
@@ -336,7 +336,7 @@ static int lua_display_text(lua_State *L)
                                     y_position,
                                     sprite_metadata[entry].width,
                                     sprite_metadata[entry].colors,
-                                    color,
+                                    color_palette_offset,
                                     sprite_data + data_offset,
                                     data_length);
 
