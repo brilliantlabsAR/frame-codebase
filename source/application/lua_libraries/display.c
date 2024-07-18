@@ -39,6 +39,7 @@ typedef struct colors_t
     uint8_t initial_cr : 3;
 } colors_t;
 
+// https://androidarts.com/palette/16pal.htm
 static colors_t colors[16] = {
     {"VOID", 0, 4, 4},
     {"WHITE", 15, 4, 4},
