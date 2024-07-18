@@ -88,13 +88,17 @@ always_ff @(posedge spi_clock_in) begin
                 if (operand_valid_in) begin
                     case (operand_count_in)
                         1: assign_color_index_spi_domain <= operand_in[3:0];
-                        2: assign_color_value_spi_domain[9:6] <= operand_in[7:4];
-                        3: assign_color_value_spi_domain[5:3] <= operand_in[7:5];
+                        2: assign_color_value_spi_domain[9:6] <= operand_in[3:0];
+                        3: assign_color_value_spi_domain[5:3] <= operand_in[2:0];
                         4: begin
-                            assign_color_value_spi_domain[2:0] <= operand_in[7:5];
-                            assign_color_enable_spi_domain <= 0;
+                            assign_color_value_spi_domain[2:0] <= operand_in[2:0];
+                            assign_color_enable_spi_domain <= 1;
                         end
                     endcase
+                end
+                
+                else begin
+                     assign_color_enable_spi_domain <= 0;
                 end
             end
 
@@ -164,7 +168,7 @@ always_ff @(posedge display_clock_in) begin
         spi_operand_edge_monitor <= {spi_operand_edge_monitor[0], operand_valid_in};
 
         if (spi_op_code_edge_monitor == 2'b01 || 
-            spi_operand_edge_monitor == 2'b01) begin // TODO do we need one more?
+            spi_operand_edge_monitor == 2'b01) begin
             assign_color_index <= assign_color_index_spi_domain;
             assign_color_value <= assign_color_value_spi_domain;
             assign_color_enable <= assign_color_enable_spi_domain;
