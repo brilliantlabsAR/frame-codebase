@@ -110,15 +110,25 @@ static void assign_color_to_palette(uint8_t palette_index,
 
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer palette_index = luaL_checkinteger(L, 1);
+    uint8_t color_palette_index;
+
+    for (uint8_t i = 0; i <= 16; i++)
+    {
+        if (i == 16)
+        {
+            luaL_error(L, "Invalid color name");
+        }
+
+        if (strcmp(luaL_checkstring(L, 1), colors[i].name) == 0)
+        {
+            color_palette_index = i;
+            break;
+        }
+    }
+
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
-
-    if (palette_index < 0 || palette_index > 15)
-    {
-        luaL_error(L, "palette_index must be between 1 and 16");
-    }
 
     if (red < 0 || red > 255)
     {
@@ -139,7 +149,7 @@ static int lua_display_assign_color(lua_State *L)
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
 
-    assign_color_to_palette((uint8_t)palette_index,
+    assign_color_to_palette(color_palette_index,
                             ((uint8_t)y) >> 4,
                             ((uint8_t)cb) >> 5,
                             ((uint8_t)cr) >> 5);
@@ -149,15 +159,25 @@ static int lua_display_assign_color(lua_State *L)
 
 static int lua_display_assign_color_ycbcr(lua_State *L)
 {
-    lua_Integer palette_index = luaL_checkinteger(L, 1);
+    uint8_t color_palette_index;
+
+    for (uint8_t i = 0; i <= 16; i++)
+    {
+        if (i == 16)
+        {
+            luaL_error(L, "Invalid color name");
+        }
+
+        if (strcmp(luaL_checkstring(L, 1), colors[i].name) == 0)
+        {
+            color_palette_index = i;
+            break;
+        }
+    }
+
     lua_Integer y = luaL_checkinteger(L, 2);
     lua_Integer cb = luaL_checkinteger(L, 3);
     lua_Integer cr = luaL_checkinteger(L, 4);
-
-    if (palette_index < 0 || palette_index > 15)
-    {
-        luaL_error(L, "palette_index must be between 0 and 15");
-    }
 
     if (y < 0 || y > 15)
     {
@@ -174,7 +194,7 @@ static int lua_display_assign_color_ycbcr(lua_State *L)
         luaL_error(L, "Cr component must be between 0 and 7");
     }
 
-    assign_color_to_palette((uint8_t)palette_index,
+    assign_color_to_palette(color_palette_index,
                             (uint8_t)y,
                             (uint8_t)cb,
                             (uint8_t)cr);
