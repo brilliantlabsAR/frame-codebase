@@ -135,9 +135,9 @@ async def main():
 
     await test.lua_error("frame.display.assign_color('BLUE', 0, 0, 0)")
 
-    await test.lua_error("frame.display.assign_color('BLUE', 256, 0, 0)")
-    await test.lua_error("frame.display.assign_color('BLUE', 0, 256, 0)")
-    await test.lua_error("frame.display.assign_color('BLUE', 0, 0, 256)")
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 256, 0, 0)")
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 0, 256, 0)")
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 0, 0, 256)")
 
     await test.lua_send("frame.display.assign_color_ycbcr('RED', 5, 3, 6)")
     await test.lua_send("frame.display.assign_color_ycbcr('GREEN', 6, 2, 3)")
