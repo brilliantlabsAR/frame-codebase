@@ -29,6 +29,34 @@
 #include "nrfx_systick.h"
 #include "spi.h"
 #include "system_font.h"
+#include "nrfx_log.h"
+
+typedef struct colors_t
+{
+    const char *name;
+    uint8_t initial_y : 4;
+    uint8_t initial_cb : 3;
+    uint8_t initial_cr : 3;
+} colors_t;
+
+static colors_t colors[16] = {
+    {"VOID", 0, 4, 4},
+    {"WHITE", 15, 4, 4},
+    {"GREY", 7, 4, 4},
+    {"RED", 5, 3, 6},
+    {"PINK", 9, 3, 5},
+    {"DARKBROWN", 2, 2, 5},
+    {"BROWN", 4, 2, 5},
+    {"ORANGE", 9, 2, 5},
+    {"YELLOW", 13, 2, 4},
+    {"DARKGREEN", 4, 4, 3},
+    {"GREEN", 6, 2, 3},
+    {"LIGHTGREEN", 10, 1, 3},
+    {"NIGHTBLUE", 1, 5, 2},
+    {"SEABLUE", 4, 5, 2},
+    {"SKYBLUE", 8, 5, 2},
+    {"CLOUDBLUE", 13, 4, 3},
+};
 
 static uint32_t utf8_decode(const char *string, size_t *index)
 {
@@ -70,17 +98,37 @@ static uint32_t utf8_decode(const char *string, size_t *index)
     return codepoint;
 }
 
+static void assign_color_to_palette(uint8_t palette_index,
+                                    uint8_t y,
+                                    uint8_t cb,
+                                    uint8_t cr)
+{
+    uint8_t data[4] = {palette_index, y, cb, cr};
+
+    spi_write(FPGA, 0x11, (uint8_t *)data, sizeof(data));
+}
+
 static int lua_display_assign_color(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    uint8_t color_palette_index;
+
+    for (uint8_t i = 0; i <= 16; i++)
+    {
+        if (i == 16)
+        {
+            luaL_error(L, "Invalid color name");
+        }
+
+        if (strcmp(luaL_checkstring(L, 1), colors[i].name) == 0)
+        {
+            color_palette_index = i;
+            break;
+        }
+    }
+
     lua_Integer red = luaL_checkinteger(L, 2);
     lua_Integer green = luaL_checkinteger(L, 3);
     lua_Integer blue = luaL_checkinteger(L, 4);
-
-    if (pallet_index < 0 || pallet_index > 15)
-    {
-        luaL_error(L, "pallet_index must be between 1 and 16");
-    }
 
     if (red < 0 || red > 255)
     {
@@ -101,49 +149,55 @@ static int lua_display_assign_color(lua_State *L)
     double cb = floor(-0.169 * red - 0.331 * green + 0.5 * blue + 128);
     double cr = floor(0.5 * red - 0.419 * green - 0.081 * blue + 128);
 
-    uint8_t data[4] = {(uint8_t)pallet_index,
-                       (uint8_t)y,
-                       (uint8_t)cb,
-                       (uint8_t)cr};
-
-    spi_write(FPGA, 0x11, (uint8_t *)data, sizeof(data));
+    assign_color_to_palette(color_palette_index,
+                            ((uint8_t)y) >> 4,
+                            ((uint8_t)cb) >> 5,
+                            ((uint8_t)cr) >> 5);
 
     return 0;
 }
 
 static int lua_display_assign_color_ycbcr(lua_State *L)
 {
-    lua_Integer pallet_index = luaL_checkinteger(L, 1) - 1;
+    uint8_t color_palette_index;
+
+    for (uint8_t i = 0; i <= 16; i++)
+    {
+        if (i == 16)
+        {
+            luaL_error(L, "Invalid color name");
+        }
+
+        if (strcmp(luaL_checkstring(L, 1), colors[i].name) == 0)
+        {
+            color_palette_index = i;
+            break;
+        }
+    }
+
     lua_Integer y = luaL_checkinteger(L, 2);
     lua_Integer cb = luaL_checkinteger(L, 3);
     lua_Integer cr = luaL_checkinteger(L, 4);
 
-    if (pallet_index < 0 || pallet_index > 15)
+    if (y < 0 || y > 15)
     {
-        luaL_error(L, "pallet_index must be between 1 and 16");
+        luaL_error(L, "Y component must be between 0 and 15");
     }
 
-    if (y < 0 || y > 255)
+    if (cb < 0 || cb > 7)
     {
-        luaL_error(L, "Y component must be between 0 and 255");
+        luaL_error(L, "Cb component must be between 0 and 7");
     }
 
-    if (cb < 0 || cb > 255)
+    if (cr < 0 || cr > 7)
     {
-        luaL_error(L, "Cb component must be between 0 and 255");
+        luaL_error(L, "Cr component must be between 0 and 7");
     }
 
-    if (cr < 0 || cr > 255)
-    {
-        luaL_error(L, "Cr component must be between 0 and 255");
-    }
-
-    uint8_t data[4] = {(uint8_t)pallet_index,
-                       (uint8_t)y,
-                       (uint8_t)cb,
-                       (uint8_t)cr};
-
-    spi_write(FPGA, 0x11, (uint8_t *)data, sizeof(data));
+    assign_color_to_palette(color_palette_index,
+                            (uint8_t)y,
+                            (uint8_t)cb,
+                            (uint8_t)cr);
 
     return 0;
 }
@@ -228,14 +282,40 @@ static int lua_display_bitmap(lua_State *L)
 
 static int lua_display_text(lua_State *L)
 {
-    // TODO color options
-    // TODO justification options
-    // TODO character spacing
-
     const char *string = luaL_checkstring(L, 1);
     lua_Integer x_position = luaL_checkinteger(L, 2);
     lua_Integer y_position = luaL_checkinteger(L, 3);
+    lua_Integer color_palette_offset = 0;
     lua_Integer character_spacing = 4;
+    // TODO justification options
+
+    if (lua_istable(L, 4))
+    {
+        if (lua_getfield(L, 4, "color") != LUA_TNIL)
+        {
+            for (size_t i = 1; i <= 16; i++)
+            {
+                if (i == 16)
+                {
+                    luaL_error(L, "Invalid color name");
+                }
+
+                if (strcmp(luaL_checkstring(L, -1), colors[i].name) == 0)
+                {
+                    color_palette_offset = i - 1;
+                    break;
+                }
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 4, "spacing") != LUA_TNIL)
+        {
+            character_spacing = luaL_checkinteger(L, -1);
+            lua_pop(L, 1);
+        }
+    }
 
     for (size_t index = 0; index < strlen(string);)
     {
@@ -276,7 +356,7 @@ static int lua_display_text(lua_State *L)
                                     y_position,
                                     sprite_metadata[entry].width,
                                     sprite_metadata[entry].colors,
-                                    0, // TODO
+                                    color_palette_offset,
                                     sprite_data + data_offset,
                                     data_length);
 
@@ -378,4 +458,13 @@ void lua_open_display_library(lua_State *L)
     lua_setfield(L, -2, "display");
 
     lua_pop(L, 1);
+
+    // Assign the initial colors
+    for (uint8_t i = 0; i < 16; i++)
+    {
+        assign_color_to_palette(i,
+                                colors[i].initial_y,
+                                colors[i].initial_cb,
+                                colors[i].initial_cr);
+    }
 }

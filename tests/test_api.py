@@ -109,12 +109,47 @@ async def main():
     # Display
 
     ## Text
-    await test.lua_send("frame.display.text('Hello there!', 1, 1)")
-    await test.lua_send("frame.display.text('Red', 100, 100)")
-    await test.lua_send("frame.display.text('Green', 200, 200)")
-    await test.lua_send("frame.display.text('Blue', 300, 300)")
+
+    ### Position
+    await test.lua_send("frame.display.text('Hello there!', 50, 50)")
+    await test.lua_error("frame.display.text('Hello there!', 0, 50)")
+    await test.lua_error("frame.display.text('Hello there!', 50, 0)")
+
+    ### Spacing
+    await test.lua_send("frame.display.text('Wide text!', 50, 100, {spacing=10})")
+
+    ### Colors
+    await test.lua_send("frame.display.text('Red', 50, 150, {color='RED'})")
+    await test.lua_send("frame.display.text('Green', 50, 200, {color='GREEN'})")
+    await test.lua_send("frame.display.text('Blue', 50, 250, {color='SKYBLUE'})")
+    await test.lua_error("frame.display.text('Blue', 50, 250, {color='BLUE'})")
+
     await test.lua_send("frame.display.show()")
-    # TODO alignment and color
+    await asyncio.sleep(1)
+
+    ### Change colors
+    await test.lua_send("frame.display.assign_color('RED', 0, 255, 128)")
+    await test.lua_send("frame.display.assign_color('GREEN', 255, 0, 255)")
+    await test.lua_send("frame.display.assign_color('SKYBLUE', 50, 50, 50)")
+    await asyncio.sleep(1)
+
+    await test.lua_error("frame.display.assign_color('BLUE', 0, 0, 0)")
+
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 256, 0, 0)")
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 0, 256, 0)")
+    await test.lua_error("frame.display.assign_color('SKYBLUE', 0, 0, 256)")
+
+    await test.lua_send("frame.display.assign_color_ycbcr('RED', 5, 3, 6)")
+    await test.lua_send("frame.display.assign_color_ycbcr('GREEN', 6, 2, 3)")
+    await test.lua_send("frame.display.assign_color_ycbcr('SKYBLUE', 8, 5, 2)")
+
+    await test.lua_error("frame.display.assign_color_ycbcr('BLUE', 13, 4, 3)")
+
+    await test.lua_error("frame.display.assign_color_ycbcr('RED', 16, 0, 0)")
+    await test.lua_error("frame.display.assign_color_ycbcr('RED', 0, 8, 0)")
+    await test.lua_error("frame.display.assign_color_ycbcr('RED', 0, 0, 8)")
+
+    # TODO justification
 
     ## Vectors
     # TODO
