@@ -19,3 +19,6 @@ test_scratch_pad*.py
 production/temp_focus_image.*
 production/log.txt
 production/frame-firmware-*.hex
+
+# Python virtual env
+.venv

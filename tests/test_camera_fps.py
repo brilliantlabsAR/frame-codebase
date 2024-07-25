@@ -700,17 +700,7 @@ async def main():
 
     print("Uploading script")
 
-    await b.send_break_signal()
-
-    await b.send_lua("f=frame.file.open('main.lua', 'w')")
-
-    for line in lua_script.splitlines():
-        await b.send_lua(f'f:write("{line}\\n");print(nil)', await_print=True)
-
-    await b.send_lua("f:close()")
-
-    await asyncio.sleep(0.1)
-
+    await b.upload_file(lua_script, "main.lua")
     await b.send_reset_signal()
 
     # Wait until a keypress
