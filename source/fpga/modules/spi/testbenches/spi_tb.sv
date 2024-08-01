@@ -95,7 +95,7 @@ task send_byte(
     input logic [7:0] data
 );
     begin
-        for (integer i = 7; i >= 0; i--) begin
+        for (integer i = 0; i < 8; i++) begin
             spi_data_in <= data[i];
             #4;
             spi_clock_in <= ~spi_clock_in;

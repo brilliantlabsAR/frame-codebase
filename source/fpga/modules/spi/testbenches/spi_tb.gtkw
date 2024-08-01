@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue Jan  9 10:12:31 2024
+[*] Thu Aug  1 10:05:06 2024
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Tue Jan  9 10:08:14 2024"
-[dumpfile_size] 1708
+[dumpfile_mtime] "Thu Aug  1 10:04:01 2024"
+[dumpfile_size] 1728
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 2032 1104
+[size] 1424 852
 [pos] 10 38
-*-9.271514 4480 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-10.037439 4330 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,12 +40,12 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 586
+[sst_vpaned_height] 254
 @28
 spi_tb.system_clock
 spi_tb.reset
+spi_tb.spi_peripheral.spi_edge
 @200
--
 -SPI peripheral
 @28
 spi_tb.spi_peripheral.spi_select_in
@@ -68,8 +68,6 @@ spi_tb.spi_peripheral.operand_count_out
 -
 @420
 spi_tb.spi_peripheral.spi_bit_index
-@22
-spi_tb.spi_peripheral.response_reg[7:0]
 @200
 -
 -Chip ID 1 register
@@ -96,7 +94,7 @@ spi_tb.chip_id_2.opcode_in[7:0]
 spi_tb.chip_id_2.opcode_valid_in
 @22
 spi_tb.chip_id_2.response_out[7:0]
-@29
+@28
 spi_tb.chip_id_2.response_valid_out
 [pattern_trace] 1
 [pattern_trace] 0
