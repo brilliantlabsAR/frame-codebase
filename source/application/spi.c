@@ -56,7 +56,6 @@ void spi_configure(void)
         FPGA_SPI_CIPO_PIN,
         NRF_SPIM_PIN_NOT_CONNECTED);
 
-    fpga_spi_config.bit_order = NRF_SPIM_BIT_ORDER_LSB_FIRST;
     fpga_spi_config.frequency = NRFX_MHZ_TO_HZ(4);
 
     check_error(nrfx_spim_init(&display_spi,

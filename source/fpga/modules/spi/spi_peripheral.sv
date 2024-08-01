@@ -38,7 +38,7 @@ module spi_peripheral (
 logic spi_edge;
 assign spi_edge = spi_clock_in | spi_select_in;
 
-integer spi_bit_index = 0;
+integer spi_bit_index = 15;
 logic [7:0] spi_response_reg;
 
 logic [7:0] spi_opcode;
@@ -51,7 +51,7 @@ integer spi_operand_count = 0;
 always_ff @(posedge spi_edge) begin
 
     if (spi_select_in == 1) begin
-        spi_bit_index <= 0;
+        spi_bit_index <= 15;
 
         spi_opcode <= 0;
         spi_operand <= 0;
@@ -62,32 +62,32 @@ always_ff @(posedge spi_edge) begin
 
     else begin
 
-        // Count up spi_bit_index from 0 - 15 for first opcode and operand. Roll
-        // over to 8 and repeat for subsequent operands
-        if (spi_bit_index < 15) begin
-            spi_bit_index <= spi_bit_index + 1;
+        // Count down spi_bit_index from 15 - 0 for first opcode and operand. 
+        // Rolls over from 0 to 7 and repeats for subsequent operands
+        if (spi_bit_index > 0) begin
+            spi_bit_index <= spi_bit_index - 1;
         end
 
         else begin
-            spi_bit_index <= 8;
+            spi_bit_index <= 7;
             spi_operand_count <= spi_operand_count + 1;
         end
 
         // Pull in data from SPI based on bit index
-        if (spi_bit_index < 8) begin
-            spi_opcode[spi_bit_index] <= spi_data_in;
+        if (spi_bit_index > 7) begin
+            spi_opcode[spi_bit_index - 8] <= spi_data_in;
         end
 
         else begin
-            spi_operand[spi_bit_index - 8] <= spi_data_in;
+            spi_operand[spi_bit_index] <= spi_data_in;
         end
 
         // Set input valid flags based on bit index
-        if (spi_bit_index == 7) begin
+        if (spi_bit_index == 8) begin
             spi_opcode_valid <= 1;
         end
 
-        if (spi_bit_index == 15) begin
+        if (spi_bit_index == 0) begin
             spi_operand_valid <= 1;
         end
 
@@ -109,8 +109,8 @@ always_ff @(negedge spi_edge) begin
     else begin
         
         // Push SPI data out simply from spi_response_reg
-        if (spi_bit_index > 7) begin
-            spi_data_out <= spi_response_reg[spi_bit_index - 8];
+        if (spi_bit_index < 8) begin
+            spi_data_out <= spi_response_reg[spi_bit_index];
         end
 
     end

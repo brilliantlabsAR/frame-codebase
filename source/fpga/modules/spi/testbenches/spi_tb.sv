@@ -9,7 +9,7 @@
  * Copyright © 2023 Brilliant Labs Limited
  */
 
-`timescale 10ns / 10ns
+`timescale 1ns / 1ns
 
 `include "../spi_peripheral.sv"
 `include "../spi_register.sv"
@@ -95,15 +95,15 @@ task send_byte(
     input logic [7:0] data
 );
     begin
-        for (integer i = 0; i < 8; i++) begin
+        for (integer i = 7; i >= 0; i--) begin
             spi_data_in <= data[i];
-            #4;
+            #40;
             spi_clock_in <= ~spi_clock_in;
-            #4;
+            #40;
             spi_clock_in <= ~spi_clock_in;
         end
         
-        #4;
+        #40;
     end
 endtask
 
@@ -114,29 +114,29 @@ end
 
 initial begin
 
-    #8
+    #80
     reset <= 1;
 
     // Test chip ID 1
-    #8
+    #80
     spi_select_in <= 0;    
     send_byte('hDB);
     send_byte('hFF);
     spi_select_in <= 1;    
-    #8
+    #80
 
     // Test chip ID 2 with extra operands
-    #8
+    #80
     spi_select_in <= 0;    
     send_byte('hF4);
     send_byte('h12);
     send_byte('h43);
     send_byte('h65);
     spi_select_in <= 1;    
-    #8
+    #80
 
     reset <= 0;
-    #8
+    #80
 
     $finish;
 end

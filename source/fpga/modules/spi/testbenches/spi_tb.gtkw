@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Aug  1 10:05:06 2024
+[*] Thu Aug  1 11:51:03 2024
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Thu Aug  1 10:04:01 2024"
-[dumpfile_size] 1728
+[dumpfile_mtime] "Thu Aug  1 11:49:32 2024"
+[dumpfile_size] 1715
 [savefile] "spi_tb.gtkw"
 [timestart] 0
 [size] 1424 852
 [pos] 10 38
-*-10.037439 4330 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-10.037439 770 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -68,6 +68,8 @@ spi_tb.spi_peripheral.operand_count_out
 -
 @420
 spi_tb.spi_peripheral.spi_bit_index
+@23
+spi_tb.spi_peripheral.spi_response_reg[7:0]
 @200
 -
 -Chip ID 1 register
