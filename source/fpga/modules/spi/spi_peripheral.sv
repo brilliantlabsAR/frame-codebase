@@ -100,7 +100,7 @@ always_ff @(posedge spi_edge) begin
 end
 
 // SPI output login
-always_ff @(negedge spi_clock_in) begin
+always_ff @(negedge spi_edge) begin
 
     if (spi_select_in == 1) begin
         spi_data_out <= 0;
