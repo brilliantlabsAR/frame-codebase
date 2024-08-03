@@ -39,8 +39,6 @@ logic spi_edge;
 assign spi_edge = spi_clock_in | spi_select_in;
 
 integer spi_bit_index = 15;
-logic [7:0] spi_response_reg;
-
 logic [7:0] spi_opcode;
 logic [7:0] spi_operand;
 logic spi_opcode_valid;
@@ -52,7 +50,6 @@ always_ff @(posedge spi_edge) begin
 
     if (spi_select_in == 1) begin
         spi_bit_index <= 15;
-
         spi_opcode <= 0;
         spi_operand <= 0;
         spi_opcode_valid <= 0;
@@ -100,6 +97,8 @@ always_ff @(posedge spi_edge) begin
 end
 
 // SPI output login
+logic [7:0] spi_response_reg;
+
 always_ff @(negedge spi_edge) begin
 
     if (spi_select_in == 1) begin
@@ -118,17 +117,39 @@ always_ff @(negedge spi_edge) begin
 end
 
 // Internal clock domain side login
+logic spi_opcode_valid_metastable;
+logic spi_operand_valid_metastable;
+
 always_ff @(posedge clock_in) begin
 
     if (reset_n_in == 0) begin
-        spi_response_reg <= 0;
+        opcode_out <= 0;
+        operand_out <= 0;
         opcode_valid_out <= 0;
         operand_valid_out <= 0;
         operand_count_out <= 0;
+        spi_opcode_valid_metastable <= 0;
+        spi_operand_valid_metastable <= 0;
+        spi_response_reg <= 0;
     end
 
     else begin
         
+        // Clock domain crossing from external to internal spi clocks
+        spi_opcode_valid_metastable <= spi_opcode_valid;
+        spi_operand_valid_metastable <= spi_operand_valid;
+
+        if (spi_opcode_valid_metastable) begin
+            opcode_out <= spi_opcode;
+            opcode_valid_out <= spi_opcode_valid;
+        end
+
+        if (spi_operand_valid_metastable) begin
+            operand_out <= spi_operand;
+            operand_valid_out <= spi_operand_valid;
+            operand_count_out <= spi_operand_count;
+        end
+
         // Update response reg whenever response valid is high. Note this 
         // register has no clock domain crossing since it's set well before the 
         // first SPI bit is pushed out
@@ -139,13 +160,6 @@ always_ff @(posedge clock_in) begin
             default: spi_response_reg <= 'h0;
         endcase
 
-        // Clock domain crossing from external to internal spi clocks
-        opcode_out <= spi_opcode;
-        operand_out <= spi_operand;
-        opcode_valid_out <= spi_opcode_valid;
-        operand_valid_out <= spi_operand_valid;
-        operand_count_out <= spi_operand_count;
-        
     end
 
 end
