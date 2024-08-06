@@ -43,7 +43,7 @@ static int lua_bluetooth_address(lua_State *L)
     check_error(sd_ble_gap_addr_get(&addr));
 
     char mac_addr_string[18];
-    sprintf(mac_addr_string, "%02x:%02x:%02x:%02x:%02x:%02x",
+    sprintf(mac_addr_string, "%02X:%02X:%02X:%02X:%02X:%02X",
             addr.addr[0], addr.addr[1], addr.addr[2],
             addr.addr[3], addr.addr[4], addr.addr[5]);
 
