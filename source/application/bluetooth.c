@@ -84,6 +84,36 @@ bool flash_write_in_progress = false;
 
 uint16_t ble_negotiated_mtu;
 
+#define APP_BLE_CONN_CFG_TAG 1
+// <o> NRF_BLE_SCAN_SCAN_INTERVAL - Scanning interval. Determines the scan interval in units of 0.625 millisecond. 
+#define NRF_BLE_SCAN_SCAN_INTERVAL 160
+// <o> NRF_BLE_SCAN_SCAN_DURATION - Duration of a scanning session in units of 10 ms. Range: 0x0001 - 0xFFFF (10 ms to 10.9225 ms). If set to 0x0000, the scanning continues until it is explicitly disabled. 
+#define NRF_BLE_SCAN_SCAN_DURATION 0
+// <o> NRF_BLE_SCAN_SCAN_WINDOW - Scanning window. Determines the scanning window in units of 0.625 millisecond. 
+#define NRF_BLE_SCAN_SCAN_WINDOW 80
+#define NRF_BLE_SCAN_BUFFER 255
+
+// <o> NRF_BLE_SCAN_SUPERVISION_TIMEOUT - Determines the supervision time-out in units of 10 millisecond. 
+#define NRF_BLE_SCAN_SUPERVISION_TIMEOUT 6200
+// <o> NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL - Determines minimum connection interval in milliseconds. 
+#define NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL 100
+// <o> NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL - Determines maximum connection interval in milliseconds. 
+#define NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL 500
+// <o> NRF_BLE_SCAN_SLAVE_LATENCY - Determines the slave latency in counts of connection events. 
+#define NRF_BLE_SCAN_SLAVE_LATENCY 5
+
+#define MSEC_TO_UNITS(TIME, RESOLUTION) (((TIME) * 1000) / (RESOLUTION))
+
+enum
+{
+    UNIT_0_625_MS = 625,        /**< Number of microseconds in 0.625 milliseconds. */
+    UNIT_1_25_MS  = 1250,       /**< Number of microseconds in 1.25 milliseconds. */
+    UNIT_10_MS    = 10000       /**< Number of microseconds in 10 milliseconds. */
+};
+
+static ble_data_t scan_buffer;
+static uint8_t scan_buffer_data[NRF_BLE_SCAN_BUFFER];
+
 static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
     error_with_message("Softdevice crashed");
@@ -347,6 +377,25 @@ void SD_EVT_IRQHandler(void)
             break;
         }
 
+        case BLE_GAP_EVT_ADV_REPORT:
+        {
+            LOG("Advertisement report: %x %x %x %x %x %x", 
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[0],
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[1],
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[2],
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[3],
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[4],
+            ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[5]
+            );
+            break;
+        }
+
+        case BLE_GAP_EVT_TIMEOUT:
+        {
+            LOG("Scan timed out");
+            break;
+        }
+
         default:
         {
             LOG("Unhandled BLE event: %u", ble_evt->header.evt_id);
@@ -367,13 +416,15 @@ void bluetooth_setup(bool factory_reset)
     // Add GAP configuration to the BLE stack
     ble_cfg_t cfg;
     cfg.conn_cfg.conn_cfg_tag = 1;
-    cfg.conn_cfg.params.gap_conn_cfg.conn_count = 1;
+    cfg.conn_cfg.params.gap_conn_cfg.conn_count = 2;
     cfg.conn_cfg.params.gap_conn_cfg.event_length = 300;
     check_error(sd_ble_cfg_set(BLE_CONN_CFG_GAP, &cfg, ram_start));
 
     // Set BLE role to peripheral only
     memset(&cfg, 0, sizeof(cfg));
     cfg.gap_cfg.role_count_cfg.periph_role_count = 1;
+    cfg.gap_cfg.role_count_cfg.central_role_count = 1;
+    cfg.gap_cfg.role_count_cfg.central_sec_count = 1;
     check_error(sd_ble_cfg_set(BLE_GAP_CFG_ROLE_COUNT, &cfg, ram_start));
 
     // Set max MTU size
@@ -403,10 +454,10 @@ void bluetooth_setup(bool factory_reset)
     cfg.gatts_cfg.service_changed.service_changed = 0;
     check_error(sd_ble_cfg_set(BLE_GATTS_CFG_SERVICE_CHANGED, &cfg, ram_start));
 
+    LOG("Softdevice using 0x%lx bytes of RAM", ram_start - 0x20000000);
+    
     // Start the Softdevice
     check_error(sd_ble_enable(&ram_start));
-
-    LOG("Softdevice using 0x%lx bytes of RAM", ram_start - 0x20000000);
 
     // Set device name
     ble_gap_conn_sec_mode_t write_permission;
@@ -564,6 +615,33 @@ void bluetooth_setup(bool factory_reset)
 
     // Start advertising
     check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+
+    ble_gap_scan_params_t scan_params;
+    memset(&scan_params, 0, sizeof(scan_params));
+    ble_gap_conn_params_t conn_params;
+    memset(&conn_params, 0, sizeof(conn_params));
+
+    scan_params.active        = 1;
+    scan_params.interval      = NRF_BLE_SCAN_SCAN_INTERVAL;
+    scan_params.window        = NRF_BLE_SCAN_SCAN_WINDOW;
+    scan_params.timeout       = NRF_BLE_SCAN_SCAN_DURATION;
+    scan_params.filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL;
+    scan_params.scan_phys     = BLE_GAP_PHY_1MBPS;
+    scan_params.extended      = 1;
+
+    conn_params.conn_sup_timeout =
+        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_SUPERVISION_TIMEOUT, UNIT_10_MS);
+    conn_params.min_conn_interval =
+        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL, UNIT_1_25_MS);
+    conn_params.max_conn_interval =
+        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL, UNIT_1_25_MS);
+    conn_params.slave_latency =
+        (uint16_t)NRF_BLE_SCAN_SLAVE_LATENCY;
+
+    scan_buffer.p_data = &scan_buffer_data;
+    scan_buffer.len = sizeof(scan_buffer_data);
+
+    check_error(sd_ble_gap_scan_start(&scan_params, &scan_buffer));
 }
 
 bool bluetooth_is_connected(void)
