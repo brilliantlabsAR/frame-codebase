@@ -121,8 +121,8 @@ void run_lua(bool factory_reset)
     }
 
     // Show splash screen
-    status = luaL_dostring(L, "frame.display.text('Frame Ready to Pair', 125, 140);"
-                              "frame.display.text('ID: '..frame.bluetooth.address():sub(-5, -4)..frame.bluetooth.address():sub(-2, -1), 250, 210, { color = 'ORANGE' });"
+    status = luaL_dostring(L, "frame.display.text('Ready to Pair', 200, 140);"
+                              "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
                               "frame.display.show();");
 
     if (status != LUA_OK)
