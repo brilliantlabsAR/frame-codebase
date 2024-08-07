@@ -409,9 +409,14 @@ void bluetooth_setup(bool factory_reset)
     LOG("Softdevice using 0x%lx bytes of RAM", ram_start - 0x20000000);
 
     // Set device name
+    ble_gap_addr_t mac_address;
+    check_error(sd_ble_gap_addr_get(&mac_address));
+
+    char device_name[9] = "";
+    sprintf(device_name, "Frame %02X", mac_address.addr[5]);
+
     ble_gap_conn_sec_mode_t write_permission;
     BLE_GAP_CONN_SEC_MODE_SET_NO_ACCESS(&write_permission);
-    const char device_name[] = "Frame";
     check_error(sd_ble_gap_device_name_set(&write_permission,
                                            (const uint8_t *)device_name,
                                            strlen(device_name)));
@@ -521,12 +526,10 @@ void bluetooth_setup(bool factory_reset)
                                                 &ble_handles.repl_tx_notification));
 
     // Add name to advertising payload
-    adv.payload[adv.length++] = strlen((const char *)device_name) + 1;
+    adv.payload[adv.length++] = strlen(device_name) + 1;
     adv.payload[adv.length++] = BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME;
-    memcpy(&adv.payload[adv.length],
-           device_name,
-           sizeof(device_name));
-    adv.length += strlen((const char *)device_name);
+    memcpy(&adv.payload[adv.length], device_name, strlen(device_name));
+    adv.length += strlen(device_name);
 
     // Set discovery mode flag
     adv.payload[adv.length++] = 0x02;
