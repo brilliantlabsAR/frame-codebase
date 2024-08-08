@@ -89,6 +89,7 @@ C_FILES += \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_spim.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_systick.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_twim.c \
+	$(LIBRARIES)/nrfx/drivers/src/nrfx_wdt.c \
 	$(LIBRARIES)/nrfx/helpers/nrfx_flag32_allocator.c \
 	$(LIBRARIES)/nrfx/mdk/system_nrf52840.c \
 	$(LIBRARIES)/segger/SEGGER_RTT.c \

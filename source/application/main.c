@@ -41,8 +41,11 @@
 #include "nrfx_log.h"
 #include "nrfx_rtc.h"
 #include "nrfx_systick.h"
+#include "nrfx_wdt.h"
 #include "pinout.h"
 #include "spi.h"
+
+static nrfx_wdt_t watchdog = NRFX_WDT_INSTANCE(0);
 
 bool not_real_hardware = false;
 bool stay_awake = false;
@@ -165,6 +168,18 @@ static void fpga_send_bitstream_bytes(void *context,
 
 static void hardware_setup(bool *factory_reset)
 {
+    // Configure watchdog
+    {
+        nrfx_wdt_config_t watchdog_config = NRFX_WDT_DEFAULT_CONFIG;
+        nrfx_wdt_channel_id watchdog_channel = NRF_WDT_RR0;
+
+        check_error(nrfx_wdt_init(&watchdog, &watchdog_config, NULL));
+        check_error(nrfx_wdt_channel_alloc(&watchdog, &watchdog_channel));
+
+        nrfx_wdt_enable(&watchdog);
+        nrfx_wdt_feed(&watchdog);
+    }
+
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
@@ -391,6 +406,11 @@ static void hardware_setup(bool *factory_reset)
     }
 }
 
+void reload_watchdog(void)
+{
+    nrfx_wdt_feed(&watchdog);
+}
+
 int main(void)
 {
     LOG("Frame firmware " BUILD_VERSION " (" GIT_COMMIT ")");
@@ -400,6 +420,8 @@ int main(void)
     hardware_setup(&factory_reset);
 
     bluetooth_setup(factory_reset);
+
+    nrfx_wdt_feed(&watchdog);
 
     while (1)
     {
