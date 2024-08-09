@@ -29,6 +29,7 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "lualib.h"
+#include "main.h"
 #include "nrf_soc.h"
 #include "nrfx_log.h"
 
@@ -71,6 +72,8 @@ void run_lua(bool factory_reset)
     {
         error_with_message("Cannot create lua state: not enough memory");
     }
+
+    lua_sethook(L, reload_watchdog, LUA_MASKCOUNT, 100);
 
     // Open the standard libraries
     luaL_requiref(L, LUA_GNAME, luaopen_base, 1);

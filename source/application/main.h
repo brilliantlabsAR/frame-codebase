@@ -30,3 +30,5 @@ extern bool not_real_hardware;
 extern bool stay_awake;
 
 void shutdown(bool enable_imu_wakeup);
+
+void reload_watchdog(void);
