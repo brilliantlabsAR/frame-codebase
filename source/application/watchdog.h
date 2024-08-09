@@ -24,9 +24,8 @@
 
 #pragma once
 
-#include <stdbool.h>
+#include "lua.h"
 
-extern bool not_real_hardware;
-extern bool stay_awake;
-
-void shutdown(bool enable_imu_wakeup);
+void init_watchdog(void);
+void reload_watchdog(lua_State *L, lua_Debug *ar);
+void sethook_watchdog(lua_State *L);

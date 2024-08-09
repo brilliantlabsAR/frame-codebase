@@ -30,6 +30,7 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "luaport.h"
+#include "watchdog.h"
 
 static int lua_bluetooth_is_connected(lua_State *L)
 {
@@ -93,7 +94,7 @@ static struct lua_bluetooth_callback
 
 static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
 {
-    lua_sethook(L, NULL, 0, 0);
+    sethook_watchdog(L);
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_callback.function);
 

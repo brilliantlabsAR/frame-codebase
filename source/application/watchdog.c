@@ -22,11 +22,33 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
+#include "lua.h"
+#include "nrfx_wdt.h"
 
-#include <stdbool.h>
+static nrfx_wdt_t watchdog = NRFX_WDT_INSTANCE(0);
 
-extern bool not_real_hardware;
-extern bool stay_awake;
+void init_watchdog(void)
+{
+    nrfx_wdt_config_t watchdog_config = {
+        .behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_MASK,
+        .reload_value = 6000,
+    };
 
-void shutdown(bool enable_imu_wakeup);
+    nrfx_wdt_channel_id watchdog_channel = NRF_WDT_RR0;
+
+    check_error(nrfx_wdt_init(&watchdog, &watchdog_config, NULL));
+    check_error(nrfx_wdt_channel_alloc(&watchdog, &watchdog_channel));
+
+    nrfx_wdt_enable(&watchdog);
+    nrfx_wdt_feed(&watchdog);
+}
+
+void reload_watchdog(lua_State *L, lua_Debug *ar)
+{
+    nrfx_wdt_channel_feed(&watchdog, NRF_WDT_RR0);
+}
+
+void sethook_watchdog(lua_State *L)
+{
+    lua_sethook(L, reload_watchdog, LUA_MASKCOUNT, 2000);
+}

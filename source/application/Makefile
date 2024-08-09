@@ -36,6 +36,7 @@ C_FILES += \
 	flash.c \
 	luaport.c \
 	spi.c \
+	watchdog.c \
 	lua_libraries/bluetooth.c \
 	lua_libraries/camera.c \
 	lua_libraries/display.c \
