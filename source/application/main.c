@@ -168,6 +168,9 @@ static void hardware_setup(bool *factory_reset)
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
+
+        // Debounce the button and charging contacts
+        nrfx_systick_delay_ms(20);
     }
 
     // Configure the I2C and SPI drivers
