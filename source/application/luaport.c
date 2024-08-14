@@ -31,6 +31,7 @@
 #include "lualib.h"
 #include "nrf_soc.h"
 #include "nrfx_log.h"
+#include "watchdog.h"
 
 lua_State *L_global = NULL;
 
@@ -50,7 +51,7 @@ void lua_write_to_repl(uint8_t *buffer, uint8_t length)
 
 static void lua_break_signal_handler(lua_State *L, lua_Debug *ar)
 {
-    lua_sethook(L, NULL, 0, 0);
+    sethook_watchdog(L);
     luaL_error(L, "break signal");
 }
 
@@ -71,6 +72,9 @@ void run_lua(bool factory_reset)
     {
         error_with_message("Cannot create lua state: not enough memory");
     }
+
+    // Attach watchdog to hook
+    sethook_watchdog(L);
 
     // Open the standard libraries
     luaL_requiref(L, LUA_GNAME, luaopen_base, 1);

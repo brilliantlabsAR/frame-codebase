@@ -43,6 +43,7 @@
 #include "nrfx_systick.h"
 #include "pinout.h"
 #include "spi.h"
+#include "watchdog.h"
 
 bool not_real_hardware = false;
 bool stay_awake = false;
@@ -165,6 +166,11 @@ static void fpga_send_bitstream_bytes(void *context,
 
 static void hardware_setup(bool *factory_reset)
 {
+    // Configure watchdog
+    {
+        init_watchdog();
+    }
+
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
@@ -403,6 +409,8 @@ int main(void)
 
     while (1)
     {
+        reload_watchdog(NULL, NULL);
+
         run_lua(factory_reset);
 
         factory_reset = false;

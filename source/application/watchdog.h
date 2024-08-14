@@ -24,29 +24,8 @@
 
 #pragma once
 
-#define NRFX_CONFIG_H__
-#include "templates/nrfx_config_common.h"
+#include "lua.h"
 
-#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
-#define NRFX_GPIOTE_ENABLED 1
-
-#define NRFX_PDM_ENABLED 1
-#define NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY 5
-
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC1_ENABLED 1
-
-#define NRFX_SAADC_ENABLED 1
-
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM1_ENABLED 1
-#define NRFX_SPIM2_ENABLED 1
-
-#define NRFX_SYSTICK_ENABLED 1
-
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-
-#define NRFX_WDT_ENABLED 1
-
-#include "templates/nrfx_config_nrf52840.h"
+void init_watchdog(void);
+void reload_watchdog(lua_State *L, lua_Debug *ar);
+void sethook_watchdog(lua_State *L);

@@ -32,6 +32,7 @@
 #include "nrfx_gpiote.h"
 #include "nrfx_systick.h"
 #include "pinout.h"
+#include "watchdog.h"
 
 #define PI 3.14159265
 
@@ -55,7 +56,7 @@ static int lua_imu_callback_function = 0;
 
 static void lua_imu_tap_callback_handler(lua_State *L, lua_Debug *ar)
 {
-    lua_sethook(L, NULL, 0, 0);
+    sethook_watchdog(L);
 
     // Clear the interrupt by reading the status register
     check_error(i2c_read(ACCELEROMETER, 0x03, 0xFF).fail);

@@ -22,31 +22,34 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#pragma once
+#include "lua.h"
+#include "nrfx_wdt.h"
 
-#define NRFX_CONFIG_H__
-#include "templates/nrfx_config_common.h"
+static nrfx_wdt_t watchdog = NRFX_WDT_INSTANCE(0);
 
-#define NRFX_GPIOTE_CONFIG_NUM_OF_EVT_HANDLERS 15
-#define NRFX_GPIOTE_ENABLED 1
+void init_watchdog(void)
+{
+    nrfx_wdt_config_t watchdog_config = {
+        .behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_MASK,
+        .reload_value = 6000,
+        .interrupt_priority = NRFX_WDT_DEFAULT_CONFIG_IRQ_PRIORITY,
+    };
 
-#define NRFX_PDM_ENABLED 1
-#define NRFX_PDM_DEFAULT_CONFIG_IRQ_PRIORITY 5
+    nrfx_wdt_channel_id watchdog_channel = NRF_WDT_RR0;
 
-#define NRFX_RTC_ENABLED 1
-#define NRFX_RTC1_ENABLED 1
+    check_error(nrfx_wdt_init(&watchdog, &watchdog_config, NULL));
+    check_error(nrfx_wdt_channel_alloc(&watchdog, &watchdog_channel));
 
-#define NRFX_SAADC_ENABLED 1
+    nrfx_wdt_enable(&watchdog);
+    nrfx_wdt_feed(&watchdog);
+}
 
-#define NRFX_SPIM_ENABLED 1
-#define NRFX_SPIM1_ENABLED 1
-#define NRFX_SPIM2_ENABLED 1
+void reload_watchdog(lua_State *L, lua_Debug *ar)
+{
+    nrfx_wdt_channel_feed(&watchdog, NRF_WDT_RR0);
+}
 
-#define NRFX_SYSTICK_ENABLED 1
-
-#define NRFX_TWIM_ENABLED 1
-#define NRFX_TWIM0_ENABLED 1
-
-#define NRFX_WDT_ENABLED 1
-
-#include "templates/nrfx_config_nrf52840.h"
+void sethook_watchdog(lua_State *L)
+{
+    lua_sethook(L, reload_watchdog, LUA_MASKCALL | LUA_MASKCOUNT, 2000);
+}
