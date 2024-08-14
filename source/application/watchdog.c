@@ -32,6 +32,7 @@ void init_watchdog(void)
     nrfx_wdt_config_t watchdog_config = {
         .behaviour = NRF_WDT_BEHAVIOUR_RUN_SLEEP_MASK,
         .reload_value = 6000,
+        .interrupt_priority = NRFX_WDT_DEFAULT_CONFIG_IRQ_PRIORITY,
     };
 
     nrfx_wdt_channel_id watchdog_channel = NRF_WDT_RR0;
@@ -50,5 +51,5 @@ void reload_watchdog(lua_State *L, lua_Debug *ar)
 
 void sethook_watchdog(lua_State *L)
 {
-    lua_sethook(L, reload_watchdog, LUA_MASKCOUNT, 2000);
+    lua_sethook(L, reload_watchdog, LUA_MASKCALL | LUA_MASKCOUNT, 2000);
 }

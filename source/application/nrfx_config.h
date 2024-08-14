@@ -48,6 +48,5 @@
 #define NRFX_TWIM0_ENABLED 1
 
 #define NRFX_WDT_ENABLED 1
-#define NRFX_WDT_CONFIG_NO_IRQ 1
 
 #include "templates/nrfx_config_nrf52840.h"

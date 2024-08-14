@@ -146,10 +146,15 @@ void _check_error(nrfx_err_t error_code, const char *file, const int line)
     {
         if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
         {
-            LOG("Crashed at %s:%u - %s",
+            LOG("Crashed at %s:%u - %s (0x%02x)",
                 file,
                 line,
-                lookup_error_code(error_code));
+                lookup_error_code(error_code),
+                error_code);
+
+            for (size_t i = 0; i < 1000; i++)
+            {
+            }
 
             __BKPT();
         }
