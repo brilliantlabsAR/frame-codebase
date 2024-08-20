@@ -27,9 +27,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "ble.h"
 
 #define BLE_PREFERRED_MAX_MTU 256
 extern uint16_t ble_negotiated_mtu;
+
+extern ble_gap_scan_params_t scan_params;
+extern ble_data_t scan_buffer;
+extern ble_gap_conn_params_t conn_params;
+extern ble_gap_addr_t scanned_addresses[10];
+extern uint8_t scanned_addresses_count;
 
 void bluetooth_setup(bool factory_reset);
 

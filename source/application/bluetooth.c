@@ -84,11 +84,11 @@ bool flash_write_in_progress = false;
 
 uint16_t ble_negotiated_mtu;
 
-#define APP_BLE_CONN_CFG_TAG 1
+#define APP_BLE_CONN_CFG_TAG 2
 // <o> NRF_BLE_SCAN_SCAN_INTERVAL - Scanning interval. Determines the scan interval in units of 0.625 millisecond. 
 #define NRF_BLE_SCAN_SCAN_INTERVAL 160
 // <o> NRF_BLE_SCAN_SCAN_DURATION - Duration of a scanning session in units of 10 ms. Range: 0x0001 - 0xFFFF (10 ms to 10.9225 ms). If set to 0x0000, the scanning continues until it is explicitly disabled. 
-#define NRF_BLE_SCAN_SCAN_DURATION 0
+#define NRF_BLE_SCAN_SCAN_DURATION 300
 // <o> NRF_BLE_SCAN_SCAN_WINDOW - Scanning window. Determines the scanning window in units of 0.625 millisecond. 
 #define NRF_BLE_SCAN_SCAN_WINDOW 80
 #define NRF_BLE_SCAN_BUFFER 255
@@ -111,8 +111,7 @@ enum
     UNIT_10_MS    = 10000       /**< Number of microseconds in 10 milliseconds. */
 };
 
-static ble_data_t scan_buffer;
-static uint8_t scan_buffer_data[NRF_BLE_SCAN_BUFFER];
+uint8_t scan_buffer_data[NRF_BLE_SCAN_BUFFER];
 
 static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
@@ -387,6 +386,23 @@ void SD_EVT_IRQHandler(void)
             ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[4],
             ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr[5]
             );
+
+            bool is_unique = true;
+            for (size_t i=0; i<scanned_addresses_count; i++) {
+                if (memcmp(
+                    ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr, 
+                    scanned_addresses[i].addr, BLE_GAP_ADDR_LEN) == 0) {
+                        is_unique = false;
+                        break;
+                    }
+            }
+
+            if (is_unique) {
+                memcpy(&scanned_addresses[scanned_addresses_count].addr, 
+                        ble_evt->evt.gap_evt.params.adv_report.peer_addr.addr,
+                        BLE_GAP_ADDR_LEN);
+                        scanned_addresses_count++;
+            }
             break;
         }
 
@@ -616,9 +632,7 @@ void bluetooth_setup(bool factory_reset)
     // Start advertising
     check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
 
-    ble_gap_scan_params_t scan_params;
     memset(&scan_params, 0, sizeof(scan_params));
-    ble_gap_conn_params_t conn_params;
     memset(&conn_params, 0, sizeof(conn_params));
 
     scan_params.active        = 1;
@@ -638,10 +652,11 @@ void bluetooth_setup(bool factory_reset)
     conn_params.slave_latency =
         (uint16_t)NRF_BLE_SCAN_SLAVE_LATENCY;
 
-    scan_buffer.p_data = &scan_buffer_data;
+    scan_buffer.p_data = &scan_buffer_data[0];
     scan_buffer.len = sizeof(scan_buffer_data);
 
-    check_error(sd_ble_gap_scan_start(&scan_params, &scan_buffer));
+    memset(&scanned_addresses, 0, sizeof(scanned_addresses));
+    scanned_addresses_count = 0;
 }
 
 bool bluetooth_is_connected(void)
