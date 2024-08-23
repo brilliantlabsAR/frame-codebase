@@ -1,5 +1,4 @@
 import asyncio
-import collections
 import time
 from aioconsole import ainput
 from frameutils import Bluetooth
