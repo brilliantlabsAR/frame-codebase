@@ -51,6 +51,23 @@ bool bluetooth_is_connected(void);
 
 bool bluetooth_send_data(const uint8_t *data, size_t length);
 
+#define NRF_BLE_SCAN_SCAN_INTERVAL 160              // scan interval in units of 0.625 millisecond
+#define NRF_BLE_SCAN_SCAN_DURATION 300              // duration of a scanning session in units of 10 ms
+#define NRF_BLE_SCAN_SCAN_WINDOW 80                 // scanning window in units of 0.625 millisecond
+#define NRF_BLE_SCAN_BUFFER 255                     // ble scan buffer size
+#define NRF_BLE_SCAN_SUPERVISION_TIMEOUT 6200       // supervision time-out in units of 10 millisecond
+#define NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL 100    // minimum connection interval in milliseconds
+#define NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL 500    // maximum connection interval in milliseconds
+#define NRF_BLE_SCAN_SLAVE_LATENCY 5                // slave latency in counts of connection events
+
+#define MSEC_TO_UNITS(TIME, RESOLUTION) (((TIME) * 1000) / (RESOLUTION))
+enum
+{
+    UNIT_0_625_MS = 625,        /**< Number of microseconds in 0.625 milliseconds. */
+    UNIT_1_25_MS  = 1250,       /**< Number of microseconds in 1.25 milliseconds. */
+    UNIT_10_MS    = 10000       /**< Number of microseconds in 10 milliseconds. */
+};
+
 /* BLE_GAP_AD_TYPE_DEFINITIONS GAP Advertising and Scan Response Data format
  * Found at https://www.bluetooth.org/Technical/AssignedNumbers/generic_access_profile.htm
  */

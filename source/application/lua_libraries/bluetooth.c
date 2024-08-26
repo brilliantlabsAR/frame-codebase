@@ -174,6 +174,14 @@ static int lua_bluetooth_scan_list(lua_State *L) {
     return 1;
 }
 
+static int lua_bluetooth_connect(lua_State *L) {
+    uint8_t index = luaL_checkinteger(L, 1);
+
+    check_error(sd_ble_gap_connect(&scan_data.address[index], &scan_data.scan_params, &scan_data.conn_params, 2));
+
+    return 1;
+}
+
 void lua_open_bluetooth_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -200,6 +208,9 @@ void lua_open_bluetooth_library(lua_State *L)
 
     lua_pushcfunction(L, lua_bluetooth_scan_list);
     lua_setfield(L, -2, "scan_list");
+
+    lua_pushcfunction(L, lua_bluetooth_connect);
+    lua_setfield(L, -2, "connect");
 
     lua_setfield(L, -2, "bluetooth");
 

@@ -84,33 +84,6 @@ bool flash_write_in_progress = false;
 
 uint16_t ble_negotiated_mtu;
 
-#define APP_BLE_CONN_CFG_TAG 2
-// <o> NRF_BLE_SCAN_SCAN_INTERVAL - Scanning interval. Determines the scan interval in units of 0.625 millisecond. 
-#define NRF_BLE_SCAN_SCAN_INTERVAL 160
-// <o> NRF_BLE_SCAN_SCAN_DURATION - Duration of a scanning session in units of 10 ms. Range: 0x0001 - 0xFFFF (10 ms to 10.9225 ms). If set to 0x0000, the scanning continues until it is explicitly disabled. 
-#define NRF_BLE_SCAN_SCAN_DURATION 300
-// <o> NRF_BLE_SCAN_SCAN_WINDOW - Scanning window. Determines the scanning window in units of 0.625 millisecond. 
-#define NRF_BLE_SCAN_SCAN_WINDOW 80
-#define NRF_BLE_SCAN_BUFFER 255
-
-// <o> NRF_BLE_SCAN_SUPERVISION_TIMEOUT - Determines the supervision time-out in units of 10 millisecond. 
-#define NRF_BLE_SCAN_SUPERVISION_TIMEOUT 6200
-// <o> NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL - Determines minimum connection interval in milliseconds. 
-#define NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL 100
-// <o> NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL - Determines maximum connection interval in milliseconds. 
-#define NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL 500
-// <o> NRF_BLE_SCAN_SLAVE_LATENCY - Determines the slave latency in counts of connection events. 
-#define NRF_BLE_SCAN_SLAVE_LATENCY 5
-
-#define MSEC_TO_UNITS(TIME, RESOLUTION) (((TIME) * 1000) / (RESOLUTION))
-
-enum
-{
-    UNIT_0_625_MS = 625,        /**< Number of microseconds in 0.625 milliseconds. */
-    UNIT_1_25_MS  = 1250,       /**< Number of microseconds in 1.25 milliseconds. */
-    UNIT_10_MS    = 10000       /**< Number of microseconds in 10 milliseconds. */
-};
-
 uint8_t scan_buffer_data[NRF_BLE_SCAN_BUFFER];
 
 static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
@@ -395,7 +368,7 @@ void SD_EVT_IRQHandler(void)
                         BLE_GAP_ADDR_LEN);
 
                 // offset 2 to exclude packet size and ad_type
-                scan_data.name_len[scan_data.len] = adv_report->data.len - 3;
+                scan_data.name_len[scan_data.len] = adv_report->data.len - 4;
 
                 memcpy(&scan_data.name[scan_data.len], 
                         adv_report->data.p_data+2,
@@ -428,14 +401,21 @@ void bluetooth_setup(bool factory_reset)
     // Enable softdevice interrupt
     check_error(sd_nvic_EnableIRQ((IRQn_Type)SD_EVT_IRQn));
 
-    // Add GAP configuration to the BLE stack
+    // Add GAP configuration for peripheral to the BLE stack
     ble_cfg_t cfg;
     cfg.conn_cfg.conn_cfg_tag = 1;
     cfg.conn_cfg.params.gap_conn_cfg.conn_count = 2;
     cfg.conn_cfg.params.gap_conn_cfg.event_length = 300;
     check_error(sd_ble_cfg_set(BLE_CONN_CFG_GAP, &cfg, ram_start));
 
-    // Set BLE role to peripheral only
+    // Add GAP configuration for central to the BLE stack
+    memset(&cfg, 0, sizeof(cfg));
+    cfg.conn_cfg.conn_cfg_tag = 2;
+    cfg.conn_cfg.params.gap_conn_cfg.conn_count = 1;
+    cfg.conn_cfg.params.gap_conn_cfg.event_length = BLE_GAP_EVENT_LENGTH_DEFAULT;
+    check_error(sd_ble_cfg_set(BLE_CONN_CFG_GAP, &cfg, ram_start));
+
+    // Set BLE role
     memset(&cfg, 0, sizeof(cfg));
     cfg.gap_cfg.role_count_cfg.periph_role_count = 1;
     cfg.gap_cfg.role_count_cfg.central_role_count = 1;
