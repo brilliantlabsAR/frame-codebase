@@ -39,13 +39,13 @@ nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 extern uint32_t __ram_start;
 static uint32_t ram_start = (uint32_t)&__ram_start;
 
-static struct ble_handles_t
+static struct ble_peripheral_handles_t
 {
     uint16_t connection;
     uint8_t advertising;
     ble_gatts_char_handles_t repl_rx_write;
     ble_gatts_char_handles_t repl_tx_notification;
-} ble_handles = {
+} ble_peripheral_handles = {
     .connection = BLE_CONN_HANDLE_INVALID,
     .advertising = BLE_GAP_ADV_SET_HANDLE_NOT_SET,
 };
@@ -78,6 +78,25 @@ static struct bond_information_t
                0xef, 0xf4, 0x91, 0x11, 0xac, 0xf4, 0xfd, 0xdb,
                0xcc, 0x03, 0x01, 0x48, 0x0e, 0x35, 0x9d, 0xe6},
     },
+};
+
+typedef struct {
+    ble_data_t scan_buffer;
+    ble_gap_scan_params_t scan_params;
+    ble_gap_conn_params_t conn_params;
+    ble_gap_addr_t address[SCAN_LIST_SIZE];
+    char name[SCAN_LIST_SIZE][32];
+    uint8_t name_len[SCAN_LIST_SIZE];
+    uint8_t len;
+} scan_data_t;
+
+static struct ble_central_handles_t
+{
+    uint16_t connection;
+    scan_data_t scan_data;
+    ble_data_t rx_data;
+} ble_central_handles = {
+    .connection = BLE_CONN_HANDLE_INVALID,
 };
 
 bool flash_write_in_progress = false;
@@ -138,41 +157,60 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_CONNECTED:
         {
-            ble_handles.connection = ble_evt
-                                         ->evt
-                                         .gap_evt
-                                         .conn_handle;
+            if (ble_evt->evt.gap_evt.params.connected.role == BLE_GAP_ROLE_CENTRAL)
+            {
+                ble_central_handles.connection = ble_evt->evt.gap_evt.conn_handle;
+            }
 
-            ble_gap_conn_params_t conn_params;
+            else
+            {
+                ble_peripheral_handles.connection = ble_evt
+                                            ->evt
+                                            .gap_evt
+                                            .conn_handle;
 
-            check_error(sd_ble_gap_ppcp_get(&conn_params));
+                ble_gap_conn_params_t conn_params;
 
-            check_error(sd_ble_gap_conn_param_update(ble_handles.connection,
-                                                     &conn_params));
+                check_error(sd_ble_gap_ppcp_get(&conn_params));
 
-            check_error(sd_ble_gatts_sys_attr_set(ble_handles.connection,
-                                                  NULL,
-                                                  0,
-                                                  0));
+                check_error(sd_ble_gap_conn_param_update(ble_peripheral_handles.connection,
+                                                        &conn_params));
 
-            check_error(sd_ble_gap_authenticate(ble_handles.connection,
-                                                &bond.sec_param));
+                check_error(sd_ble_gatts_sys_attr_set(ble_peripheral_handles.connection,
+                                                    NULL,
+                                                    0,
+                                                    0));
+
+                check_error(sd_ble_gap_authenticate(ble_peripheral_handles.connection,
+                                                    &bond.sec_param));
+            }
 
             break;
         }
 
         case BLE_GAP_EVT_DISCONNECTED:
         {
-            ble_handles.connection = BLE_CONN_HANDLE_INVALID;
+            // TODO: need to check disconnect reason?
+            if (ble_evt->evt.gap_evt.conn_handle == ble_central_handles.connection)
+            {
+                ble_central_handles.connection = BLE_CONN_HANDLE_INVALID;
 
-            check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+                memset(&ble_central_handles.rx_data, 0, sizeof(ble_central_handles.rx_data));
+            }
+
+            else if (ble_evt->evt.gap_evt.conn_handle == ble_peripheral_handles.connection) 
+            {
+                ble_peripheral_handles.connection = BLE_CONN_HANDLE_INVALID;
+
+                check_error(sd_ble_gap_adv_start(ble_peripheral_handles.advertising, 1));
+            }
 
             break;
         }
 
         case BLE_GAP_EVT_AUTH_KEY_REQUEST:
         {
-            check_error(sd_ble_gap_auth_key_reply(ble_handles.connection,
+            check_error(sd_ble_gap_auth_key_reply(ble_peripheral_handles.connection,
                                                   BLE_GAP_AUTH_KEY_TYPE_NONE,
                                                   NULL));
         }
@@ -201,7 +239,7 @@ void SD_EVT_IRQHandler(void)
                                       .client_rx_mtu;
 
             // Respond with our max MTU size
-            sd_ble_gatts_exchange_mtu_reply(ble_handles.connection,
+            sd_ble_gatts_exchange_mtu_reply(ble_peripheral_handles.connection,
                                             BLE_PREFERRED_MAX_MTU);
 
             // Choose the smaller MTU as the final length we'll use
@@ -217,7 +255,7 @@ void SD_EVT_IRQHandler(void)
         {
             // If REPL service
             if (ble_evt->evt.gatts_evt.params.write.handle ==
-                ble_handles.repl_rx_write.value_handle)
+                ble_peripheral_handles.repl_rx_write.value_handle)
             {
                 // Handle raw data
                 if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x01)
@@ -250,7 +288,7 @@ void SD_EVT_IRQHandler(void)
         case BLE_GATTS_EVT_TIMEOUT:
         {
             check_error(sd_ble_gap_disconnect(
-                ble_handles.connection,
+                ble_peripheral_handles.connection,
                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
 
             break;
@@ -258,7 +296,7 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
         {
-            check_error(sd_ble_gatts_sys_attr_set(ble_handles.connection,
+            check_error(sd_ble_gatts_sys_attr_set(ble_peripheral_handles.connection,
                                                   NULL,
                                                   0,
                                                   0));
@@ -268,7 +306,7 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
         {
-            check_error(sd_ble_gap_data_length_update(ble_handles.connection,
+            check_error(sd_ble_gap_data_length_update(ble_peripheral_handles.connection,
                                                       NULL,
                                                       NULL));
 
@@ -292,7 +330,7 @@ void SD_EVT_IRQHandler(void)
             if (bonded == sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk))
             {
                 check_error(sd_ble_gap_sec_params_reply(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_GAP_SEC_STATUS_SUCCESS,
                     &bond.sec_param,
                     &bond.keyset));
@@ -301,13 +339,13 @@ void SD_EVT_IRQHandler(void)
             else
             {
                 check_error(sd_ble_gap_sec_params_reply(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_GAP_SEC_STATUS_AUTH_REQ,
                     NULL,
                     NULL));
 
                 check_error(sd_ble_gap_disconnect(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
             }
 
@@ -317,7 +355,7 @@ void SD_EVT_IRQHandler(void)
         case BLE_GAP_EVT_SEC_INFO_REQUEST:
         {
             check_error(sd_ble_gap_sec_info_reply(
-                ble_handles.connection,
+                ble_peripheral_handles.connection,
                 &bond.keyset.keys_own.p_enc_key->enc_info,
                 NULL,
                 NULL));
@@ -355,32 +393,50 @@ void SD_EVT_IRQHandler(void)
             bool is_unique = true;
             bool has_name = (adv_report->data.p_data[1] == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME
                         || adv_report->data.p_data[1] == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME);
-            for (size_t i=0; i<scan_data.len; i++) {
-                if (memcmp(adv_report->peer_addr.addr, scan_data.address[i].addr, BLE_GAP_ADDR_LEN) == 0) {
+            for (size_t i=0; i<ble_central_handles.scan_data.len; i++) {
+                if (memcmp(adv_report->peer_addr.addr, ble_central_handles.scan_data.address[i].addr, BLE_GAP_ADDR_LEN) == 0) {
                     is_unique = false;
                     break;
                 }
             }
 
             if (is_unique && has_name) {
-                memcpy(&scan_data.address[scan_data.len].addr,
+                memcpy(&ble_central_handles.scan_data.address[ble_central_handles.scan_data.len].addr,
                         adv_report->peer_addr.addr,
                         BLE_GAP_ADDR_LEN);
 
                 // offset 2 to exclude packet size and ad_type
-                scan_data.name_len[scan_data.len] = adv_report->data.len - 4;
+                ble_central_handles.scan_data.name_len[ble_central_handles.scan_data.len] = adv_report->data.len - 4;
 
-                memcpy(&scan_data.name[scan_data.len], 
+                memcpy(&ble_central_handles.scan_data.name[ble_central_handles.scan_data.len], 
                         adv_report->data.p_data+2,
-                        scan_data.name_len[scan_data.len]);
+                        ble_central_handles.scan_data.name_len[ble_central_handles.scan_data.len]);
 
-                scan_data.len++;
+                ble_central_handles.scan_data.len++;
             }
             break;
         }
 
         case BLE_GAP_EVT_TIMEOUT:
         {
+            break;
+        }
+
+        case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
+        {
+            check_error(sd_ble_gap_conn_param_update(ble_evt->evt.gap_evt.conn_handle, 
+                &ble_evt->evt.gap_evt.params.conn_param_update_request.conn_params));
+            break;
+        }
+
+        case BLE_GATTC_EVT_HVX:
+        {
+            LOG("Notification: %u, %x", ble_evt->evt.gattc_evt.params.hvx.len, 
+                ble_evt->evt.gattc_evt.params.hvx.data[0]);
+
+            memcpy(&ble_central_handles.rx_data, &ble_evt->evt.gattc_evt.params.hvx.data, 
+                ble_evt->evt.gattc_evt.params.hvx.len);
+
             break;
         }
 
@@ -559,12 +615,12 @@ void bluetooth_setup(bool factory_reset)
     check_error(sd_ble_gatts_characteristic_add(repl_service_handle,
                                                 &rx_char_md,
                                                 &rx_attr,
-                                                &ble_handles.repl_rx_write));
+                                                &ble_peripheral_handles.repl_rx_write));
 
     check_error(sd_ble_gatts_characteristic_add(repl_service_handle,
                                                 &tx_char_md,
                                                 &tx_attr,
-                                                &ble_handles.repl_tx_notification));
+                                                &ble_peripheral_handles.repl_tx_notification));
 
     // Add name to advertising payload
     adv.payload[adv.length++] = strlen((const char *)device_name) + 1;
@@ -604,56 +660,56 @@ void bluetooth_setup(bool factory_reset)
     adv_params.interval = (20 * 1000) / 625;
 
     // Configure the advertising set
-    check_error(sd_ble_gap_adv_set_configure(&ble_handles.advertising,
+    check_error(sd_ble_gap_adv_set_configure(&ble_peripheral_handles.advertising,
                                              &adv_data,
                                              &adv_params));
 
     // Start advertising
-    check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+    check_error(sd_ble_gap_adv_start(ble_peripheral_handles.advertising, 1));
 
-    memset(&scan_data, 0, sizeof(scan_data));
+    memset(&ble_central_handles.scan_data, 0, sizeof(ble_central_handles.scan_data));
 
-    scan_data.scan_params.active        = 1;
-    scan_data.scan_params.interval      = NRF_BLE_SCAN_SCAN_INTERVAL;
-    scan_data.scan_params.window        = NRF_BLE_SCAN_SCAN_WINDOW;
-    scan_data.scan_params.timeout       = NRF_BLE_SCAN_SCAN_DURATION;
-    scan_data.scan_params.filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL;
-    scan_data.scan_params.scan_phys     = BLE_GAP_PHY_1MBPS;
-    scan_data.scan_params.extended      = 0;
+    ble_central_handles.scan_data.scan_params.active        = 1;
+    ble_central_handles.scan_data.scan_params.interval      = NRF_BLE_SCAN_SCAN_INTERVAL;
+    ble_central_handles.scan_data.scan_params.window        = NRF_BLE_SCAN_SCAN_WINDOW;
+    ble_central_handles.scan_data.scan_params.timeout       = NRF_BLE_SCAN_SCAN_DURATION;
+    ble_central_handles.scan_data.scan_params.filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL;
+    ble_central_handles.scan_data.scan_params.scan_phys     = BLE_GAP_PHY_1MBPS;
+    ble_central_handles.scan_data.scan_params.extended      = 0;
 
-    scan_data.conn_params.conn_sup_timeout =
+    ble_central_handles.scan_data.conn_params.conn_sup_timeout =
         (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_SUPERVISION_TIMEOUT, UNIT_10_MS);
-    scan_data.conn_params.min_conn_interval =
+    ble_central_handles.scan_data.conn_params.min_conn_interval =
         (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL, UNIT_1_25_MS);
-    scan_data.conn_params.max_conn_interval =
+    ble_central_handles.scan_data.conn_params.max_conn_interval =
         (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL, UNIT_1_25_MS);
-    scan_data.conn_params.slave_latency =
+    ble_central_handles.scan_data.conn_params.slave_latency =
         (uint16_t)NRF_BLE_SCAN_SLAVE_LATENCY;
 
-    scan_data.scan_buffer.p_data = (uint8_t *) &scan_buffer_data;
-    scan_data.scan_buffer.len = sizeof(scan_buffer_data);
+    ble_central_handles.scan_data.scan_buffer.p_data = (uint8_t *) &scan_buffer_data;
+    ble_central_handles.scan_data.scan_buffer.len = sizeof(scan_buffer_data);
 }
 
 bool bluetooth_is_connected(void)
 {
-    return ble_handles.connection == BLE_CONN_HANDLE_INVALID ? false : true;
+    return ble_peripheral_handles.connection == BLE_CONN_HANDLE_INVALID ? false : true;
 }
 
 bool bluetooth_send_data(const uint8_t *data, size_t length)
 {
-    if (ble_handles.connection == BLE_CONN_HANDLE_INVALID)
+    if (ble_peripheral_handles.connection == BLE_CONN_HANDLE_INVALID)
     {
         return true;
     }
 
     // Initialise the handle value parameters
     ble_gatts_hvx_params_t hvx_params = {0};
-    hvx_params.handle = ble_handles.repl_tx_notification.value_handle;
+    hvx_params.handle = ble_peripheral_handles.repl_tx_notification.value_handle;
     hvx_params.p_data = data;
     hvx_params.p_len = (uint16_t *)&length;
     hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
 
-    uint32_t status = sd_ble_gatts_hvx(ble_handles.connection, &hvx_params);
+    uint32_t status = sd_ble_gatts_hvx(ble_peripheral_handles.connection, &hvx_params);
 
     if (status == NRF_SUCCESS)
     {
@@ -661,4 +717,34 @@ bool bluetooth_send_data(const uint8_t *data, size_t length)
     }
 
     return true;
+}
+
+void blueotooth_start_scan(uint16_t timeout)
+{
+    ble_central_handles.scan_data.scan_params.timeout = timeout;
+    check_error(sd_ble_gap_scan_start(&ble_central_handles.scan_data.scan_params, 
+        &ble_central_handles.scan_data.scan_buffer));
+}
+
+void bluetooth_scan_list()
+{
+    for (size_t i=0; i<ble_central_handles.scan_data.len; i++) {
+        LOG("%d -> %x:%x:%x:%x:%x:%x - %.*s",
+            i,
+            ble_central_handles.scan_data.address[i].addr[5],
+            ble_central_handles.scan_data.address[i].addr[4],
+            ble_central_handles.scan_data.address[i].addr[3],
+            ble_central_handles.scan_data.address[i].addr[2],
+            ble_central_handles.scan_data.address[i].addr[1],
+            ble_central_handles.scan_data.address[i].addr[0],
+            ble_central_handles.scan_data.name_len[i],
+            ble_central_handles.scan_data.name[i]
+        );
+    }
+}
+
+void bluetooth_central_connect(uint8_t index)
+{
+    check_error(sd_ble_gap_connect(&ble_central_handles.scan_data.address[index], 
+        &ble_central_handles.scan_data.scan_params, &ble_central_handles.scan_data.conn_params, 2));
 }

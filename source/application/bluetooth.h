@@ -32,25 +32,13 @@
 #define BLE_PREFERRED_MAX_MTU 256
 extern uint16_t ble_negotiated_mtu;
 
-#define SCAN_LIST_SIZE 10
-struct scan_data_t {
-    ble_data_t scan_buffer;
-    ble_gap_scan_params_t scan_params;
-    ble_gap_conn_params_t conn_params;
-    ble_gap_addr_t address[SCAN_LIST_SIZE];
-    char name[SCAN_LIST_SIZE][32];
-    uint8_t name_len[SCAN_LIST_SIZE];
-    uint8_t len;
-};
-
-extern struct scan_data_t scan_data;
-
 void bluetooth_setup(bool factory_reset);
 
 bool bluetooth_is_connected(void);
 
 bool bluetooth_send_data(const uint8_t *data, size_t length);
 
+#define SCAN_LIST_SIZE 10
 #define NRF_BLE_SCAN_SCAN_INTERVAL 160              // scan interval in units of 0.625 millisecond
 #define NRF_BLE_SCAN_SCAN_DURATION 300              // duration of a scanning session in units of 10 ms
 #define NRF_BLE_SCAN_SCAN_WINDOW 80                 // scanning window in units of 0.625 millisecond
@@ -105,3 +93,7 @@ enum
 #define BLE_GAP_AD_TYPE_URI                                 0x24 /**< URI */
 #define BLE_GAP_AD_TYPE_3D_INFORMATION_DATA                 0x3D /**< 3D Information Data. */
 #define BLE_GAP_AD_TYPE_MANUFACTURER_SPECIFIC_DATA          0xFF /**< Manufacturer Specific Data. */
+
+void blueotooth_start_scan(uint16_t timeout);
+void bluetooth_scan_list();
+void bluetooth_central_connect(uint8_t index);

@@ -31,8 +31,6 @@
 #include "lua.h"
 #include "luaport.h"
 
-struct scan_data_t scan_data;
-
 static int lua_bluetooth_is_connected(lua_State *L)
 {
     lua_pushboolean(L, bluetooth_is_connected());
@@ -152,32 +150,21 @@ static int lua_bluetooth_start_scan(lua_State *L) {
     if (timeout <= 0) {
         luaL_error(L, "timeout must be less than 10000");
     } 
-    scan_data.scan_params.timeout = timeout;
-    check_error(sd_ble_gap_scan_start(&scan_data.scan_params, &scan_data.scan_buffer));
+
     return 1;
 }
 
 static int lua_bluetooth_scan_list(lua_State *L) {
-    for (size_t i=0; i<scan_data.len; i++) {
-        LOG("%d -> %x:%x:%x:%x:%x:%x - %.*s",
-            i,
-            scan_data.address[i].addr[5],
-            scan_data.address[i].addr[4],
-            scan_data.address[i].addr[3],
-            scan_data.address[i].addr[2],
-            scan_data.address[i].addr[1],
-            scan_data.address[i].addr[0],
-            scan_data.name_len[i],
-            scan_data.name[i]
-        );
-    }
+
+    bluetooth_scan_list();
+
     return 1;
 }
 
 static int lua_bluetooth_connect(lua_State *L) {
     uint8_t index = luaL_checkinteger(L, 1);
 
-    check_error(sd_ble_gap_connect(&scan_data.address[index], &scan_data.scan_params, &scan_data.conn_params, 2));
+    bluetooth_central_connect(index);
 
     return 1;
 }
