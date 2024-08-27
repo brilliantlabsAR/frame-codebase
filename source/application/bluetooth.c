@@ -368,7 +368,7 @@ void bluetooth_setup(bool factory_reset)
     ble_cfg_t cfg;
     cfg.conn_cfg.conn_cfg_tag = 1;
     cfg.conn_cfg.params.gap_conn_cfg.conn_count = 1;
-    cfg.conn_cfg.params.gap_conn_cfg.event_length = 300;
+    cfg.conn_cfg.params.gap_conn_cfg.event_length = (15 * 1000) / 1250;
     check_error(sd_ble_cfg_set(BLE_CONN_CFG_GAP, &cfg, ram_start));
 
     // Set BLE role to peripheral only

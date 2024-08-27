@@ -1,6 +1,7 @@
 from aioconsole import ainput
 from frameutils import Bluetooth
 import asyncio
+import time
 
 header = bytearray(
     [
@@ -631,20 +632,26 @@ header = bytearray(
 )
 
 image_buffer = b""
+last_fps_time = time.time()
+fps = 0
 
 
 def receive_data(data):
     global image_buffer
+    global last_fps_time
+    global fps
 
     if len(data) == 1:
         with open("temp_focus_image.jpg", "wb") as f:
             f.write(header + image_buffer)
             image_buffer = b""
+            fps = 1 / (time.time() - last_fps_time)
+            last_fps_time = time.time()
         return
 
     image_buffer += data[1:]
     print(
-        f"Received {str(len(image_buffer)-1)} bytes. Press enter to finish      ",
+        f"Received {str(len(image_buffer)-1)} bytes. FPS = {fps}. Press enter to finish      ",
         end="\r",
     )
 
@@ -658,11 +665,11 @@ async def main():
 
     while true do
         if state == 'CAPTURE' then
-            frame.camera.capture { quality_factor = 25 }
+            frame.camera.capture { quality_factor = 50 }
             state_time = frame.time.utc()
             state = 'WAIT'
         elseif state == 'WAIT' then
-            if frame.time.utc() > state_time + 0.2 then
+            if frame.time.utc() > state_time + 0.1 then
                 state = 'SEND'
             end
         elseif state == 'SEND' then
