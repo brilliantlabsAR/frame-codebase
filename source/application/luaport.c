@@ -63,7 +63,7 @@ void lua_break_signal_interrupt(void)
                 1);
 }
 
-void run_lua(bool factory_reset)
+void run_lua(bool factory_reset, bool is_paired)
 {
     lua_State *L = luaL_newstate();
     L_global = L; // Only used for interrupts
@@ -125,9 +125,18 @@ void run_lua(bool factory_reset)
     }
 
     // Show splash screen
-    status = luaL_dostring(L, "frame.display.text('Ready to Pair', 200, 140);"
-                              "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
-                              "frame.display.show();");
+    if (!is_paired)
+    {
+        status = luaL_dostring(L, "frame.display.text('Ready to Pair', 200, 140);"
+                                  "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'GREEN' });"
+                                  "frame.display.show();");
+    }
+    else
+    {
+        status = luaL_dostring(L, "frame.display.text('Frame is Paired', 185, 140);"
+                                  "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
+                                  "frame.display.show();");
+    }
 
     if (status != LUA_OK)
     {

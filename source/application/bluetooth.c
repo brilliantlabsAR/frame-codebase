@@ -356,7 +356,7 @@ void SD_EVT_IRQHandler(void)
     }
 }
 
-void bluetooth_setup(bool factory_reset)
+void bluetooth_setup(bool factory_reset, bool *is_paired)
 {
     // Enable the softdevice using internal RC oscillator
     check_error(sd_softdevice_enable(NULL, softdevice_assert_handler));
@@ -437,6 +437,15 @@ void bluetooth_setup(bool factory_reset)
     {
         flash_erase_page(bond_storage);
         flash_wait_until_complete();
+    }
+
+    // Check if already paired
+    ble_gap_enc_info_t zero_struct;
+    memset(&zero_struct, 0xFF, sizeof(ble_gap_enc_info_t));
+    if (memcmp((void *)bond_storage, &zero_struct, sizeof(ble_gap_enc_info_t)))
+    {
+        LOG("Device is paired");
+        *is_paired = true;
     }
 
     // Read stored encryption key from memory

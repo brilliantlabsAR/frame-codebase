@@ -402,16 +402,17 @@ int main(void)
     LOG("Frame firmware " BUILD_VERSION " (" GIT_COMMIT ")");
 
     bool factory_reset = false;
+    bool is_paired = false;
 
     hardware_setup(&factory_reset);
 
-    bluetooth_setup(factory_reset);
+    bluetooth_setup(factory_reset, &is_paired);
 
     while (1)
     {
         reload_watchdog(NULL, NULL);
 
-        run_lua(factory_reset);
+        run_lua(factory_reset, is_paired);
 
         factory_reset = false;
     }
