@@ -39,13 +39,13 @@ nrf_nvic_state_t nrf_nvic_state = {{0}, 0};
 extern uint32_t __ram_start;
 static uint32_t ram_start = (uint32_t)&__ram_start;
 
-static struct ble_handles_t
+static struct ble_peripheral_handles_t
 {
     uint16_t connection;
     uint8_t advertising;
     ble_gatts_char_handles_t repl_rx_write;
     ble_gatts_char_handles_t repl_tx_notification;
-} ble_handles = {
+} ble_peripheral_handles = {
     .connection = BLE_CONN_HANDLE_INVALID,
     .advertising = BLE_GAP_ADV_SET_HANDLE_NOT_SET,
 };
@@ -138,41 +138,47 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_CONNECTED:
         {
-            ble_handles.connection = ble_evt
-                                         ->evt
-                                         .gap_evt
-                                         .conn_handle;
+            if (ble_evt->evt.gap_evt.params.connected.role == BLE_GAP_ROLE_PERIPH)
+            {
+                ble_peripheral_handles.connection = ble_evt
+                                            ->evt
+                                            .gap_evt
+                                            .conn_handle;
 
-            ble_gap_conn_params_t conn_params;
+                ble_gap_conn_params_t conn_params;
 
-            check_error(sd_ble_gap_ppcp_get(&conn_params));
+                check_error(sd_ble_gap_ppcp_get(&conn_params));
 
-            check_error(sd_ble_gap_conn_param_update(ble_handles.connection,
-                                                     &conn_params));
+                check_error(sd_ble_gap_conn_param_update(ble_peripheral_handles.connection,
+                                                        &conn_params));
 
-            check_error(sd_ble_gatts_sys_attr_set(ble_handles.connection,
-                                                  NULL,
-                                                  0,
-                                                  0));
+                check_error(sd_ble_gatts_sys_attr_set(ble_peripheral_handles.connection,
+                                                    NULL,
+                                                    0,
+                                                    0));
 
-            check_error(sd_ble_gap_authenticate(ble_handles.connection,
-                                                &bond.sec_param));
+                check_error(sd_ble_gap_authenticate(ble_peripheral_handles.connection,
+                                                    &bond.sec_param));
+            }
 
             break;
         }
 
         case BLE_GAP_EVT_DISCONNECTED:
         {
-            ble_handles.connection = BLE_CONN_HANDLE_INVALID;
+            if (ble_evt->evt.gap_evt.conn_handle == ble_peripheral_handles.connection)
+            {
+                ble_peripheral_handles.connection = BLE_CONN_HANDLE_INVALID;
 
-            check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+                check_error(sd_ble_gap_adv_start(ble_peripheral_handles.advertising, 1));
+            }
 
             break;
         }
 
         case BLE_GAP_EVT_AUTH_KEY_REQUEST:
         {
-            check_error(sd_ble_gap_auth_key_reply(ble_handles.connection,
+            check_error(sd_ble_gap_auth_key_reply(ble_peripheral_handles.connection,
                                                   BLE_GAP_AUTH_KEY_TYPE_NONE,
                                                   NULL));
         }
@@ -201,7 +207,7 @@ void SD_EVT_IRQHandler(void)
                                       .client_rx_mtu;
 
             // Respond with our max MTU size
-            sd_ble_gatts_exchange_mtu_reply(ble_handles.connection,
+            sd_ble_gatts_exchange_mtu_reply(ble_peripheral_handles.connection,
                                             BLE_PREFERRED_MAX_MTU);
 
             // Choose the smaller MTU as the final length we'll use
@@ -217,7 +223,7 @@ void SD_EVT_IRQHandler(void)
         {
             // If REPL service
             if (ble_evt->evt.gatts_evt.params.write.handle ==
-                ble_handles.repl_rx_write.value_handle)
+                ble_peripheral_handles.repl_rx_write.value_handle)
             {
                 // Handle raw data
                 if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x01)
@@ -250,7 +256,7 @@ void SD_EVT_IRQHandler(void)
         case BLE_GATTS_EVT_TIMEOUT:
         {
             check_error(sd_ble_gap_disconnect(
-                ble_handles.connection,
+                ble_peripheral_handles.connection,
                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
 
             break;
@@ -258,7 +264,7 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GATTS_EVT_SYS_ATTR_MISSING:
         {
-            check_error(sd_ble_gatts_sys_attr_set(ble_handles.connection,
+            check_error(sd_ble_gatts_sys_attr_set(ble_peripheral_handles.connection,
                                                   NULL,
                                                   0,
                                                   0));
@@ -268,7 +274,7 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_DATA_LENGTH_UPDATE_REQUEST:
         {
-            check_error(sd_ble_gap_data_length_update(ble_handles.connection,
+            check_error(sd_ble_gap_data_length_update(ble_peripheral_handles.connection,
                                                       NULL,
                                                       NULL));
 
@@ -292,7 +298,7 @@ void SD_EVT_IRQHandler(void)
             if (bonded == sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk))
             {
                 check_error(sd_ble_gap_sec_params_reply(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_GAP_SEC_STATUS_SUCCESS,
                     &bond.sec_param,
                     &bond.keyset));
@@ -301,13 +307,13 @@ void SD_EVT_IRQHandler(void)
             else
             {
                 check_error(sd_ble_gap_sec_params_reply(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_GAP_SEC_STATUS_AUTH_REQ,
                     NULL,
                     NULL));
 
                 check_error(sd_ble_gap_disconnect(
-                    ble_handles.connection,
+                    ble_peripheral_handles.connection,
                     BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
             }
 
@@ -317,7 +323,7 @@ void SD_EVT_IRQHandler(void)
         case BLE_GAP_EVT_SEC_INFO_REQUEST:
         {
             check_error(sd_ble_gap_sec_info_reply(
-                ble_handles.connection,
+                ble_peripheral_handles.connection,
                 &bond.keyset.keys_own.p_enc_key->enc_info,
                 NULL,
                 NULL));
@@ -559,12 +565,12 @@ void bluetooth_setup(bool factory_reset)
     check_error(sd_ble_gatts_characteristic_add(repl_service_handle,
                                                 &rx_char_md,
                                                 &rx_attr,
-                                                &ble_handles.repl_rx_write));
+                                                &ble_peripheral_handles.repl_rx_write));
 
     check_error(sd_ble_gatts_characteristic_add(repl_service_handle,
                                                 &tx_char_md,
                                                 &tx_attr,
-                                                &ble_handles.repl_tx_notification));
+                                                &ble_peripheral_handles.repl_tx_notification));
 
     // Add name to advertising payload
     adv.payload[adv.length++] = strlen((const char *)device_name) + 1;
@@ -604,12 +610,12 @@ void bluetooth_setup(bool factory_reset)
     adv_params.interval = (20 * 1000) / 625;
 
     // Configure the advertising set
-    check_error(sd_ble_gap_adv_set_configure(&ble_handles.advertising,
+    check_error(sd_ble_gap_adv_set_configure(&ble_peripheral_handles.advertising,
                                              &adv_data,
                                              &adv_params));
 
     // Start advertising
-    check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+    check_error(sd_ble_gap_adv_start(ble_peripheral_handles.advertising, 1));
 
     memset(&scan_data, 0, sizeof(scan_data));
 
@@ -636,24 +642,24 @@ void bluetooth_setup(bool factory_reset)
 
 bool bluetooth_is_connected(void)
 {
-    return ble_handles.connection == BLE_CONN_HANDLE_INVALID ? false : true;
+    return ble_peripheral_handles.connection == BLE_CONN_HANDLE_INVALID ? false : true;
 }
 
 bool bluetooth_send_data(const uint8_t *data, size_t length)
 {
-    if (ble_handles.connection == BLE_CONN_HANDLE_INVALID)
+    if (ble_peripheral_handles.connection == BLE_CONN_HANDLE_INVALID)
     {
         return true;
     }
 
     // Initialise the handle value parameters
     ble_gatts_hvx_params_t hvx_params = {0};
-    hvx_params.handle = ble_handles.repl_tx_notification.value_handle;
+    hvx_params.handle = ble_peripheral_handles.repl_tx_notification.value_handle;
     hvx_params.p_data = data;
     hvx_params.p_len = (uint16_t *)&length;
     hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
 
-    uint32_t status = sd_ble_gatts_hvx(ble_handles.connection, &hvx_params);
+    uint32_t status = sd_ble_gatts_hvx(ble_peripheral_handles.connection, &hvx_params);
 
     if (status == NRF_SUCCESS)
     {
