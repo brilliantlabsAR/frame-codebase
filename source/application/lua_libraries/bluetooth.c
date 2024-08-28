@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include "ble_gap.h"
 #include "bluetooth.h"
+#include "nrfx_systick.h"
 #include "error_logging.h"
 #include "frame_lua_libraries.h"
 #include "lauxlib.h"
@@ -32,6 +33,7 @@
 #include "luaport.h"
 
 struct scan_data_t scan_data;
+uint16_t central_conn_handle = BLE_CONN_HANDLE_INVALID;
 
 static int lua_bluetooth_is_connected(lua_State *L)
 {
@@ -196,9 +198,24 @@ static int lua_bluetooth_scan_list(lua_State *L) {
 }
 
 static int lua_bluetooth_connect(lua_State *L) {
+    uint8_t retry_count = 3;
     uint8_t index = luaL_checkinteger(L, 1);
 
-    check_error(sd_ble_gap_connect(&scan_data.address[index], &scan_data.scan_params, &scan_data.conn_params, 2));
+    while (retry_count > 0)
+    {
+        check_error(sd_ble_gap_connect(&scan_data.address[index], 
+            &scan_data.scan_params, &scan_data.conn_params, 2));
+
+        nrfx_systick_delay_ms(500);
+
+        if (central_conn_handle != BLE_CONN_HANDLE_INVALID)
+            break;
+        else
+            retry_count--;
+    }
+
+    if (retry_count == 0) 
+        luaL_error(L, "failed to connect");
 
     return 1;
 }

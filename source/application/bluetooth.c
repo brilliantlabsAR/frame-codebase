@@ -162,7 +162,9 @@ void SD_EVT_IRQHandler(void)
             }
 
             if (ble_evt->evt.gap_evt.params.connected.role == BLE_GAP_ROLE_CENTRAL)
-                LOG("central connected");
+            {
+                central_conn_handle = ble_evt->evt.gap_evt.conn_handle;
+            }
 
             break;
         }
@@ -174,6 +176,11 @@ void SD_EVT_IRQHandler(void)
                 ble_peripheral_handles.connection = BLE_CONN_HANDLE_INVALID;
 
                 check_error(sd_ble_gap_adv_start(ble_peripheral_handles.advertising, 1));
+            }
+
+            if (ble_evt->evt.gap_evt.conn_handle == central_conn_handle)
+            {
+                central_conn_handle = BLE_CONN_HANDLE_INVALID;
             }
 
             break;

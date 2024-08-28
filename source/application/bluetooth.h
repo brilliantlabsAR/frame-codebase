@@ -45,6 +45,8 @@ struct scan_data_t {
 
 extern struct scan_data_t scan_data;
 
+extern uint16_t central_conn_handle;
+
 void bluetooth_setup(bool factory_reset);
 
 bool bluetooth_is_connected(void);
