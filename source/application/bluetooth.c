@@ -161,6 +161,9 @@ void SD_EVT_IRQHandler(void)
                                                     &bond.sec_param));
             }
 
+            if (ble_evt->evt.gap_evt.params.connected.role == BLE_GAP_ROLE_CENTRAL)
+                LOG("central connected");
+
             break;
         }
 
@@ -387,6 +390,21 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_TIMEOUT:
         {
+            break;
+        }
+
+        case BLE_GAP_EVT_CONN_PARAM_UPDATE_REQUEST:
+        {
+            sd_ble_gap_conn_param_update(ble_evt->evt.gap_evt.conn_handle, 
+                &ble_evt->evt.gap_evt.params.conn_param_update_request.conn_params);
+            
+            break;
+        }
+
+        case BLE_GATTC_EVT_HVX:
+        {
+            LOG("data: %.2x %.2x", ble_evt->evt.gattc_evt.params.hvx.data[0], ble_evt->evt.gattc_evt.params.hvx.data[0]);
+
             break;
         }
 
