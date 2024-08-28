@@ -158,19 +158,40 @@ static int lua_bluetooth_start_scan(lua_State *L) {
 }
 
 static int lua_bluetooth_scan_list(lua_State *L) {
+
+    lua_newtable(L);
+
+    char mac_address[18];
+    char name[32];
+
     for (size_t i=0; i<scan_data.len; i++) {
-        LOG("%d -> %x:%x:%x:%x:%x:%x - %.*s",
+
+        lua_newtable(L);
+
+        {
+            sprintf(mac_address, "%.2x:%.2x:%.2x:%.2x:%.2x:%.2x", scan_data.address[i].addr[5],
+            scan_data.address[i].addr[4], scan_data.address[i].addr[3], scan_data.address[i].addr[2],
+            scan_data.address[i].addr[1], scan_data.address[i].addr[0]);
+
+            sprintf(name, "%.*s", scan_data.name_len[i], scan_data.name[i]);
+
+            lua_pushstring(L, mac_address);
+            lua_setfield(L, -2, "mac");
+
+            lua_pushstring(L, name);
+            lua_setfield(L, -2, "name");
+        }
+
+        lua_seti(L, -2, i);
+
+        LOG("%d -> %.17s - %.*s",
             i,
-            scan_data.address[i].addr[5],
-            scan_data.address[i].addr[4],
-            scan_data.address[i].addr[3],
-            scan_data.address[i].addr[2],
-            scan_data.address[i].addr[1],
-            scan_data.address[i].addr[0],
+            mac_address,
             scan_data.name_len[i],
             scan_data.name[i]
         );
     }
+
     return 1;
 }
 
