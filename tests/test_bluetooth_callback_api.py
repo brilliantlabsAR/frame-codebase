@@ -12,7 +12,7 @@ async def main():
 
     await bluetooth.send_reset_signal()
     await bluetooth.send_lua("function ble_event(d)frame.bluetooth.send(d)end")
-    await bluetooth.send_lua("frame.bluetooth.receive_callback(ble_event)")
+    await bluetooth.send_lua("frame.bluetooth.peripheral_receive_callback(ble_event)")
     await bluetooth.send_lua("for i=1,10 do print(i); frame.sleep(1) end")
 
     await asyncio.sleep(1)

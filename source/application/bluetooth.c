@@ -238,7 +238,7 @@ void SD_EVT_IRQHandler(void)
                 // Handle raw data
                 if (ble_evt->evt.gatts_evt.params.write.data[0] == 0x01)
                 {
-                    lua_bluetooth_data_interrupt(
+                    lua_bluetooth_peripheral_data_interrupt(
                         ble_evt->evt.gatts_evt.params.write.data + 1,
                         ble_evt->evt.gatts_evt.params.write.len - 1);
                 }
@@ -410,7 +410,10 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GATTC_EVT_HVX:
         {
-            LOG("data: %.2x %.2x", ble_evt->evt.gattc_evt.params.hvx.data[0], ble_evt->evt.gattc_evt.params.hvx.data[0]);
+
+            lua_bluetooth_central_data_interrupt(
+                ble_evt->evt.gattc_evt.params.hvx.data,
+                ble_evt->evt.gattc_evt.params.hvx.len);
 
             break;
         }

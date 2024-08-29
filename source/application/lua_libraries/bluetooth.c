@@ -86,24 +86,26 @@ static int lua_bluetooth_send(lua_State *L)
     return 0;
 }
 
-static struct lua_bluetooth_callback
+struct lua_bluetooth_callback
 {
     int function;
     uint8_t data[BLE_PREFERRED_MAX_MTU];
     size_t length;
-} lua_bluetooth_callback = {
+};
+
+static struct lua_bluetooth_callback lua_bluetooth_peripheral_callback = {
     .function = 0,
 };
 
-static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
+static void lua_bluetooth_peripheral_receive_callback_handler(lua_State *L, lua_Debug *ar)
 {
     lua_sethook(L, NULL, 0, 0);
 
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_callback.function);
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_peripheral_callback.function);
 
     lua_pushlstring(L,
-                    (char *)lua_bluetooth_callback.data,
-                    lua_bluetooth_callback.length);
+                    (char *)lua_bluetooth_peripheral_callback.data,
+                    lua_bluetooth_peripheral_callback.length);
 
     if (lua_pcall(L, 1, 0, 0) != LUA_OK)
     {
@@ -111,33 +113,33 @@ static void lua_bluetooth_receive_callback_handler(lua_State *L, lua_Debug *ar)
     }
 }
 
-void lua_bluetooth_data_interrupt(uint8_t *data, size_t length)
+void lua_bluetooth_peripheral_data_interrupt(uint8_t *data, size_t length)
 {
-    if (lua_bluetooth_callback.function == 0)
+    if (lua_bluetooth_peripheral_callback.function == 0)
     {
         return;
     }
 
-    memcpy(lua_bluetooth_callback.data, data, length);
-    lua_bluetooth_callback.length = length;
+    memcpy(lua_bluetooth_peripheral_callback.data, data, length);
+    lua_bluetooth_peripheral_callback.length = length;
 
     lua_sethook(L_global,
-                lua_bluetooth_receive_callback_handler,
+                lua_bluetooth_peripheral_receive_callback_handler,
                 LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
                 1);
 }
 
-static int lua_bluetooth_receive_callback(lua_State *L)
+static int lua_bluetooth_peripheral_receive_callback(lua_State *L)
 {
     if (lua_isnil(L, 1))
     {
-        lua_bluetooth_callback.function = 0;
+        lua_bluetooth_peripheral_callback.function = 0;
         return 0;
     }
 
     if (lua_isfunction(L, 1))
     {
-        lua_bluetooth_callback.function = luaL_ref(L, LUA_REGISTRYINDEX);
+        lua_bluetooth_peripheral_callback.function = luaL_ref(L, LUA_REGISTRYINDEX);
         return 0;
     }
 
@@ -198,7 +200,7 @@ static int lua_bluetooth_scan_list(lua_State *L) {
 }
 
 static int lua_bluetooth_connect(lua_State *L) {
-    uint8_t retry_count = 3;
+    uint8_t retry_count = 5;
     uint8_t index = luaL_checkinteger(L, 1);
 
     while (retry_count > 0)
@@ -206,10 +208,12 @@ static int lua_bluetooth_connect(lua_State *L) {
         check_error(sd_ble_gap_connect(&scan_data.address[index], 
             &scan_data.scan_params, &scan_data.conn_params, 2));
 
-        nrfx_systick_delay_ms(500);
+        nrfx_systick_delay_ms(1000);
 
-        if (central_conn_handle != BLE_CONN_HANDLE_INVALID)
+        if (central_conn_handle != BLE_CONN_HANDLE_INVALID) {
+            LOG("connected");
             break;
+        }
         else
             retry_count--;
     }
@@ -218,6 +222,61 @@ static int lua_bluetooth_connect(lua_State *L) {
         luaL_error(L, "failed to connect");
 
     return 1;
+}
+
+static struct lua_bluetooth_callback lua_bluetooth_central_callback = {
+    .function = 0,
+};
+
+static void lua_bluetooth_central_receive_callback_handler(lua_State *L, lua_Debug *ar)
+{
+    lua_sethook(L, NULL, 0, 0);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua_bluetooth_central_callback.function);
+
+    lua_pushlstring(L,
+                    (char *)lua_bluetooth_central_callback.data,
+                    lua_bluetooth_central_callback.length);
+
+    if (lua_pcall(L, 1, 0, 0) != LUA_OK)
+    {
+        luaL_error(L, "%s", lua_tostring(L, -1));
+    }
+}
+
+void lua_bluetooth_central_data_interrupt(uint8_t *data, size_t length)
+{
+    if (lua_bluetooth_central_callback.function == 0)
+    {
+        return;
+    }
+
+    memcpy(lua_bluetooth_central_callback.data, data, length);
+    lua_bluetooth_central_callback.length = length;
+
+    lua_sethook(L_global,
+                lua_bluetooth_central_receive_callback_handler,
+                LUA_MASKCALL | LUA_MASKRET | LUA_MASKLINE | LUA_MASKCOUNT,
+                1);
+}
+
+static int lua_bluetooth_central_receive_callback(lua_State *L)
+{
+    if (lua_isnil(L, 1))
+    {
+        lua_bluetooth_central_callback.function = 0;
+        return 0;
+    }
+
+    if (lua_isfunction(L, 1))
+    {
+        lua_bluetooth_central_callback.function = luaL_ref(L, LUA_REGISTRYINDEX);
+        return 0;
+    }
+
+    luaL_error(L, "expected nil or function");
+
+    return 0;
 }
 
 void lua_open_bluetooth_library(lua_State *L)
@@ -238,8 +297,8 @@ void lua_open_bluetooth_library(lua_State *L)
     lua_pushcfunction(L, lua_bluetooth_send);
     lua_setfield(L, -2, "send");
 
-    lua_pushcfunction(L, lua_bluetooth_receive_callback);
-    lua_setfield(L, -2, "receive_callback");
+    lua_pushcfunction(L, lua_bluetooth_peripheral_receive_callback);
+    lua_setfield(L, -2, "peripheral_receive_callback");
 
     lua_pushcfunction(L, lua_bluetooth_start_scan);
     lua_setfield(L, -2, "start_scan");
@@ -249,6 +308,9 @@ void lua_open_bluetooth_library(lua_State *L)
 
     lua_pushcfunction(L, lua_bluetooth_connect);
     lua_setfield(L, -2, "connect");
+
+    lua_pushcfunction(L, lua_bluetooth_central_receive_callback);
+    lua_setfield(L, -2, "central_receive_callback");
 
     lua_setfield(L, -2, "bluetooth");
 

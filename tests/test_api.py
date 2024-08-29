@@ -93,10 +93,10 @@ async def main():
 
     ## Send and receive callback
     await test.lua_send(
-        "frame.bluetooth.receive_callback((function(d)frame.bluetooth.send(d)end))"
+        "frame.bluetooth.peripheral_receive_callback((function(d)frame.bluetooth.send(d)end))"
     )
     await test.data_equal(b"test", b"test")
-    await test.lua_send("frame.bluetooth.receive_callback(nil)")
+    await test.lua_send("frame.bluetooth.peripheral_receive_callback(nil)")
 
     ## MTU size
     max_length = test.max_data_payload()

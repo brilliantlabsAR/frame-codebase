@@ -29,7 +29,8 @@
 
 extern lua_State *L_global;
 
-void lua_bluetooth_data_interrupt(uint8_t *data, size_t length);
+void lua_bluetooth_peripheral_data_interrupt(uint8_t *data, size_t length);
+void lua_bluetooth_central_data_interrupt(uint8_t *data, size_t length);
 
 void lua_open_bluetooth_library(lua_State *L);
 void lua_open_camera_library(lua_State *L);
