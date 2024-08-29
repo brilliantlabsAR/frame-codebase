@@ -91,6 +91,28 @@ static void softdevice_assert_handler(uint32_t id, uint32_t pc, uint32_t info)
     error_with_message("Softdevice crashed");
 }
 
+static uint8_t find_ad_type(uint16_t ad_type, uint8_t* p_data, uint8_t data_len, uint8_t* offset)
+{
+    size_t i=0;
+    uint16_t this_ad_type;
+    uint8_t ad_type_len = 0;
+
+    while (i+1 < data_len)
+    {
+        ad_type_len = p_data[i];
+        this_ad_type = p_data[i+1];
+
+        if (this_ad_type == ad_type)
+        {
+            *offset = i+2;
+            return ad_type_len-1;
+        }
+        else i += ad_type_len+1; // +1 offset for ad_type_len
+    }
+
+    return 0;
+}
+
 void SD_EVT_IRQHandler(void)
 {
     uint32_t evt_id;
@@ -369,25 +391,31 @@ void SD_EVT_IRQHandler(void)
         {
             ble_gap_evt_adv_report_t *adv_report = &ble_evt->evt.gap_evt.params.adv_report;
             bool is_unique = true;
-            bool has_name = (adv_report->data.p_data[1] == BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME
-                        || adv_report->data.p_data[1] == BLE_GAP_AD_TYPE_SHORT_LOCAL_NAME);
-            for (size_t i=0; i<scan_data.len; i++) {
-                if (memcmp(adv_report->peer_addr.addr, scan_data.address[i].addr, BLE_GAP_ADDR_LEN) == 0) {
+
+            uint8_t name_offset = 0;
+            uint8_t name_len = find_ad_type(BLE_GAP_AD_TYPE_COMPLETE_LOCAL_NAME,
+                                adv_report->data.p_data, adv_report->data.len, &name_offset);
+
+            for (size_t i=0; i<scan_data.len; i++) 
+            {
+                if (memcmp(adv_report->peer_addr.addr, 
+                        scan_data.address[i].addr, BLE_GAP_ADDR_LEN) == 0) {
                     is_unique = false;
                     break;
                 }
             }
 
-            if (is_unique && has_name) {
+            if (is_unique && name_len != 0) 
+            {
                 memcpy(&scan_data.address[scan_data.len].addr,
                         adv_report->peer_addr.addr,
                         BLE_GAP_ADDR_LEN);
 
-                // offset 2 to exclude packet size and ad_type
-                scan_data.name_len[scan_data.len] = adv_report->data.len - 4;
+                scan_data.name_len[scan_data.len] = name_len;
 
+                // offset +2 to exclude packet size and ad_type
                 memcpy(&scan_data.name[scan_data.len], 
-                        adv_report->data.p_data+2,
+                        &adv_report->data.p_data[name_offset],
                         scan_data.name_len[scan_data.len]);
 
                 scan_data.len++;
@@ -397,6 +425,13 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_TIMEOUT:
         {
+            break;
+        }
+
+        case BLE_GAP_EVT_SEC_REQUEST:
+        {
+            // TODO: handle security request
+            LOG("unhandled BLE_GAP_EVT_SEC_REQUEST");
             break;
         }
 
@@ -648,22 +683,17 @@ void bluetooth_setup(bool factory_reset)
     memset(&scan_data, 0, sizeof(scan_data));
 
     scan_data.scan_params.active        = 1;
-    scan_data.scan_params.interval      = NRF_BLE_SCAN_SCAN_INTERVAL;
-    scan_data.scan_params.window        = NRF_BLE_SCAN_SCAN_WINDOW;
-    scan_data.scan_params.timeout       = NRF_BLE_SCAN_SCAN_DURATION;
+    scan_data.scan_params.interval      = 160;
+    scan_data.scan_params.window        = 80;
+    scan_data.scan_params.timeout       = 300;
     scan_data.scan_params.filter_policy = BLE_GAP_SCAN_FP_ACCEPT_ALL;
     scan_data.scan_params.scan_phys     = BLE_GAP_PHY_1MBPS;
-    scan_data.scan_params.extended      = 0;
+    scan_data.scan_params.extended      = 1;
 
-    scan_data.conn_params.conn_sup_timeout =
-        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_SUPERVISION_TIMEOUT, UNIT_10_MS);
-    scan_data.conn_params.min_conn_interval =
-        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MIN_CONNECTION_INTERVAL, UNIT_1_25_MS);
-    scan_data.conn_params.max_conn_interval =
-        (uint16_t)MSEC_TO_UNITS(NRF_BLE_SCAN_MAX_CONNECTION_INTERVAL, UNIT_1_25_MS);
-    scan_data.conn_params.slave_latency =
-        (uint16_t)NRF_BLE_SCAN_SLAVE_LATENCY;
-
+    scan_data.conn_params.conn_sup_timeout = 620;
+    scan_data.conn_params.min_conn_interval = 80;
+    scan_data.conn_params.max_conn_interval = 400;
+    scan_data.conn_params.slave_latency = 5;
     scan_data.scan_buffer.p_data = (uint8_t *) &scan_buffer_data;
     scan_data.scan_buffer.len = sizeof(scan_buffer_data);
 }

@@ -187,15 +187,17 @@ static int lua_bluetooth_scan_list(lua_State *L) {
         }
 
         lua_seti(L, -2, i);
-
-        LOG("%d -> %.17s - %.*s",
-            i,
-            mac_address,
-            scan_data.name_len[i],
-            scan_data.name[i]
-        );
     }
 
+    return 1;
+}
+
+static int lua_bluetooth_scan_clear(lua_State *L) {
+    memset(&scan_data.address, 0, sizeof(scan_data.address));
+    memset(&scan_data.name, 0, sizeof(scan_data.name));
+    memset(&scan_data.name_len, 0, sizeof(scan_data.name_len));
+    scan_data.len = 0;
+    
     return 1;
 }
 
@@ -210,12 +212,14 @@ static int lua_bluetooth_connect(lua_State *L) {
 
         nrfx_systick_delay_ms(1000);
 
-        if (central_conn_handle != BLE_CONN_HANDLE_INVALID) {
-            LOG("connected");
+        if (central_conn_handle != BLE_CONN_HANDLE_INVALID) 
+        {
             break;
         }
-        else
+        else 
+        {
             retry_count--;
+        }
     }
 
     if (retry_count == 0) 
@@ -305,6 +309,9 @@ void lua_open_bluetooth_library(lua_State *L)
 
     lua_pushcfunction(L, lua_bluetooth_scan_list);
     lua_setfield(L, -2, "scan_list");
+
+    lua_pushcfunction(L, lua_bluetooth_scan_clear);
+    lua_setfield(L, -2, "scan_clear");
 
     lua_pushcfunction(L, lua_bluetooth_connect);
     lua_setfield(L, -2, "connect");
