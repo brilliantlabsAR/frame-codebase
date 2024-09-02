@@ -662,10 +662,11 @@ async def main():
             state_time = frame.time.utc()
             state = 'WAIT'
         elseif state == 'WAIT' then
-            if frame.time.utc() > state_time + 0.2 then
-                state = 'SEND'
+            -- if frame.time.utc() > state_time + 0.0 then
+            if string.byte(frame.fpga.read(0x27, 1), 1) == 1 then
+                state = 'READ'
             end
-        elseif state == 'SEND' then
+        elseif state == 'READ' then
             local i = frame.camera.read_raw(frame.bluetooth.max_length() - 1)
             if (i == nil) then
                 state = 'DONE'
