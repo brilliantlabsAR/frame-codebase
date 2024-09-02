@@ -80,6 +80,40 @@ static struct bond_information_t
     },
 };
 
+ble_gap_sec_params_t central_sec_param = {
+    .bond = 1,
+    .keypress = 0,
+    .io_caps = BLE_GAP_IO_CAPS_NONE,
+    .min_key_size = 7,
+    .max_key_size = 16,
+    .kdist_own.enc = 1,
+    .kdist_own.id = 1,
+    .kdist_peer.enc = 1,
+    .kdist_peer.id = 1,
+};
+
+ble_gap_enc_key_t      own_enc_key;           /**< Encryption Key, or NULL. */
+ble_gap_id_key_t       own_id_key;            /**< Identity Key, or NULL. */
+ble_gap_sign_info_t    own_sign_key;          /**< Signing Key, or NULL. */
+ble_gap_lesc_p256_pk_t own_pk;
+
+ble_gap_enc_key_t      peer_enc_key;           /**< Encryption Key, or NULL. */
+ble_gap_id_key_t       peer_id_key;            /**< Identity Key, or NULL. */
+ble_gap_sign_info_t    peer_sign_key;          /**< Signing Key, or NULL. */
+ble_gap_lesc_p256_pk_t peer_pk;
+
+ble_gap_sec_keyset_t central_keyset = {
+    .keys_own.p_enc_key = &own_enc_key,
+    .keys_own.p_id_key = &own_id_key,
+    .keys_own.p_sign_key = &own_sign_key,
+    .keys_own.p_pk = &own_pk,
+
+    .keys_peer.p_enc_key = &peer_enc_key,
+    .keys_peer.p_id_key = &peer_id_key,
+    .keys_peer.p_sign_key = &peer_sign_key,
+    .keys_peer.p_pk = &peer_pk,
+};
+
 bool flash_write_in_progress = false;
 
 uint16_t ble_negotiated_mtu;
@@ -315,38 +349,51 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_SEC_PARAMS_REQUEST:
         {
-            size_t bonded = 0;
-
-            for (size_t i = 0;
-                 i < sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk);
-                 i++)
+            if (ble_evt->evt.gap_evt.conn_handle == ble_peripheral_handles.connection)
             {
-                if (bond.keyset.keys_own.p_enc_key->enc_info.ltk[i] == 0xff)
+                size_t bonded = 0;
+
+                for (size_t i = 0;
+                    i < sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk);
+                    i++)
                 {
-                    bonded++;
+                    if (bond.keyset.keys_own.p_enc_key->enc_info.ltk[i] == 0xff)
+                    {
+                        bonded++;
+                    }
+                }
+
+                if (bonded == sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk))
+                {
+                    check_error(sd_ble_gap_sec_params_reply(
+                        ble_peripheral_handles.connection,
+                        BLE_GAP_SEC_STATUS_SUCCESS,
+                        &bond.sec_param,
+                        &bond.keyset));
+                }
+
+                else
+                {
+                    check_error(sd_ble_gap_sec_params_reply(
+                        ble_peripheral_handles.connection,
+                        BLE_GAP_SEC_STATUS_AUTH_REQ,
+                        NULL,
+                        NULL));
+
+                    check_error(sd_ble_gap_disconnect(
+                        ble_peripheral_handles.connection,
+                        BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
                 }
             }
 
-            if (bonded == sizeof(bond.keyset.keys_own.p_enc_key->enc_info.ltk))
+            if (ble_evt->evt.gap_evt.conn_handle == central_conn_handle)
             {
                 check_error(sd_ble_gap_sec_params_reply(
-                    ble_peripheral_handles.connection,
+                    central_conn_handle,
                     BLE_GAP_SEC_STATUS_SUCCESS,
-                    &bond.sec_param,
-                    &bond.keyset));
-            }
-
-            else
-            {
-                check_error(sd_ble_gap_sec_params_reply(
-                    ble_peripheral_handles.connection,
-                    BLE_GAP_SEC_STATUS_AUTH_REQ,
                     NULL,
-                    NULL));
-
-                check_error(sd_ble_gap_disconnect(
-                    ble_peripheral_handles.connection,
-                    BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION));
+                    &central_keyset
+                ));
             }
 
             break;
@@ -365,13 +412,16 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_AUTH_STATUS:
         {
-            if (ble_evt->evt.gap_evt.params.auth_status.auth_status ==
-                BLE_GAP_SEC_STATUS_SUCCESS)
+            if (ble_evt->evt.gap_evt.conn_handle == ble_peripheral_handles.connection)
             {
-                flash_write(
-                    bond_storage,
-                    (uint32_t *)&bond.keyset.keys_own.p_enc_key->enc_info,
-                    sizeof(bond.keyset.keys_own.p_enc_key->enc_info));
+                if (ble_evt->evt.gap_evt.params.auth_status.auth_status ==
+                    BLE_GAP_SEC_STATUS_SUCCESS)
+                {
+                    flash_write(
+                        bond_storage,
+                        (uint32_t *)&bond.keyset.keys_own.p_enc_key->enc_info,
+                        sizeof(bond.keyset.keys_own.p_enc_key->enc_info));
+                }
             }
 
             break;
@@ -430,8 +480,7 @@ void SD_EVT_IRQHandler(void)
 
         case BLE_GAP_EVT_SEC_REQUEST:
         {
-            // TODO: handle security request
-            LOG("unhandled BLE_GAP_EVT_SEC_REQUEST");
+            uint32_t error = sd_ble_gap_authenticate(ble_evt->evt.gap_evt.conn_handle, &central_sec_param);       
             break;
         }
 
