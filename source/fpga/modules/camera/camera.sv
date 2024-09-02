@@ -60,6 +60,7 @@ logic [1:0] compression_factor;
 logic [15:0] bytes_available;
 logic [7:0] image_buffer_data;
 logic [15:0] image_buffer_address;
+logic image_buffer_ready;
 
 logic [7:0] red_center_metering_spi_clock_domain;
 logic [7:0] green_center_metering_spi_clock_domain;
@@ -89,6 +90,7 @@ spi_registers spi_registers (
     .bytes_available_in(bytes_available),
     .data_in(image_buffer_data),
     .bytes_read_out(image_buffer_address),
+    .data_ready_in(image_buffer_ready),
 
     .red_center_metering_in(red_center_metering_spi_clock_domain),
     .green_center_metering_in(green_center_metering_spi_clock_domain),
@@ -368,6 +370,7 @@ crop zoom_crop (
 logic [31:0] final_image_data;
 logic [15:0] final_image_address;
 logic final_image_data_valid;
+logic final_image_ready;
 
 jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
@@ -390,7 +393,7 @@ jpeg_encoder jpeg_encoder (
     .data_out(final_image_data),
     .data_valid_out(final_image_data_valid),
     .address_out(final_image_address),
-    .image_valid_out()
+    .image_valid_out(final_image_ready)
 );
 
 always_comb bytes_available = final_image_address + 4;
@@ -404,7 +407,9 @@ image_buffer image_buffer (
     .read_address_in(image_buffer_address),
     .write_data_in(final_image_data),
     .read_data_out(image_buffer_data),
-    .write_read_n_in(final_image_data_valid)
+    .write_read_n_in(final_image_data_valid),
+    .write_complete_in(final_image_ready),
+    .write_complete_out(image_buffer_ready)
 );
 
 endmodule

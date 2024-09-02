@@ -48,7 +48,10 @@ module image_buffer (
     input logic [31:0] write_data_in,
     output logic [7:0] read_data_out,
 
-    input logic write_read_n_in
+    input logic write_read_n_in,
+
+    input logic write_complete_in,
+    output logic write_complete_out
 );
 
 // Write to read CDC
@@ -76,6 +79,30 @@ always @(posedge read_clock_in) begin : cdc
         end
 
         write_enable <= write_enable_cdc_pulse;
+    end
+
+end
+
+// Write complete CDC
+logic [2:0] write_complete_cdc;
+
+always @(posedge read_clock_in) begin : cdc2
+
+    if (read_reset_n_in == 0) begin
+        write_complete_out <= 0;
+        write_complete_cdc <= 0;
+    end
+
+    else begin
+        write_complete_cdc <= {write_complete_cdc[1:0], write_complete_in};
+
+        if (write_complete_cdc[2]) begin
+            write_complete_out <= 1;
+        end
+
+        else begin
+            write_complete_out <= 0;
+        end
     end
 
 end

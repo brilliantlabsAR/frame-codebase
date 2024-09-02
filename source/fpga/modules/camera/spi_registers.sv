@@ -29,6 +29,7 @@
     input logic [15:0] bytes_available_in,
     input logic [7:0] data_in,
     output logic [15:0] bytes_read_out,
+    input logic data_ready_in,
 
     input logic [7:0] red_center_metering_in,
     input logic [7:0] green_center_metering_in,
@@ -128,6 +129,12 @@ always_ff @(posedge clock_in) begin
                     if (operand_valid_in) begin 
                         compression_factor_out <= operand_in[1:0];
                     end
+                end
+
+                // Capture in progress
+                'h27: begin
+                    response_out <= {7'b0, data_ready_in};
+                    response_valid_out <= 1;
                 end
 
             endcase
