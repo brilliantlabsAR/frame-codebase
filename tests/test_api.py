@@ -2,7 +2,7 @@
 Tests the Frame specific Lua libraries over Bluetooth.
 """
 
-import asyncio
+import asyncio, sys
 from frameutils import Bluetooth
 
 
@@ -159,9 +159,18 @@ async def main():
 
     # Camera
 
-    ## Capture in different modes
+    ## Test capture and ready flag
     await test.lua_send("frame.camera.capture{}")
-    await test.lua_send("frame.sleep(0.1)")
+    await test.lua_equals("frame.camera.image_ready()", "false")
+    await test.lua_send("frame.sleep(0.05)")
+    await test.lua_equals("frame.camera.image_ready()", "true")
+
+    await test.lua_send("frame.camera.capture{}")
+    await test.lua_equals("frame.camera.image_ready()", "false")
+    await test.lua_send("frame.sleep(0.05)")
+    await test.lua_equals("frame.camera.image_ready()", "true")
+
+    ## Capture in different modes
     await test.lua_send("frame.camera.capture{quality_factor=10}")
     await test.lua_send("frame.sleep(0.1)")
     await test.lua_send("frame.camera.capture{quality_factor=25}")
