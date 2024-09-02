@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BLE_PREFERRED_MAX_MTU 185
+#define BLE_PREFERRED_MAX_MTU 247
 extern uint16_t ble_negotiated_mtu;
 
 void bluetooth_setup(bool factory_reset, bool *is_paired);
