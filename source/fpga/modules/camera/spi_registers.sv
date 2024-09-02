@@ -26,9 +26,10 @@
     // TODO position signals
     output logic [1:0] compression_factor_out,
 
-    input logic [15:0] bytes_available_in,
-    input logic [7:0] data_in,
-    output logic [15:0] bytes_read_out,
+    input logic image_ready_in,
+    input logic [15:0] image_total_size_in,
+    input logic [7:0] image_data_in,
+    output logic [15:0] image_address_out,
 
     input logic [7:0] red_center_metering_in,
     input logic [7:0] green_center_metering_in,
@@ -39,7 +40,7 @@
 );
 
 logic [15:0] bytes_remaining;
-assign bytes_remaining = bytes_available_in - bytes_read_out;
+assign bytes_remaining = image_total_size_in - image_address_out;
 
 logic [1:0] operand_valid_in_edge_monitor;
 
@@ -53,7 +54,7 @@ always_ff @(posedge clock_in) begin
         // TODO position signals
         compression_factor_out <= 0;
 
-        bytes_read_out <= 0;
+        image_address_out <= 0;
 
         operand_valid_in_edge_monitor <= 0;
     end
@@ -69,7 +70,7 @@ always_ff @(posedge clock_in) begin
                 // Capture
                 'h20: begin
                     start_capture_out <= 1;
-                    bytes_read_out <= 0;
+                    image_address_out <= 0;
                 end
 
                 // Bytes available
@@ -84,11 +85,11 @@ always_ff @(posedge clock_in) begin
 
                 // Read data
                 'h22: begin
-                    response_out <= data_in;
+                    response_out <= image_data_in;
 
                     if (operand_valid_in_edge_monitor == 2'b01) begin
-                        if (bytes_read_out < bytes_available_in) begin 
-                            bytes_read_out <= bytes_read_out + 1;
+                        if (image_address_out < image_total_size_in) begin 
+                            image_address_out <= image_address_out + 1;
                         end
                     end
 
@@ -128,6 +129,12 @@ always_ff @(posedge clock_in) begin
                     if (operand_valid_in) begin 
                         compression_factor_out <= operand_in[1:0];
                     end
+                end
+
+                // Image ready flag
+                'h27: begin
+                    response_out <= {7'b0, image_ready_in};
+                    response_valid_out <= 1;
                 end
 
             endcase
