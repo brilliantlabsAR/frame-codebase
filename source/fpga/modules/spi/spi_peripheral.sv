@@ -41,6 +41,10 @@ logic operand_valid_metastable;
 logic local_reset_n;
 always_comb local_reset_n = reset_n_in & ~spi_select_in;
 
+// Workaround for error: The clock port is assigned to a non-clock pin
+logic spi_local_clock;
+always_comb spi_local_clock = spi_clock_in | spi_select_in;
+
 // SPI input logic and bit counting
 always_ff @(posedge spi_clock_in or negedge local_reset_n) begin
 
