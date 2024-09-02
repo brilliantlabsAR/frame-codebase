@@ -98,6 +98,21 @@ static int lua_camera_capture(lua_State *L)
     return 0;
 }
 
+static int lua_camera_image_ready(lua_State *L)
+{
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
+    uint8_t data[1] = {0};
+
+    spi_read(FPGA, 0x27, (uint8_t *)data, sizeof(data));
+
+    lua_pushboolean(L, data[0] == 1);
+    return 1;
+}
+
 static uint16_t get_bytes_available(void)
 {
     uint8_t data[2] = {0, 0};
@@ -694,6 +709,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_capture);
     lua_setfield(L, -2, "capture");
+
+    lua_pushcfunction(L, lua_camera_image_ready);
+    lua_setfield(L, -2, "image_ready");
 
     lua_pushcfunction(L, lua_camera_read);
     lua_setfield(L, -2, "read");

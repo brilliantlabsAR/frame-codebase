@@ -669,7 +669,7 @@ async def main():
             state_time = frame.time.utc()
             state = 'WAIT'
         elseif state == 'WAIT' then
-            if string.byte(frame.fpga.read(0x27, 1), 1) == 1 then
+            if frame.camera.image_ready() then
                 state = 'READ'
             end
         elseif state == 'READ' then
