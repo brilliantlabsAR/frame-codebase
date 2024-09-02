@@ -34,132 +34,102 @@ module spi_peripheral (
     input logic response_3_valid_in
 );
 
-// External SPI domain signals
-logic spi_edge;
-assign spi_edge = spi_clock_in | spi_select_in;
+integer bit_index = 15;
+logic opcode_valid_metastable;
+logic operand_valid_metastable;
 
-integer spi_bit_index = 15;
-logic [7:0] spi_opcode;
-logic [7:0] spi_operand;
-logic spi_opcode_valid;
-logic spi_operand_valid;
-integer spi_operand_count = 0;
+logic local_reset_n;
+always_comb local_reset_n = reset_n_in & ~spi_select_in;
 
-// SPI input & bit counting login
-always_ff @(posedge spi_edge) begin
+// SPI input logic and bit counting
+always_ff @(posedge spi_clock_in or negedge local_reset_n) begin
 
-    if (spi_select_in == 1) begin
-        spi_bit_index <= 15;
-        spi_opcode <= 0;
-        spi_operand <= 0;
-        spi_opcode_valid <= 0;
-        spi_operand_valid <= 0;
-        spi_operand_count <= 0;
+    if (local_reset_n == 0) begin
+        bit_index <= 15;
+        opcode_valid_metastable <= 0;
+        operand_valid_metastable <= 0;
+        operand_count_out <= 0;
     end
 
     else begin
 
-        // Count down spi_bit_index from 15 - 0 for first opcode and operand. 
+        // Count down bit_index from 15 - 0 for first opcode and operand. 
         // Rolls over from 0 to 7 and repeats for subsequent operands
-        if (spi_bit_index > 0) begin
-            spi_bit_index <= spi_bit_index - 1;
+        if (bit_index > 0) begin
+            bit_index <= bit_index - 1;
         end
 
         else begin
-            spi_bit_index <= 7;
-            spi_operand_count <= spi_operand_count + 1;
+            bit_index <= 7;
+            operand_count_out <= operand_count_out + 1;
         end
 
         // Pull in data from SPI based on bit index
-        if (spi_bit_index > 7) begin
-            spi_opcode[spi_bit_index - 8] <= spi_data_in;
+        if (bit_index > 7) begin
+            opcode_out[bit_index - 8] <= spi_data_in;
         end
 
         else begin
-            spi_operand[spi_bit_index] <= spi_data_in;
+            operand_out[bit_index] <= spi_data_in;
         end
 
         // Set input valid flags based on bit index
-        if (spi_bit_index == 8) begin
-            spi_opcode_valid <= 1;
+        if (bit_index == 8) begin
+            opcode_valid_metastable <= 1;
         end
 
-        if (spi_bit_index == 0) begin
-            spi_operand_valid <= 1;
+        if (bit_index == 0) begin
+            operand_valid_metastable <= 1;
         end
 
         else begin
-            spi_operand_valid <= 0;
+            operand_valid_metastable <= 0;
         end
         
     end
     
 end
 
-// SPI output login
+// SPI output logic
 logic [7:0] spi_response_reg;
 
-always_ff @(negedge spi_edge) begin
+always_ff @(negedge spi_clock_in or negedge local_reset_n) begin
 
-    if (spi_select_in == 1) begin
+    if (local_reset_n == 0) begin
         spi_data_out <= 0;
     end
 
     else begin
         
         // Push SPI data out simply from spi_response_reg
-        if (spi_bit_index < 8) begin
-            spi_data_out <= spi_response_reg[spi_bit_index];
+        if (bit_index < 8) begin
+            spi_data_out <= spi_response_reg[bit_index];
         end
 
     end
 
 end
 
-// Internal clock domain side login
-logic spi_opcode_valid_metastable;
-logic spi_operand_valid_metastable;
+always_comb begin
+    case ({response_1_valid_in, response_2_valid_in, response_3_valid_in})
+        'b100: spi_response_reg = response_1_in;
+        'b010: spi_response_reg = response_2_in;
+        'b001: spi_response_reg = response_3_in;
+        default: spi_response_reg = 'h0;
+    endcase
+end
 
+// Clock crossing
 always_ff @(posedge clock_in) begin
 
     if (reset_n_in == 0) begin
-        opcode_out <= 0;
-        operand_out <= 0;
         opcode_valid_out <= 0;
         operand_valid_out <= 0;
-        operand_count_out <= 0;
-        spi_opcode_valid_metastable <= 0;
-        spi_operand_valid_metastable <= 0;
-        spi_response_reg <= 0;
     end
 
     else begin
-        
-        // Clock domain crossing from external to internal spi clocks
-        spi_opcode_valid_metastable <= spi_opcode_valid;
-        spi_operand_valid_metastable <= spi_operand_valid;
-
-        if (spi_opcode_valid_metastable) begin
-            opcode_out <= spi_opcode;
-            opcode_valid_out <= spi_opcode_valid;
-        end
-
-        if (spi_operand_valid_metastable) begin
-            operand_out <= spi_operand;
-            operand_valid_out <= spi_operand_valid;
-            operand_count_out <= spi_operand_count;
-        end
-
-        // Update response reg whenever response valid is high. Note this 
-        // register has no clock domain crossing since it's set well before the 
-        // first SPI bit is pushed out
-        case ({response_1_valid_in, response_2_valid_in, response_3_valid_in})
-            'b100: spi_response_reg <= response_1_in;
-            'b010: spi_response_reg <= response_2_in;
-            'b001: spi_response_reg <= response_3_in;
-            default: spi_response_reg <= 'h0;
-        endcase
-
+        opcode_valid_out <= opcode_valid_metastable;
+        operand_valid_out <= operand_valid_metastable;
     end
 
 end

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Thu Aug  1 11:51:03 2024
+[*] Mon Sep  2 09:18:11 2024
 [*]
 [dumpfile] "simulation/spi_tb.fst"
-[dumpfile_mtime] "Thu Aug  1 11:49:32 2024"
-[dumpfile_size] 1715
+[dumpfile_mtime] "Mon Sep  2 09:17:03 2024"
+[dumpfile_size] 1574
 [savefile] "spi_tb.gtkw"
 [timestart] 0
-[size] 1424 852
+[size] 2032 1104
 [pos] 10 38
-*-10.037439 770 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-9.271514 80 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -40,13 +40,17 @@
 [sst_width] 253
 [signals_width] 283
 [sst_expanded] 1
-[sst_vpaned_height] 254
+[sst_vpaned_height] 345
 @28
 spi_tb.system_clock
 spi_tb.reset
-spi_tb.spi_peripheral.spi_edge
 @200
+-
 -SPI peripheral
+@28
+spi_tb.spi_peripheral.local_reset_n
+@200
+-
 @28
 spi_tb.spi_peripheral.spi_select_in
 spi_tb.spi_peripheral.spi_clock_in
@@ -56,19 +60,15 @@ spi_tb.spi_data_out
 -
 @22
 spi_tb.spi_peripheral.opcode_out[7:0]
-@28
 spi_tb.spi_peripheral.opcode_valid_out
-@22
 spi_tb.spi_peripheral.operand_out[7:0]
-@28
 spi_tb.spi_peripheral.operand_valid_out
-@420
 spi_tb.spi_peripheral.operand_count_out
 @200
 -
-@420
-spi_tb.spi_peripheral.spi_bit_index
-@23
+@421
+spi_tb.spi_peripheral.bit_index
+@22
 spi_tb.spi_peripheral.spi_response_reg[7:0]
 @200
 -
