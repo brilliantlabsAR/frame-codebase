@@ -46,7 +46,7 @@ logic spi_local_clock;
 always_comb spi_local_clock = spi_clock_in | spi_select_in;
 
 // SPI input logic and bit counting
-always_ff @(posedge spi_clock_in or negedge local_reset_n) begin
+always_ff @(posedge spi_local_clock or negedge local_reset_n) begin
 
     if (local_reset_n == 0) begin
         bit_index <= 15;
@@ -97,7 +97,7 @@ end
 // SPI output logic
 logic [7:0] spi_response_reg;
 
-always_ff @(negedge spi_clock_in or negedge local_reset_n) begin
+always_ff @(negedge spi_local_clock or negedge local_reset_n) begin
 
     if (local_reset_n == 0) begin
         spi_data_out <= 0;
