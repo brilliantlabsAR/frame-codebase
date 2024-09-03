@@ -6,7 +6,7 @@
  * Copyright (C) 2024 Robert Metchev
  */
 module transpose  #(
-    parameter QW = 13 // 1st pass 13, 2nd pass 15
+    parameter QW = 12 // 1st pass 12, 2nd pass 15
 )(
     input logic signed[QW-1:0] d[7:0],
     input logic[2:0]        d_cnt,
@@ -79,7 +79,7 @@ logic[1:0]      wr_cnt_x22;
 logic[2:0]      d_cnt_x22;
 
 parameter DSIZE = 6 + 2*QW;
-afifo #(.DSIZE(DSIZE), .ASIZE(3)) afifo(
+afifo #(.DSIZE(DSIZE), .ASIZE(2), .FULL_EMPTY_SAFEGUARD(0)) afifo(
     .i_wclk(clk),
     .i_wrst_n(resetn), 
     .i_wr(d_valid & ~full),

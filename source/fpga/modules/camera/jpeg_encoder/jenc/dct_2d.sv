@@ -5,20 +5,16 @@
  *
  * Copyright (C) 2024 Robert Metchev
  */
-/*
-Take 8-bit input samples (0..255)
-Subtract 128 (-128..127)
-Do N*N fDCT, where N=8
-Output can have log2(N)+8 bits = 11 bits (-1024..1023)
-DC coefficients are stored as a difference, so they can have 12 bits// Implementation of 2-D DCT, sharing one 1-D DCT
-*/
 module dct_2d #(
     parameter DW = 8,
-    // Regular 1-D DCT adds +3 bits (8 -> 11) to coefficients, but 
-    // AAN includes a factor of 3.923 on top of that, so +2 bits for 1-D (8+3+2=13) or +4 bits for 2-D (8+3+4=15)      
-    parameter CW = DW + 5,
-    parameter C2W = CW + 5,     // Coeffs after 2nd pass full size
-    parameter QW = DW + 7       // Coeffs after 2nd are normlized to 15 bits (11 + 4)
+    // Regular 1-D DCT includes a factor of sqrt(8) = 2.828. 
+    // AAN includes a factor of 1/((cos(PI/16)/2)/(-a5 + a4 + 1)) = 1/0.254898 = 3.923.
+    // Combined factor for 1-D DCT = 11.096, add +4 bits to DW
+    // Combined factor for 2-D DCT = 123.128, add +7 bits to DW, or +3 bits to 1st DCT output CW
+    // 1st DCT: DW = 8, CW = 12
+    // 2nd DCT: DW = 12, CW = 15
+    parameter CW = DW + 4,
+    parameter QW = CW + 3       // Coeffs after 2nd pass
 )(
     input   logic signed[DW-1:0]    di[7:0], 
     input   logic                   di_valid,
@@ -34,6 +30,9 @@ module dct_2d #(
     input   logic                   resetn_x22
 );
 
+always_comb assert (DW == 8) else $error();
+always_comb assert (CW == 12) else $error();
+always_comb assert (QW == 15) else $error();
 //------------------------------------------------------------------------------
 // DCT0
 //------------------------------------------------------------------------------
@@ -80,15 +79,14 @@ transpose #(.QW(CW)) transpose (
 //------------------------------------------------------------------------------
 // DCT1
 //------------------------------------------------------------------------------
-logic signed[C2W-1:0] dct1_q[7:0]; 
-logic [QW-1:0] dct1_q_0[7:0]; 
+logic signed[QW-1:0] dct1_q[7:0]; 
 logic [2:0] dct1_q_cnt;
 logic dct1_q_valid;
 logic dct1_q_hold;
 
 dct_1d_aan #(
     .DW     (CW),
-    .CW     (C2W)
+    .CW     (QW)
 ) dct_1d_1 (
     .di             (dct1_d),
     .di_valid       (dct1_d_valid),
@@ -101,16 +99,12 @@ dct_1d_aan #(
     .*
 );
 
-always_comb
-    for (int j=0; j<8; j++)
-        dct1_q_0[j] = dct1_q[j];
-
 //------------------------------------------------------------------------------
 // ZigZag Mem
 //------------------------------------------------------------------------------
 
 zigzag #(.QW(QW)) zigzag (
-    .d          (dct1_q_0),
+    .d          (dct1_q),
     .d_cnt      (dct1_q_cnt),
     .d_valid    (dct1_q_valid),
     .d_hold     (dct1_q_hold),

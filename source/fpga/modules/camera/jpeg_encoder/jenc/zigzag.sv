@@ -7,9 +7,9 @@
  */
 `include "zigzag.vh"
 module zigzag  #(
-    parameter QW = 15 // 1st pass 13, 2nd pass 15
+    parameter QW = 15 // 1st pass 12, 2nd pass 15
 )(
-    input logic[QW-1:0]     d[7:0],
+    input logic signed[QW-1:0] d[7:0],
     input logic[2:0]        d_cnt,
     input logic             d_valid,
     output logic            d_hold,
@@ -82,7 +82,7 @@ logic[2:0]      d_cnt_x22;
 logic[5:0]      d_addr1_x22, d_addr0_x22;
 
 parameter DSIZE = 6 + 2*QW;
-afifo #(.DSIZE(DSIZE), .ASIZE(3)) afifo(
+afifo #(.DSIZE(DSIZE), .ASIZE(2), .FULL_EMPTY_SAFEGUARD(0)) afifo(
     .i_wclk(clk),
     .i_wrst_n(resetn), 
     .i_wr(d_valid & ~full),

@@ -3,6 +3,8 @@
 
 // USE DSP Slice
 `define QUANTIZER_USE_DSP_MULT
+`define DCT_USE_DSP_MULT
+`define RGB2YUV_USE_DSP_MULT
 
 // 4 possible QF
 `ifndef QF0

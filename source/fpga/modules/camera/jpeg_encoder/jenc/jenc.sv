@@ -19,14 +19,12 @@ module jenc #(
     output  logic                   di_hold,
     input   logic [2:0]             di_cnt,
 
-    output  logic [127:0]           out_data,
-    output  logic [4:0]             out_bytes,
+    output  logic [31:0]            out_data,
     output  logic                   out_tlast,
     output  logic                   out_valid,
     input   logic                   out_hold,
 
     input   logic[1:0]              qf_select,          // select one of the 4 possible QF
-    output  logic [19:0]            size,
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
@@ -90,27 +88,7 @@ entropy entropy(
     .*
 );
 
-bitpacker bitpacker(
-    .in_codecoeff_length    (codecoeff_length),
-    .in_codecoeff           (codecoeff),
-    .in_tlast               (codecoeff_tlast),
-    .in_valid               (codecoeff_valid),
-    .in_hold                (codecoeff_hold),
-    .out_data               (b_data),
-    .out_bytes              (b_bytes),
-    .out_tlast              (b_tlast),
-    .out_valid              (b_valid),
-    .out_hold               (b_hold & b_valid),
-    .*
-);
-
-bytepacker bytepacker(
-    .in_data                (b_data),
-    .in_bytes               (b_bytes),
-    .in_tlast               (b_tlast),
-    .in_valid               (b_valid),
-    .in_hold                (b_hold),
-
+byte_pack byte_pack(
     .out_hold               (out_hold & out_valid),
     .*
 );
