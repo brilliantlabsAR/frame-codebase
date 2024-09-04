@@ -329,9 +329,11 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double exposure = 0.0;
     double shutter_kp = 0.1;
-    double shutter_limit = 6000.0;
+    double shutter_limit = 800.0; // TODO fix this value
     double gain_kp = 1.0;
     double gain_limit = 248.0;
+    double max_pixel = 255.0;
+    double exposure_speed = 0.50; // 1: max speed 0: no change
 
     if (lua_istable(L, 1))
     {
@@ -420,12 +422,12 @@ static int lua_camera_auto(lua_State *L)
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double spot_r = metering_data[0] / 64.0 - 2;
-    double spot_g = metering_data[1] / 64.0 - 2;
-    double spot_b = metering_data[2] / 64.0 - 2;
-    double matrix_r = metering_data[3] / 64.0 - 2;
-    double matrix_g = metering_data[4] / 64.0 - 2;
-    double matrix_b = metering_data[5] / 64.0 - 2;
+    double spot_r = metering_data[0] / max_pixel;
+    double spot_g = metering_data[1] / max_pixel;
+    double spot_b = metering_data[2] / max_pixel;
+    double matrix_r = metering_data[3] / max_pixel;
+    double matrix_g = metering_data[4] / max_pixel;
+    double matrix_b = metering_data[5] / max_pixel;
 
     double spot_average = (spot_r + spot_g + spot_b) / 3.0;
     double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
@@ -439,37 +441,61 @@ static int lua_camera_auto(lua_State *L)
     switch (metering)
     {
     case SPOT:
-        error = exposure - spot_average;
+        error = exposure_speed * ((0.18 / spot_average) - 1) + 1;
         break;
 
     case CENTER_WEIGHTED:
-        error = exposure - center_weighted_average;
+        error = exposure_speed * ((0.18 / center_weighted_average) - 1) + 1;
         break;
 
     default: // AVERAGE
-        error = exposure - matrix_average;
+        error = exposure_speed * ((0.18 / matrix_average) - 1) + 1;
         break;
     }
 
-    // Run the loop iteration
-    if (error > 0)
+    if (error > 1)
     {
-        last.shutter += (shutter_kp * last.shutter) * error;
+        double shutter_temp;
+        shutter_temp = last.shutter;
+        last.shutter *= error;
 
-        // Prioritize shutter over gain when image is too dark
-        if (last.shutter >= shutter_limit)
+        if (last.shutter > shutter_limit)
         {
-            last.gain += gain_kp * error;
+            last.shutter = shutter_limit;
+        }
+
+        error *= shutter_temp / last.shutter;
+
+        if (error > 1)
+        {
+            last.gain *= error;
+            if (last.gain > gain_limit)
+            {
+                last.gain = gain_limit;
+            }
         }
     }
     else
     {
-        // When image is too bright, reduce gain first
-        last.gain += gain_kp * error;
+        double gain_temp;
+        gain_temp = last.gain;
+        last.gain *= error;
 
-        if (last.gain <= 0)
+        if (last.gain < 1.0)
         {
-            last.shutter += (shutter_kp * last.shutter) * error;
+            last.gain = 1.0;
+        }
+
+        error *= gain_temp / last.gain;
+
+        if (error < 1)
+        {
+            last.shutter *= error;
+
+            if (last.shutter > shutter_limit)
+            {
+                last.shutter = shutter_limit;
+            }
         }
     }
 
@@ -599,21 +625,22 @@ static int lua_camera_set_shutter(lua_State *L)
         return luaL_error(L, "shutter must be between 4 and 16383");
     }
 
+    /** no need for frame change
     // If shutter is longer than frame length (VTS register)
     if (shutter > 0x32A)
     {
-        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail); // vertical line
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);// vertical line
     }
     else
     {
         check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail); // why not 0x2a?
     }
-
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
+     **/
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail); // Integration time
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);  // Integration time
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);  // Integration time
 
     return 0;
 }

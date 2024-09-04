@@ -98,6 +98,25 @@ async def main():
     end
     """
 
+    lua_script_c = """
+    while true do
+        -- Get current values
+        e = frame.camera.auto { }
+
+        metrics = 'Data:'
+        metrics = metrics..e['brightness']['matrix']['r']..':'
+        metrics = metrics..e['brightness']['matrix']['g']..':'
+        metrics = metrics..e['brightness']['matrix']['b']..':'
+        metrics = metrics..e['brightness']['center_weighted_average']..':'
+        metrics = metrics..e['shutter']..':'
+        metrics = metrics..e['gain']..':'
+        metrics = metrics..e['error']
+        print(metrics)
+
+        frame.sleep(0.1)
+    end
+    """
+
     # Data to plot
     frame_count = [0]
 
@@ -120,7 +139,7 @@ async def main():
     green_plot, = input_axis.plot(frame_count, g_brightness_values, 'g', label='green')
     blue_plot, = input_axis.plot(frame_count, b_brightness_values, 'b', label='blue')
     average_plot, = input_axis.plot(frame_count, average_brightness_values, 'k', label='average')
-    input_axis.set_ylim([-2.1, 2.1])
+    input_axis.set_ylim([-0.05, 1.05])
     input_axis.set_ylabel("Brightness")
     input_axis.legend(loc="upper left")
     
@@ -135,7 +154,7 @@ async def main():
     gain_axis.legend(loc="upper right")
 
     error_plot, = error_axis.plot(frame_count, error_values)
-    error_axis.set_ylim([-2.1, 2.1])
+    error_axis.set_ylim([-0.1, 2.1])
     error_axis.set_xlabel("Frame")
     error_axis.set_ylabel("Error")
 
@@ -185,7 +204,7 @@ async def main():
     await b.send_break_signal()
     print("Uploading script")
     await b.send_lua("f=frame.file.open('main.lua', 'w')")
-    for line in lua_script_b.splitlines():
+    for line in lua_script_c.splitlines():
         await b.send_lua(f'f:write("{line.replace("'", "\\'")}\\n");print(nil)', await_print=True)
     await b.send_lua("f:close()")
     await asyncio.sleep(0.1)
