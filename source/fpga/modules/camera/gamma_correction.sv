@@ -292,9 +292,9 @@ end
 
 always_ff @(posedge clock_in) begin
 
-    red_data_out <= gamma_rom_r[red_data_in];
-    green_data_out <= gamma_rom_g[green_data_in];
-    blue_data_out <= gamma_rom_b[blue_data_in];
+    red_data_out <= gamma_rom_r[red_data_in] + 1;
+    green_data_out <= gamma_rom_g[green_data_in] + 1;
+    blue_data_out <= gamma_rom_b[blue_data_in] + 1;
 
     line_valid_out <= line_valid_in;
     frame_valid_out <= frame_valid_in;
