@@ -24,6 +24,8 @@ module entropy (
     input   logic                   resetn
 );
 
+`define INFER_HUFFMAN_CODES_ROM
+
 always_comb q_hold = out_hold;
 
 // return size of signal

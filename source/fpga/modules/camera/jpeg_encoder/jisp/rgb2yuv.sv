@@ -7,7 +7,8 @@
  *
  * Copyright (C) 2024 Robert Metchev
  */
- module rgb2yuv #(
+`include "jpeg_encoder.vh"
+module rgb2yuv #(
     parameter DW    = 8,
     parameter MW    = 8
 )(
@@ -26,6 +27,7 @@
 );
 
 localparam YW = DW + 2; // Need 2 bits: 1 for range > 255, 1 for negative numbers
+always_comb assert (MW == 8) else $error();
 
 /*
 Color space conversion matrix: 
@@ -49,9 +51,15 @@ logic frame_valid_0;
 logic line_valid_0;
 
 always_comb begin
+`ifndef RGB2YUV_USE_DSP_MULT
     k_rgb0[0] = (rgb24[0] << 6) + (rgb24[0] << 3) + (rgb24[0] << 2) + (rgb24[0] << 0);       // R: 01001101
     k_rgb0[1] = (rgb24[1] << 7) + (rgb24[1] << 4) + (rgb24[1] << 2) + (rgb24[1] << 1);       // G: 10010110
     k_rgb0[2] = (rgb24[2] << 4) + (rgb24[2] << 3) + (rgb24[2] << 2) + (rgb24[2] << 0);       // B: 00011101
+`else
+    k_rgb0[0] =  77 * rgb24[0];
+    k_rgb0[1] = 150 * rgb24[1];
+    k_rgb0[2] =  29 * rgb24[2];
+`endif //RGB2YUV_USE_DSP_MULT
 end
 
 always @(posedge clk)
@@ -116,13 +124,21 @@ end
 // Calculate  Cb = 128 + KCb*U = 128 + 144*U, Cr = 128 + KCr*V = 128 + 182*V
 // mult range: 144*U ~= 144*225.93 ~= 127.085625 ~= 127, 182*V ~= 182*178.755 ~= 127.083632812 ~= 127
 // --> 8 bits are enough!
+parameter signed[MW:0]   kcb = 144;
+parameter signed[MW:0]   kcr = 182;
+
 logic signed[YW+2*MW-1:0]   cb1, cr1;
 logic signed[YW-1:0]        cb2, cr2;
 logic unsigned[YW-1:0]      y2;
 
 always_comb begin
+`ifndef RGB2YUV_USE_DSP_MULT
     cb1 = (128 << (2*MW)) + (u1 << 7) + (u1 << 4);                                      // KCb = 10010000
     cr1 = (128 << (2*MW)) + (v1 << 7) + (v1 << 5) + (v1 << 4) + (v1 << 2) + (v1 << 1);  // KCr = 10110110
+`else
+    cb1 = (128 << (2*MW)) + (kcb * u1);
+    cr1 = (128 << (2*MW)) + (kcr * v1);
+`endif //RGB2YUV_USE_DSP_MULT
     
     y2 = y1;
     cb2 = (cb1 + (1<<((2*MW) - 1))) >> (2*MW);

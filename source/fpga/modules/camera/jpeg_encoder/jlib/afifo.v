@@ -67,7 +67,7 @@
 module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 		i_rclk, i_rrst_n, i_rd, o_rdata, o_rempty);
 	parameter	DSIZE = 2,
-			ASIZE = 4;
+			ASIZE = 4, FULL_EMPTY_SAFEGUARD = 1;
 	localparam	DW = DSIZE,
 			AW = ASIZE;
 	input	wire			i_wclk, i_wrst_n, i_wr;
@@ -109,7 +109,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 
 
 	// Calculate the next write address, and the next graycode pointer.
-	assign	wbinnext  = wbin + { {(AW){1'b0}}, ((i_wr) && (!o_wfull)) };
+	assign	wbinnext  = wbin + { {(AW){1'b0}}, ((i_wr) && (!o_wfull || !FULL_EMPTY_SAFEGUARD)) };
 	assign	wgraynext = (wbinnext >> 1) ^ wbinnext;
 
 	assign	waddr = wbin[AW-1:0];
@@ -141,7 +141,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 	//
 	// Write to the FIFO on a clock
 	always @(posedge i_wclk)
-	if ((i_wr)&&(!o_wfull))
+	if ((i_wr)&&(!o_wfull || !FULL_EMPTY_SAFEGUARD))
 		mem[waddr] <= i_wdata;
 
 	////////////////////////////////////////////////////////////////////////
@@ -169,7 +169,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 
 
 	// Calculate the next read address,
-	assign	rbinnext  = rbin + { {(AW){1'b0}}, ((i_rd)&&(!o_rempty)) };
+	assign	rbinnext  = rbin + { {(AW){1'b0}}, ((i_rd)&&(!o_rempty || !FULL_EMPTY_SAFEGUARD)) };
 	// and the next Gray code version associated with it
 	assign	rgraynext = (rbinnext >> 1) ^ rbinnext;
 
