@@ -23,7 +23,7 @@ async def test_microphone(b: Bluetooth):
     await b.send_lua("frame.microphone.start { bit_depth=16 }")
 
     await b.send_lua(
-        "while true do s=frame.microphone.read(frame.bluetooth.max_length()); if s==nil then break end if s~='' then while true do if (pcall(frame.bluetooth.send,s)) then break end end end end"
+        "while true do s=frame.microphone.read((frame.bluetooth.max_length()//2)*2); if s==nil then break end if s~='' then while true do if (pcall(frame.bluetooth.send,s)) then break end end end end"
     )
 
     await asyncio.sleep(5)
