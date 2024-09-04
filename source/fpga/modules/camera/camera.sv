@@ -13,6 +13,7 @@
 `ifndef RADIANT
 `include "modules/camera/crop.sv"
 `include "modules/camera/debayer.sv"
+`include "modules/camera/gamma_correction.sv"
 `include "modules/camera/image_buffer.sv"
 `include "modules/camera/jpeg_encoder/jpeg_encoder.sv"
 `include "modules/camera/metering.sv"
@@ -367,6 +368,29 @@ crop zoom_crop (
     .frame_valid_out(zoomed_frame_valid)
 );
 
+logic [9:0] gamma_corrected_red_data;
+logic [9:0] gamma_corrected_green_data;
+logic [9:0] gamma_corrected_blue_data;
+logic gamma_corrected_line_valid;
+logic gamma_corrected_frame_valid;
+
+gamma_correction gamma_correction (
+    .clock_in(pixel_clock_in),
+    .reset_n_in(pixel_reset_n_in),
+
+    .red_data_in(zoomed_red_data),
+    .green_data_in(zoomed_green_data),
+    .blue_data_in(zoomed_blue_data),
+    .line_valid_in(zoomed_line_valid),
+    .frame_valid_in(zoomed_frame_valid),
+
+    .red_data_out(gamma_corrected_red_data),
+    .green_data_out(gamma_corrected_green_data),
+    .blue_data_out(gamma_corrected_blue_data),
+    .line_valid_out(gamma_corrected_line_valid),
+    .frame_valid_out(gamma_corrected_frame_valid)
+);
+
 logic [31:0] final_image_data;
 logic [15:0] final_image_address;
 logic final_image_data_valid;
@@ -379,11 +403,11 @@ jpeg_encoder jpeg_encoder (
     .jpeg_fast_clock_in(jpeg_buffer_clock_in),
     .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
-    .red_data_in(zoomed_red_data),
-    .green_data_in(zoomed_green_data),
-    .blue_data_in(zoomed_blue_data),
-    .line_valid_in(zoomed_line_valid),
-    .frame_valid_in(zoomed_frame_valid),
+    .red_data_in(gamma_corrected_red_data),
+    .green_data_in(gamma_corrected_green_data),
+    .blue_data_in(gamma_corrected_blue_data),
+    .line_valid_in(gamma_corrected_line_valid),
+    .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
