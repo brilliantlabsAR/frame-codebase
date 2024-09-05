@@ -31,6 +31,10 @@ logic [7:0] gamma_rom_r [255:0];
 logic [7:0] gamma_rom_g [255:0];
 logic [7:0] gamma_rom_b [255:0];
 
+logic [7:0] red_data_temp;
+logic [7:0] green_data_temp;
+logic [7:0] blue_data_temp;
+
 initial begin
     gamma_rom_r[0]   = 'd0;   gamma_rom_g[0]   = 'd0;   gamma_rom_b[0]   = 'd0;
     gamma_rom_r[1]   = 'd4;   gamma_rom_g[1]   = 'd4;   gamma_rom_b[1]   = 'd4;
@@ -292,9 +296,9 @@ end
 
 always_ff @(posedge clock_in) begin
 
-    red_data_out <= gamma_rom_r[red_data_in] + 1;
-    green_data_out <= gamma_rom_g[green_data_in] + 1;
-    blue_data_out <= gamma_rom_b[blue_data_in] + 1;
+    red_data_temp <= gamma_rom_r[red_data_in] + 1;
+    green_data_temp <= gamma_rom_g[green_data_in] + 1;
+    blue_data_temp <= gamma_rom_b[blue_data_in] + 1;
 
     line_valid_out <= line_valid_in;
     frame_valid_out <= frame_valid_in;
@@ -306,5 +310,9 @@ always_ff @(posedge clock_in) begin
     // end
    
 end
-    
+
+assign red_data_out = red_data_temp - 1;
+assign green_data_out = green_data_temp - 1;
+assign blue_data_out = blue_data_temp - 1;
+
 endmodule
