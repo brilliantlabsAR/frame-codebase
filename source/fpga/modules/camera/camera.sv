@@ -368,9 +368,9 @@ crop zoom_crop (
     .frame_valid_out(zoomed_frame_valid)
 );
 
-logic [9:0] gamma_corrected_red_data;
-logic [9:0] gamma_corrected_green_data;
-logic [9:0] gamma_corrected_blue_data;
+logic [7:0] gamma_corrected_red_data;
+logic [7:0] gamma_corrected_green_data;
+logic [7:0] gamma_corrected_blue_data;
 logic gamma_corrected_line_valid;
 logic gamma_corrected_frame_valid;
 
@@ -378,9 +378,9 @@ gamma_correction gamma_correction (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
-    .red_data_in(zoomed_red_data),
-    .green_data_in(zoomed_green_data),
-    .blue_data_in(zoomed_blue_data),
+    .red_data_in(zoomed_red_data[9:2]),
+    .green_data_in(zoomed_green_data[9:2]),
+    .blue_data_in(zoomed_blue_data[9:2]),
     .line_valid_in(zoomed_line_valid),
     .frame_valid_in(zoomed_frame_valid),
 

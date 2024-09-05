@@ -14,15 +14,15 @@
     input logic clock_in,
     input logic reset_n_in,
 
-    input logic [9:0] red_data_in,
-    input logic [9:0] green_data_in,
-    input logic [9:0] blue_data_in,
+    input logic [7:0] red_data_in,
+    input logic [7:0] green_data_in,
+    input logic [7:0] blue_data_in,
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    output logic [9:0] red_data_out,
-    output logic [9:0] green_data_out,
-    output logic [9:0] blue_data_out,
+    output logic [7:0] red_data_out,
+    output logic [7:0] green_data_out,
+    output logic [7:0] blue_data_out,
     output logic line_valid_out,
     output logic frame_valid_out
 );
