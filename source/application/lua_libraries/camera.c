@@ -724,6 +724,32 @@ static int lua_camera_set_register(lua_State *L)
     return 0;
 }
 
+static int lua_camera_get_register(lua_State *L)
+{
+    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    {
+        luaL_error(L, "camera is asleep");
+    }
+
+    lua_Integer address = luaL_checkinteger(L, 1);
+
+    if (address < 0 || address > 0xFFFF)
+    {
+        luaL_error(L, "address must be a 16 bit unsigned number");
+    }
+
+    i2c_response_t response = i2c_read(CAMERA, (uint16_t)address, 0xFF);
+
+    if (response.fail)
+    {
+        error();
+    }
+
+    lua_pushinteger(L, response.value);
+
+    return 1;
+}
+
 void lua_open_camera_library(lua_State *L)
 {
     // Wake up camera in case it was asleep
@@ -766,6 +792,9 @@ void lua_open_camera_library(lua_State *L)
 
     lua_pushcfunction(L, lua_camera_set_register);
     lua_setfield(L, -2, "set_register");
+
+    lua_pushcfunction(L, lua_camera_get_register);
+    lua_setfield(L, -2, "get_register");
 
     lua_setfield(L, -2, "camera");
 
