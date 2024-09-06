@@ -146,7 +146,7 @@ async def main():
     shutter_plot, = shutter_axis.plot(frame_count, shutter_values, 'r', label='shutter')
     gain_plot, = gain_axis.plot(frame_count, gain_values, 'b', label='gain')
 
-    shutter_axis.set_ylim([0, 17000])
+    shutter_axis.set_ylim([0, 1000])
     shutter_axis.set_ylabel("Setpoints")
     shutter_axis.legend(loc="upper left")
     shutter_axis.yaxis.set_major_formatter(EngFormatter(sep=""))

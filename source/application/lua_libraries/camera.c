@@ -523,18 +523,6 @@ static int lua_camera_auto(lua_State *L)
     uint16_t shutter = (uint16_t)last.shutter;
     uint8_t gain = (uint8_t)last.gain;
 
-    // If shutter is longer than frame length (VTS register)
-    if (shutter > 0x32A)
-    {
-        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
-    }
-    else
-    {
-        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
-    }
-
     check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
@@ -625,22 +613,9 @@ static int lua_camera_set_shutter(lua_State *L)
         return luaL_error(L, "shutter must be between 4 and 16383");
     }
 
-    /** no need for frame change
-    // If shutter is longer than frame length (VTS register)
-    if (shutter > 0x32A)
-    {
-        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail); // vertical line
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);// vertical line
-    }
-    else
-    {
-        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
-        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail); // why not 0x2a?
-    }
-     **/
-    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail); // Integration time
-    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);  // Integration time
-    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);  // Integration time
+    check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
+    check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
+    check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
 
     return 0;
 }
