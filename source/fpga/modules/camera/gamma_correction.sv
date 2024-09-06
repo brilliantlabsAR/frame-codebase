@@ -12,7 +12,6 @@
  
  module gamma_correction (
     input logic clock_in,
-    input logic reset_n_in,
 
     input logic [7:0] red_data_in,
     input logic [7:0] green_data_in,
@@ -296,19 +295,15 @@ end
 
 always_ff @(posedge clock_in) begin
 
-    red_data_temp <= gamma_rom_r[red_data_in] ^ 1;
-    green_data_temp <= gamma_rom_g[green_data_in] ^ 1;
-    blue_data_temp <= gamma_rom_b[blue_data_in] ^ 1;
+    if (line_valid_in && frame_valid_in) begin
+        red_data_temp <= gamma_rom_r[red_data_in] ^ 1;
+        green_data_temp <= gamma_rom_g[green_data_in] ^ 1;
+        blue_data_temp <= gamma_rom_b[blue_data_in] ^ 1;
+    end
 
     line_valid_out <= line_valid_in;
     frame_valid_out <= frame_valid_in;
 
-    // if(reset_n_in == 0 || frame_valid_in == 0 || line_valid_in == 0) begin
-    // end
-    
-    // else begin
-    // end
-   
 end
 
 assign red_data_out = red_data_temp ^ 1;
