@@ -46,8 +46,8 @@ static struct camera_auto_last_values
     double shutter;
     double gain;
 } last = {
-    .shutter = 3000,
-    .gain = 0,
+    .shutter = 500.0f,
+    .gain = 1.0f,
 };
 
 static lua_Integer camera_quality_factor = 50;
@@ -327,13 +327,10 @@ static int lua_camera_auto(lua_State *L)
     }
 
     camera_metering_mode_t metering = AVERAGE;
-    double exposure = 0.0;
-    double shutter_kp = 0.1;
+    double target_exposure = 0.18;
+    double exposure_speed = 0.50;
     double shutter_limit = 800.0; // TODO fix this value
-    double gain_kp = 1.0;
     double gain_limit = 248.0;
-    double max_pixel = 255.0;
-    double exposure_speed = 0.50; // 1: max speed 0: no change
 
     if (lua_istable(L, 1))
     {
@@ -364,21 +361,21 @@ static int lua_camera_auto(lua_State *L)
 
         if (lua_getfield(L, 1, "exposure") != LUA_TNIL)
         {
-            exposure = luaL_checknumber(L, -1);
-            if (exposure < -2.0 || exposure > 2.0)
+            target_exposure = luaL_checknumber(L, -1);
+            if (target_exposure < 0.0 || target_exposure > 1.0)
             {
-                luaL_error(L, "exposure must be between -2 and 2");
+                luaL_error(L, "exposure must be between 0 and 1");
             }
 
             lua_pop(L, 1);
         }
 
-        if (lua_getfield(L, 1, "shutter_kp") != LUA_TNIL)
+        if (lua_getfield(L, 1, "exposure_speed") != LUA_TNIL)
         {
-            shutter_kp = luaL_checknumber(L, -1);
-            if (shutter_kp < 0.0)
+            exposure_speed = luaL_checknumber(L, -1);
+            if (exposure_speed < 0.0 || exposure_speed > 1.0)
             {
-                luaL_error(L, "shutter_kp must be greater than 0");
+                luaL_error(L, "exposure_speed must be between 0 and 1");
             }
 
             lua_pop(L, 1);
@@ -390,17 +387,6 @@ static int lua_camera_auto(lua_State *L)
             if (shutter_limit < 4.0 || shutter_limit > 16383.0)
             {
                 luaL_error(L, "shutter_limit must be between 4 and 16383");
-            }
-
-            lua_pop(L, 1);
-        }
-
-        if (lua_getfield(L, 1, "gain_kp") != LUA_TNIL)
-        {
-            gain_kp = luaL_checknumber(L, -1);
-            if (gain_kp < 0.0)
-            {
-                luaL_error(L, "gain_kp must be greater than 0");
             }
 
             lua_pop(L, 1);
@@ -422,12 +408,12 @@ static int lua_camera_auto(lua_State *L)
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
-    double spot_r = metering_data[0] / max_pixel;
-    double spot_g = metering_data[1] / max_pixel;
-    double spot_b = metering_data[2] / max_pixel;
-    double matrix_r = metering_data[3] / max_pixel;
-    double matrix_g = metering_data[4] / max_pixel;
-    double matrix_b = metering_data[5] / max_pixel;
+    double spot_r = metering_data[0] / 255.0f;
+    double spot_g = metering_data[1] / 255.0f;
+    double spot_b = metering_data[2] / 255.0f;
+    double matrix_r = metering_data[3] / 255.0f;
+    double matrix_g = metering_data[4] / 255.0f;
+    double matrix_b = metering_data[5] / 255.0f;
 
     double spot_average = (spot_r + spot_g + spot_b) / 3.0;
     double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
@@ -438,25 +424,26 @@ static int lua_camera_auto(lua_State *L)
 
     // Choose error
     double error;
+
     switch (metering)
     {
     case SPOT:
-        error = exposure_speed * ((0.18 / spot_average) - 1) + 1;
+        error = exposure_speed * ((target_exposure / spot_average) - 1) + 1;
         break;
 
     case CENTER_WEIGHTED:
-        error = exposure_speed * ((0.18 / center_weighted_average) - 1) + 1;
+        error = exposure_speed * ((target_exposure / center_weighted_average) - 1) + 1;
         break;
 
-    default: // AVERAGE
-        error = exposure_speed * ((0.18 / matrix_average) - 1) + 1;
+    case AVERAGE:
+        error = exposure_speed * ((target_exposure / matrix_average) - 1) + 1;
         break;
     }
 
     if (error > 1)
     {
-        double shutter_temp;
-        shutter_temp = last.shutter;
+        double shutter = last.shutter;
+
         last.shutter *= error;
 
         if (last.shutter > shutter_limit)
@@ -464,11 +451,12 @@ static int lua_camera_auto(lua_State *L)
             last.shutter = shutter_limit;
         }
 
-        error *= shutter_temp / last.shutter;
+        error *= shutter / last.shutter;
 
         if (error > 1)
         {
             last.gain *= error;
+
             if (last.gain > gain_limit)
             {
                 last.gain = gain_limit;
@@ -477,8 +465,8 @@ static int lua_camera_auto(lua_State *L)
     }
     else
     {
-        double gain_temp;
-        gain_temp = last.gain;
+        double gain = last.gain;
+
         last.gain *= error;
 
         if (last.gain < 1.0)
@@ -486,7 +474,7 @@ static int lua_camera_auto(lua_State *L)
             last.gain = 1.0;
         }
 
-        error *= gain_temp / last.gain;
+        error *= gain / last.gain;
 
         if (error < 1)
         {
