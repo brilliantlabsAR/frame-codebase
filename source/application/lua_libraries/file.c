@@ -276,7 +276,7 @@ static int lua_file_write(lua_State *L)
     lfs_ssize_t result = lfs_file_write(&filesystem,
                                         &stream->file,
                                         string,
-                                        strlen(string));
+                                        expected_length);
 
     if (result != expected_length)
     {
