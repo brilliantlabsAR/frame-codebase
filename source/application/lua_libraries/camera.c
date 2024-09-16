@@ -430,11 +430,11 @@ static int lua_camera_auto(lua_State *L)
                                      3.0;
     
     // Scene brightness estimate for brightness-based speed modulation
-    double K = 41664000.0; // lux/total exposure
-    double scene_brighness = K*matrix_average/(last.shutter*last.gain);
-    double t1 = 100; // lux
-    double t2 = 1000; //lux
-    double b_speed =  (scene_brighness - t1)/(t2 - t1); // alpha belending
+    double K = 4166400.0; // lux/total exposure
+    double scene_brightness = K*matrix_average/(last.shutter*last.gain);
+    double t1 = 50; // lux
+    double t2 = 200; //lux
+    double b_speed =  (scene_brightness - t1)/(t2 - t1); // alpha belending
 
     if (b_speed > 1.0)
     { 
@@ -470,9 +470,9 @@ static int lua_camera_auto(lua_State *L)
     }
 
     // Apply AWB speed
-    last.awb_r = awb_speed*(awb_r - last.awb_r) + last.awb_r;
-    last.awb_g = awb_speed*(awb_g - last.awb_g) + last.awb_g;
-    last.awb_b = awb_speed*(awb_b - last.awb_b) + last.awb_b;
+    last.awb_r = b_speed*awb_speed*(awb_r - last.awb_r) + last.awb_r;
+    last.awb_g = b_speed*awb_speed*(awb_g - last.awb_g) + last.awb_g;
+    last.awb_b = b_speed*awb_speed*(awb_b - last.awb_b) + last.awb_b;
 
 
 
@@ -626,11 +626,18 @@ static int lua_camera_auto(lua_State *L)
             lua_setfield(L, -2, "matrix");
         }
 
+
         lua_pushnumber(L, center_weighted_average);
         lua_setfield(L, -2, "center_weighted_average");
 
         lua_setfield(L, -2, "brightness");
     }
+
+
+    lua_pushnumber(L, scene_brightness);
+    lua_setfield(L, -2, "scene_brightness");
+
+
 
     lua_pushnumber(L, error);
     lua_setfield(L, -2, "error");
