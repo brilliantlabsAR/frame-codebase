@@ -45,9 +45,15 @@ static struct camera_auto_last_values
 {
     double shutter;
     double gain;
+    double awb_r;
+    double awb_g;
+    double awb_b;
 } last = {
     .shutter = 500.0f,
     .gain = 1.0f,
+    .awb_r = 1.9f,
+    .awb_g = 1.0f,
+    .awb_b = 2.2f,
 };
 
 static lua_Integer camera_quality_factor = 50;
@@ -329,6 +335,7 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.18;
     double exposure_speed = 0.50;
+    double awb_speed = 0.5;
     double shutter_limit = 800.0; // TODO fix this value
     double gain_limit = 248.0;
 
@@ -421,6 +428,53 @@ static int lua_camera_auto(lua_State *L)
                                       spot_average +
                                       matrix_average) /
                                      3.0;
+    
+    // Scene brightness estimate for brightness-based speed modulation
+    double K = 41664000.0; // lux/total exposure
+    double scene_brighness = K*matrix_average/(last.shutter*last.gain);
+    double t1 = 100; // lux
+    double t2 = 1000; //lux
+    double b_speed =  (scene_brighness - t1)/(t2 - t1); // alpha belending
+
+    if (b_speed > 1.0)
+    { 
+        b_speed = 1.0;
+    }
+
+    if (b_speed < 0.0)
+    {
+        b_speed = 0.0;
+    }
+
+    // AWB weight calculations
+    double max_p = matrix_r/last.awb_r > matrix_g/last.awb_g ? 
+        (matrix_r/last.awb_r > matrix_b/last.awb_b ? matrix_r/last.awb_r : matrix_b/last.awb_b) : 
+        (matrix_g/last.awb_g > matrix_b/last.awb_b ? matrix_g/last.awb_g : matrix_b/last.awb_b);
+    double awb_r = max_p/matrix_r*last.awb_r;
+    double awb_g = max_p/matrix_g*last.awb_g;
+    double awb_b = max_p/matrix_b*last.awb_b;
+
+    // max WB gain clipping
+    if (awb_r > 1023.0)
+    {
+        awb_r = 1023.0;
+    }
+
+    if (awb_g > 1023.0)
+    {
+        awb_g = 1023.0;
+    }
+    if (awb_b > 1023.0)
+    {
+        awb_b = 1023.0;
+    }
+
+    // Apply AWB speed
+    last.awb_r = awb_speed*(awb_r - last.awb_r) + last.awb_r;
+    last.awb_g = awb_speed*(awb_g - last.awb_g) + last.awb_g;
+    last.awb_b = awb_speed*(awb_b - last.awb_b) + last.awb_b;
+
+
 
     // Choose error
     double error;
@@ -515,6 +569,21 @@ static int lua_camera_auto(lua_State *L)
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
     check_error(i2c_write(CAMERA, 0x350B, 0xFF, gain).fail);
+
+    // AWB
+    uint16_t awb_r_16b = (uint16_t)(last.awb_r*256.0);
+    uint16_t awb_g_16b = (uint16_t)(last.awb_g*256.0);
+    uint16_t awb_b_16b = (uint16_t)(last.awb_b*256.0);
+    
+    //R
+    check_error(i2c_write(CAMERA, 0x5180, 0x03, awb_r_16b >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5181, 0xFF, awb_r_16b).fail);
+    //G
+    check_error(i2c_write(CAMERA, 0x5182, 0x03, awb_g_16b >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5183, 0xFF, awb_g_16b).fail);
+    //B
+    check_error(i2c_write(CAMERA, 0x5184, 0x03, awb_b_16b >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5185, 0xFF, awb_b_16b).fail);
 
     lua_newtable(L);
 
