@@ -108,7 +108,7 @@ void run_lua(bool factory_reset, bool is_paired)
     }
 
     // Run main.lua
-    int status = luaL_dostring(L, "require('main')");
+    int status = luaL_dostring(L, "frame.stay_awake(false); require('main')");
 
     if (status != LUA_OK)
     {

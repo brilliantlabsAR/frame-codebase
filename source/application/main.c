@@ -290,6 +290,7 @@ static void hardware_setup(bool *factory_reset)
             {
                 LOG("Factory reset");
                 *factory_reset = true;
+                stay_awake = true;
             }
         }
 
