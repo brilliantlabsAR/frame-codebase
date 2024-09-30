@@ -108,6 +108,11 @@ async def main():
 
     # Display
 
+    ## Power mode
+    await test.lua_send("frame.display.power_save(true)")
+    await asyncio.sleep(1)
+    await test.lua_send("frame.display.power_save(false)")
+
     ## Text
 
     ### Position

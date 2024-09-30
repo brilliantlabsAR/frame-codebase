@@ -89,6 +89,7 @@ void shutdown(bool enable_imu_wakeup)
 
     uint8_t display_power_save[1] = {0x92};
     spi_write(DISPLAY, 0x00, display_power_save, sizeof(display_power_save));
+    nrfx_systick_delay_ms(50);
 
     nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
 

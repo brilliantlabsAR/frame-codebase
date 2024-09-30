@@ -7,6 +7,8 @@ async def main():
 
     await b.connect(print_response_handler=lambda s: print(s))
 
+    await b.send_lua("frame.display.power_save(false)")
+
     # Print text in all the corners
     await b.send_lua("frame.display.text('Test', 1, 1)")
     await b.send_lua("frame.display.text('Test', 563, 1)")
@@ -88,6 +90,9 @@ async def main():
     await b.send_lua("frame.display.assign_color_ycbcr('SEABLUE', 4, 5, 2)")
     await b.send_lua("frame.display.assign_color_ycbcr('SKYBLUE', 8, 5, 2)")
     await b.send_lua("frame.display.assign_color_ycbcr('CLOUDBLUE', 13, 4, 3)")
+    await asyncio.sleep(5.00)
+
+    await b.send_lua("frame.display.power_save(true)")
 
     await b.disconnect()
 

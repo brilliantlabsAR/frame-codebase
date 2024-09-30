@@ -428,6 +428,20 @@ static int lua_display_set_register(lua_State *L)
     return 0;
 }
 
+static int lua_display_power_save(lua_State *L)
+{
+    if (!lua_isboolean(L, 1))
+    {
+        luaL_error(L, "value must be true or false");
+    }
+
+    uint8_t mode = lua_toboolean(L, 1) ? 0x92 : 0x93;
+
+    spi_write(DISPLAY, 0x00, (uint8_t *)&mode, 1);
+
+    return 0;
+}
+
 void lua_open_display_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
@@ -448,6 +462,9 @@ void lua_open_display_library(lua_State *L)
 
     lua_pushcfunction(L, lua_display_show);
     lua_setfield(L, -2, "show");
+
+    lua_pushcfunction(L, lua_display_power_save);
+    lua_setfield(L, -2, "power_save");
 
     lua_pushcfunction(L, lua_display_set_brightness);
     lua_setfield(L, -2, "set_brightness");
