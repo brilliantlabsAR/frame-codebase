@@ -190,9 +190,9 @@ async def main():
     await test.lua_equals("#frame.camera.read(123)", "123")
 
     ## Test sleep prevents captures
-    await test.lua_send("frame.camera.sleep()")
+    await test.lua_send("frame.camera.power_save(true)")
     await test.lua_error("frame.camera.capture{}")
-    await test.lua_send("frame.camera.wake()")
+    await test.lua_send("frame.camera.power_save(false)")
     await test.lua_send("frame.sleep(0.1)")
     await test.lua_send("frame.camera.capture{}")
 
@@ -317,8 +317,8 @@ async def main():
     await test.lua_is_type("frame.update", "function")
 
     ## FPGA IO
-    await test.lua_equals("string.byte(frame.fpga.read(0xDB, 1))", "129")
-    await test.lua_send("frame.fpga.write(0xDC, 'test data')")
+    await test.lua_equals("string.byte(frame.fpga_read(0xDB, 1))", "129")
+    await test.lua_send("frame.fpga_write(0xDC, 'test data')")
 
     # File handling
 

@@ -408,7 +408,7 @@ static int lua_display_set_brightness(lua_State *L)
     return 0;
 }
 
-static int lua_display_set_register(lua_State *L)
+static int lua_display_write_register(lua_State *L)
 {
     lua_Integer address = luaL_checkinteger(L, 1);
     lua_Integer value = luaL_checkinteger(L, 2);
@@ -469,8 +469,8 @@ void lua_open_display_library(lua_State *L)
     lua_pushcfunction(L, lua_display_set_brightness);
     lua_setfield(L, -2, "set_brightness");
 
-    lua_pushcfunction(L, lua_display_set_register);
-    lua_setfield(L, -2, "set_register");
+    lua_pushcfunction(L, lua_display_write_register);
+    lua_setfield(L, -2, "write_register");
 
     lua_setfield(L, -2, "display");
 

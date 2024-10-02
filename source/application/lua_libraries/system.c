@@ -217,17 +217,11 @@ void lua_open_system_library(lua_State *L)
     lua_pushcfunction(L, lua_battery_level);
     lua_setfield(L, -2, "battery_level");
 
-    {
-        lua_newtable(L);
+    lua_pushcfunction(L, lua_fpga_read);
+    lua_setfield(L, -2, "fpga_read");
 
-        lua_pushcfunction(L, lua_fpga_read);
-        lua_setfield(L, -2, "read");
-
-        lua_pushcfunction(L, lua_fpga_write);
-        lua_setfield(L, -2, "write");
-
-        lua_setfield(L, -2, "fpga");
-    }
+    lua_pushcfunction(L, lua_fpga_write);
+    lua_setfield(L, -2, "fpga_write");
 
     lua_pop(L, 1);
 }

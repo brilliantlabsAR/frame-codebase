@@ -29,10 +29,10 @@
 #include "jpeg.h"
 #include "lauxlib.h"
 #include "lua.h"
-#include "nrf_gpio.h"
 #include "nrfx_systick.h"
-#include "pinout.h"
 #include "spi.h"
+
+static bool camera_is_asleep = false;
 
 typedef enum camera_metering_mode
 {
@@ -62,7 +62,7 @@ static size_t jpeg_footer_bytes_sent_out = 0;
 
 static int lua_camera_capture(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -106,7 +106,7 @@ static int lua_camera_capture(lua_State *L)
 
 static int lua_camera_image_ready(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -327,7 +327,7 @@ static int lua_camera_read_raw(lua_State *L)
 
 static int lua_camera_auto(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         return 0;
     }
@@ -668,21 +668,37 @@ static int lua_camera_auto(lua_State *L)
     return 1;
 }
 
-static int lua_camera_sleep(lua_State *L)
+static int lua_camera_power_save(lua_State *L)
 {
-    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, false);
-    return 0;
-}
+    if (!lua_isboolean(L, 1))
+    {
+        luaL_error(L, "value must be true or false");
+    }
 
-static int lua_camera_wake(lua_State *L)
-{
-    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
+    if (lua_toboolean(L, 1))
+    {
+        camera_is_asleep = true;
+        check_error(i2c_write(CAMERA, 0x0100, 0xFF, 0x00).fail);
+        check_error(i2c_write(CAMERA, 0x3658, 0xFF, 0xFF).fail);
+        check_error(i2c_write(CAMERA, 0x3659, 0xFF, 0xFF).fail);
+        check_error(i2c_write(CAMERA, 0x365A, 0xFF, 0xFF).fail);
+        check_error(i2c_write(CAMERA, 0x308B, 0xFF, 0x01).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x3658, 0xFF, 0x22).fail);
+        check_error(i2c_write(CAMERA, 0x3659, 0xFF, 0x22).fail);
+        check_error(i2c_write(CAMERA, 0x365A, 0xFF, 0x02).fail);
+        check_error(i2c_write(CAMERA, 0x308B, 0xFF, 0x00).fail);
+        check_error(i2c_write(CAMERA, 0x0100, 0xFF, 0x01).fail);
+        camera_is_asleep = false;
+    }
     return 0;
 }
 
 static int lua_camera_set_shutter(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -703,7 +719,7 @@ static int lua_camera_set_shutter(lua_State *L)
 
 static int lua_camera_set_gain(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -722,7 +738,7 @@ static int lua_camera_set_gain(lua_State *L)
 
 static int lua_camera_set_white_balance(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -747,9 +763,9 @@ static int lua_camera_set_white_balance(lua_State *L)
     return 0;
 }
 
-static int lua_camera_set_register(lua_State *L)
+static int lua_camera_write_register(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -767,22 +783,14 @@ static int lua_camera_set_register(lua_State *L)
         luaL_error(L, "value must be an 8 bit unsigned number");
     }
 
-    i2c_response_t response = i2c_write(CAMERA,
-                                        (uint16_t)address,
-                                        0xFF,
-                                        (uint8_t)value);
-
-    if (response.fail)
-    {
-        error();
-    }
+    check_error(i2c_write(CAMERA, (uint16_t)address, 0xFF, (uint8_t)value).fail);
 
     return 0;
 }
 
-static int lua_camera_get_register(lua_State *L)
+static int lua_camera_read_register(lua_State *L)
 {
-    if (nrf_gpio_pin_out_read(CAMERA_SLEEP_PIN) == false)
+    if (camera_is_asleep)
     {
         luaL_error(L, "camera is asleep");
     }
@@ -808,10 +816,6 @@ static int lua_camera_get_register(lua_State *L)
 
 void lua_open_camera_library(lua_State *L)
 {
-    // Wake up camera in case it was asleep
-    nrf_gpio_pin_write(CAMERA_SLEEP_PIN, true);
-    nrfx_systick_delay_ms(10);
-
     lua_getglobal(L, "frame");
 
     lua_newtable(L);
@@ -831,11 +835,8 @@ void lua_open_camera_library(lua_State *L)
     lua_pushcfunction(L, lua_camera_auto);
     lua_setfield(L, -2, "auto");
 
-    lua_pushcfunction(L, lua_camera_sleep);
-    lua_setfield(L, -2, "sleep");
-
-    lua_pushcfunction(L, lua_camera_wake);
-    lua_setfield(L, -2, "wake");
+    lua_pushcfunction(L, lua_camera_power_save);
+    lua_setfield(L, -2, "power_save");
 
     lua_pushcfunction(L, lua_camera_set_shutter);
     lua_setfield(L, -2, "set_shutter");
@@ -846,11 +847,11 @@ void lua_open_camera_library(lua_State *L)
     lua_pushcfunction(L, lua_camera_set_white_balance);
     lua_setfield(L, -2, "set_white_balance");
 
-    lua_pushcfunction(L, lua_camera_set_register);
-    lua_setfield(L, -2, "set_register");
+    lua_pushcfunction(L, lua_camera_write_register);
+    lua_setfield(L, -2, "write_register");
 
-    lua_pushcfunction(L, lua_camera_get_register);
-    lua_setfield(L, -2, "get_register");
+    lua_pushcfunction(L, lua_camera_read_register);
+    lua_setfield(L, -2, "read_register");
 
     lua_setfield(L, -2, "camera");
 
