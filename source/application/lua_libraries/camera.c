@@ -341,9 +341,9 @@ static int lua_camera_auto(lua_State *L)
 
     // Default white balance settings
     double white_balance_speed = 0.5;
-    double K = 4166400.0; // TODO rename and expose these for user override
-    double t1 = 50;       // TODO rename and expose these for user override
-    double t2 = 200;      // TODO rename and expose these for user override
+    double brightness_constant = 4166400.0;
+    double white_balance_min_activation = 50;
+    double white_balance_max_activation = 200;
 
     // Allow user to over-ride these if desired
     if (lua_istable(L, 1))
@@ -538,20 +538,22 @@ static int lua_camera_auto(lua_State *L)
     check_error(i2c_write(CAMERA, 0x350B, 0xFF, analog_gain).fail);
 
     // Auto white balance based on full scene matrix
-    double max_p = matrix_r / last.red_gain > matrix_g / last.green_gain // TODO rename this
-                       ? (matrix_r / last.red_gain > matrix_b / last.blue_gain
-                              ? matrix_r / last.red_gain
-                              : matrix_b / last.blue_gain)
-                       : (matrix_g / last.green_gain > matrix_b / last.blue_gain
-                              ? matrix_g / last.green_gain
-                              : matrix_b / last.blue_gain);
+    double max_rgb = matrix_r / last.red_gain > matrix_g / last.green_gain
+                         ? (matrix_r / last.red_gain > matrix_b / last.blue_gain
+                                ? matrix_r / last.red_gain
+                                : matrix_b / last.blue_gain)
+                         : (matrix_g / last.green_gain > matrix_b / last.blue_gain
+                                ? matrix_g / last.green_gain
+                                : matrix_b / last.blue_gain);
 
-    double red_gain = max_p / matrix_r * last.red_gain;
-    double green_gain = max_p / matrix_g * last.green_gain;
-    double blue_gain = max_p / matrix_b * last.blue_gain;
-    double scene_brightness = K * matrix_average /
+    double red_gain = max_rgb / matrix_r * last.red_gain;
+    double green_gain = max_rgb / matrix_g * last.green_gain;
+    double blue_gain = max_rgb / matrix_b * last.blue_gain;
+    double scene_brightness = brightness_constant * matrix_average /
                               (last.shutter * last.analog_gain);
-    double b_speed = (scene_brightness - t1) / (t2 - t1); // TODO rename this
+    double blending_factor = (scene_brightness - white_balance_min_activation) /
+                             (white_balance_max_activation -
+                              white_balance_min_activation);
 
     if (red_gain > 1023.0)
     {
@@ -565,24 +567,24 @@ static int lua_camera_auto(lua_State *L)
     {
         blue_gain = 1023.0;
     }
-    if (b_speed > 1.0)
+    if (blending_factor > 1.0)
     {
-        b_speed = 1.0;
+        blending_factor = 1.0;
     }
-    if (b_speed < 0.0)
+    if (blending_factor < 0.0)
     {
-        b_speed = 0.0;
+        blending_factor = 0.0;
     }
 
-    last.red_gain = b_speed * white_balance_speed *
+    last.red_gain = blending_factor * white_balance_speed *
                         (red_gain - last.red_gain) +
                     last.red_gain;
 
-    last.green_gain = b_speed * white_balance_speed *
+    last.green_gain = blending_factor * white_balance_speed *
                           (green_gain - last.green_gain) +
                       last.green_gain;
 
-    last.blue_gain = b_speed * white_balance_speed *
+    last.blue_gain = blending_factor * white_balance_speed *
                          (blue_gain - last.blue_gain) +
                      last.blue_gain;
 
