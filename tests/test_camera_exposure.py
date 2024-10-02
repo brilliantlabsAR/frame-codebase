@@ -21,7 +21,7 @@ async def main():
         metrics = metrics..e['brightness']['matrix']['b']..':'
         metrics = metrics..e['brightness']['center_weighted_average']..':'
         metrics = metrics..e['shutter']..':'
-        metrics = metrics..e['gain']..':'
+        metrics = metrics..e['analog_gain']..':'
         metrics = metrics..e['error']
         print(metrics)
 
@@ -38,13 +38,13 @@ async def main():
 
     average_brightness_values = [0]
     shutter_values = [0]
-    gain_values = [0]
+    analog_gain_values = [0]
 
     error_values = [0]
 
     # Set up the figure
     figure, (input_axis, shutter_axis, error_axis) = plot.subplots(3, 1, sharex=True)
-    gain_axis = shutter_axis.twinx()
+    analog_gain_axis = shutter_axis.twinx()
     figure.suptitle("Frame auto-exposure tuning tool")
 
     (red_plot,) = input_axis.plot(frame_count, r_brightness_values, "r", label="red")
@@ -62,14 +62,16 @@ async def main():
     (shutter_plot,) = shutter_axis.plot(
         frame_count, shutter_values, "r", label="shutter"
     )
-    (gain_plot,) = gain_axis.plot(frame_count, gain_values, "b", label="gain")
+    (analog_gain_plot,) = analog_gain_axis.plot(
+        frame_count, analog_gain_values, "b", label="analog_gain"
+    )
 
     shutter_axis.set_ylim([0, 1000])
     shutter_axis.set_ylabel("Setpoints")
     shutter_axis.legend(loc="upper left")
     shutter_axis.yaxis.set_major_formatter(EngFormatter(sep=""))
-    gain_axis.set_ylim([0, 260])
-    gain_axis.legend(loc="upper right")
+    analog_gain_axis.set_ylim([0, 260])
+    analog_gain_axis.legend(loc="upper right")
 
     (error_plot,) = error_axis.plot(frame_count, error_values)
     error_axis.set_ylim([-0.1, 2.1])
@@ -93,7 +95,7 @@ async def main():
         b_brightness_values.append(float(data[3]))
         average_brightness_values.append(float(data[4]))
         shutter_values.append(float(data[5]))
-        gain_values.append(float(data[6]))
+        analog_gain_values.append(float(data[6]))
         error_values.append(float(data[7]))
 
         red_plot.set_xdata(frame_count)
@@ -101,7 +103,7 @@ async def main():
         blue_plot.set_xdata(frame_count)
         average_plot.set_xdata(frame_count)
         shutter_plot.set_xdata(frame_count)
-        gain_plot.set_xdata(frame_count)
+        analog_gain_plot.set_xdata(frame_count)
         error_plot.set_xdata(frame_count)
 
         red_plot.set_ydata(r_brightness_values)
@@ -109,7 +111,7 @@ async def main():
         blue_plot.set_ydata(b_brightness_values)
         average_plot.set_ydata(average_brightness_values)
         shutter_plot.set_ydata(shutter_values)
-        gain_plot.set_ydata(gain_values)
+        analog_gain_plot.set_ydata(analog_gain_values)
         error_plot.set_ydata(error_values)
 
         error_axis.set_xlim([0, len(frame_count)])

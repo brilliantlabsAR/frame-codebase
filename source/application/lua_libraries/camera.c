@@ -44,16 +44,16 @@ typedef enum camera_metering_mode
 static struct camera_auto_last_values
 {
     double shutter;
-    double gain;
-    double awb_r;
-    double awb_g;
-    double awb_b;
+    double analog_gain;
+    double red_gain;
+    double green_gain;
+    double blue_gain;
 } last = {
     .shutter = 500.0f,
-    .gain = 1.0f,
-    .awb_r = 1.9f,
-    .awb_g = 1.0f,
-    .awb_b = 2.2f,
+    .analog_gain = 1.0f,
+    .red_gain = 1.9f,
+    .green_gain = 1.0f,
+    .blue_gain = 2.2f,
 };
 
 static lua_Integer camera_quality_factor = 50;
@@ -332,13 +332,20 @@ static int lua_camera_auto(lua_State *L)
         return 0;
     }
 
+    // Default auto exposure settings
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.18;
     double exposure_speed = 0.50;
-    double awb_speed = 0.5;
-    double shutter_limit = 800.0; // TODO fix this value
-    double gain_limit = 248.0;
+    double shutter_limit = 800.0;
+    double analog_gain_limit = 248.0;
 
+    // Default white balance settings
+    double white_balance_speed = 0.5;
+    double K = 4166400.0; // TODO rename and expose these for user override
+    double t1 = 50;       // TODO rename and expose these for user override
+    double t2 = 200;      // TODO rename and expose these for user override
+
+    // Allow user to over-ride these if desired
     if (lua_istable(L, 1))
     {
         if (lua_getfield(L, 1, "metering") != LUA_TNIL)
@@ -399,19 +406,30 @@ static int lua_camera_auto(lua_State *L)
             lua_pop(L, 1);
         }
 
-        if (lua_getfield(L, 1, "gain_limit") != LUA_TNIL)
+        if (lua_getfield(L, 1, "analog_gain_limit") != LUA_TNIL)
         {
-            gain_limit = luaL_checknumber(L, -1);
-            if (gain_limit < 0.0 || gain_limit > 248.0)
+            analog_gain_limit = luaL_checknumber(L, -1);
+            if (analog_gain_limit < 0.0 || analog_gain_limit > 248.0)
             {
-                luaL_error(L, "gain_limit must be between 0 and 248");
+                luaL_error(L, "analog_gain_limit must be between 0 and 248");
+            }
+
+            lua_pop(L, 1);
+        }
+
+        if (lua_getfield(L, 1, "white_balance_speed") != LUA_TNIL)
+        {
+            white_balance_speed = luaL_checknumber(L, -1);
+            if (white_balance_speed < 0.0 || white_balance_speed > 1.0)
+            {
+                luaL_error(L, "white_balance_speed must be between 0 and 1");
             }
 
             lua_pop(L, 1);
         }
     }
 
-    // Get current brightness
+    // Get current brightness from FPGA
     volatile uint8_t metering_data[6];
     spi_read(FPGA, 0x25, (uint8_t *)metering_data, sizeof(metering_data));
 
@@ -428,55 +446,8 @@ static int lua_camera_auto(lua_State *L)
                                       spot_average +
                                       matrix_average) /
                                      3.0;
-    
-    // Scene brightness estimate for brightness-based speed modulation
-    double K = 4166400.0; // lux/total exposure
-    double scene_brightness = K*matrix_average/(last.shutter*last.gain);
-    double t1 = 50; // lux
-    double t2 = 200; //lux
-    double b_speed =  (scene_brightness - t1)/(t2 - t1); // alpha belending
 
-    if (b_speed > 1.0)
-    { 
-        b_speed = 1.0;
-    }
-
-    if (b_speed < 0.0)
-    {
-        b_speed = 0.0;
-    }
-
-    // AWB weight calculations
-    double max_p = matrix_r/last.awb_r > matrix_g/last.awb_g ? 
-        (matrix_r/last.awb_r > matrix_b/last.awb_b ? matrix_r/last.awb_r : matrix_b/last.awb_b) : 
-        (matrix_g/last.awb_g > matrix_b/last.awb_b ? matrix_g/last.awb_g : matrix_b/last.awb_b);
-    double awb_r = max_p/matrix_r*last.awb_r;
-    double awb_g = max_p/matrix_g*last.awb_g;
-    double awb_b = max_p/matrix_b*last.awb_b;
-
-    // max WB gain clipping
-    if (awb_r > 1023.0)
-    {
-        awb_r = 1023.0;
-    }
-
-    if (awb_g > 1023.0)
-    {
-        awb_g = 1023.0;
-    }
-    if (awb_b > 1023.0)
-    {
-        awb_b = 1023.0;
-    }
-
-    // Apply AWB speed
-    last.awb_r = b_speed*awb_speed*(awb_r - last.awb_r) + last.awb_r;
-    last.awb_g = b_speed*awb_speed*(awb_g - last.awb_g) + last.awb_g;
-    last.awb_b = b_speed*awb_speed*(awb_b - last.awb_b) + last.awb_b;
-
-
-
-    // Choose error
+    // Auto exposure based on metering mode
     double error;
 
     switch (metering)
@@ -509,26 +480,26 @@ static int lua_camera_auto(lua_State *L)
 
         if (error > 1)
         {
-            last.gain *= error;
+            last.analog_gain *= error;
 
-            if (last.gain > gain_limit)
+            if (last.analog_gain > analog_gain_limit)
             {
-                last.gain = gain_limit;
+                last.analog_gain = analog_gain_limit;
             }
         }
     }
     else
     {
-        double gain = last.gain;
+        double analog_gain = last.analog_gain;
 
-        last.gain *= error;
+        last.analog_gain *= error;
 
-        if (last.gain < 1.0)
+        if (last.analog_gain < 1.0)
         {
-            last.gain = 1.0;
+            last.analog_gain = 1.0;
         }
 
-        error *= gain / last.gain;
+        error *= analog_gain / last.analog_gain;
 
         if (error < 1)
         {
@@ -541,7 +512,6 @@ static int lua_camera_auto(lua_State *L)
         }
     }
 
-    // Limit the outputs
     if (last.shutter > shutter_limit)
     {
         last.shutter = shutter_limit;
@@ -550,40 +520,82 @@ static int lua_camera_auto(lua_State *L)
     {
         last.shutter = 4.0;
     }
-    if (last.gain > gain_limit)
+    if (last.analog_gain > analog_gain_limit)
     {
-        last.gain = gain_limit;
+        last.analog_gain = analog_gain_limit;
     }
-    if (last.gain < 0.0)
+    if (last.analog_gain < 0.0)
     {
-        last.gain = 0.0;
+        last.analog_gain = 0.0;
     }
 
-    // TODO calculate and set auto white-balance
-
-    // Set the output
     uint16_t shutter = (uint16_t)last.shutter;
-    uint8_t gain = (uint8_t)last.gain;
+    uint8_t analog_gain = (uint8_t)last.analog_gain;
 
     check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);
     check_error(i2c_write(CAMERA, 0x3502, 0xF0, shutter << 4).fail);
-    check_error(i2c_write(CAMERA, 0x350B, 0xFF, gain).fail);
+    check_error(i2c_write(CAMERA, 0x350B, 0xFF, analog_gain).fail);
 
-    // AWB
-    uint16_t awb_r_16b = (uint16_t)(last.awb_r*256.0);
-    uint16_t awb_g_16b = (uint16_t)(last.awb_g*256.0);
-    uint16_t awb_b_16b = (uint16_t)(last.awb_b*256.0);
-    
-    //R
-    check_error(i2c_write(CAMERA, 0x5180, 0x03, awb_r_16b >> 8).fail);
-    check_error(i2c_write(CAMERA, 0x5181, 0xFF, awb_r_16b).fail);
-    //G
-    check_error(i2c_write(CAMERA, 0x5182, 0x03, awb_g_16b >> 8).fail);
-    check_error(i2c_write(CAMERA, 0x5183, 0xFF, awb_g_16b).fail);
-    //B
-    check_error(i2c_write(CAMERA, 0x5184, 0x03, awb_b_16b >> 8).fail);
-    check_error(i2c_write(CAMERA, 0x5185, 0xFF, awb_b_16b).fail);
+    // Auto white balance based on full scene matrix
+    double max_p = matrix_r / last.red_gain > matrix_g / last.green_gain // TODO rename this
+                       ? (matrix_r / last.red_gain > matrix_b / last.blue_gain
+                              ? matrix_r / last.red_gain
+                              : matrix_b / last.blue_gain)
+                       : (matrix_g / last.green_gain > matrix_b / last.blue_gain
+                              ? matrix_g / last.green_gain
+                              : matrix_b / last.blue_gain);
+
+    double red_gain = max_p / matrix_r * last.red_gain;
+    double green_gain = max_p / matrix_g * last.green_gain;
+    double blue_gain = max_p / matrix_b * last.blue_gain;
+    double scene_brightness = K * matrix_average /
+                              (last.shutter * last.analog_gain);
+    double b_speed = (scene_brightness - t1) / (t2 - t1); // TODO rename this
+
+    if (red_gain > 1023.0)
+    {
+        red_gain = 1023.0;
+    }
+    if (green_gain > 1023.0)
+    {
+        green_gain = 1023.0;
+    }
+    if (blue_gain > 1023.0)
+    {
+        blue_gain = 1023.0;
+    }
+    if (b_speed > 1.0)
+    {
+        b_speed = 1.0;
+    }
+    if (b_speed < 0.0)
+    {
+        b_speed = 0.0;
+    }
+
+    last.red_gain = b_speed * white_balance_speed *
+                        (red_gain - last.red_gain) +
+                    last.red_gain;
+
+    last.green_gain = b_speed * white_balance_speed *
+                          (green_gain - last.green_gain) +
+                      last.green_gain;
+
+    last.blue_gain = b_speed * white_balance_speed *
+                         (blue_gain - last.blue_gain) +
+                     last.blue_gain;
+
+    uint16_t red_gain_uint16 = (uint16_t)(last.red_gain * 256.0);
+    uint16_t green_gain_uint16 = (uint16_t)(last.green_gain * 256.0);
+    uint16_t blue_gain_uint16 = (uint16_t)(last.blue_gain * 256.0);
+
+    check_error(i2c_write(CAMERA, 0x5180, 0x03, red_gain_uint16 >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5181, 0xFF, red_gain_uint16).fail);
+    check_error(i2c_write(CAMERA, 0x5182, 0x03, green_gain_uint16 >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5183, 0xFF, green_gain_uint16).fail);
+    check_error(i2c_write(CAMERA, 0x5184, 0x03, blue_gain_uint16 >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x5185, 0xFF, blue_gain_uint16).fail);
 
     lua_newtable(L);
 
@@ -626,18 +638,14 @@ static int lua_camera_auto(lua_State *L)
             lua_setfield(L, -2, "matrix");
         }
 
-
         lua_pushnumber(L, center_weighted_average);
         lua_setfield(L, -2, "center_weighted_average");
 
+        lua_pushnumber(L, scene_brightness);
+        lua_setfield(L, -2, "scene");
+
         lua_setfield(L, -2, "brightness");
     }
-
-
-    lua_pushnumber(L, scene_brightness);
-    lua_setfield(L, -2, "scene_brightness");
-
-
 
     lua_pushnumber(L, error);
     lua_setfield(L, -2, "error");
@@ -645,8 +653,17 @@ static int lua_camera_auto(lua_State *L)
     lua_pushnumber(L, last.shutter);
     lua_setfield(L, -2, "shutter");
 
-    lua_pushnumber(L, last.gain);
-    lua_setfield(L, -2, "gain");
+    lua_pushnumber(L, last.analog_gain);
+    lua_setfield(L, -2, "analog_gain");
+
+    lua_pushnumber(L, last.red_gain);
+    lua_setfield(L, -2, "red_gain");
+
+    lua_pushnumber(L, last.green_gain);
+    lua_setfield(L, -2, "green_gain");
+
+    lua_pushnumber(L, last.blue_gain);
+    lua_setfield(L, -2, "blue_gain");
 
     return 1;
 }
