@@ -670,6 +670,7 @@ async def main():
             state = 'WAIT'
         elseif state == 'WAIT' then
             if frame.camera.image_ready() then
+                frame.camera.power_save(true)
                 state = 'READ'
             end
         elseif state == 'READ' then
@@ -686,6 +687,7 @@ async def main():
         elseif state == 'DONE' then
             while true do
                 if pcall(frame.bluetooth.send, '0') then
+                    frame.camera.power_save(false)
                     break
                 end
             end

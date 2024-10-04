@@ -685,6 +685,7 @@ static int lua_camera_power_save(lua_State *L)
         check_error(i2c_write(CAMERA, 0x3659, 0xFF, 0xFF).fail);
         check_error(i2c_write(CAMERA, 0x365A, 0xFF, 0xFF).fail);
         check_error(i2c_write(CAMERA, 0x308B, 0xFF, 0x01).fail);
+        spi_write(FPGA, 0x28, (uint8_t *)"\x01", 1);
     }
     else
     {
@@ -693,8 +694,10 @@ static int lua_camera_power_save(lua_State *L)
         check_error(i2c_write(CAMERA, 0x365A, 0xFF, 0x02).fail);
         check_error(i2c_write(CAMERA, 0x308B, 0xFF, 0x00).fail);
         check_error(i2c_write(CAMERA, 0x0100, 0xFF, 0x01).fail);
+        spi_write(FPGA, 0x28, (uint8_t *)"\x00", 1);
         camera_is_asleep = false;
     }
+
     return 0;
 }
 

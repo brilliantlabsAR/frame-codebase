@@ -25,6 +25,7 @@
     output logic start_capture_out,
     // TODO position signals
     output logic [1:0] compression_factor_out,
+    output logic power_save_enable_out,
 
     input logic image_ready_in,
     input logic [15:0] image_total_size_in,
@@ -53,6 +54,7 @@ always_ff @(posedge clock_in) begin
         start_capture_out <= 0;
         // TODO position signals
         compression_factor_out <= 0;
+        power_save_enable_out <= 0;
 
         image_address_out <= 0;
 
@@ -135,6 +137,13 @@ always_ff @(posedge clock_in) begin
                 'h27: begin
                     response_out <= {7'b0, image_ready_in};
                     response_valid_out <= 1;
+                end
+
+                // Power saving
+                'h28: begin
+                   if (operand_valid_in) begin 
+                        power_save_enable_out <= operand_in[0];
+                    end
                 end
 
             endcase
