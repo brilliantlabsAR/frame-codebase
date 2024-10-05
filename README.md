@@ -1,7 +1,7 @@
 # Frame Firmware & RTL Codebase
 
 Welcome to the complete codebase of the Frame hardware. For regular usage, check out the docs [here](https://docs.brilliant.xyz).
-
+ 
 ## System architecture
 
 The codebase is split into three sections. The **nRF52 Application**, the **nRF52 Bootloader**, and the **FPGA RTL**. 
