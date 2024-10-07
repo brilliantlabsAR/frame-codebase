@@ -663,6 +663,9 @@ async def main():
     local state = 'CAPTURE'
     local state_time = 0
 
+    frame.display.power_save(true)
+    frame.camera.power_save(false)
+
     while true do
         if state == 'CAPTURE' then
             frame.camera.capture { quality_factor = 50 }
