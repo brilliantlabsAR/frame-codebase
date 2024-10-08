@@ -663,6 +663,9 @@ async def main():
     local state = 'CAPTURE'
     local state_time = 0
 
+    frame.display.power_save(true)
+    frame.camera.power_save(false)
+
     while true do
         if state == 'CAPTURE' then
             frame.camera.capture { quality_factor = 50 }
@@ -670,6 +673,7 @@ async def main():
             state = 'WAIT'
         elseif state == 'WAIT' then
             if frame.camera.image_ready() then
+                frame.camera.power_save(true)
                 state = 'READ'
             end
         elseif state == 'READ' then
@@ -686,6 +690,7 @@ async def main():
         elseif state == 'DONE' then
             while true do
                 if pcall(frame.bluetooth.send, '0') then
+                    frame.camera.power_save(false)
                     break
                 end
             end

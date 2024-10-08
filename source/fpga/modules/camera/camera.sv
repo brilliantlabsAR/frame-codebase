@@ -57,6 +57,7 @@ logic [10:0] x_resolution = 512;
 logic [10:0] y_resolution = 512;
 logic [10:0] x_pan = 0;
 logic [1:0] compression_factor;
+logic power_save_enable;
 
 logic image_buffer_ready;
 logic [15:0] image_buffer_total_size;
@@ -87,6 +88,7 @@ spi_registers spi_registers (
     // .y_resolution_out(y_resolution),
     // .x_pan_out(x_pan),
     .compression_factor_out(compression_factor),
+    .power_save_enable_out(power_save_enable),
 
     .image_ready_in(image_buffer_ready),
     .image_total_size_in(image_buffer_total_size),
@@ -155,7 +157,7 @@ csi2_receiver_ip csi2_receiver_ip (
     .payload_en_o(mipi_payload_enable_metastable),
     .payload_o(mipi_payload_metastable),
     .tx_rdy_i(1'b1),
-    .pd_dphy_i(~global_reset_n_in),
+    .pd_dphy_i(~global_reset_n_in | power_save_enable),
     .dt_o(mipi_datatype),
     .wc_o(mipi_word_count),
     .ref_dt_i(6'h2B),
