@@ -32,6 +32,10 @@ async def main():
     await asyncio.sleep(5.00)
     await b.send_lua("frame.display.power_save(false)")
     await b.send_lua("frame.camera.power_save(false)")
+    await asyncio.sleep(5.00)
+
+    # Deep sleep
+    await b.send_lua("frame.sleep()")
 
     await b.disconnect()
 
