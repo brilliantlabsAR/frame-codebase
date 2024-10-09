@@ -101,7 +101,7 @@ PLL #(
     .PHIE("0"),
     .PHIF("0"),
     .PLLPD_N("USED"),
-    .PLLPDN_EN("DISABLED"),
+    .PLLPDN_EN("ENABLED"),
     .PLLRESET_ENA("ENABLED"),
     .PMU_WAITFORLOCK("ENABLED"),
     .REF_INTEGER_MODE("ENABLED"),
@@ -150,7 +150,7 @@ PLL #(
     .FBKCK(feedback_w),
     .PLLRESET(rstn_i),
     .REFCK(clki_i),
-    
+    .PLLPOWERDOWN_N(0),
     // Outputs
     .CLKOP(clkop_o),
     .CLKOS(clkos_o),
