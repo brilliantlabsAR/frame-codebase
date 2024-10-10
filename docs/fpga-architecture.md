@@ -26,7 +26,9 @@ Each function is accessed through a register. Registers are always addressed by 
 | 0x23    | `CAMERA_ZOOM`           | Sets the zoom factor. A setting of `1` captures a 720x720 image, `2` captures 360x360, `3` captures 240x240, and `4` captures 180x180.<br>**Write: `zoom_factor[7:0]`**
 | 0x24    | `CAMERA_PAN`            | Pans the capture window up or down in discrete steps. A setting of `10` captures the top-most part of the image, `0` is the middle, and `-10` is the bottom-most<br>**Write: `pan_position[7:0]`**
 | 0x25    | `CAMERA_READ_METERING`  | Returns the current brightness levels for the red, green and blue channels of the camera. Two sets of values are returned representing spot and average metering.<br>**Read: `center_red_level[7:0]`**<br>**Read: `center_green_level[7:0]`**<br>**Read: `center_blue_level[7:0]`**<br>**Read: `average_red_level[7:0]`**<br>**Read: `average_green_level[7:0]`**<br>**Read: `average_blue_level[7:0]`**
-| 0x26    | `CAMERA_QUALITY_FACTOR` | Sets the jpeg quality factor of the saved image. High values are higher quality but bigger size.<br>**Write: `quality_factor[1:0]`**.<br>- **0b01** = 100%<br>- **0b00** = 50%<br>- **0b11** = 25%<br>- **0b10** = 10%
+| 0x26    | `CAMERA_QUALITY_FACTOR` | Sets the jpeg quality factor of the saved image. High values are higher quality but bigger size.<br>**Write: `quality_factor[1:0]`**.<br>- **0x1:** QF = 100<br>- **0x0:** QF = 50<br>- **0x3:** QF = 25<br>- **0x2:** QF = 10
+| 0x30    | `COMPRESSION_STATUS`        | Status of JPEG compression.<br>**Read: `image_complete[0]`**<br>**`Bit 0: Returns 1 when compression completed.`**
+| 0x31    | `COMPRESSED_BYTES_MINUS_4`  | Returns total size in bytes minus 4 of the ECS (= Entropy Coded Segment, that is, everything after the SOS marker and header, and before the EOS marker). Add 4 to get the actual size of the ECS. <br>**Read: `compressed_bytes_minus_4[15:0] (LSB first)`**  
 | 0xDB    | `GET_CHIP_ID`           | Returns the chip ID value.<br>**Read: `0x81`**
 
 ## Graphics
