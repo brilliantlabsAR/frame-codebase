@@ -210,37 +210,6 @@ image_gen image_gen (
 );
 `endif // TESTBENCH
 
-logic [9:0] panned_data;
-logic panned_line_valid;
-logic panned_frame_valid;
-
-crop pan_crop (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
-
-    .red_data_in(byte_to_pixel_data),
-    .green_data_in(0),
-    .blue_data_in(0),
-    .line_valid_in(byte_to_pixel_line_valid),
-    .frame_valid_in(byte_to_pixel_frame_valid),
-
-    `ifdef TESTBENCH
-    .x_crop_start(10),
-    .x_crop_end(25),
-    .y_crop_start(12),
-    .y_crop_end(24),
-    `else
-    .x_crop_start(284), // TODO make dynamic
-    .x_crop_end(1004),  // TODO make dynamic
-    .y_crop_start(4),
-    .y_crop_end(724),
-    `endif
-
-    .red_data_out(panned_data),
-    .line_valid_out(panned_line_valid),
-    .frame_valid_out(panned_frame_valid)
-);
-
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
 logic [9:0] debayered_blue_data;
@@ -251,9 +220,9 @@ debayer debayer (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
-    .bayer_data_in(panned_data),
-    .line_valid_in(panned_line_valid),
-    .frame_valid_in(panned_frame_valid),
+    .bayer_data_in(byte_to_pixel_data),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
 
     .red_data_out(debayered_red_data),
     .green_data_out(debayered_green_data),
@@ -341,7 +310,7 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
-crop zoom_crop (
+crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
