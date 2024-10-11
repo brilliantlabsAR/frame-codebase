@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -13,33 +14,10 @@ module spi_register #(
     parameter REGISTER_ADDRESS = 'h00,
     parameter REGISTER_VALUE = 'h00
 )(
-    input logic clock_in,
-    input logic reset_n_in,
-
     input logic [7:0] opcode_in,
-    input logic opcode_valid_in,
-    
-    output logic [7:0] response_out,
-    output logic response_valid_out
+    output logic [7:0] response_out
 );
 
-    always_ff @(posedge clock_in) begin
-        
-        if (reset_n_in == 0) begin
-            response_out <= 0;
-            response_valid_out <= 0;
-        end
-
-        else begin
-            if (opcode_in == REGISTER_ADDRESS) begin
-                response_out <= REGISTER_VALUE;
-                response_valid_out <= 1;
-            end
-            else begin
-                response_valid_out <= 0;
-            end
-        end
-
-    end
+always_comb response_out = opcode_in == REGISTER_ADDRESS ? REGISTER_VALUE : '0;
 
 endmodule

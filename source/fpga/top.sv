@@ -3,7 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
- *              Robert Metchev / Chips & Scripts (rmetchev@ieee.org) 
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -57,8 +57,12 @@ logic camera_pixel_clock;
 logic display_clock;
 logic spi_peripheral_clock;
 logic jpeg_buffer_clock;
+logic image_buffer_clock;
 logic pll_locked;
 logic pll_reset;
+logic pllpowerdown_n;
+logic image_buffer_clock_select;
+
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -72,20 +76,32 @@ OSCA #(
 pll_wrapper pll_wrapper (
     .clki_i(osc_clock),                 // 18MHz
     .rstn_i(pll_reset),
+    .pllpowerdown_n(pllpowerdown_n),
     .clkop_o(camera_clock),             // 24MHz
     .clkos_o(camera_pixel_clock),       // 36MHz
     .clkos2_o(display_clock),           // 36MHz
-    .clkos3_o(spi_peripheral_clock),    // 72MHz
-    .clkos4_o(jpeg_buffer_clock),       // 78MHz
+    .clkos3_o(spi_peripheral_clock),    // 72MHz - remove
+    .clkos4_o(jpeg_buffer_clock),       // 78MHz - remove
     .lock_o(pll_locked)
 );
+
+// Clock select for image buffer
+defparam DCSInst0.DCSMODE = "DCS";
+DCS DCSInst0 (
+.CLK0 (spi_clock_in),
+.CLK1 (camera_pixel_clock),
+.SEL (image_buffer_clock_select),
+.SELFORCE (1'b0),
+.DCSOUT (image_buffer_clock));
 
 // Reset
 logic global_reset_n;
 logic camera_pixel_reset_n;
 logic display_reset_n;
 logic spi_peripheral_reset_n;
+logic spi_async_peripheral_reset_n;
 logic jpeg_buffer_reset_n;
+logic image_buffer_reset_n;
 
 global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
@@ -106,9 +122,10 @@ reset_sync display_clock_reset_sync (
     .sync_reset_n_out(display_reset_n)
 );
 
+assign spi_async_peripheral_reset_n = ~spi_select_in | spi_peripheral_reset_n;
 reset_sync spi_peripheral_clock_reset_sync (
-    .clock_in(spi_peripheral_clock),
-    .async_reset_n_in(global_reset_n),
+    .clock_in(spi_clock_in),
+    .async_reset_n_in(spi_async_peripheral_reset_n),    // De-couple SPI reset from PLL status
     .sync_reset_n_out(spi_peripheral_reset_n)
 );
 
@@ -118,55 +135,58 @@ reset_sync jpeg_buffer_clock_reset_sync (
     .sync_reset_n_out(jpeg_buffer_reset_n)
 );
 
+reset_sync image_buffer_clock_reset_sync (
+    .clock_in(image_buffer_clock),
+    .async_reset_n_in(global_reset_n),
+    .sync_reset_n_out(image_buffer_reset_n)
+);
+
 // SPI
 logic [7:0] opcode;
-logic opcode_valid;
 logic [7:0] operand;
-logic operand_valid;
-integer operand_count;
+logic operand_rd_en;
+logic operand_wr_en;
+logic [31:0] rd_operand_count;
+logic [31:0] wr_operand_count;
 
-logic [7:0] response_2;
-logic response_2_valid;
-
-logic [7:0] response_3;
-logic response_3_valid;
+logic [7:0] response_2;  // Camera
+logic [7:0] response_3;  // Chip ID
+logic [7:0] response_4;  // PLL CSR
 
 spi_peripheral spi_peripheral (
-    .clock_in(spi_peripheral_clock),
-    .reset_n_in(spi_peripheral_reset_n),
-
-    .spi_select_in(spi_select_in),
+    //.clock_in(spi_peripheral_clock),      // This 72 MHz clock is no longer used
+    .reset_n_in(1'b0),	                    // De-couple SPI reset from PLL status 
+                                            // SPI uses ONLY spi_select_in to reset
+    .spi_select_in(spi_select_in),          // note: CS is active low
     .spi_clock_in(spi_clock_in),
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
-    .opcode_out(opcode),
-    .opcode_valid_out(opcode_valid),
-    .operand_out(operand),
-    .operand_valid_out(operand_valid),
-    .operand_count_out(operand_count),
+    .address_out(opcode),
+    .wr_data(operand),
+    .rd_byte_count(rd_operand_count)
+    .wr_byte_count(wr_operand_count)
+    .data_rd_en(operand_rd_en),
+    .data_wr_en(operand_wr_en),
 
     .response_1_in(8'b0),
     .response_2_in(response_2),
     .response_3_in(response_3),
-    .response_1_valid_in(1'b0),
-    .response_2_valid_in(response_2_valid),
-    .response_3_valid_in(response_3_valid)
+    .response_4_in(response_4)
 );
 
 // Graphics
 graphics graphics (
-    .spi_clock_in(spi_peripheral_clock),
-    .spi_reset_n_in(spi_peripheral_reset_n),
+    .spi_clock_in(spi_clock_in),            // external SPI clock
+    .spi_reset_n_in(spi_peripheral_reset_n),// synchronized external SPI CS
 
     .display_clock_in(display_clock),
     .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
-    .op_code_valid_in(opcode_valid),
     .operand_in(operand),
-    .operand_valid_in(operand_valid),
-    .operand_count_in(operand_count),
+    .operand_valid_in(operand_wr_en),
+    .operand_count_in(wr_operand_count),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
@@ -182,7 +202,7 @@ assign camera_clock_out = camera_clock;
 camera camera (
     .global_reset_n_in(global_reset_n),
 
-    .spi_clock_in(spi_peripheral_clock),
+    .spi_clock_in(spi_clock_in),
     .spi_reset_n_in(spi_peripheral_reset_n),
 
     .pixel_clock_in(camera_pixel_clock),
@@ -190,6 +210,9 @@ camera camera (
 
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
+
+    .image_buffer_clock_in(jpeg_buffer_clock),
+    .image_buffer_reset_n_in(jpeg_buffer_reset_n),
     
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
@@ -199,12 +222,13 @@ camera camera (
     `endif
     
     .op_code_in(opcode),
-    .op_code_valid_in(opcode_valid),
     .operand_in(operand),
-    .operand_valid_in(operand_valid),
-    .operand_count_in(operand_count),
-    .response_out(response_2),
-    .response_valid_out(response_2_valid)
+    .rd_operand_count_in(rd_operand_count)
+    .wr_operand_count_in(wr_operand_count)
+    .operand_read(operand_rd_en),
+    .operand_valid_in(operand_wr_en),
+
+    .response_out(response_2)
 );
 
 // Chip ID register
@@ -212,13 +236,24 @@ spi_register #(
     .REGISTER_ADDRESS('hDB),
     .REGISTER_VALUE('h81)
 ) chip_id_1 (
-    .clock_in(spi_peripheral_clock),
-    .reset_n_in(spi_peripheral_reset_n),
-
     .opcode_in(opcode),
-    .opcode_valid_in(opcode_valid),
-    .response_out(response_3),
-    .response_valid_out(response_3_valid)
+    .response_out(response_3)
 );
 
+// PLL control and status register
+pll_csr pll_csr (
+    // SPI clock
+    .spi_clock_in(spi_clock_in),                                    // external SPI clock
+    .spi_async_peripheral_reset_n(spi_async_peripheral_reset_n),    // async external SPI CS
+
+    // SPI interface
+    .op_code_in(opcode),
+    .operand_in(operand),
+    .operand_valid_in(operand_wr_en),
+    .response_out(response_4)
+
+    .pllpowerdown_n(pllpowerdown_n),                        // pll power down control
+    .image_buffer_clock_select(image_buffer_clock_select),  // seletcs SPI clock to read image buffer when PLL is off
+    .pll_locked(pll_locked)                                 // PLL lock status - needed in order to safely switch image buffer clocks
+);
 endmodule

@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -24,10 +25,9 @@ module graphics (
     input logic display_reset_n_in,
 
     input logic [7:0] op_code_in,
-    input logic op_code_valid_in,
     input logic [7:0] operand_in,
     input logic operand_valid_in,
-    input integer operand_count_in,
+    input logic [31:0] operand_count_in,
 
     output logic display_clock_out,
     output logic display_hsync_out,
@@ -66,14 +66,14 @@ logic sprite_enable;
 logic switch_buffer_spi_domain;
 logic switch_buffer;
 
-logic [1:0] spi_op_code_edge_monitor;
-logic [1:0] spi_operand_edge_monitor;
+logic spi_operand_edge_monitor;
+logic spi_operand_edge_monitor_z;
 
 // SPI registers
-always_ff @(posedge spi_clock_in) begin
+always_ff @(negedge spi_clock_in) begin
     
     // Always clear flags after the opcode has been handled
-    if (op_code_valid_in == 0 || spi_reset_n_in == 0) begin
+    if (operand_valid_in == 0 || spi_reset_n_in == 0) begin
         assign_color_enable_spi_domain <= 0;
         sprite_enable_spi_domain <= 0;
         switch_buffer_spi_domain <= 0;
@@ -139,13 +139,22 @@ always_ff @(posedge spi_clock_in) begin
 
 end
 
+// SPI to display pulse sync
+psync1 psync1_operand_valid_in (
+        .in             (operand_valid_in),
+        .in_clk         (~spi_clock_in),
+        .in_reset_n     (spi_reset_n_in),
+        .out            (spi_operand_edge_monitor),
+        .out_clk        (display_clock_in),
+        .out_reset_n    (display_reset_n_in)
+);
+
 // SPI to display CDC
 always_ff @(posedge display_clock_in) begin
     
     // Always clear flags after the opcode has been handled
     if (display_reset_n_in == 0) begin
-        spi_op_code_edge_monitor <= 0;
-        spi_operand_edge_monitor <= 0;
+        spi_operand_edge_monitor_z <= 0;
 
         assign_color_index <= 0;
         assign_color_value <= 0;
@@ -164,11 +173,9 @@ always_ff @(posedge display_clock_in) begin
     end
 
     else begin
-        spi_op_code_edge_monitor <= {spi_op_code_edge_monitor[0], op_code_valid_in};
-        spi_operand_edge_monitor <= {spi_operand_edge_monitor[0], operand_valid_in};
+        spi_operand_edge_monitor_z <= spi_operand_edge_monitor;
 
-        if (spi_op_code_edge_monitor == 2'b01 || 
-            spi_operand_edge_monitor == 2'b01) begin
+        if (spi_operand_edge_monitor) begin
             assign_color_index <= assign_color_index_spi_domain;
             assign_color_value <= assign_color_value_spi_domain;
             assign_color_enable <= assign_color_enable_spi_domain;
@@ -185,7 +192,7 @@ always_ff @(posedge display_clock_in) begin
             switch_buffer <= switch_buffer_spi_domain;
         end
 
-        if (spi_operand_edge_monitor == 2'b10) begin
+        if (spi_operand_edge_monitor_z) begin
             sprite_data_valid <= sprite_data_valid_spi_domain;
         end
     end
