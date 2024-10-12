@@ -29,21 +29,21 @@ module spi_peripheral (
     output logic data_rd_en,            // was opcode_valid_out + operand_valid_out
     output logic data_wr_en,            // was opcode_valid_out + operand_valid_out
 
-    input logic [7:0] rd_data_1,        // Graphics; was response_1_in
-    input logic [7:0] rd_data_2,        // Camera; was response_2_in
-    input logic [7:0] rd_data_3,        // Chip ID; was response_3_in
-    input logic [7:0] rd_data_4         // PLL CSR
+    input logic [7:0] response_1_in,    // Graphics; was response_1_in
+    input logic [7:0] response_2_in,    // Camera; was response_2_in
+    input logic [7:0] response_3_in,    // Chip ID; was response_3_in
+    input logic [7:0] response_4_in     // PLL CSR
 );
 
 logic                   spi_resetn;
 logic [3:0]             bit_index;
 logic [7:0]             shift_reg;
-logic [7:0]             rd_data;
+logic [7:0]             response;
 
 always_comb  spi_resetn = reset_n_in & ~spi_select_in; // local reset
 always_comb  wr_data = shift_reg;
 
-always_comb  rd_data = rd_data_1 | rd_data_2 | rd_data_3 | rd_data_4;
+always_comb  response = response_1_in | response_2_in | response_3_in | response_4_in;
 
 // At rising edge of SPI clock keep track data bytes and bits within the data
 always_ff @(posedge spi_clock_in or negedge spi_resetn)
@@ -72,7 +72,7 @@ always @(negedge spi_clock_in or negedge spi_resetn)
 if (!spi_resetn)
     spi_data_out <= 0;
 else if (bit_index == 7)
-    spi_data_out <= rd_data[7];
+    spi_data_out <= response[7];
 else  if (~bit_index[3])  
     spi_data_out <= shift_reg[7];
     
@@ -81,7 +81,7 @@ always_ff @(posedge spi_clock_in)
 if (bit_index[3]) 
     address_out <= {address_out, spi_data_in};
 else if (bit_index == 7)
-    shift_reg <= {rd_data, spi_data_in};
+    shift_reg <= {response, spi_data_in};
 else
     shift_reg <= {shift_reg, spi_data_in};
 

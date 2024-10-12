@@ -40,12 +40,19 @@ module top (
     output logic display_cb1_out,
     output logic display_cb2_out,
 
+    `ifdef NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic byte_to_pixel_line_valid /* synthesis syn_keep=1 nomerge=""*/,
+    input logic [9:0] byte_to_pixel_data /* synthesis syn_keep=1 nomerge=""*/,
+    input logic camera_pixel_clock,
+    `else
     `ifdef RADIANT
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
     `endif
+    `endif //NO_MIPI_IP_SIM
 
     output logic camera_clock_out
 );
@@ -53,17 +60,54 @@ module top (
 // Clocking
 logic osc_clock;
 logic camera_clock;
-logic camera_pixel_clock;
 logic display_clock;
 logic spi_peripheral_clock;
-logic jpeg_buffer_clock;
-logic image_buffer_clock;
 logic pll_locked;
 logic pll_reset;
+logic jpeg_buffer_clock;
+logic jpeg_slow_clock;
+logic image_buffer_clock;
+
 logic pllpowerdown_n;
 logic image_buffer_read_en;
 
+/* JPEG slow clock: 36, 24, 18, 12 MHz:
 
+                |   JPEG_SLOW_CLOCK_SOURCE
+    ------------+--_------------------------------------------------------
+    DIV_PCLKDIV |   camera_pixel_clock (36 MHz)     camera_clock (24 MHz)
+    "X1"        |   36 MHz                          24 MHz
+    "X2"        |   18 MHz                          12 MHz
+
+    NOTE:
+    When divider is "X2", jpeg_buffer_clock can be set to `JPEG_SLOW_CLOCK_SOURCE!
+*/
+
+//`define JPEG_SLOW_CLOCK_SOURCE camera_clock         /* 24 MHz -> 12 or 24 MHz */
+`define JPEG_SLOW_CLOCK_SOURCE camera_pixel_clock   /* 36 MHz -> 18 or 36 MHz */
+`define JPEG_SLOW_CLOCK_DIV "X1"                    /* "X2" or "X1" */
+
+`ifdef NO_PLL_SIM
+initial osc_clock = 0;
+initial camera_clock = 0;
+initial display_clock = 0;
+initial spi_peripheral_clock = 0;
+initial jpeg_buffer_clock = 0;
+initial jpeg_slow_clock = 0;
+initial forever #(27777.778) osc_clock = ~osc_clock;
+initial forever #(20833.333) camera_clock = !pll_reset ? ~camera_clock : 0;
+initial forever #(13999.889) display_clock = !pll_reset ? ~display_clock : 0;
+initial forever #( 6944.444) spi_peripheral_clock = !pll_reset ? ~spi_peripheral_clock : 0;
+initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset ? ~jpeg_buffer_clock : 0;
+// Divide 36 MHz clock by 2
+generate
+if (`JPEG_SLOW_CLOCK_DIV == "X2")
+always @(posedge `JPEG_SLOW_CLOCK_SOURCE or posedge pll_reset) jpeg_slow_clock = !pll_reset ? ~jpeg_slow_clock : 0;
+else
+always_comb jpeg_slow_clock = `JPEG_SLOW_CLOCK_SOURCE;
+endgenerate
+always_comb pll_locked = ~pll_reset;
+`else
 OSCA #(
     .HF_CLK_DIV("24"),
     .HF_OSC_EN("ENABLED"),
@@ -72,6 +116,8 @@ OSCA #(
     .HFOUTEN(1'b1),
     .HFCLKOUT(osc_clock) // f = (450 / (HF_CLK_DIV + 1)) ± 7%
 );
+
+logic camera_pixel_clock;
 
 pll_wrapper pll_wrapper (
     .clki_i(osc_clock),                 // 18MHz
@@ -84,6 +130,18 @@ pll_wrapper pll_wrapper (
     .clkos4_o(jpeg_buffer_clock),       // 78MHz - remove
     .lock_o(pll_locked)
 );
+
+// Divide 36 MHz clock by 2
+PCLKDIVSP #(
+    .DIV_PCLKDIV(`JPEG_SLOW_CLOCK_DIV),
+    .GSR("DISABLED")
+) div (
+    .CLKIN(`JPEG_SLOW_CLOCK_SOURCE),
+    .LSRPDIV(pll_reset),
+    .CLKOUT(jpeg_slow_clock)
+);
+
+`endif //NO_PLL_SIM
 
 // Reset
 logic global_reset_n;
@@ -132,15 +190,24 @@ reset_sync image_buffer_clock_reset_sync (
     .sync_reset_n_out(image_buffer_reset_n)
 );
 
+`ifdef NO_PLL_SIM
+clkswitch clkswitch(
+    .i_clk_a (camera_pixel_clock), 
+    .i_clk_b (spi_clock_in), 
+    .i_areset_n (spi_async_peripheral_reset_n), 
+    .i_sel (image_buffer_read_en), 
+    .o_clk (image_buffer_clock)
+);
+`else
 // Dynamic clock select for jpeg and Image buffer
-defparam DCSInst0.DCSMODE = "DCS";
-DCS DCSInst0 (
+DCS #(.DCSMODE("DCS")) DCSInst0 (
     .CLK0 (camera_pixel_clock),
     .CLK1 (spi_clock_in),
     .SEL (image_buffer_read_en),
     .SELFORCE (1'b0),
     .DCSOUT (image_buffer_clock)
 );
+`endif //NO_PLL_SIM
 
 // SPI
 logic [7:0] opcode;
@@ -165,8 +232,8 @@ spi_peripheral spi_peripheral (
 
     .address_out(opcode),
     .wr_data(operand),
-    .rd_byte_count(rd_operand_count)
-    .wr_byte_count(wr_operand_count)
+    .rd_byte_count(rd_operand_count),
+    .wr_byte_count(wr_operand_count),
     .data_rd_en(operand_rd_en),
     .data_wr_en(operand_wr_en),
 
@@ -215,18 +282,24 @@ camera camera (
     .image_buffer_clock_in(jpeg_buffer_clock),
     .image_buffer_reset_n_in(jpeg_buffer_reset_n),
     
+    `ifdef NO_MIPI_IP_SIM
+    .byte_to_pixel_frame_valid,
+    .byte_to_pixel_line_valid,
+    .byte_to_pixel_data,
+    `else
     `ifdef RADIANT
     .mipi_clock_p_in(mipi_clock_p_in),
     .mipi_clock_n_in(mipi_clock_n_in),
     .mipi_data_p_in(mipi_data_p_in),
     .mipi_data_n_in(mipi_data_n_in),
     `endif
+    `endif //NO_MIPI_IP_SIM
     
     // SPI interface
-    .op_code_in(opcode),
+    .opcode_in(opcode),
     .operand_in(operand),
-    .rd_operand_count_in(rd_operand_count)
-    //.wr_operand_count_in(wr_operand_count)
+    .rd_operand_count_in(rd_operand_count),
+    //.wr_operand_count_in(wr_operand_count),
     .operand_read(operand_rd_en),
     .operand_valid_in(operand_wr_en),
 
@@ -249,10 +322,10 @@ pll_csr pll_csr (
     .spi_async_peripheral_reset_n(spi_async_peripheral_reset_n),    // async external SPI CS
 
     // SPI interface
-    .op_code_in(opcode),
+    .opcode_in(opcode),
     .operand_in(operand),
     .operand_valid_in(operand_wr_en),
-    .response_out(response_4)
+    .response_out(response_4),
 
     .pllpowerdown_n(pllpowerdown_n),                // pll power down control
     .image_buffer_read_en(image_buffer_read_en),    // seletcs SPI clock to read image buffer when PLL is off

@@ -1,0 +1,10 @@
+modelsim.ini
+transcript
+
+*.log
+
+*.vstf
+vsim.wlf
+
+*.fst
+*.vcd

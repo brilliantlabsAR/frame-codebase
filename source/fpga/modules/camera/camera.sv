@@ -39,18 +39,25 @@ module camera (
     input logic image_buffer_clock_in,
     input logic image_buffer_reset_n_in,
 
+`ifndef NO_MIPI_IP_SIM
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
+`else
+    // for NO_MIPI_IP_SIM
+    input logic byte_to_pixel_frame_valid,
+    input logic byte_to_pixel_line_valid,
+    input logic [9:0] byte_to_pixel_data,
+`endif //NO_MIPI_IP_SIM
 
-    input logic [7:0] op_code_in,
-    input logic op_code_valid_in,
+    // SPI interface
+    input logic [7:0] opcode_in,
     input logic [7:0] operand_in,
+    input logic operand_read,
     input logic operand_valid_in,
-    input integer operand_count_in,
-    output logic [7:0] response_out,
-    output logic response_valid_out
+    input logic [31:0] rd_operand_count_in,
+    output logic [7:0] response_out
 );
 
 logic start_capture_spi_clock_domain;;
@@ -78,13 +85,13 @@ spi_registers spi_registers (
     .reset_n_in(spi_reset_n_in),
 
     // SPI interface
-    .op_code_in(op_code_in),
+    .opcode_in(opcode_in),
     .operand_in(operand_in),
-    .rd_operand_count_in(rd_operand_count_in)
-    //.wr_operand_count_in(wr_operand_count)
+    .rd_operand_count_in(rd_operand_count_in),
+    //.wr_operand_count_in(wr_operand_count),
     .operand_read(operand_read),
     .operand_valid_in(operand_valid_in),
-    .response_out(response_out)
+    .response_out(response_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
     // .x_resolution_out(x_resolution),
@@ -116,10 +123,13 @@ psync1 psync1_operand_valid_in (
         .out_reset_n    (pixel_reset_n_in)
 );
 
+`ifndef NO_MIPI_IP_SIM
 logic [9:0] byte_to_pixel_data;
 logic byte_to_pixel_line_valid;
 logic byte_to_pixel_frame_valid;
+`endif //NO_MIPI_IP_SIM
 
+`ifndef NO_MIPI_IP_SIM
 `ifdef RADIANT
 logic mipi_byte_clock;
 logic mipi_byte_reset_n;
@@ -199,6 +209,7 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .pd_o(byte_to_pixel_data)
 );
 `endif // RADIANT
+`endif //NO_MIPI_IP_SIM
 
 `ifdef TESTBENCH // TESTBENCH
 image_gen image_gen (
@@ -238,6 +249,8 @@ crop pan_crop (
     `endif
 
     .red_data_out(panned_data),
+    .green_data_out(),
+    .blue_data_out(),
     .line_valid_out(panned_line_valid),
     .frame_valid_out(panned_frame_valid)
 );

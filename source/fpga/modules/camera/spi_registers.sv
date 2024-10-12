@@ -55,7 +55,7 @@ logic [15:0] bytes_remaining;
 assign bytes_remaining = image_total_size_in - image_address_out;
 
 always_comb
-     case (op_code_in)
+     case (opcode_in)
          // Bytes available
          BYTES_REMAINING:
          case (rd_operand_count_in)
@@ -85,7 +85,7 @@ always_comb
 
 
 // combinatorial!
-always_comb start_capture_out = operand_valid_in & op_code_in == START_CAPTURE;
+always_comb start_capture_out = operand_valid_in & opcode_in == START_CAPTURE;
 
 always_ff @(negedge clock_in) begin
     
@@ -98,7 +98,7 @@ always_ff @(negedge clock_in) begin
 
     else begin
         if (operand_read) begin
-            case (op_code_in)
+            case (opcode_in)
                 // Read data
                 IMAGE_DATA: begin
                     if (image_address_out < image_total_size_in) begin 
@@ -110,7 +110,7 @@ always_ff @(negedge clock_in) begin
 
         if (operand_valid_in) begin
 
-            case (op_code_in)
+            case (opcode_in)
 
                 // Capture
                 START_CAPTURE: begin
