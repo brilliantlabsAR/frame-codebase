@@ -3,11 +3,11 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
- *              Robert Metchev / Chips & Scripts (rmetchev@ieee.org) 
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
- * Copyright © 2023 Brilliant Labs Limited
+ * Copyright © 2024 Brilliant Labs Limited
  */
 
 `ifndef RADIANT
@@ -36,6 +36,9 @@ module camera (
     input logic jpeg_buffer_clock_in, // 78MHz
     input logic jpeg_buffer_reset_n_in,
 
+    input logic image_buffer_clock_in,
+    input logic image_buffer_reset_n_in,
+
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
     inout wire mipi_data_p_in,
@@ -50,8 +53,7 @@ module camera (
     output logic response_valid_out
 );
 
-logic start_capture_spi_clock_domain;
-logic start_capture_metastable;
+logic start_capture_spi_clock_domain;;
 logic start_capture_pixel_clock_domain;
 logic [10:0] x_resolution = 512;
 logic [10:0] y_resolution = 512;
@@ -75,13 +77,14 @@ spi_registers spi_registers (
     .clock_in(spi_clock_in),
     .reset_n_in(spi_reset_n_in),
 
+    // SPI interface
     .op_code_in(op_code_in),
-    .op_code_valid_in(op_code_valid_in),
     .operand_in(operand_in),
+    .rd_operand_count_in(rd_operand_count_in)
+    //.wr_operand_count_in(wr_operand_count)
+    .operand_read(operand_read),
     .operand_valid_in(operand_valid_in),
-    .operand_count_in(operand_count_in),
-    .response_out(response_out),
-    .response_valid_out(response_valid_out),
+    .response_out(response_out)
 
     .start_capture_out(start_capture_spi_clock_domain),
     // .x_resolution_out(x_resolution),
@@ -103,17 +106,15 @@ spi_registers spi_registers (
     .blue_average_metering_in(blue_average_metering_spi_clock_domain)
 );
 
-always @(posedge pixel_clock_in) begin
-    if (pixel_reset_n_in == 0) begin
-        start_capture_metastable <= 0;
-        start_capture_pixel_clock_domain <= 0;
-    end
-
-    else begin
-        start_capture_metastable <= start_capture_spi_clock_domain;
-        start_capture_pixel_clock_domain <= start_capture_metastable;
-    end
-end
+// SPI to display pulse sync
+psync1 psync1_operand_valid_in (
+        .in             (start_capture_spi_clock_domain),
+        .in_clk         (~spi_clock_in),
+        .in_reset_n     (spi_reset_n_in),
+        .out            (start_capture_pixel_clock_domain),
+        .out_clk        (pixel_clock_in),
+        .out_reset_n    (pixel_reset_n_in)
+);
 
 logic [9:0] byte_to_pixel_data;
 logic byte_to_pixel_line_valid;
@@ -308,30 +309,21 @@ metering #(.SIZE(512)) average_metering (
 );
 
 always @(posedge spi_clock_in) begin : metering_cdc
-    if (spi_reset_n_in == 0) begin
-        center_metering_ready_metastable <= 0;
-        center_metering_ready_spi_clock_domain <= 0;
-        average_metering_ready_metastable <= 0;
-        average_metering_ready_spi_clock_domain <= 0;
+    center_metering_ready_metastable <= center_metering_ready_pixel_clock_domain;
+    center_metering_ready_spi_clock_domain <= center_metering_ready_metastable;
+    average_metering_ready_metastable <= average_metering_ready_pixel_clock_domain;
+    average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
+
+    if (center_metering_ready_spi_clock_domain) begin
+        red_center_metering_spi_clock_domain <= red_center_metering_pixel_clock_domain;
+        green_center_metering_spi_clock_domain <= green_center_metering_pixel_clock_domain;
+        blue_center_metering_spi_clock_domain <= blue_center_metering_pixel_clock_domain;
     end
 
-    else begin
-        center_metering_ready_metastable <= center_metering_ready_pixel_clock_domain;
-        center_metering_ready_spi_clock_domain <= center_metering_ready_metastable;
-        average_metering_ready_metastable <= average_metering_ready_pixel_clock_domain;
-        average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
-
-        if (center_metering_ready_spi_clock_domain) begin
-            red_center_metering_spi_clock_domain <= red_center_metering_pixel_clock_domain;
-            green_center_metering_spi_clock_domain <= green_center_metering_pixel_clock_domain;
-            blue_center_metering_spi_clock_domain <= blue_center_metering_pixel_clock_domain;
-        end
-
-        if (average_metering_ready_spi_clock_domain) begin
-            red_average_metering_spi_clock_domain <= red_average_metering_pixel_clock_domain;
-            green_average_metering_spi_clock_domain <= green_average_metering_pixel_clock_domain;
-            blue_average_metering_spi_clock_domain <= blue_average_metering_pixel_clock_domain;
-        end
+    if (average_metering_ready_spi_clock_domain) begin
+        red_average_metering_spi_clock_domain <= red_average_metering_pixel_clock_domain;
+        green_average_metering_spi_clock_domain <= green_average_metering_pixel_clock_domain;
+        blue_average_metering_spi_clock_domain <= blue_average_metering_pixel_clock_domain;
     end
 end
 
@@ -424,17 +416,14 @@ jpeg_encoder jpeg_encoder (
 always_comb image_buffer_total_size = final_image_address + 4;
 
 image_buffer image_buffer (
-    .write_clock_in(pixel_clock_in),
-    .read_clock_in(spi_clock_in),
-    .write_reset_n_in(pixel_reset_n_in),
-    .read_reset_n_in(spi_reset_n_in),
+    .clock_in(image_buffer_clock_in),
+
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),
+
     .write_data_in(final_image_data),
     .read_data_out(image_buffer_data),
-    .write_read_n_in(final_image_data_valid),
-    .write_complete_in(final_image_ready),
-    .write_complete_out(image_buffer_ready)
+    .write_read_n_in(final_image_data_valid)
 );
 
 endmodule

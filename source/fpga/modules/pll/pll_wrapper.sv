@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *

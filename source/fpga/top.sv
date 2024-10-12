@@ -61,7 +61,7 @@ logic image_buffer_clock;
 logic pll_locked;
 logic pll_reset;
 logic pllpowerdown_n;
-logic image_buffer_clock_select;
+logic image_buffer_read_en;
 
 
 OSCA #(
@@ -84,15 +84,6 @@ pll_wrapper pll_wrapper (
     .clkos4_o(jpeg_buffer_clock),       // 78MHz - remove
     .lock_o(pll_locked)
 );
-
-// Clock select for image buffer
-defparam DCSInst0.DCSMODE = "DCS";
-DCS DCSInst0 (
-.CLK0 (spi_clock_in),
-.CLK1 (camera_pixel_clock),
-.SEL (image_buffer_clock_select),
-.SELFORCE (1'b0),
-.DCSOUT (image_buffer_clock));
 
 // Reset
 logic global_reset_n;
@@ -139,6 +130,16 @@ reset_sync image_buffer_clock_reset_sync (
     .clock_in(image_buffer_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(image_buffer_reset_n)
+);
+
+// Dynamic clock select for jpeg and Image buffer
+defparam DCSInst0.DCSMODE = "DCS";
+DCS DCSInst0 (
+    .CLK0 (camera_pixel_clock),
+    .CLK1 (spi_clock_in),
+    .SEL (image_buffer_read_en),
+    .SELFORCE (1'b0),
+    .DCSOUT (image_buffer_clock)
 );
 
 // SPI
@@ -221,10 +222,11 @@ camera camera (
     .mipi_data_n_in(mipi_data_n_in),
     `endif
     
+    // SPI interface
     .op_code_in(opcode),
     .operand_in(operand),
     .rd_operand_count_in(rd_operand_count)
-    .wr_operand_count_in(wr_operand_count)
+    //.wr_operand_count_in(wr_operand_count)
     .operand_read(operand_rd_en),
     .operand_valid_in(operand_wr_en),
 
@@ -252,8 +254,8 @@ pll_csr pll_csr (
     .operand_valid_in(operand_wr_en),
     .response_out(response_4)
 
-    .pllpowerdown_n(pllpowerdown_n),                        // pll power down control
-    .image_buffer_clock_select(image_buffer_clock_select),  // seletcs SPI clock to read image buffer when PLL is off
-    .pll_locked(pll_locked)                                 // PLL lock status - needed in order to safely switch image buffer clocks
+    .pllpowerdown_n(pllpowerdown_n),                // pll power down control
+    .image_buffer_read_en(image_buffer_read_en),    // seletcs SPI clock to read image buffer when PLL is off
+    .pll_locked(pll_locked)                         // PLL lock status - needed in order to safely switch image buffer clocks
 );
 endmodule
