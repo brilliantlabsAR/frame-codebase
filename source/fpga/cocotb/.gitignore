@@ -7,4 +7,7 @@ transcript
 vsim.wlf
 
 *.fst
+*.fst.hier
 *.vcd
+sim_build
+__pycache__

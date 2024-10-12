@@ -95,10 +95,10 @@ initial spi_peripheral_clock = 0;
 initial jpeg_buffer_clock = 0;
 initial jpeg_slow_clock = 0;
 initial forever #(27777.778) osc_clock = ~osc_clock;
-initial forever #(20833.333) camera_clock = !pll_reset ? ~camera_clock : 0;
-initial forever #(13999.889) display_clock = !pll_reset ? ~display_clock : 0;
-initial forever #( 6944.444) spi_peripheral_clock = !pll_reset ? ~spi_peripheral_clock : 0;
-initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset ? ~jpeg_buffer_clock : 0;
+initial forever #(20833.333) camera_clock = !pll_reset & pllpowerdown_n ? ~camera_clock : 0;
+initial forever #(13999.889) display_clock = !pll_reset & pllpowerdown_n ? ~display_clock : 0;
+initial forever #( 6944.444) spi_peripheral_clock = !pll_reset & pllpowerdown_n ? ~spi_peripheral_clock : 0;
+initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset & pllpowerdown_n ? ~jpeg_buffer_clock : 0;
 // Divide 36 MHz clock by 2
 generate
 if (`JPEG_SLOW_CLOCK_DIV == "X2")
@@ -106,7 +106,7 @@ always @(posedge `JPEG_SLOW_CLOCK_SOURCE or posedge pll_reset) jpeg_slow_clock =
 else
 always_comb jpeg_slow_clock = `JPEG_SLOW_CLOCK_SOURCE;
 endgenerate
-always_comb pll_locked = ~pll_reset;
+always_comb pll_locked = ~pll_reset & pllpowerdown_n;
 `else
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -278,9 +278,6 @@ camera camera (
 
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
-
-    .image_buffer_clock_in(jpeg_buffer_clock),
-    .image_buffer_reset_n_in(jpeg_buffer_reset_n),
     
     `ifdef NO_MIPI_IP_SIM
     .byte_to_pixel_frame_valid,

@@ -36,9 +36,6 @@ module camera (
     input logic jpeg_buffer_clock_in, // 78MHz
     input logic jpeg_buffer_reset_n_in,
 
-    input logic image_buffer_clock_in,
-    input logic image_buffer_reset_n_in,
-
 `ifndef NO_MIPI_IP_SIM
     inout wire mipi_clock_p_in,
     inout wire mipi_clock_n_in,
@@ -429,7 +426,7 @@ jpeg_encoder jpeg_encoder (
 always_comb image_buffer_total_size = final_image_address + 4;
 
 image_buffer image_buffer (
-    .clock_in(image_buffer_clock_in),
+    .clock_in(pixel_clock_in),
 
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),

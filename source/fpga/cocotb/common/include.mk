@@ -120,12 +120,12 @@ VERILOG_FILES += \
 
 # Lattice models
 #VERILOG_FILES += \
-#        ../../../../radiant/huffman_codes_rom/ipgen/rtl/huffman_codes_rom.v \
-#        ../../../../radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
-#        ../../../../radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
-#        ../../../../radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
-#        ../../../../radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
-#        ../../../../radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v
+#        $(FPGA_PATH)/radiant/huffman_codes_rom/ipgen/rtl/huffman_codes_rom.v \
+#        $(FPGA_PATH)/radiant/jenc/ram_dp_w32_b4_d64/rtl/ram_dp_w32_b4_d64.v \
+#        $(FPGA_PATH)/radiant/jisp/ram_dp_w18_d360/rtl/ram_dp_w18_d360.v \
+#        $(FPGA_PATH)/radiant/jisp/ram_dp_w64_b8_d2880/rtl/ram_dp_w64_b8_d2880.v \
+#        $(FPGA_PATH)/radiant/jisp/ram_dp_w64_b8_d1440/rtl/ram_dp_w64_b8_d1440.v \
+#        $(FPGA_PATH)/radiant/image_buffer/large_ram_dp_w32_d16k_q/rtl/large_ram_dp_w32_d16k_q.v
 
 # CSI/Lattice IP requires license to generate - copy the .v from somewhere else
 VERILOG_FILES += \
@@ -199,8 +199,9 @@ endif
 TOPLEVEL =  tb_top
 
 # MODULE is the basename of the Python test file
-MODULE = test_camera
-export PYTHONPATH := $(realpath ../python_common):$(realpath ../jed):$(PYTHONPATH)
+MODULE = $(TEST_TOP)
+
+export PYTHONPATH := $(realpath .):$(COMMONS_PATH):$(TEST_PATH) #$(realpath ../python_common):$(realpath ../jed):$(PYTHONPATH)
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
@@ -228,14 +229,8 @@ g gtkwave:
 
 clean::
 	rm -rf __pycache__ results.xml obj_dir
-	rm -rf jpeg_out.jpg rgb_out.bmp rgb_out.bmp.npy ecs_out.bin rgb332_out.npy
 	rm -rf dump.vcd dump.vcd.fst dump.vcd.fst.hier 
 	rm -rf dump.fst dump.fst.hier 
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
 	rm -rf frame_frame_vo.sdf_*.csd
 	#make clean -C ../../testbenches/csi/source/csi/pll_sim_ip
-
-.PHONY: bmp
-bmp: rgb_out.bmp
-%.bmp: %.bmp.npy
-	python npy2bmp.py $< $@
