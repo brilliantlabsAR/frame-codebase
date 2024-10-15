@@ -23,7 +23,7 @@
     output logic response_valid_out,
 
     output logic start_capture_out,
-    output logic [9:0] resolution_out, 
+    output logic [9:0] half_resolution_out, 
     output logic [1:0] compression_factor_out,
     output logic power_save_enable_out,
 
@@ -52,7 +52,7 @@ always_ff @(posedge clock_in) begin
         response_valid_out <= 0;
 
         start_capture_out <= 0;
-        // TODO position signals
+        half_resolution_out <= 360;
         compression_factor_out <= 0;
         power_save_enable_out <= 0;
 
@@ -102,8 +102,8 @@ always_ff @(posedge clock_in) begin
                 'h23: begin
                     if (operand_valid_in) begin 
                         case (operand_count_in)
-                            0: resolution_out <= {operand_in[1:0], 8'b0};
-                            1: resolution_out <= {resolution_out[9:8], operand_in};
+                            0: half_resolution_out <= {operand_in[1:0], 8'b0};
+                            1: half_resolution_out <= {half_resolution_out[9:8], operand_in};
                         endcase
                     end
                 end

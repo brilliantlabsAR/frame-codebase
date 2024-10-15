@@ -53,7 +53,7 @@ module camera (
 logic start_capture_spi_clock_domain;
 logic start_capture_metastable;
 logic start_capture_pixel_clock_domain;
-logic [10:0] resolution = 512;
+logic [9:0] half_resolution;
 logic [1:0] compression_factor;
 logic power_save_enable;
 
@@ -82,7 +82,7 @@ spi_registers spi_registers (
     .response_valid_out(response_valid_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-    .resolution_out(resolution),
+    .half_resolution_out(half_resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
 
@@ -322,10 +322,10 @@ crop crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(360 - (resolution << 1)),
-    .x_crop_end(360 + (resolution << 1)),
-    .y_crop_start(360 - (resolution << 1)),
-    .y_crop_end(360 + (resolution << 1)),
+    .x_crop_start(360 - half_resolution),
+    .x_crop_end(360 + half_resolution),
+    .y_crop_start(360 - half_resolution),
+    .y_crop_end(360 + half_resolution),
     `endif
 
     .red_data_out(zoomed_red_data),
@@ -376,8 +376,8 @@ jpeg_encoder jpeg_encoder (
     .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
-    .x_size_in(resolution << 1),
-    .y_size_in(resolution << 1),
+    .x_size_in(half_resolution << 1),
+    .y_size_in(half_resolution << 1),
     .qf_select_in(compression_factor),
 
     .data_out(final_image_data),
