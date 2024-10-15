@@ -306,18 +306,6 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
-logic x_crop_start[9:0];
-logic x_crop_end[9:0];
-logic y_crop_start[9:0];
-logic y_crop_end[9:0];
-logic half_resolution[9:0];
-
-assign half_resolution = resolution / 2;
-assign x_crop_start = 360 - half_resolution;
-assign x_crop_end = 360 + half_resolution;
-assign y_crop_start = 360 - half_resolution;
-assign y_crop_end = 360 + half_resolution;
-
 crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
@@ -334,10 +322,10 @@ crop crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(x_crop_start),
-    .x_crop_end(x_crop_end),
-    .y_crop_start(y_crop_start),
-    .y_crop_end(y_crop_end),
+    .x_crop_start(360 - (resolution << 1)),
+    .x_crop_end(360 + (resolution << 1)),
+    .y_crop_start(360 - (resolution << 1)),
+    .y_crop_end(360 + (resolution << 1)),
     `endif
 
     .red_data_out(zoomed_red_data),
@@ -388,8 +376,8 @@ jpeg_encoder jpeg_encoder (
     .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
-    .x_size_in(resolution),
-    .y_size_in(resolution),
+    .x_size_in(resolution << 1),
+    .y_size_in(resolution << 1),
     .qf_select_in(compression_factor),
 
     .data_out(final_image_data),
