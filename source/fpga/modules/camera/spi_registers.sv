@@ -52,7 +52,7 @@ always_ff @(posedge clock_in) begin
         response_valid_out <= 0;
 
         start_capture_out <= 0;
-        half_resolution_out <= 360;
+        half_resolution_out <= 256;
         compression_factor_out <= 0;
         power_save_enable_out <= 0;
 
