@@ -666,6 +666,30 @@ async def main():
     frame.display.power_save(true)
     frame.camera.power_save(false)
 
+    -- X addressing
+    -- frame.camera.write_register(0x3800, 0x01) -- OK
+    -- frame.camera.write_register(0x3801, 0x20) -- OK
+    -- frame.camera.write_register(0x3804, 0x03) -- OK
+    -- frame.camera.write_register(0x3805, 0xf1) -- OK
+
+    -- X size
+    -- frame.camera.write_register(0x3808, 0x02) -- OK
+    -- frame.camera.write_register(0x3809, 0xd2) -- OK
+
+    -- Pixels per line
+    -- frame.camera.write_register(0x380c, 0x05)
+    -- frame.camera.write_register(0x380d, 0x90)
+
+    -- Y addressing
+    -- frame.camera.write_register(0x3802, 0x00) -- OK
+    -- frame.camera.write_register(0x3803, 0x06) -- OK
+    -- frame.camera.write_register(0x3806, 0x02) -- OK
+    -- frame.camera.write_register(0x3807, 0xd8) -- OK
+
+    -- Y size
+    -- frame.camera.write_register(0x380A, 0x02) -- OK
+    -- frame.camera.write_register(0x380B, 0xd2) -- OK
+
     while true do
         if state == 'CAPTURE' then
             frame.camera.capture { quality_factor = 50 }
