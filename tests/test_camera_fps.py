@@ -666,6 +666,8 @@ async def main():
     frame.display.power_save(true)
     frame.camera.power_save(false)
 
+    frame.fpga_write(0x23, '\\x00\\x03')
+
     -- X addressing
     -- frame.camera.write_register(0x3800, 0x01) -- OK
     -- frame.camera.write_register(0x3801, 0x20) -- OK
