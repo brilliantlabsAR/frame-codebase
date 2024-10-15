@@ -103,8 +103,8 @@ always_ff @(posedge clock_in) begin
                     if (operand_valid_in) begin 
                         case (operand_count_in)
                             0: begin /* Do nothing */ end
-                            1: half_resolution_out <= {operand_in[1:0], 8'b0};
-                            2: half_resolution_out <= {half_resolution_out[9:8], operand_in};
+                            1: half_resolution_out[9:8] <= operand_in[1:0];
+                            2: half_resolution_out[7:0] <= operand_in;
                         endcase
                     end
                 end
