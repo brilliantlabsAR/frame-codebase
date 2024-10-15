@@ -376,8 +376,8 @@ jpeg_encoder jpeg_encoder (
     .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
-    .x_size_in(512),
-    .y_size_in(512),
+    .x_size_in(half_resolution << 1),
+    .y_size_in(half_resolution << 1),
     .qf_select_in(compression_factor),
 
     .data_out(final_image_data),
