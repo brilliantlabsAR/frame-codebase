@@ -53,9 +53,7 @@ module camera (
 logic start_capture_spi_clock_domain;
 logic start_capture_metastable;
 logic start_capture_pixel_clock_domain;
-logic [10:0] x_resolution = 512;
-logic [10:0] y_resolution = 512;
-logic [10:0] x_pan = 0;
+logic [10:0] resolution = 512;
 logic [1:0] compression_factor;
 logic power_save_enable;
 
@@ -84,9 +82,7 @@ spi_registers spi_registers (
     .response_valid_out(response_valid_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-    // .x_resolution_out(x_resolution),
-    // .y_resolution_out(y_resolution),
-    // .x_pan_out(x_pan),
+    .resolution_out(resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
 
@@ -310,6 +306,18 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
+logic x_crop_start[9:0];
+logic x_crop_end[9:0];
+logic y_crop_start[9:0];
+logic y_crop_end[9:0];
+logic half_resolution[9:0];
+
+assign half_resolution = resolution / 2;
+assign x_crop_start = 360 - half_resolution;
+assign x_crop_end = 360 + half_resolution;
+assign y_crop_start = 360 - half_resolution;
+assign y_crop_end = 360 + half_resolution;
+
 crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
@@ -326,10 +334,10 @@ crop crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(104), // TODO make dynamic
-    .x_crop_end(616),   // TODO make dynamic
-    .y_crop_start(104), // TODO make dynamic
-    .y_crop_end(616),   // TODO make dynamic
+    .x_crop_start(x_crop_start),
+    .x_crop_end(x_crop_end),
+    .y_crop_start(y_crop_start),
+    .y_crop_end(y_crop_end),
     `endif
 
     .red_data_out(zoomed_red_data),
@@ -380,8 +388,8 @@ jpeg_encoder jpeg_encoder (
     .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
-    .x_size_in(x_resolution),
-    .y_size_in(y_resolution),
+    .x_size_in(resolution),
+    .y_size_in(resolution),
     .qf_select_in(compression_factor),
 
     .data_out(final_image_data),

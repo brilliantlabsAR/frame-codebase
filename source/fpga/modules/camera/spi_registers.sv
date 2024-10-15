@@ -23,7 +23,7 @@
     output logic response_valid_out,
 
     output logic start_capture_out,
-    // TODO position signals
+    output logic [9:0] resolution_out, 
     output logic [1:0] compression_factor_out,
     output logic power_save_enable_out,
 
@@ -101,14 +101,10 @@ always_ff @(posedge clock_in) begin
                 // Zoom
                 'h23: begin
                     if (operand_valid_in) begin 
-                        // zoom_factor <= operand_in; // TODO
-                    end
-                end
-
-                // Pan
-                'h24: begin
-                    if (operand_valid_in) begin 
-                        // pan_level <= operand_in; // TODO
+                        case (operand_count_in)
+                            0: resolution_out <= {operand_in[1:0], 8'b0};
+                            1: resolution_out <= {resolution_out[9:8], operand_in};
+                        endcase
                     end
                 end
 
