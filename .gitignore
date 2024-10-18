@@ -19,7 +19,6 @@ test_scratch_pad*.py
 production/focus_image.*
 production/log.txt
 production/frame-firmware-*.hex
-production/innowave/
 
 # Python virtual env
 .venv
