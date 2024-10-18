@@ -9,7 +9,9 @@
  */
 
 module pll_csr #(
-    parameter PLL_CSR_BASE = 'h40
+    parameter PLL_CSR_BASE = 'h40,
+    parameter PLLPOWERDOWN_N_DEFAULT = 0,
+    parameter IMAGE_BUFFER_READ_EN_DEFAULT = 0
 )(
     // SPI clock
     input logic spi_clock_in,
@@ -32,8 +34,8 @@ module pll_csr #(
 
 always @(negedge spi_clock_in or negedge spi_async_peripheral_reset_n) // Async reset
 if (!spi_async_peripheral_reset_n) begin
-    pllpowerdown_n <= 0;
-    image_buffer_read_en <= 0;
+    pllpowerdown_n <= PLLPOWERDOWN_N_DEFAULT;
+    image_buffer_read_en <= IMAGE_BUFFER_READ_EN_DEFAULT;
 end
 else if (operand_valid_in & opcode_in == PLL_CSR_BASE) begin
     pllpowerdown_n <= operand_in[0];

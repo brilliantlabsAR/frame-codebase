@@ -95,10 +95,10 @@ initial spi_peripheral_clock = 0;
 initial jpeg_buffer_clock = 0;
 initial jpeg_slow_clock = 0;
 initial forever #(27777.778) osc_clock = ~osc_clock;
-initial forever #(20833.333) camera_clock = !pll_reset & pllpowerdown_n ? ~camera_clock : 0;
-initial forever #(13999.889) display_clock = !pll_reset & pllpowerdown_n ? ~display_clock : 0;
-initial forever #( 6944.444) spi_peripheral_clock = !pll_reset & pllpowerdown_n ? ~spi_peripheral_clock : 0;
-initial forever #( 6410.256) jpeg_buffer_clock = !pll_reset & pllpowerdown_n ? ~jpeg_buffer_clock : 0;
+initial forever #(20833.333) camera_clock = pll_locked ? ~camera_clock : 0;
+initial forever #(13999.889) display_clock = pll_locked ? ~display_clock : 0;
+initial forever #( 6944.444) spi_peripheral_clock = pll_locked ? ~spi_peripheral_clock : 0;
+initial forever #( 6410.256) jpeg_buffer_clock = pll_locked ? ~jpeg_buffer_clock : 0;
 // Divide 36 MHz clock by 2
 generate
 if (`JPEG_SLOW_CLOCK_DIV == "X2")
@@ -223,7 +223,7 @@ logic [7:0] response_4;  // PLL CSR
 
 spi_peripheral spi_peripheral (
     //.clock_in(spi_peripheral_clock),      // This 72 MHz clock is no longer used
-    .reset_n_in(1'b0),	                    // De-couple SPI reset from PLL status 
+    .reset_n_in(1'b1),	                    // De-couple SPI reset from PLL status 
                                             // SPI uses ONLY spi_select_in to reset
     .spi_select_in(spi_select_in),          // note: CS is active low
     .spi_clock_in(spi_clock_in),

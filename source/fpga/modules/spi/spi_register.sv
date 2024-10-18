@@ -11,8 +11,8 @@
  */
 
 module spi_register #(
-    parameter REGISTER_ADDRESS = 'h00,
-    parameter REGISTER_VALUE = 'h00
+    parameter REGISTER_ADDRESS = 'hdb,
+    parameter REGISTER_VALUE = 'h81
 )(
     input logic [7:0] opcode_in,
     output logic [7:0] response_out

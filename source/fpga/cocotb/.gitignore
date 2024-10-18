@@ -11,3 +11,5 @@ vsim.wlf
 *.vcd
 sim_build
 __pycache__
+
+results.xml

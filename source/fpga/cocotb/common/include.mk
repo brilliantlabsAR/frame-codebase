@@ -201,7 +201,7 @@ TOPLEVEL =  tb_top
 # MODULE is the basename of the Python test file
 MODULE = $(TEST_TOP)
 
-export PYTHONPATH := $(realpath .):$(COMMONS_PATH):$(TEST_PATH) #$(realpath ../python_common):$(realpath ../jed):$(PYTHONPATH)
+export PYTHONPATH := $(realpath .):$(COMMONS_PATH)
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim

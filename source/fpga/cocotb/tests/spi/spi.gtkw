@@ -1,0 +1,37 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Fri Oct 18 20:07:16 2024
+[*]
+[dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/dump.fst"
+[dumpfile_mtime] "Fri Oct 18 19:56:51 2024"
+[dumpfile_size] 44682
+[savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/spi.gtkw"
+[timestart] 0
+[size] 1850 1016
+[pos] -1 -1
+*-23.323677 7354049 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] .
+[treeopen] .tb_top.
+[treeopen] .tb_top.dut.
+[sst_width] 233
+[signals_width] 190
+[sst_expanded] 1
+[sst_vpaned_height] 289
+@28
+tb_top.dut.spi_peripheral.spi_select_in
+tb_top.dut.spi_peripheral.spi_data_in
+tb_top.dut.spi_peripheral.spi_data_out
+tb_top.dut.spi_peripheral.spi_clock_in
+@200
+-
+@28
+tb_top.dut.pllpowerdown_n
+tb_top.dut.pll_locked
+tb_top.dut.pll_reset
+tb_top.dut.global_reset_n
+tb_top.dut.camera_pixel_reset_n
+tb_top.dut.camera_pixel_clock
+@200
+-
+[pattern_trace] 1
+[pattern_trace] 0

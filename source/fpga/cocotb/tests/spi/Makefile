@@ -7,7 +7,7 @@
 #
 
 TEST_PATH := $(realpath .)
-TEST_TOP := spi_test.py
+TEST_TOP := spi_test
 
 include $(realpath ../../common/include.mk)
 
