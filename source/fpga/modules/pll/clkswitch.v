@@ -24,12 +24,12 @@ logic clk_a, clk_b;
 // Synchronizer for A
 always @(posedge i_clk_a or negedge i_areset_n)
 if (!i_areset_n)    a_sel_reg <= 1;
-else                a_sel_reg <= ~i_sel & ~b_sel;
+else                a_sel_reg <= {a_sel_reg, ~i_sel & ~b_sel};
 
 // Synchronizer for B
 always @(posedge i_clk_b or negedge i_areset_n)
 if (!i_areset_n)    b_sel_reg <= 0;
-else                b_sel_reg <= i_sel & ~a_sel;
+else                b_sel_reg <= {b_sel_reg, i_sel & ~a_sel};
 
 // Gate for A
 always_latch

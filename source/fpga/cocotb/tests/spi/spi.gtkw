@@ -1,22 +1,23 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Fri Oct 18 20:07:16 2024
+[*] Fri Oct 18 20:52:02 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/dump.fst"
-[dumpfile_mtime] "Fri Oct 18 19:56:51 2024"
-[dumpfile_size] 44682
+[dumpfile_mtime] "Fri Oct 18 20:40:06 2024"
+[dumpfile_size] 73338
 [savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/spi.gtkw"
-[timestart] 0
-[size] 1850 1016
+[timestart] 25470000
+[size] 1612 902
 [pos] -1 -1
-*-23.323677 7354049 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-21.227816 27430000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] .
 [treeopen] .tb_top.
 [treeopen] .tb_top.dut.
+[treeopen] .tb_top.dut.camera.
 [sst_width] 233
-[signals_width] 190
+[signals_width] 206
 [sst_expanded] 1
-[sst_vpaned_height] 289
+[sst_vpaned_height] 251
 @28
 tb_top.dut.spi_peripheral.spi_select_in
 tb_top.dut.spi_peripheral.spi_data_in
@@ -31,6 +32,33 @@ tb_top.dut.pll_reset
 tb_top.dut.global_reset_n
 tb_top.dut.camera_pixel_reset_n
 tb_top.dut.camera_pixel_clock
+@200
+-
+@22
+tb_top.dut.camera.image_buffer.read_address_in[15:0]
+tb_top.dut.camera.image_buffer.write_address_in[15:0]
+@28
+tb_top.dut.camera.image_buffer.write_read_n_in
+tb_top.dut.camera.image_buffer.clock_in
+@c00022
+tb_top.dut.camera.spi_registers.response_out[7:0]
+@28
+(0)tb_top.dut.camera.spi_registers.response_out[7:0]
+(1)tb_top.dut.camera.spi_registers.response_out[7:0]
+(2)tb_top.dut.camera.spi_registers.response_out[7:0]
+(3)tb_top.dut.camera.spi_registers.response_out[7:0]
+(4)tb_top.dut.camera.spi_registers.response_out[7:0]
+(5)tb_top.dut.camera.spi_registers.response_out[7:0]
+(6)tb_top.dut.camera.spi_registers.response_out[7:0]
+(7)tb_top.dut.camera.spi_registers.response_out[7:0]
+@1401200
+-group_end
+@200
+-
+@28
+tb_top.dut.image_buffer_clock
+tb_top.dut.jpeg_buffer_clock
+tb_top.dut.jpeg_slow_clock
 @200
 -
 [pattern_trace] 1
