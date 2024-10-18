@@ -131,7 +131,7 @@ pll_wrapper pll_wrapper (
     .lock_o(pll_locked)
 );
 
-// Divide 36 MHz clock by 2
+// Divide 36 MHz clock by 2 or 1
 PCLKDIVSP #(
     .DIV_PCLKDIV(`JPEG_SLOW_CLOCK_DIV),
     .GSR("DISABLED")
