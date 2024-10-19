@@ -32,13 +32,17 @@
     input   logic               pixel_clock_in,
     input   logic               pixel_reset_n_in,
     input   logic               jpeg_fast_clock_in,
-    input   logic               jpeg_fast_reset_n_in
+    input   logic               jpeg_fast_reset_n_in,
+    input   logic               jpeg_slow_clock_in,
+    input   logic               jpeg_slow_reset_n_in
 );
 
 // clock
 logic               clk_x22;
 logic               resetn_x22;
-logic [1:0]         jpeg_reset_n_x22_cdc;
+
+logic               slow_clock;
+logic               slow_reset_n;
 
 // JPEG FSM
 enum logic [2:0] {IDLE, RESET, WAIT_FOR_FRAME_START, COMPRESS, IMAGE_VALID} state;
@@ -61,13 +65,22 @@ logic               out_tlast, out_valid, out_hold;
 
 // x22 reset
 always_comb clk_x22 = jpeg_fast_clock_in;
-always_comb resetn_x22 = jpeg_fast_reset_n_in & jpeg_reset_n_x22_cdc[1];
+reset_sync reset_sync_x22 (.clock_in(clk_x22), .async_reset_n_in(jpeg_fast_reset_n_in & jpeg_reset_n), .sync_reset_n_out(resetn_x22));
 
-always @(posedge jpeg_fast_clock_in)
-if (!jpeg_fast_reset_n_in)
-    jpeg_reset_n_x22_cdc <= 0;
-else
-    jpeg_reset_n_x22_cdc <= {jpeg_reset_n_x22_cdc, jpeg_reset_n};
+// Slow reset
+always_comb slow_clock = jpeg_slow_clock_in;
+reset_sync reset_sync_slow (.clock_in(slow_clock), .async_reset_n_in(jpeg_slow_reset_n_in & jpeg_reset_n), .sync_reset_n_out(slow_reset_n));
+
+// pulse sync
+logic compress_2_image_valid;
+psync1 psync_fsm (
+    .in             (out_valid & ~out_hold & out_tlast), 
+    .in_clk         (slow_clock), 
+    .in_reset_n     (slow_reset_n), 
+    .out            (compress_2_image_valid), 
+    .out_clk        (pixel_clock_in), 
+    .out_reset_n    (pixel_reset_n_in & jpeg_reset_n)
+);
 
 // JPEG FSM
 always @(posedge pixel_clock_in)
@@ -77,7 +90,7 @@ else
     case(state)
     RESET:                  if (~frame_valid_in) state <= WAIT_FOR_FRAME_START;     // reset state (1), hold in reset until end of previous frame
     WAIT_FOR_FRAME_START:   if (frame_valid_in) state <= COMPRESS;                  // wait for frame start (2)
-    COMPRESS:               if (out_valid & ~out_hold & out_tlast) state <= IMAGE_VALID;    // compress state (3)
+    COMPRESS:               if (compress_2_image_valid) state <= IMAGE_VALID;       // compress state (3)
     default:                if (start_capture_in) state <= RESET;                   // idle state (0) or image valid state (4)
     endcase        
 
@@ -113,21 +126,32 @@ jenc #(
 ) jenc (
     .qf_select          (qf_select_in),
 
-    .clk                (pixel_clock_in),
-    .resetn             (pixel_reset_n_in & jpeg_reset_n),
+    .clk                (slow_clock),
+    .resetn             (slow_reset_n),
     .*
+);
+
+// pulse sync
+logic frame_start;
+psync1 psync_frame_start (
+    .in             (state==WAIT_FOR_FRAME_START & frame_valid_in), 
+    .in_clk         (pixel_clock_in), 
+    .in_reset_n     (pixel_reset_n_in & jpeg_reset_n), 
+    .out            (frame_start), 
+    .out_clk        (slow_clock), 
+    .out_reset_n    (slow_reset_n)
 );
 
 // Size reg logic
 logic [19:0]        size;
-always @(posedge pixel_clock_in)
-if (state==WAIT_FOR_FRAME_START & frame_valid_in)
+always @(posedge slow_clock)
+if (frame_start)
     size <= 0;
 else if (out_valid & ~out_hold)
     size <= size + 4;
 
 // data out: need to reverse data endianness 
-always @(posedge pixel_clock_in)
+always @(posedge slow_clock)
 if (out_valid & ~out_hold) begin
     for(int i=0; i<4; i++)
         data_out[8*i +: 8] <= out_data[8*(3-i) +: 8];    
@@ -135,8 +159,8 @@ if (out_valid & ~out_hold) begin
 end
 
 // pre-CDC: Ensure there is always an idle  cycle
-always @(posedge pixel_clock_in)
-if (!(pixel_reset_n_in & jpeg_reset_n))
+always @(posedge slow_clock)
+if (!slow_reset_n)
     data_valid_out <= 0;
 else if (data_valid_out)
     data_valid_out <= 0;
