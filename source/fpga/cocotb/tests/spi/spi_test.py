@@ -9,10 +9,8 @@ import sys, os, time, random, logging
 import numpy as np
 
 import cocotb
-from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
 
-import tb_top
 from tb_top import SpiTransactor, clock_n_reset
 
 
