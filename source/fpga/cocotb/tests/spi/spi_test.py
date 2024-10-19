@@ -5,7 +5,6 @@
 #
 # Copyright (C) 2024 Robert Metchev
 #
-
 import sys, os, time, random, logging
 import numpy as np
 
@@ -13,11 +12,8 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
 
-
 import tb_top
 from tb_top import SpiTransactor, clock_n_reset
-
-
 
 
 @cocotb.test()
@@ -28,17 +24,14 @@ async def spi_test(dut):
     # Hack/Fix for missing "negedge reset" in verilator, works OK in icarus
     dut.spi_select_in.value = 0
     await Timer(1, 'ps')
-    # add assert for PLL reset stable
 
     # SPI Transactor
     t = SpiTransactor(dut)
 
     # Start camera clock
     cr = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock
+    
 
-    
-    #await Timer(20, units='us')
-    
     #   1. Test single byte read from ID register 0xDB
     a = 0xdb
     id = [0x81]
@@ -74,7 +67,5 @@ async def spi_test(dut):
     read_bytes = await t.spi_read(0x22, 3)
 
 
-
-
     # Finish
-    await Timer(5, units='us')
+    await Timer(10, units='us')
