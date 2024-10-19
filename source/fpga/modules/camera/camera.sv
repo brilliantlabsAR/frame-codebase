@@ -15,7 +15,7 @@
 `include "modules/camera/debayer.sv"
 `include "modules/camera/gamma_correction.sv"
 `include "modules/camera/image_buffer.sv"
-`include "modules/camera/jpeg_encoder/jpeg_encoder.sv"
+`include "modules/camera/jpeg/jpeg.sv"
 `include "modules/camera/metering.sv"
 `include "modules/camera/spi_registers.sv"
 `endif
@@ -35,6 +35,9 @@ module camera (
 
     input logic jpeg_buffer_clock_in, // 78MHz
     input logic jpeg_buffer_reset_n_in,
+
+    input logic jpeg_slow_clock_in, // 18MHz or 12 MHz
+    input logic jpeg_slow_reset_n_in,
 
 `ifndef NO_MIPI_IP_SIM
     inout wire mipi_clock_p_in,
@@ -59,16 +62,28 @@ module camera (
 
 logic start_capture_spi_clock_domain;;
 logic start_capture_pixel_clock_domain;
-logic [10:0] x_resolution = 512;
-logic [10:0] y_resolution = 512;
-logic [10:0] x_pan = 0;
+
+//logic [10:0] x_resolution = 512;
+//logic [10:0] y_resolution = 512;
+//logic [10:0] x_pan = 0;
+
+logic[10:0] x_zoom_crop_start;  // Todo: Make SPI register
+logic[10:0] x_zoom_crop_end;    // Todo: Make SPI register
+logic[10:0] y_zoom_crop_start;  // Todo: Make SPI register
+logic[10:0] y_zoom_crop_end;    // Todo: Make SPI register
+logic[10:0] x_resolution;       // Todo: Make SPI register
+logic[10:0] y_resolution;       // Todo: Make SPI register
+
+always_comb x_resolution = x_zoom_crop_end - x_zoom_crop_start; // Todo: Make SPI register
+always_comb y_resolution = y_zoom_crop_end - y_zoom_crop_start; // Todo: Make SPI register
+
 logic [1:0] compression_factor;
 logic power_save_enable;
 
-logic image_buffer_ready;
-logic [15:0] image_buffer_total_size;
-logic [7:0] image_buffer_data;
-logic [15:0] image_buffer_address;
+logic image_buffer_ready;               // Ready bit, high when compression finished
+logic [15:0] image_buffer_total_size;   // final address + 4, sames as bytes available
+logic [7:0] image_buffer_data;          // Read out data
+logic [15:0] image_buffer_address;      // Read address
 
 logic [7:0] red_center_metering_spi_clock_domain;
 logic [7:0] green_center_metering_spi_clock_domain;
@@ -223,31 +238,54 @@ logic [9:0] panned_data;
 logic panned_line_valid;
 logic panned_frame_valid;
 
+logic[10:0] x_pan_crop_start;   // Todo: Make SPI register
+logic[10:0] x_pan_crop_end;     // Todo: Make SPI register
+logic[10:0] y_pan_crop_start;   // Todo: Make SPI register
+logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
+
+`ifdef COCOTB_SIM
+`ifndef IMAGE_X_SIZE
+`define IMAGE_X_SIZE 200
+`endif
+`ifndef IMAGE_Y_SIZE
+`define IMAGE_Y_SIZE 200
+`endif
+always_comb x_pan_crop_start    = 1;
+always_comb x_pan_crop_end      = x_pan_crop_start + `IMAGE_X_SIZE + 2;
+always_comb y_pan_crop_start    = 1;
+always_comb y_pan_crop_end      = y_pan_crop_start + `IMAGE_Y_SIZE + 2;
+`else
+`ifdef TESTBENCH
+always_comb x_pan_crop_start    = 10;
+always_comb x_pan_crop_end      = 25;
+always_comb y_pan_crop_start    = 12;
+always_comb y_pan_crop_end      = 24;
+`else
+always_comb x_pan_crop_start    = 284;
+always_comb x_pan_crop_end      = 1004;
+always_comb y_pan_crop_start    = 4;
+always_comb y_pan_crop_end      = 724;
+`endif
+`endif
+
 crop pan_crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
     .red_data_in(byte_to_pixel_data),
-    .green_data_in(0),
-    .blue_data_in(0),
+    .green_data_in('0),
+    .blue_data_in('0),
     .line_valid_in(byte_to_pixel_line_valid),
     .frame_valid_in(byte_to_pixel_frame_valid),
 
-    `ifdef TESTBENCH
-    .x_crop_start(10),
-    .x_crop_end(25),
-    .y_crop_start(12),
-    .y_crop_end(24),
-    `else
-    .x_crop_start(284), // TODO make dynamic
-    .x_crop_end(1004),  // TODO make dynamic
-    .y_crop_start(4),
-    .y_crop_end(724),
-    `endif
+    .x_crop_start(x_pan_crop_start),
+    .x_crop_end(x_pan_crop_end),
+    .y_crop_start(y_pan_crop_start),
+    .y_crop_end(y_pan_crop_end),
 
     .red_data_out(panned_data),
-    .green_data_out(),
-    .blue_data_out(),
+    .green_data_out( ),
+    .blue_data_out( ),
     .line_valid_out(panned_line_valid),
     .frame_valid_out(panned_frame_valid)
 );
@@ -259,8 +297,11 @@ logic debayered_line_valid;
 logic debayered_frame_valid;
 
 debayer debayer (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
+    .pixel_clock_in(pixel_clock_in),
+    .pixel_reset_n_in(pixel_reset_n_in),
+
+    .x_crop_start_lsb(x_pan_crop_start[0]),
+    .y_crop_start_lsb(y_pan_crop_start[0]),
 
     .bayer_data_in(panned_data),
     .line_valid_in(panned_line_valid),
@@ -343,6 +384,26 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
+`ifdef COCOTB_SIM
+// after debayer
+always_comb x_zoom_crop_start    = 0;
+always_comb x_zoom_crop_end      = x_pan_crop_end - x_pan_crop_start - 2;
+always_comb y_zoom_crop_start    = 0;
+always_comb y_zoom_crop_end      = y_pan_crop_end - y_pan_crop_start - 2;
+`else
+`ifdef TESTBENCH
+always_comb x_zoom_crop_start    = 0;
+always_comb x_zoom_crop_end      = 15;
+always_comb y_zoom_crop_start    = 0;
+always_comb y_zoom_crop_end      = 12;
+`else
+always_comb x_zoom_crop_start    = 260;
+always_comb x_zoom_crop_end      = 460;
+always_comb y_zoom_crop_start    = 260;
+always_comb y_zoom_crop_end      = 460;
+`endif
+`endif
+
 crop zoom_crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
@@ -353,17 +414,10 @@ crop zoom_crop (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    `ifdef TESTBENCH
-    .x_crop_start(0),
-    .x_crop_end(15),
-    .y_crop_start(0),
-    .y_crop_end(12),
-    `else
-    .x_crop_start(104), // TODO make dynamic
-    .x_crop_end(616),   // TODO make dynamic
-    .y_crop_start(104), // TODO make dynamic
-    .y_crop_end(616),   // TODO make dynamic
-    `endif
+    .x_crop_start(x_zoom_crop_start),
+    .x_crop_end(x_zoom_crop_end),
+    .y_crop_start(y_zoom_crop_start),
+    .y_crop_end(y_zoom_crop_end),
 
     .red_data_out(zoomed_red_data),
     .green_data_out(zoomed_green_data),
@@ -394,10 +448,10 @@ gamma_correction gamma_correction (
     .frame_valid_out(gamma_corrected_frame_valid)
 );
 
-logic [31:0] final_image_data;
-logic [15:0] final_image_address;
-logic final_image_data_valid;
-logic final_image_ready;
+logic [31:0] final_image_data;          // image data JPEG -> Image buffer
+logic [15:0] final_image_address;       // image address JPEG -> Image buffer
+logic final_image_data_valid;           // qualifier
+logic final_image_ready;                // Ready bit, high when compression finished
 
 jpeg_encoder jpeg_encoder (
     .pixel_clock_in(pixel_clock_in),
@@ -424,9 +478,10 @@ jpeg_encoder jpeg_encoder (
 );
 
 always_comb image_buffer_total_size = final_image_address + 4;
+always_comb image_buffer_ready = final_image_ready;
 
 image_buffer image_buffer (
-    .clock_in(pixel_clock_in),
+    .clock_in(jpeg_slow_clock_in),
 
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),

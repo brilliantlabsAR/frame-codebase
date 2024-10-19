@@ -64,9 +64,9 @@ logic display_clock;
 logic spi_peripheral_clock;
 logic pll_locked;
 logic pll_reset;
-logic jpeg_buffer_clock;
-logic jpeg_slow_clock;
-logic image_buffer_clock;
+logic jpeg_buffer_clock;        // 2x JPEG clock
+logic jpeg_slow_clock;          // generated/divided JPEG clock
+logic jpeg_clock;               // Same as JPEG clock after muxinf with SPI
 
 logic pllpowerdown_n;
 logic image_buffer_read_en;
@@ -184,28 +184,28 @@ reset_sync jpeg_buffer_clock_reset_sync (
     .sync_reset_n_out(jpeg_buffer_reset_n)
 );
 
-reset_sync image_buffer_clock_reset_sync (
-    .clock_in(image_buffer_clock),
+reset_sync jpeg_clock_reset_sync (
+    .clock_in(jpeg_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(image_buffer_reset_n)
 );
 
 `ifdef NO_PLL_SIM
 clkswitch clkswitch(
-    .i_clk_a (camera_pixel_clock), 
+    .i_clk_a (jpeg_slow_clock), 
     .i_clk_b (spi_clock_in), 
     .i_areset_n (spi_async_peripheral_reset_n), 
     .i_sel (image_buffer_read_en), 
-    .o_clk (image_buffer_clock)
+    .o_clk (jpeg_clock)
 );
 `else
 // Dynamic clock select for jpeg and Image buffer
 DCS #(.DCSMODE("DCS")) DCSInst0 (
-    .CLK0 (camera_pixel_clock),
+    .CLK0 (jpeg_slow_clock),
     .CLK1 (spi_clock_in),
     .SEL (image_buffer_read_en),
     .SELFORCE (1'b0),
-    .DCSOUT (image_buffer_clock)
+    .DCSOUT (jpeg_clock)
 );
 `endif //NO_PLL_SIM
 
