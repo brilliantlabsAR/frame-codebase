@@ -114,17 +114,15 @@ class JpegTester():
     async def read_image_buffer(self):
         # poll image complete
         while True:
-            [read_data] = await self.spi.spi_read(0x30)
-            if read_data != 0:
-                read_data = await self.spi.spi_read(0x30)
-                if read_data != 0:
+            [image_ready_flag] = await self.spi.spi_read(0x30)
+            if image_ready_flag != 0:
                     break
-        return
         # read address -> need to add 4 to get size in bytes
-        read_data = await self.spi_write_read(0x31, *[0xff]*2)
-        bytes = 4 + sum([v*(2**(i*8)) for i,v in enumerate(read_data)])
+        read_data = await self.spi.spi_read(0x31, 2)
+        bytes = 4 + sum([v << (i*8) for i,v in enumerate(read_data)])
 
         self.dut._log.debug(f"******** Compressed bytes={bytes}")
+        return
         if True:
             self.ecs = await self.spi_write_read(0x22, *[0xff]*bytes)
         else:

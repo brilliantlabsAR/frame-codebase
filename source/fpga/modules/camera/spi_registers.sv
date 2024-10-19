@@ -28,7 +28,7 @@
     output logic power_save_enable_out,
 
     input logic image_ready_in,
-    input logic [15:0] image_total_size_in,
+    input logic [15:0] final_image_address, // image_total_size_in - 4
     input logic [7:0] image_data_in,
     output logic [15:0] image_address_out,
 
@@ -48,11 +48,16 @@ parameter ZOOM              = 'h23; // WO
 parameter PAN               = 'h24; // WO
 parameter METERING          = 'h25; // RO
 parameter QUALITY_FACTOR    = 'h26; // WO
-parameter IMAGE_READY_FLAG  = 'h27; // RO
 parameter POWER_SAVE_ENABLE = 'h28; // WO
 
+parameter IMAGE_READY_FLAG  = 'h30; // RO
+parameter COMPRESSED_BYTES  = 'h31; // RO 2x
+
+logic [15:0] image_buffer_total_size;   // final address + 4, sames as bytes available
 logic [15:0] bytes_remaining;
-assign bytes_remaining = image_total_size_in - image_address_out;
+
+always_comb image_buffer_total_size = final_image_address + 4;
+assign bytes_remaining = image_buffer_total_size - image_address_out;
 
 always_comb
      case (opcode_in)
@@ -80,6 +85,14 @@ always_comb
          // Image ready flag
          IMAGE_READY_FLAG: response_out = image_ready_in;
 
+         // Image size
+         COMPRESSED_BYTES:
+         case (rd_operand_count_in)
+             0: response_out = final_image_address[7:0];
+             1: response_out = final_image_address[15:8];
+             default: response_out = 0;
+         endcase
+
          default: response_out = 0;
      endcase
 
@@ -101,7 +114,7 @@ always_ff @(negedge clock_in) begin
             case (opcode_in)
                 // Read data
                 IMAGE_DATA: begin
-                    if (image_address_out < image_total_size_in) begin 
+                    if (image_address_out < image_buffer_total_size) begin 
                         image_address_out <= image_address_out + 1;
                     end
                 end

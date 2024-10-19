@@ -81,10 +81,9 @@ logic [1:0] compression_factor;
 logic power_save_enable;
 
 logic image_buffer_ready;               // Ready bit, high when compression finished
-logic [15:0] image_buffer_total_size;   // final address + 4, sames as bytes available
 logic [7:0] image_buffer_data;          // Read out data
 logic [15:0] image_buffer_address;      // Read address
-
+logic [15:0] final_image_address;       // image address JPEG -> Image buffer
 logic [7:0] red_center_metering;
 logic [7:0] green_center_metering;
 logic [7:0] blue_center_metering;
@@ -113,7 +112,7 @@ spi_registers spi_registers (
     .power_save_enable_out(power_save_enable),
 
     .image_ready_in(image_buffer_ready),
-    .image_total_size_in(image_buffer_total_size),
+    .final_image_address(final_image_address),
     .image_data_in(image_buffer_data),
     .image_address_out(image_buffer_address),
 
@@ -431,7 +430,7 @@ gamma_correction gamma_correction (
 );
 
 logic [31:0] final_image_data;          // image data JPEG -> Image buffer
-logic [15:0] final_image_address;       // image address JPEG -> Image buffer
+//logic [15:0] final_image_address;       // image address JPEG -> Image buffer
 logic final_image_data_valid;           // qualifier
 logic final_image_ready;                // Ready bit, high when compression finished
 
@@ -462,7 +461,6 @@ jpeg_encoder jpeg_encoder (
     .image_valid_out(final_image_ready)
 );
 
-always_comb image_buffer_total_size = final_image_address + 4;
 always_comb image_buffer_ready = final_image_ready;
 
 image_buffer image_buffer (
