@@ -8,7 +8,7 @@
 
 Available tests:
 - tests/spi: Basic register reads and writes, PLL power up+down, image buffer clock switch
-- tests/jpeg_enecoder: Basic image compression
+- tests/camera: Basic image compression through the camera pipeline
 - tests/graphics: Basic graphics
 
 To run one test:
