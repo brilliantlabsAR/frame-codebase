@@ -33,12 +33,12 @@ else                b_sel_reg <= {b_sel_reg, i_sel & ~a_sel};
 
 // Gate for A
 always_latch
-if (!i_clk_a) a_sel <= a_sel_reg[1];
+if (!i_clk_a) a_sel = a_sel_reg[1];
 always_comb clk_a = a_sel & i_clk_a;
 
 // Gate for B
 always_latch
-if (!i_clk_b) b_sel <= b_sel_reg[1];
+if (!i_clk_b) b_sel = b_sel_reg[1];
 always_comb clk_b = b_sel & i_clk_b;
 
 // Or
