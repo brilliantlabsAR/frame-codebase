@@ -278,6 +278,9 @@ camera camera (
 
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
+
+    .jpeg_slow_clock_in(jpeg_buffer_clock),
+    .jpeg_slow_clock_in(jpeg_buffer_reset_n),
     
     `ifdef NO_MIPI_IP_SIM
     .byte_to_pixel_frame_valid,
