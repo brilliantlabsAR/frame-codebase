@@ -64,28 +64,28 @@ logic display_clock;
 logic spi_peripheral_clock;
 logic pll_locked;
 logic pll_reset;
-logic jpeg_buffer_clock;        // 2x JPEG clock
-logic jpeg_slow_clock;          // generated/divided JPEG clock
-logic jpeg_clock;               // Same as JPEG clock after muxinf with SPI
+logic jpeg_clock;               // Raw JPEG clock - generated or divided down from pixel clock - goes to clock switch
+logic jpeg_buffer_clock;        // 2x JPEG clock for transpose/zig-zag buffer overclocking -  goes to JPEG
+logic jpeg_slow_clock;          // Raw JPEG clock muxed with SPI clock - goes to JPEG
 
 logic pllpowerdown_n;
 logic image_buffer_read_en;
 
 /* JPEG slow clock: 36, 24, 18, 12 MHz:
 
-                |   JPEG_SLOW_CLOCK_SOURCE
+                |   JPEG_CLOCK_SOURCE
     ------------+--_------------------------------------------------------
     DIV_PCLKDIV |   camera_pixel_clock (36 MHz)     camera_clock (24 MHz)
     "X1"        |   36 MHz                          24 MHz
     "X2"        |   18 MHz                          12 MHz
 
     NOTE:
-    When divider is "X2", jpeg_buffer_clock can be set to `JPEG_SLOW_CLOCK_SOURCE!
+    When divider is "X2", jpeg_buffer_clock can be set to `JPEG_CLOCK_SOURCE!
 */
 
-//`define JPEG_SLOW_CLOCK_SOURCE camera_clock         /* 24 MHz -> 12 or 24 MHz */
-`define JPEG_SLOW_CLOCK_SOURCE camera_pixel_clock   /* 36 MHz -> 18 or 36 MHz */
-`define JPEG_SLOW_CLOCK_DIV "X1"                    /* "X2" or "X1" */
+//`define JPEG_CLOCK_SOURCE camera_clock          /* 24 MHz -> 12 or 24 MHz */
+`define JPEG_CLOCK_SOURCE camera_pixel_clock    /* 36 MHz -> 18 or 36 MHz */
+`define JPEG_CLOCK_DIV "X1"                     /* "X2" or "X1" */
 
 `ifdef NO_PLL_SIM
 initial osc_clock = 0;
@@ -93,7 +93,7 @@ initial camera_clock = 0;
 initial display_clock = 0;
 initial spi_peripheral_clock = 0;
 initial jpeg_buffer_clock = 0;
-initial jpeg_slow_clock = 0;
+initial jpeg_clock = 0;
 initial forever #(27777.778) osc_clock = ~osc_clock;
 initial forever #(20833.333) camera_clock = pll_locked ? ~camera_clock : 0;
 initial forever #(13999.889) display_clock = pll_locked ? ~display_clock : 0;
@@ -101,10 +101,10 @@ initial forever #( 6944.444) spi_peripheral_clock = pll_locked ? ~spi_peripheral
 initial forever #( 6410.256) jpeg_buffer_clock = pll_locked ? ~jpeg_buffer_clock : 0;
 // Divide 36 MHz clock by 2
 generate
-if (`JPEG_SLOW_CLOCK_DIV == "X2")
-always @(posedge `JPEG_SLOW_CLOCK_SOURCE or posedge pll_reset) jpeg_slow_clock = !pll_reset ? ~jpeg_slow_clock : 0;
+if (`JPEG_CLOCK_DIV == "X2")
+always @(posedge `JPEG_CLOCK_SOURCE or posedge pll_reset) jpeg_clock = !pll_reset ? ~jpeg_clock : 0;
 else
-always_comb jpeg_slow_clock = `JPEG_SLOW_CLOCK_SOURCE;
+always_comb jpeg_clock = `JPEG_CLOCK_SOURCE;
 endgenerate
 always_comb pll_locked = ~pll_reset & pllpowerdown_n;
 `else
@@ -133,12 +133,12 @@ pll_wrapper pll_wrapper (
 
 // Divide 36 MHz clock by 2 or 1
 PCLKDIVSP #(
-    .DIV_PCLKDIV(`JPEG_SLOW_CLOCK_DIV),
+    .DIV_PCLKDIV(`JPEG_CLOCK_DIV),
     .GSR("DISABLED")
 ) div (
-    .CLKIN(`JPEG_SLOW_CLOCK_SOURCE),
+    .CLKIN(`JPEG_CLOCK_SOURCE),
     .LSRPDIV(pll_reset),
-    .CLKOUT(jpeg_slow_clock)
+    .CLKOUT(jpeg_clock)
 );
 
 `endif //NO_PLL_SIM
@@ -150,7 +150,7 @@ logic display_reset_n;
 logic spi_peripheral_reset_n;
 logic spi_async_peripheral_reset_n;
 logic jpeg_buffer_reset_n;
-logic image_buffer_reset_n;
+logic jpeg_slow_reset_n;
 
 global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
@@ -184,28 +184,28 @@ reset_sync jpeg_buffer_clock_reset_sync (
     .sync_reset_n_out(jpeg_buffer_reset_n)
 );
 
-reset_sync jpeg_clock_reset_sync (
-    .clock_in(jpeg_clock),
+reset_sync jpeg_slow_reset_n_sync (
+    .clock_in(jpeg_slow_clock),
     .async_reset_n_in(global_reset_n),
-    .sync_reset_n_out(image_buffer_reset_n)
+    .sync_reset_n_out(jpeg_slow_reset_n)
 );
 
 `ifdef NO_PLL_SIM
 clkswitch clkswitch(
-    .i_clk_a (jpeg_slow_clock), 
+    .i_clk_a (jpeg_clock), 
     .i_clk_b (spi_clock_in), 
     .i_areset_n (spi_async_peripheral_reset_n), 
     .i_sel (image_buffer_read_en), 
-    .o_clk (jpeg_clock)
+    .o_clk (jpeg_slow_clock)
 );
 `else
 // Dynamic clock select for jpeg and Image buffer
 DCS #(.DCSMODE("DCS")) DCSInst0 (
-    .CLK0 (jpeg_slow_clock),
+    .CLK0 (jpeg_clock),
     .CLK1 (spi_clock_in),
     .SEL (image_buffer_read_en),
     .SELFORCE (1'b0),
-    .DCSOUT (jpeg_clock)
+    .DCSOUT (jpeg_slow_clock)
 );
 `endif //NO_PLL_SIM
 
@@ -279,8 +279,8 @@ camera camera (
     .jpeg_buffer_clock_in(jpeg_buffer_clock),
     .jpeg_buffer_reset_n_in(jpeg_buffer_reset_n),
 
-    .jpeg_slow_clock_in(jpeg_buffer_clock),
-    .jpeg_slow_clock_in(jpeg_buffer_reset_n),
+    .jpeg_slow_clock_in(jpeg_slow_clock),
+    .jpeg_slow_reset_n_in(jpeg_slow_reset_n),
     
     `ifdef NO_MIPI_IP_SIM
     .byte_to_pixel_frame_valid,

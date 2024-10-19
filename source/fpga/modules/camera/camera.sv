@@ -442,6 +442,9 @@ jpeg_encoder jpeg_encoder (
     .jpeg_fast_clock_in(jpeg_buffer_clock_in),
     .jpeg_fast_reset_n_in(jpeg_buffer_reset_n_in),
 
+    .jpeg_slow_clock_in(jpeg_slow_clock_in),
+    .jpeg_slow_reset_n_in(jpeg_slow_reset_n_in),
+
     .red_data_in({gamma_corrected_red_data, 2'b0}),
     .green_data_in({gamma_corrected_green_data, 2'b0}),
     .blue_data_in({gamma_corrected_blue_data, 2'b0}),
