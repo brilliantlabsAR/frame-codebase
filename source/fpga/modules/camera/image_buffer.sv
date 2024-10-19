@@ -39,7 +39,7 @@ module image_buffer (
 
 // Read/write selection
 logic [13:0] address;
-assign address = write_read_n_in ? write_address_in : read_address_in[15:2];
+assign address = write_read_n_in ? write_address_in[15:2] : read_address_in[15:2];
 
 // Read 8 bits of 32 based on address
 logic [31:0] read_data;

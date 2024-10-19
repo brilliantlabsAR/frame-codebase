@@ -7,12 +7,18 @@
 #
 import sys, os, time, random, logging
 import numpy as np
+if os.environ['SIM'] != 'modelsim':
+    import cv2
 
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
 
 from tb_top import SpiTransactor, clock_n_reset
+from encoder import writeJPG_header, writeJPG_footer    # ../jed
 
+
+np.set_printoptions(suppress=True, precision=3)
+np.random.seed(0)
 
 class JpegTester():
     def __init__(self, dut, spi, img_file='baboon.bmp', qf=50, read_bmp=True, save_bmp_to_array=False):
@@ -120,16 +126,39 @@ class JpegTester():
         # read address -> need to add 4 to get size in bytes
         read_data = await self.spi.spi_read(0x31, 2)
         bytes = 4 + sum([v << (i*8) for i,v in enumerate(read_data)])
-
         self.dut._log.debug(f"******** Compressed bytes={bytes}")
-        return
+
         if True:
-            self.ecs = await self.spi_write_read(0x22, *[0xff]*bytes)
+            self.ecs = await self.spi.spi_read(0x22, bytes)
         else:
             self.ecs = []
             for _ in range(bytes):
-                ecs = await self.spi_write_read(0x22, 0xff)
+                ecs = await self.spi.spi_read(0x22, 1)
                 self.ecs.extend(ecs)
+
+
+    async def write_image(self, jfilename='jpeg_out.jpg', efilename='ecs_out.bin'):
+        await self.write_jpg(jfilename)
+        await self.write_ecs(efilename)
+
+
+    async def write_ecs(self, filename='ecs_out.bin'):
+        # Write bytes to file
+        with open(filename, "wb") as f:
+            f.write(bytearray(self.ecs))
+
+
+    async def write_jpg(self, filename='jpeg_out.jpg'):
+        hdr = bytearray(writeJPG_header(height=self.y, width=self.x, qf=self.qf))
+        ecs = bytearray(self.ecs)
+        ftr = bytearray(writeJPG_footer())
+
+        # Write bytes to file
+        with open(filename, "wb") as f:
+            f.write(hdr)
+            f.write(ecs)
+            f.write(ftr)
+
 
 
 @cocotb.test()
@@ -163,19 +192,25 @@ async def jpeg_test(dut):
     pll_lock = await spi.spi_read(0x41)
     assert pll_lock == [1]
 
-    for _ in range(1):
-        for _ in range(2):
-            # send a few non capture frames
-            bayer  = cocotb.start_soon(t.send_bayer())   
-            await cocotb.triggers.Combine(bayer)  # wait for frame end
 
-        # send capture frame
-        t.jpeg_sel = 1 #int(os.environ['JPEG_SEL'])
+    # Send a few non capture dummy frames
+    for _ in range(2):
+        bayer  = cocotb.start_soon(t.send_bayer())
+        await cocotb.triggers.Combine(bayer)  # wait for frame end
 
-        await t.initialize()    
-        bayer  = cocotb.start_soon(t.send_bayer())   
+    # Set up encoder
+    t.jpeg_sel = 1 #int(os.environ['JPEG_SEL'])
+    await t.initialize()
 
-        await t.read_image_buffer()
+    # Send capture frame
+    bayer  = cocotb.start_soon(t.send_bayer())
+
+    # Read image when ready
+    await t.read_image_buffer()
+    await t.write_image()
+
+    await show_image(test_image, 'jpeg_out.jpg')
+    await cocotb.triggers.Combine(bayer)  # wait for frame end
 
 
     # Finish
