@@ -89,7 +89,8 @@ class JpegTester():
         qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([50, 100, 10, 25])}[self.qf]
         await self.spi.spi_write(0x26, qf_select)
         await self.spi.spi_write(0x20, 1)
-
+        if os.environ.get('GAMMA_BYPASS', '') == '1':
+            await self.spi.spi_write(0x32, 1)
 
     async def send_bayer(self):
 	    # send RGB

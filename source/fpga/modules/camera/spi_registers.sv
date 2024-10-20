@@ -26,6 +26,7 @@
     // TODO position signals
     output logic [1:0] compression_factor_out,
     output logic power_save_enable_out,
+    output logic gamma_bypass_out,
 
     input logic image_ready_in,
     input logic [15:0] final_image_address, // image_total_size_in - 4
@@ -52,6 +53,7 @@ parameter POWER_SAVE_ENABLE = 'h28; // WO
 
 parameter IMAGE_READY_FLAG  = 'h30; // RO
 parameter COMPRESSED_BYTES  = 'h31; // RO 2x
+parameter GAMMA_BYPASS      = 'h32; // WO
 
 logic [15:0] image_buffer_total_size;   // final address + 4, sames as bytes available
 logic [15:0] bytes_remaining;
@@ -107,6 +109,7 @@ always_ff @(negedge clock_in) begin
         compression_factor_out <= 0;
         power_save_enable_out <= 1;
         image_address_out <= 0;
+        gamma_bypass_out <= 0;
     end
 
     else begin
@@ -148,6 +151,11 @@ always_ff @(negedge clock_in) begin
                 // Power saving
                 POWER_SAVE_ENABLE: begin
                     power_save_enable_out <= operand_in[0];
+                end
+
+                // Power saving
+                GAMMA_BYPASS: begin
+                    gamma_bypass_out <= operand_in[0];
                 end
 
             endcase

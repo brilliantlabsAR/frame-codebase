@@ -79,6 +79,7 @@ always_comb y_resolution = y_zoom_crop_end - y_zoom_crop_start; // Todo: Make SP
 
 logic [1:0] compression_factor;
 logic power_save_enable;
+logic gamma_bypass;
 
 logic image_buffer_ready;               // Ready bit, high when compression finished
 logic [7:0] image_buffer_data;          // Read out data
@@ -110,6 +111,7 @@ spi_registers spi_registers (
     // .x_pan_out(x_pan),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
+    .gamma_bypass_out(gamma_bypass),
 
     .image_ready_in(image_buffer_ready),
     .final_image_address(final_image_address),
@@ -444,11 +446,11 @@ jpeg_encoder jpeg_encoder (
     .jpeg_slow_clock_in(jpeg_slow_clock_in),
     .jpeg_slow_reset_n_in(jpeg_slow_reset_n_in),
 
-    .red_data_in({gamma_corrected_red_data, 2'b0}),
-    .green_data_in({gamma_corrected_green_data, 2'b0}),
-    .blue_data_in({gamma_corrected_blue_data, 2'b0}),
-    .line_valid_in(gamma_corrected_line_valid),
-    .frame_valid_in(gamma_corrected_frame_valid),
+    .red_data_in(gamma_bypass ? zoomed_red_data : {gamma_corrected_red_data, 2'b0}),
+    .green_data_in(gamma_bypass ? zoomed_green_data : {gamma_corrected_green_data, 2'b0}),
+    .blue_data_in(gamma_bypass ? zoomed_blue_data : {gamma_corrected_blue_data, 2'b0}),
+    .line_valid_in(gamma_bypass ? zoomed_line_valid : gamma_corrected_line_valid),
+    .frame_valid_in(gamma_bypass ? zoomed_frame_valid : gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(x_resolution),
