@@ -6,6 +6,9 @@
 # Copyright (C) 2024 Robert Metchev
 #
 
+import os
+if os.environ['SIM'] != 'modelsim':
+    import cv2
 import logging
 
 import cocotb
@@ -32,6 +35,14 @@ async def clock_n_reset(c, r, f=0, n=5, t=10):
         await Timer(t, 'us')
     if r is not None:
         r.value = 1
+
+
+async def show_image(*img_files, t=5000):
+    if os.environ['SIM'] != 'modelsim':
+        for img_file in img_files:
+            cv2.imshow(img_file, cv2.imread(img_file))
+        cv2.waitKey(t) 
+        cv2.destroyAllWindows()
 
 
 class SpiTransactor:

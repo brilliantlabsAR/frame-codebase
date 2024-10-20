@@ -13,7 +13,7 @@ if os.environ['SIM'] != 'modelsim':
 import cocotb
 from cocotb.triggers import ClockCycles, RisingEdge, FallingEdge, Timer
 
-from tb_top import SpiTransactor, clock_n_reset
+from tb_top import SpiTransactor, clock_n_reset, show_image
 from encoder import writeJPG_header, writeJPG_footer    # ../jed
 
 
@@ -126,7 +126,7 @@ class JpegTester():
         # read address -> need to add 4 to get size in bytes
         read_data = await self.spi.spi_read(0x31, 2)
         bytes = 4 + sum([v << (i*8) for i,v in enumerate(read_data)])
-        self.dut._log.debug(f"******** Compressed bytes={bytes}")
+        self.dut._log.info(f"ECS size = {bytes} bytes")
 
         if True:
             self.ecs = await self.spi.spi_read(0x22, bytes)

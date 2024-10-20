@@ -20,6 +20,9 @@ MODULES_PATH    := $(realpath $(TEST_PATH)/../../../modules)
 CAMERA_PATH     := $(realpath $(TEST_PATH)/../../../modules/camera)
 JPEG_PATH       := $(realpath $(TEST_PATH)/../../../modules/camera/jpeg_encoder)
 
+JED             := $(realpath $(TEST_PATH)/../../jed)
+JPEG_COMMON     := $(realpath $(TEST_PATH)/../../jpeg_common)
+
 # Sim control
 GATE_SIM = 0
 SDF_ANNO = 0
@@ -201,7 +204,7 @@ TOPLEVEL =  tb_top
 # MODULE is the basename of the Python test file
 MODULE = $(TEST_TOP)
 
-export PYTHONPATH := $(realpath .):$(COMMONS_PATH)
+export PYTHONPATH := $(realpath .):$(COMMONS_PATH):$(JPEG_COMMON):$(JED)
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
