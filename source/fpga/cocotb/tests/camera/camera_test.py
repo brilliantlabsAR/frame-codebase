@@ -124,6 +124,9 @@ class JpegTester():
             [image_ready_flag] = await self.spi.spi_read(0x30)
             if image_ready_flag != 0:
                     break
+            # poll less over SPI to speed up sim
+            await Timer(100, units='us')
+
         # read address -> need to add 4 to get size in bytes
         read_data = await self.spi.spi_read(0x31, 2)
         bytes = 4 + sum([v << (i*8) for i,v in enumerate(read_data)])
