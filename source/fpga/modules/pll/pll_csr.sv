@@ -15,7 +15,7 @@ module pll_csr #(
 )(
     // SPI clock
     input logic spi_clock_in,
-    input logic spi_async_peripheral_reset_n,
+    input logic spi_reset_n_in,
 
     // SPI interface
     input logic [7:0] opcode_in,
@@ -32,8 +32,8 @@ module pll_csr #(
     input logic pll_locked                  // PLL lock status - needed in order to safely switch image buffer clocks
 );
 
-always @(negedge spi_clock_in or negedge spi_async_peripheral_reset_n) // Async reset
-if (!spi_async_peripheral_reset_n) begin
+always @(negedge spi_clock_in or negedge spi_reset_n_in) // Async reset
+if (!spi_reset_n_in) begin
     pllpowerdown_n <= PLLPOWERDOWN_N_DEFAULT;
     image_buffer_read_en <= IMAGE_BUFFER_READ_EN_DEFAULT;
 end

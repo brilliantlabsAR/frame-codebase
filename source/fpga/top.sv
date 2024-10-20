@@ -148,7 +148,6 @@ logic global_reset_n;
 logic camera_pixel_reset_n;
 logic display_reset_n;
 logic spi_peripheral_reset_n;
-logic spi_async_peripheral_reset_n;
 logic jpeg_buffer_reset_n;
 logic jpeg_slow_reset_n;
 
@@ -156,8 +155,9 @@ global_reset_sync global_reset_sync (
     .clock_in(osc_clock),
     .pll_locked_in(pll_locked),
     .pll_reset_out(pll_reset),
-    .global_reset_n_out(global_reset_n)
+    .global_reset_n_out(/*global_reset_n*/)  // FIXME - Raj/Robert to review - with PLL powerdown + no lock, this will reset all FPGA, which we don't want
 );
+always_comb global_reset_n = ~pll_reset;
 
 reset_sync camera_pixel_clock_reset_sync (
     .clock_in(camera_pixel_clock),
@@ -171,10 +171,9 @@ reset_sync display_clock_reset_sync (
     .sync_reset_n_out(display_reset_n)
 );
 
-assign spi_async_peripheral_reset_n = ~spi_select_in | spi_peripheral_reset_n;
 reset_sync spi_peripheral_clock_reset_sync (
     .clock_in(spi_clock_in),
-    .async_reset_n_in(spi_async_peripheral_reset_n),    // De-couple SPI reset from PLL status
+    .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(spi_peripheral_reset_n)
 );
 
@@ -194,7 +193,7 @@ reset_sync jpeg_slow_reset_n_sync (
 clkswitch clkswitch(
     .i_clk_a (jpeg_clock), 
     .i_clk_b (spi_clock_in), 
-    .i_areset_n (spi_async_peripheral_reset_n), 
+    .i_areset_n (global_reset_n), 
     .i_sel (image_buffer_read_en), 
     .o_clk (jpeg_slow_clock)
 );
@@ -319,7 +318,7 @@ spi_register #(
 pll_csr pll_csr (
     // SPI clock
     .spi_clock_in(spi_clock_in),                                    // external SPI clock
-    .spi_async_peripheral_reset_n(spi_async_peripheral_reset_n),    // async external SPI CS
+    .spi_reset_n_in(spi_peripheral_reset_n),    // async external SPI CS
 
     // SPI interface
     .opcode_in(opcode),
