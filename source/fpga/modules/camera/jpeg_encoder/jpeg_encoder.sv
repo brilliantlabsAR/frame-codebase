@@ -151,22 +151,11 @@ else if (out_valid & ~out_hold)
     size <= size + 4;
 
 // data out: need to reverse data endianness 
-always @(posedge slow_clock)
-if (out_valid & ~out_hold) begin
+always_comb
     for(int i=0; i<4; i++)
-        data_out[8*i +: 8] <= out_data[8*(3-i) +: 8];    
-    address_out <= size;
-end
-
-// pre-CDC: Ensure there is always an idle  cycle
-always @(posedge slow_clock)
-if (!slow_reset_n)
-    data_valid_out <= 0;
-else if (data_valid_out)
-    data_valid_out <= 0;
-else
-    data_valid_out <= out_valid;
-
-always_comb out_hold = data_valid_out;
+        data_out[8*i +: 8] = out_data[8*(3-i) +: 8];    
+always_comb address_out = size;
+always_comb data_valid_out = out_valid;
+always_comb out_hold = 0;
 
 endmodule
