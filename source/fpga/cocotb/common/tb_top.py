@@ -68,7 +68,7 @@ class SpiTransactor:
             cpol        = 0,
             cpha        = 0,
             msb_first   = True,
-            #frame_spacing_ns = 10,
+            frame_spacing_ns = 125,
             #ignore_rx_value = None,
             cs_active_low = True,   # optional (assumed True)
         )

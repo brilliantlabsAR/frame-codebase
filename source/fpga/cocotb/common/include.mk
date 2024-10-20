@@ -182,7 +182,6 @@ ifeq ($(GATE_SIM),1)
 endif    
         EXTRA_ARGS += -L lifcl -L ovi_lifcl -L pmi_work
         EXTRA_ARGS += +memory
-        export COCOTB_RESOLVE_X=ZEROS
 
 ifeq ($(WAVES),1)
         EXTRA_ARGS += +DUMP
@@ -204,6 +203,7 @@ TOPLEVEL =  tb_top
 # MODULE is the basename of the Python test file
 MODULE = $(TEST_TOP)
 
+export COCOTB_RESOLVE_X=ZEROS
 export PYTHONPATH := $(realpath .):$(COMMONS_PATH):$(JPEG_COMMON):$(JED)
 
 # include cocotb's make rules to take care of the simulator setup

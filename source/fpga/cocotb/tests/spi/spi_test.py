@@ -19,16 +19,22 @@ async def spi_test(dut):
     log_level = os.environ.get('LOG_LEVEL', 'INFO') # NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
     dut._log.setLevel(log_level)
 
-    # Hack/Fix for missing "negedge reset" in verilator, works OK in icarus
-    dut.spi_select_in.value = 0
-    await Timer(1, 'ps')
-
     # SPI Transactor
     t = SpiTransactor(dut)
 
     # Start camera clock
     cr = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock
+
+    # Hack/Fix for missing "negedge reset" in verilator, works OK in icarus
+    await Timer(10, 'ns')
+    dut.spi_select_in.value = 0
+    await Timer(10, 'ns')
+    dut.spi_select_in.value = 1
+    await Timer(10, 'ns')
+
     
+    #   0. Wait for reset
+    await Timer(10, units='us')
 
     #   1. Test single byte read from ID register 0xDB
     a = 0xdb

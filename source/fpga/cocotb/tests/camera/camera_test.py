@@ -26,7 +26,12 @@ class JpegTester():
         self.spi = spi
         self.jpeg_sel = 1
         self.qf = qf
-        
+
+        # initialize sensor BFM
+        if os.environ['SIM'] != 'modelsim':
+            self.dut.pixel_lv.value = 0
+            self.dut.pixel_fv.value = 0
+
         # Always Read RGB image
         if read_bmp and os.environ['SIM'] != 'modelsim':
             self.img_bgr = cv2.imread(img_file)
@@ -129,10 +134,10 @@ class JpegTester():
 
         # read address -> need to add 4 to get size in bytes
         read_data = await self.spi.spi_read(0x31, 2)
-        bytes = 4 + sum([v << (i*8) for i,v in enumerate(read_data)])
+        bytes = sum([v << (i*8) for i,v in enumerate(read_data)])
         self.dut._log.info(f"ECS size = {bytes} bytes")
 
-        if True:
+        if os.environ.get('SINGLE_SPI_READS', 0) == '0':
             self.ecs = await self.spi.spi_read(0x22, bytes)
         else:
             self.ecs = []
@@ -170,15 +175,19 @@ async def jpeg_test(dut):
     log_level = os.environ.get('LOG_LEVEL', 'INFO') # NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
     dut._log.setLevel(log_level)
 
-    # Hack/Fix for missing "negedge reset" in verilator, works OK in icarus
-    dut.spi_select_in.value = 0
-    await Timer(1, 'ps')
-
     # SPI Transactor
     spi = SpiTransactor(dut)
 
     # Start camera clock
-    cr = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock
+    cr = cocotb.start_soon(clock_n_reset(dut.camera_pixel_clock, None, f=36.0*10e6))       # 36 MHz clock  
+
+    # Hack/Fix for missing "negedge reset" in verilator, works OK in icarus
+    await Timer(10, 'ns')
+    dut.spi_select_in.value = 0
+    await Timer(10, 'ns')
+    dut.spi_select_in.value = 1
+    await Timer(10, 'ns')
+
 
     test_image = 'baboon.bmp'  # 256x256
     #test_image = '4.2.07.tiff'  # peppers 512x512
@@ -191,6 +200,7 @@ async def jpeg_test(dut):
     t = JpegTester(dut, spi, test_image, qf=qf, read_bmp=False)
 
     # Wait for PLL to power up, lock & global reset
+    await Timer(10, units='us')
     await spi.spi_write(0x40, 0x1)
     await Timer(20, units='us')
     pll_lock = await spi.spi_read(0x41)
