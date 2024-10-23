@@ -73,7 +73,7 @@ The complete pipeline for the camera subsystem is as follows:
 
 And the JPEG encoding subsystem is further broken down as follows:
 
-![JPEG encoding pipeline for Frame](diagrams/camera-jpeg-encoder-architecture.drawio.png)
+![JPEG encoding pipeline for Frame](diagrams/camera-jpeg-encoder-architecture-2.drawio.png)
 
 ### Capturing Images
 
