@@ -1,24 +1,25 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Wed Oct 23 12:52:03 2024
+[*] Wed Oct 23 13:14:06 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/dump.fst"
-[dumpfile_mtime] "Wed Oct 23 12:32:58 2024"
-[dumpfile_size] 168750
+[dumpfile_mtime] "Wed Oct 23 13:12:24 2024"
+[dumpfile_size] 179975
 [savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/spi.gtkw"
 [timestart] 0
-[size] 1612 902
-[pos] -10 6
-*-24.733698 124838000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[size] 1612 1012
+[pos] 0 6
+*-24.814211 124838000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] .
 [treeopen] .tb_top.
 [treeopen] .tb_top.dut.
 [treeopen] .tb_top.dut.camera.
 [treeopen] .tb_top.dut.graphics.
+[treeopen] .tb_top.dut.graphics.display_buffers.
 [sst_width] 289
 [signals_width] 302
 [sst_expanded] 1
-[sst_vpaned_height] 251
+[sst_vpaned_height] 288
 @28
 tb_top.dut.spi_peripheral.spi_select_in
 tb_top.dut.spi_peripheral.spi_data_in
@@ -83,7 +84,13 @@ tb_top.dut.graphics.operand_valid_in
 tb_top.dut.graphics.spi_operand_edge_monitor
 tb_top.dut.graphics.spi_operand_edge_monitor_z
 tb_top.dut.graphics.sprite_data_valid_spi_domain
-@29
 tb_top.dut.graphics.sprite_data_valid
+@200
+-
+@29
+tb_top.dut.graphics.switch_buffer
+@28
+tb_top.dut.graphics.display_buffers.buffer_switch_pending
+tb_top.dut.graphics.switch_buffer_spi_domain
 [pattern_trace] 1
 [pattern_trace] 0

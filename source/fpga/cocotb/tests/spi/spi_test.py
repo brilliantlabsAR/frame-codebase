@@ -77,6 +77,9 @@ async def spi_test(dut):
     #   4b. Register 0x12 Sprite position 
     await Timer(5, units='us')
     await t.spi_write(0x12, [0x3, 0xaa, 0x2, 0xbb, 0x3, 0xcc, 0xf, 0x5, 0xc1])
+    #   4c. Register 0x14 Switch buffer
+    await Timer(5, units='us')
+    await t.spi_write(0x14, 0)
 
     # Finish
     await Timer(10, units='us')
