@@ -70,6 +70,13 @@ async def spi_test(dut):
     #   3d. Read 3 bytes from Image buffer using PLL clock
     read_bytes = await t.spi_read(0x22, 3)
 
+    #   4. Test Graphics
+    #   4a. Register 0x11 Assign Color
+    await Timer(15, units='us')
+    await t.spi_write(0x11, [0xf, 0xe, 0x7, 0x6])
+    #   4b. Register 0x12 Sprite position 
+    await Timer(5, units='us')
+    await t.spi_write(0x12, [0x3, 0xaa, 0x2, 0xbb, 0x3, 0xcc, 0xf, 0x5, 0xc1])
 
     # Finish
     await Timer(10, units='us')

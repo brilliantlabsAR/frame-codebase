@@ -87,10 +87,10 @@ always_ff @(negedge spi_clock_in) begin
             'h11: begin
                 if (operand_valid_in) begin
                     case (operand_count_in)
-                        1: assign_color_index_spi_domain <= operand_in[3:0];
-                        2: assign_color_value_spi_domain[9:6] <= operand_in[3:0];
-                        3: assign_color_value_spi_domain[5:3] <= operand_in[2:0];
-                        4: begin
+                        0: assign_color_index_spi_domain <= operand_in[3:0];
+                        1: assign_color_value_spi_domain[9:6] <= operand_in[3:0];
+                        2: assign_color_value_spi_domain[5:3] <= operand_in[2:0];
+                        3: begin
                             assign_color_value_spi_domain[2:0] <= operand_in[2:0];
                             assign_color_enable_spi_domain <= 1;
                         end
@@ -106,15 +106,14 @@ always_ff @(negedge spi_clock_in) begin
             'h12: begin
                 if (operand_valid_in) begin
                     case (operand_count_in)
-                        0: begin /* Do nothing */ end
-                        1: sprite_x_position_spi_domain <= {operand_in[1:0], 8'b0};
-                        2: sprite_x_position_spi_domain <= {sprite_x_position_spi_domain[9:8], operand_in};
-                        3: sprite_y_position_spi_domain <= {operand_in[1:0], 8'b0};
-                        4: sprite_y_position_spi_domain <= {sprite_y_position_spi_domain[9:8], operand_in};
-                        5: sprite_width_spi_domain <= {operand_in[1:0], 8'b0};
-                        6: sprite_width_spi_domain <= {sprite_width_spi_domain[9:8], operand_in};
-                        7: sprite_color_count_spi_domain <= operand_in[4:0];
-                        8: sprite_palette_offset_spi_domain <= operand_in[3:0];
+                        0: sprite_x_position_spi_domain <= {operand_in[1:0], 8'b0};
+                        1: sprite_x_position_spi_domain <= {sprite_x_position_spi_domain[9:8], operand_in};
+                        2: sprite_y_position_spi_domain <= {operand_in[1:0], 8'b0};
+                        3: sprite_y_position_spi_domain <= {sprite_y_position_spi_domain[9:8], operand_in};
+                        4: sprite_width_spi_domain <= {operand_in[1:0], 8'b0};
+                        5: sprite_width_spi_domain <= {sprite_width_spi_domain[9:8], operand_in};
+                        6: sprite_color_count_spi_domain <= operand_in[4:0];
+                        7: sprite_palette_offset_spi_domain <= operand_in[3:0];
                         default begin
                             sprite_data_spi_domain <= operand_in;        
                             sprite_data_valid_spi_domain <= 1;

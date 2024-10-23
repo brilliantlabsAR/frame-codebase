@@ -1,21 +1,22 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Fri Oct 18 20:52:02 2024
+[*] Wed Oct 23 12:52:03 2024
 [*]
 [dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/dump.fst"
-[dumpfile_mtime] "Fri Oct 18 20:40:06 2024"
-[dumpfile_size] 73338
+[dumpfile_mtime] "Wed Oct 23 12:32:58 2024"
+[dumpfile_size] 168750
 [savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/spi.gtkw"
-[timestart] 25470000
+[timestart] 0
 [size] 1612 902
-[pos] -1 -1
-*-21.227816 27430000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[pos] -10 6
+*-24.733698 124838000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] .
 [treeopen] .tb_top.
 [treeopen] .tb_top.dut.
 [treeopen] .tb_top.dut.camera.
-[sst_width] 233
-[signals_width] 206
+[treeopen] .tb_top.dut.graphics.
+[sst_width] 289
+[signals_width] 302
 [sst_expanded] 1
 [sst_vpaned_height] 251
 @28
@@ -56,10 +57,33 @@ tb_top.dut.camera.spi_registers.response_out[7:0]
 @200
 -
 @28
-tb_top.dut.image_buffer_clock
 tb_top.dut.jpeg_buffer_clock
 tb_top.dut.jpeg_slow_clock
 @200
 -
+@22
+tb_top.dut.graphics.assign_color_index_spi_domain[3:0]
+tb_top.dut.graphics.assign_color_index[3:0]
+tb_top.dut.graphics.assign_color_value_spi_domain[9:0]
+tb_top.dut.graphics.assign_color_value[9:0]
+@28
+tb_top.dut.graphics.assign_color_enable_spi_domain
+tb_top.dut.graphics.assign_color_enable
+@200
+-
+@28
+tb_top.dut.graphics.sprite_data_valid_spi_domain
+tb_top.dut.graphics.sprite_data_valid
+tb_top.dut.graphics.sprite_enable_spi_domain
+tb_top.dut.graphics.sprite_enable
+@200
+-
+@28
+tb_top.dut.graphics.operand_valid_in
+tb_top.dut.graphics.spi_operand_edge_monitor
+tb_top.dut.graphics.spi_operand_edge_monitor_z
+tb_top.dut.graphics.sprite_data_valid_spi_domain
+@29
+tb_top.dut.graphics.sprite_data_valid
 [pattern_trace] 1
 [pattern_trace] 0
