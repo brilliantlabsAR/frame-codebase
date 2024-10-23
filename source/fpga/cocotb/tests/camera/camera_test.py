@@ -137,7 +137,7 @@ class JpegTester():
         bytes = sum([v << (i*8) for i,v in enumerate(read_data)])
         self.dut._log.info(f"ECS size = {bytes} bytes")
 
-        if os.environ.get('SINGLE_SPI_READS', 0) == '0':
+        if os.environ.get('SINGLE_SPI_READS', 0) == 0:
             self.ecs = await self.spi.spi_read(0x22, bytes)
         else:
             self.ecs = []
