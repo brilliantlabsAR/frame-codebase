@@ -30,6 +30,13 @@
                 </ipxact:wire>
             </ipxact:port>
             <ipxact:port>
+                <ipxact:name>pllpd_en_n_i</ipxact:name>
+                <ipxact:displayName>pllpd_en_n_i</ipxact:displayName>
+                <ipxact:wire>
+                    <ipxact:direction>in</ipxact:direction>
+                </ipxact:wire>
+            </ipxact:port>
+            <ipxact:port>
                 <ipxact:name>clkop_o</ipxact:name>
                 <ipxact:displayName>clkop_o</ipxact:displayName>
                 <ipxact:wire>
@@ -128,7 +135,7 @@
         </lsccip:deviceInfo>
         <lsccip:generationInfo>
             <lsccip:fileVersion>20180929</lsccip:fileVersion>
-            <lsccip:createdTimestamp>2024 04 16 16:25:09</lsccip:createdTimestamp>
+            <lsccip:createdTimestamp>2024 10 09 09:54:57</lsccip:createdTimestamp>
             <lsccip:radiantBuild>&quot;Lattice Radiant Software&quot; (64-bit) 2023.2.1.288.0</lsccip:radiantBuild>
         </lsccip:generationInfo>
     </ipxact:vendorExtensions>

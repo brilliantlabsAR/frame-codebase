@@ -3,6 +3,7 @@
  *
  * Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
  *              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+ *              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -12,6 +13,7 @@
 module pll_wrapper (
     input logic clki_i,
     input logic rstn_i,
+    input logic pllpowerdown_n,
     output logic clkop_o,
     output logic clkos_o,
     output logic clkos2_o,
@@ -101,7 +103,7 @@ PLL #(
     .PHIE("0"),
     .PHIF("0"),
     .PLLPD_N("USED"),
-    .PLLPDN_EN("DISABLED"),
+    .PLLPDN_EN("ENABLED"),
     .PLLRESET_ENA("ENABLED"),
     .PMU_WAITFORLOCK("ENABLED"),
     .REF_INTEGER_MODE("ENABLED"),
@@ -150,7 +152,7 @@ PLL #(
     .FBKCK(feedback_w),
     .PLLRESET(rstn_i),
     .REFCK(clki_i),
-    
+    .PLLPOWERDOWN_N(pllpowerdown_n),
     // Outputs
     .CLKOP(clkop_o),
     .CLKOS(clkos_o),

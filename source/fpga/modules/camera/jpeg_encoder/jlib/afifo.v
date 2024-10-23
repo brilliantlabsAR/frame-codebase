@@ -65,7 +65,7 @@
 //
 //
 module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
-		i_rclk, i_rrst_n, i_rd, o_rdata, o_rempty);
+		i_rclk, i_rrst_n, i_rd, o_rdata, o_rempty, wptr, rptr);
 	parameter	DSIZE = 2,
 			ASIZE = 4, FULL_EMPTY_SAFEGUARD = 1;
 	localparam	DW = DSIZE,
@@ -76,6 +76,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 	input	wire			i_rclk, i_rrst_n, i_rd;
 	output	wire	[DW-1:0]	o_rdata;
 	output	reg			o_rempty;
+	output	wire    [AW:0]          wptr, rptr;
 
 	wire	[AW-1:0]	waddr, raddr;
 	wire			wfull_next, rempty_next;
@@ -113,6 +114,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 	assign	wgraynext = (wbinnext >> 1) ^ wbinnext;
 
 	assign	waddr = wbin[AW-1:0];
+	assign	wptr = wbin;
 
 	// Register these two values--the address and its Gray code
 	// representation
@@ -124,8 +126,9 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 		{ wbin, wgray } <= { wbinnext, wgraynext };
 
 	//assign	wfull_next = (wgraynext == { ~wq2_rgray[AW:AW-1],
-	assign	wfull_next = (wgray == { ~wq2_rgray[AW:AW-1],
-				wq2_rgray[AW-2:0] });
+	//assign	wfull_next = (wgray == { ~wq2_rgray[AW:AW-1],
+	//			wq2_rgray[AW-2:0] });
+	assign	wfull_next = (wgray == (wq2_rgray ^ (2'b11 << (AW-1))) );
 
 	//
 	// Calculate whether or not the register will be full on the next
@@ -185,6 +188,7 @@ module afifo(i_wclk, i_wrst_n, i_wr, i_wdata, o_wfull,
 
 	// Memory read address Gray code and pointer calculation
 	assign	raddr = rbin[AW-1:0];
+	assign	rptr = rbin;
 
 	// Determine if we'll be empty on the next clock
 	//assign	rempty_next = (rgraynext == rq2_wgray);
