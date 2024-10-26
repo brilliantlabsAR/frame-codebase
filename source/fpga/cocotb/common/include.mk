@@ -237,3 +237,4 @@ clean::
 	rm -rf transcript modelsim.ini vsim.wlf vsim_stacktrace.vstf vish_stacktrace.vstf
 	rm -rf frame_frame_vo.sdf_*.csd
 	#make clean -C ../../testbenches/csi/source/csi/pll_sim_ip
+	rm -rf f wlft*
