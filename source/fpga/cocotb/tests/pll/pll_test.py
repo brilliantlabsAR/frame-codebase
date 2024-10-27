@@ -24,3 +24,4 @@ async def spi_test(dut):
 
     # Finish
     await Timer(1000, units='us')
+    assert dut.pll_locked == 1, "No PLL lock"
