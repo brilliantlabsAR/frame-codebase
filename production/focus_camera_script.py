@@ -661,12 +661,12 @@ def receive_data(data):
     global fps
 
     if len(data) == 1:
-        with open("focus_image.jpg", "wb") as f:
+        with open("focus_image.temp.jpg", "wb") as f:
             f.write(header + image_buffer)
             image_buffer = b""
 
         ### Remove if not using InnoWave IP
-        image = plt.imread("focus_image.jpg")
+        image = plt.imread("focus_image.temp.jpg")
         image = bt601_reverse(image, get_max_pixel(image.dtype))
 
         _, _, _, _, _, _, _, image_overlay = get_sfr_score(
@@ -679,7 +679,7 @@ def receive_data(data):
             edge_size_threshold=75,  # in pixels
         )
 
-        plt.imsave("focus_image.jpg", image_overlay)
+        plt.imsave("focus_image.png", image_overlay)
         ###
 
         return
@@ -702,7 +702,8 @@ async def main():
     local state_time = 0
 
     frame.camera.set_gain(0)
-    frame.camera.set_shutter(600)
+    frame.camera.set_shutter(550)
+    frame.camera.set_white_balance(255, 255, 255)
 
     while true do
         if state == 'CAPTURE' then
