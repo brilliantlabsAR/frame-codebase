@@ -22,6 +22,7 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include "error_logging.h"
@@ -336,8 +337,8 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.18;
     double exposure_speed = 0.50;
-    double shutter_limit = 800.0;
-    double analog_gain_limit = 248.0;
+    double shutter_limit = 1600.0;
+    double analog_gain_limit = 60.0;
 
     // Default white balance settings
     double white_balance_speed = 0.5;
@@ -409,7 +410,7 @@ static int lua_camera_auto(lua_State *L)
         if (lua_getfield(L, 1, "analog_gain_limit") != LUA_TNIL)
         {
             analog_gain_limit = luaL_checknumber(L, -1);
-            if (analog_gain_limit < 0.0 || analog_gain_limit > 248.0)
+            if (analog_gain_limit < 1.0 || analog_gain_limit > 248.0)
             {
                 luaL_error(L, "analog_gain_limit must be between 0 and 248");
             }
@@ -505,32 +506,27 @@ static int lua_camera_auto(lua_State *L)
         {
             last.shutter *= error;
 
-            if (last.shutter > shutter_limit)
+            if (last.shutter < 4.0)
             {
-                last.shutter = shutter_limit;
+                last.shutter = 4.0;
             }
         }
     }
 
-    if (last.shutter > shutter_limit)
-    {
-        last.shutter = shutter_limit;
-    }
-    if (last.shutter < 4.0)
-    {
-        last.shutter = 4.0;
-    }
-    if (last.analog_gain > analog_gain_limit)
-    {
-        last.analog_gain = analog_gain_limit;
-    }
-    if (last.analog_gain < 0.0)
-    {
-        last.analog_gain = 0.0;
-    }
+    uint16_t shutter = (uint16_t)rint(last.shutter);
+    uint8_t analog_gain = (uint8_t)rint(last.analog_gain);
 
-    uint16_t shutter = (uint16_t)last.shutter;
-    uint8_t analog_gain = (uint8_t)last.analog_gain;
+    // If shutter is longer than frame length (VTS register)
+    if (shutter > 0x32A)
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, shutter >> 8).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, shutter).fail);
+    }
+    else
+    {
+        check_error(i2c_write(CAMERA, 0x380E, 0xFF, 0x03).fail);
+        check_error(i2c_write(CAMERA, 0x380F, 0xFF, 0x22).fail);
+    }
 
     check_error(i2c_write(CAMERA, 0x3500, 0x03, shutter >> 12).fail);
     check_error(i2c_write(CAMERA, 0x3501, 0xFF, shutter >> 4).fail);

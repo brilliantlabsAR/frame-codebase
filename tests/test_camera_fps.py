@@ -698,7 +698,10 @@ async def main():
         end
 
         if frame.time.utc() - last_autoexp_time > 0.1 then
-            frame.camera.auto { }
+            local stats = frame.camera.auto { analog_gain_limit=30,  shutter_limit=3200 }
+            -- if stats ~= nil then 
+            --     print('gain = '..stats['analog_gain']..', shutter = '..stats['shutter'])
+            -- end
             last_autoexp_time = frame.time.utc()
         end
     end
