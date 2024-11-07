@@ -29,6 +29,7 @@ module pll_csr #(
     output logic image_buffer_read_en,      // seletcs SPI clock to read image buffer when PLL is off
                                             // 0 .. pixel clock (default)
                                             // 1 .. spi clock
+    output logic spi_clock_en_n,            // This register must always be 0! Do not write!
     input logic pll_locked                  // PLL lock status - needed in order to safely switch image buffer clocks
 );
 
@@ -36,11 +37,14 @@ always @(negedge spi_clock_in or negedge spi_reset_n_in) // Async reset
 if (!spi_reset_n_in) begin
     pllpowerdown_n <= PLLPOWERDOWN_N_DEFAULT;
     image_buffer_read_en <= IMAGE_BUFFER_READ_EN_DEFAULT;
+    spi_clock_en_n <= 0;
 end
 else if (operand_valid_in & opcode_in == PLL_CSR_BASE) begin
     pllpowerdown_n <= operand_in[0];
     image_buffer_read_en <= operand_in[1];
-end
+    spi_clock_en_n <= operand_in[7];
+end else if (spi_clock_en_n)
+    spi_clock_en_n <= 0;
 
 // CDC
 //logic [1:0] pll_locked_cdc;

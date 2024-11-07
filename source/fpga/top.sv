@@ -67,6 +67,7 @@ logic pll_reset;
 logic jpeg_clock;               // Raw JPEG clock - generated or divided down from pixel clock - goes to clock switch
 logic jpeg_buffer_clock;        // 2x JPEG clock for transpose/zig-zag buffer overclocking -  goes to JPEG
 logic jpeg_slow_clock;          // Raw JPEG clock muxed with SPI clock - goes to JPEG
+logic spi_clock;                // locally routed clock
 
 logic pllpowerdown_n;
 logic image_buffer_read_en;
@@ -172,7 +173,7 @@ reset_sync display_clock_reset_sync (
 );
 
 reset_sync spi_peripheral_clock_reset_sync (
-    .clock_in(spi_clock_in),
+    .clock_in(spi_clock),
     .async_reset_n_in(global_reset_n),
     .sync_reset_n_out(spi_peripheral_reset_n)
 );
@@ -192,7 +193,7 @@ reset_sync jpeg_slow_reset_n_sync (
 `ifdef NO_PLL_SIM
 clkswitch clkswitch(
     .i_clk_a (jpeg_clock), 
-    .i_clk_b (spi_clock_in), 
+    .i_clk_b (spi_clock), 
     .i_areset_n (global_reset_n), 
     .i_sel (image_buffer_read_en), 
     .o_clk (jpeg_slow_clock)
@@ -201,7 +202,7 @@ clkswitch clkswitch(
 // Dynamic clock select for jpeg and Image buffer
 DCS #(.DCSMODE("DCS")) DCSInst0 (
     .CLK0 (jpeg_clock),
-    .CLK1 (spi_clock_in),
+    .CLK1 (spi_clock),
     .SEL (image_buffer_read_en),
     .SELFORCE (1'b0),
     .DCSOUT (jpeg_slow_clock)
@@ -220,12 +221,27 @@ logic [7:0] response_2;  // Camera
 logic [7:0] response_3;  // Chip ID
 logic [7:0] response_4;  // PLL CSR
 
+/*
+6.1. Primary Clock Sources
+The primary clock network has multiple inputs, called primary clock sources, which can be routed directly to the
+primary clock routing to clock the FPGA fabric.
+The primary clock sources that can connect to the primary clock routing are:
+- Dedicated Clock Input Pins
+- PLL Outputs
+- PCLKDIVSP/ECLKDIV Outputs
+- Internal FPGA Fabric Entries (with minimum general routing)       <<====== AND with spi_clock_en_n
+- SGMII-CDR, SerDes/PCS clocks
+- OSC Clock
+*/
+logic spi_clock_en_n /* synthesis syn_keep=1 nomerge="" */;
+always_comb spi_clock = spi_clock_in & ~spi_clock_en_n;
+
 spi_peripheral spi_peripheral (
     //.clock_in(spi_peripheral_clock),      // This 72 MHz clock is no longer used
     .reset_n_in(1'b1),	                    // De-couple SPI reset from PLL status 
                                             // SPI uses ONLY spi_select_in to reset
     .spi_select_in(spi_select_in),          // note: CS is active low
-    .spi_clock_in(spi_clock_in),
+    .spi_clock_in(spi_clock),
     .spi_data_in(spi_data_in),
     .spi_data_out(spi_data_out),
 
@@ -244,7 +260,7 @@ spi_peripheral spi_peripheral (
 
 // Graphics
 graphics graphics (
-    .spi_clock_in(spi_clock_in),            // external SPI clock
+    .spi_clock_in(spi_clock),               // external SPI clock
     .spi_reset_n_in(spi_peripheral_reset_n),// synchronized external SPI CS
 
     .display_clock_in(display_clock),
@@ -269,7 +285,7 @@ assign camera_clock_out = camera_clock;
 camera camera (
     .global_reset_n_in(global_reset_n),
 
-    .spi_clock_in(spi_clock_in),
+    .spi_clock_in(spi_clock),
     .spi_reset_n_in(spi_peripheral_reset_n),
 
     .pixel_clock_in(camera_pixel_clock),
@@ -317,7 +333,7 @@ spi_register #(
 // PLL control and status register
 pll_csr pll_csr (
     // SPI clock
-    .spi_clock_in(spi_clock_in),                                    // external SPI clock
+    .spi_clock_in(spi_clock),                   // external SPI clock
     .spi_reset_n_in(spi_peripheral_reset_n),    // async external SPI CS
 
     // SPI interface
@@ -328,6 +344,7 @@ pll_csr pll_csr (
 
     .pllpowerdown_n(pllpowerdown_n),                // pll power down control
     .image_buffer_read_en(image_buffer_read_en),    // seletcs SPI clock to read image buffer when PLL is off
+    .spi_clock_en_n(spi_clock_en_n),                // This register must always be 0! Do not write!
     .pll_locked(pll_locked)                         // PLL lock status - needed in order to safely switch image buffer clocks
 );
 endmodule
