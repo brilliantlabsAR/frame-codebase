@@ -16,6 +16,7 @@ async def spi_test(dut):
     log_level = os.environ.get('LOG_LEVEL', 'INFO') # NOTSET=0 DEBUG=10 INFO=20 WARN=30 ERROR=40 CRITICAL=50
     dut._log.setLevel(log_level)
 
+    dut.pllpowerdown_n = 1
     dut.pll_reset = 1
     await Timer(5, units='us')
 

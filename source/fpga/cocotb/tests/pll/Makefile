@@ -14,6 +14,7 @@ TOPLEVEL_LANG ?= verilog
 
 VERILOG_SOURCES +=  \
         ./pll_tb.sv \
+        ../../../modules/camera/testbenches/csi/source/csi/pll_sim_ip/rtl/pll_sim_ip.v \
         ../../../modules/pll/pll_wrapper.sv
 
 VERILOG_INCLUDE_DIRS += \

@@ -15,6 +15,7 @@ logic camera_pixel_clock;
 logic pll_locked;
 logic pll_reset;
 logic pllpowerdown_n;
+logic sim_ip_pll_locked;
 
 OSCA #(
     .HF_CLK_DIV("24"),
@@ -27,7 +28,7 @@ OSCA #(
 
 
 //always_comb pll_reset = 0;
-always_comb pllpowerdown_n = 1;
+//always_comb pllpowerdown_n = 1;
 
 pll_wrapper pll_wrapper (
     .clki_i(osc_clock),                 // 18MHz
@@ -41,5 +42,13 @@ pll_wrapper pll_wrapper (
     .lock_o(pll_locked)
 );
 
+pll_sim_ip pll_sim_ip (
+    .clki_i(osc_clock),
+    .clkop_o( ),
+    .clkos_o( ),
+    .clkos2_o( ),
+    .clkos5_o( ),
+    .lock_o(sim_ip_pll_locked)
+);
 
 endmodule
