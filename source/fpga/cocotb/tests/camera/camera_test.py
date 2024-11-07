@@ -201,7 +201,8 @@ async def jpeg_test(dut):
 
     # Wait for PLL to power up, lock & global reset
     await Timer(10, units='us')
-    await spi.spi_write(0x40, 0x1)
+    await spi.spi_write(0x40, 0x1)      # PLL_CSR - power up PLL
+    await spi.spi_write(0x28, 0x0)      # Camera registers - clear POWER_SAVE_ENABLE
     await Timer(20, units='us')
     pll_lock = await spi.spi_read(0x41)
     assert pll_lock == [1]

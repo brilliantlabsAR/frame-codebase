@@ -102,12 +102,19 @@ always_comb
 // combinatorial!
 always_comb start_capture_out = operand_valid_in & opcode_in == START_CAPTURE;
 
+// RM - Being extra careful here and putting POWER_SAVE_ENABLE on async reset
+// D-PHY is per default powered down
+always_ff @(negedge clock_in or negedge reset_n_in)
+if (reset_n_in == 0)
+    power_save_enable_out <= 1; // D-PHY is per default powered down
+else if (operand_valid_in & opcode_in==POWER_SAVE_ENABLE)
+    power_save_enable_out <= operand_in[0];
+
 always_ff @(negedge clock_in) begin
     
     if (reset_n_in == 0) begin
         // TODO position signals
         compression_factor_out <= 0;
-        power_save_enable_out <= 1;
         image_address_out <= 0;
         gamma_bypass_out <= 0;
     end
@@ -148,12 +155,7 @@ always_ff @(negedge clock_in) begin
                     compression_factor_out <= operand_in[1:0];
                 end
 
-                // Power saving
-                POWER_SAVE_ENABLE: begin
-                    power_save_enable_out <= operand_in[0];
-                end
-
-                // Power saving
+                // Bypass Gamma for debug
                 GAMMA_BYPASS: begin
                     gamma_bypass_out <= operand_in[0];
                 end
