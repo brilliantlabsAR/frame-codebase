@@ -54,9 +54,9 @@ async def spi_test(dut):
     #   3. Test image buffer clock switch
     #   3a. Read image buffer using PLL clock (default)
     read_bytes = await t.spi_read(0x22)
-    #   3b. Switch image buffer clock to SPI clock 0x41
+    #   3b. Switch image buffer clock to SPI clock 0x40
     await t.spi_write(0x40, 0x3)
-    #   3c. Power down PLL 0x41
+    #   3c. Power down PLL 0x40
     await t.spi_write(0x40, 0x2)
     #   3d. Read 2 bytes from Image buffer using SPI clock - low power PLL mode
     read_bytes = await t.spi_read(0x22, 2)

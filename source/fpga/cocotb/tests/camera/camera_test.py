@@ -134,8 +134,8 @@ class JpegTester():
 
         # power down PLL and D-PHY, read out image buffer using SPI clock
         if os.environ.get('SPI_CLOCK_READOUT', 1) == 1:
-            await self.spi.spi_write(0x40, 0x3)         # Switch image buffer clock to SPI clock 0x41
-            await self.spi.spi_write(0x40, 0x2)         # Power down PLL - PLL_CSR 0x41
+            await self.spi.spi_write(0x40, 0x3)         # Switch image buffer clock to SPI clock 0x40
+            await self.spi.spi_write(0x40, 0x2)         # Power down PLL - PLL_CSR 0x40
             await self.spi.spi_write(0x28, 0x1)         # Set D-PHY POWER_SAVE_ENABLE 0x28 in camera registers
 
         # read size in bytes
