@@ -227,6 +227,7 @@ else #modelsim
 endif
 endif
 
+.PHONY: g gtkwave
 g gtkwave:
 	gtkwave $(DUMP) -o -a 1.gtkw
 
