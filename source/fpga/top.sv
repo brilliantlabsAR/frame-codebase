@@ -235,7 +235,8 @@ The primary clock sources that can connect to the primary clock routing are:
 */
 logic spi_clock_en_n;
 logic spi_clock_gate_en /* synthesis syn_keep=1 nomerge="" */;
-always_comb spi_clock_gate_en = ~(spi_clock_en_n & spi_select_in);  // trying to make this foolproof
+//always_comb spi_clock_gate_en = ~(spi_clock_en_n & spi_select_in);  // trying to make this foolproof
+always_comb spi_clock_gate_en = 1;
 always_comb spi_clock = spi_clock_in & spi_clock_gate_en;
 
 spi_peripheral spi_peripheral (
