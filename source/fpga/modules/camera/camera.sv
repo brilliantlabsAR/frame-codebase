@@ -53,9 +53,7 @@ module camera (
 logic start_capture_spi_clock_domain;
 logic start_capture_metastable;
 logic start_capture_pixel_clock_domain;
-logic [10:0] x_resolution = 512;
-logic [10:0] y_resolution = 512;
-logic [10:0] x_pan = 0;
+logic [9:0] half_resolution;
 logic [1:0] compression_factor;
 logic power_save_enable;
 
@@ -84,9 +82,7 @@ spi_registers spi_registers (
     .response_valid_out(response_valid_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-    // .x_resolution_out(x_resolution),
-    // .y_resolution_out(y_resolution),
-    // .x_pan_out(x_pan),
+    .half_resolution_out(half_resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
 
@@ -210,37 +206,6 @@ image_gen image_gen (
 );
 `endif // TESTBENCH
 
-logic [9:0] panned_data;
-logic panned_line_valid;
-logic panned_frame_valid;
-
-crop pan_crop (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
-
-    .red_data_in(byte_to_pixel_data),
-    .green_data_in(0),
-    .blue_data_in(0),
-    .line_valid_in(byte_to_pixel_line_valid),
-    .frame_valid_in(byte_to_pixel_frame_valid),
-
-    `ifdef TESTBENCH
-    .x_crop_start(10),
-    .x_crop_end(25),
-    .y_crop_start(12),
-    .y_crop_end(24),
-    `else
-    .x_crop_start(284), // TODO make dynamic
-    .x_crop_end(1004),  // TODO make dynamic
-    .y_crop_start(4),
-    .y_crop_end(724),
-    `endif
-
-    .red_data_out(panned_data),
-    .line_valid_out(panned_line_valid),
-    .frame_valid_out(panned_frame_valid)
-);
-
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
 logic [9:0] debayered_blue_data;
@@ -251,9 +216,9 @@ debayer debayer (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
-    .bayer_data_in(panned_data),
-    .line_valid_in(panned_line_valid),
-    .frame_valid_in(panned_frame_valid),
+    .bayer_data_in(byte_to_pixel_data),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
 
     .red_data_out(debayered_red_data),
     .green_data_out(debayered_green_data),
@@ -341,7 +306,7 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
-crop zoom_crop (
+crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
@@ -357,10 +322,10 @@ crop zoom_crop (
     .y_crop_start(0),
     .y_crop_end(12),
     `else
-    .x_crop_start(104), // TODO make dynamic
-    .x_crop_end(616),   // TODO make dynamic
-    .y_crop_start(104), // TODO make dynamic
-    .y_crop_end(616),   // TODO make dynamic
+    .x_crop_start(360 - half_resolution),
+    .x_crop_end(360 + half_resolution),
+    .y_crop_start(360 - half_resolution),
+    .y_crop_end(360 + half_resolution),
     `endif
 
     .red_data_out(zoomed_red_data),
@@ -411,8 +376,8 @@ jpeg_encoder jpeg_encoder (
     .frame_valid_in(gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
-    .x_size_in(x_resolution),
-    .y_size_in(y_resolution),
+    .x_size_in(half_resolution << 1),
+    .y_size_in(half_resolution << 1),
     .qf_select_in(compression_factor),
 
     .data_out(final_image_data),
