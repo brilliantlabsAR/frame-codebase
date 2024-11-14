@@ -12,13 +12,13 @@
 
 /*
  *   
- *     +-- 1 pixel dummy starting column
+ *     .-- 1 pixel dummy starting column
  *     |
  *     v
  *   +----+----+----+----+
  *   | B  | Gb | B  | Gb | <-- 1 pixel dummy starting row    This row is buffered in line_buffer[line_toggle]
  *   +----+----+----+----+
- *   | Gr | R* | Gr | R  | R is calculated when..          This row is buffered in line_buffer[!line_toggle]
+ *   | Gr | R* | Gr | R  | R is calculated when..            This row is buffered in line_buffer[!line_toggle]
  *   +----+----+----+----+
  *   | B  | Gb | B* | Gb | .. B is being read
  *   +----+----+----+----+
@@ -26,7 +26,7 @@
  *   +----+----+----+----+
  *      ^    ^    ^    ^ 
  *      |    |    |    |
- *      |    |    |    +-- 1 pixel dummy ending column
+ *      |    |    |    `-- 1 pixel dummy ending column
  *      |    |    previous_pixel
  *      |    previous_previous_pixel
  *      previous_previous_previous_pixel
