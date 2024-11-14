@@ -10,7 +10,7 @@
 
 module pll_csr #(
     parameter PLL_CSR_BASE = 'h40,
-    parameter PLLPOWERDOWN_N_DEFAULT = 0,
+    parameter PLLPOWERDOWN_N_DEFAULT = 1,
     parameter IMAGE_BUFFER_READ_EN_DEFAULT = 0
 )(
     // SPI clock
@@ -24,8 +24,8 @@ module pll_csr #(
     output logic [7:0] response_out,
 
     output logic pllpowerdown_n,            // pll power down control
-                                            // 0 .. PLL power down (default)
-                                            // 1 .. PLL power on
+                                            // 0 .. PLL power down
+                                            // 1 .. PLL power on (default)
     output logic image_buffer_read_en,      // seletcs SPI clock to read image buffer when PLL is off
                                             // 0 .. pixel clock (default)
                                             // 1 .. spi clock
