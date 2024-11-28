@@ -58,14 +58,20 @@ static void set_power_rails(bool enable)
         // Turn on LDO0 (1.2V rail)
         check_error(i2c_write(PMIC, 0x39, 0x07, 0x06).fail);
 
-        // Turn on SBB2 (2.7V rail) with 333mA limit
+        // Turn on LDO1 (2.8V rail)
+        check_error(i2c_write(PMIC, 0x3B, 0x07, 0x06).fail);
+
+        // Turn on SBB2 (2.95V rail) with 333mA limit
         check_error(i2c_write(PMIC, 0x2E, 0x37, 0x36).fail);
 
         return;
     }
 
-    // Turn off SBB2 (2.7V rail) with active discharge resistor on
+    // Turn off SBB2 (2.95V rail) with active discharge resistor on
     check_error(i2c_write(PMIC, 0x2E, 0x0F, 0x0C).fail);
+
+    // Turn off LDO1 (2.8V rail)
+    check_error(i2c_write(PMIC, 0x3B, 0x0F, 0x0C).fail);
 
     // Turn off LDO0 (1.2V rail)
     check_error(i2c_write(PMIC, 0x39, 0x0F, 0x0C).fail);
@@ -216,11 +222,14 @@ static void hardware_setup(bool *factory_reset)
         // Set SBB0 to 1.0V
         check_error(i2c_write(PMIC, 0x29, 0x7F, 0x04).fail);
 
-        // Set SBB2 to 2.7V
-        check_error(i2c_write(PMIC, 0x2D, 0x7F, 0x26).fail);
+        // Set SBB2 to 2.95V
+        check_error(i2c_write(PMIC, 0x2D, 0x7F, 0x2B).fail);
 
         // Set LDO0 to 1.2V
         check_error(i2c_write(PMIC, 0x38, 0x7F, 0x10).fail);
+
+        // Set LDO1 to 2.8V
+        check_error(i2c_write(PMIC, 0x3A, 0x7F, 0x50).fail);
 
         // Turn/keep off FPGA before FPGA configuration
         set_power_rails(false);
