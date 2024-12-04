@@ -719,7 +719,7 @@ async def main():
         end
 
         if frame.time.utc() - last_autoexp_time > 0.1 then
-            frame.camera.auto { analog_gain_limit=40, shutter_limit=2500 }
+            frame.camera.auto { analog_gain_limit=50, shutter_limit=1600 }
             last_autoexp_time = frame.time.utc()
         end
 
