@@ -12,10 +12,13 @@ The `production_script.sh` file runs a complete factory programming and test pro
     brew install python
     ```
 
-1. Install the following python packages:
+1. Create a python environment and install the dependencies
 
     ```sh
-    pip3 install frameutils pillow sounddevice numpy
+    python -m venv .venv
+    source .venv/bin/activate
+
+    pip install -r production/requirements.txt
     ```
 
 1. Make the production script executable:
@@ -49,8 +52,8 @@ The `production_script.sh` file runs a complete factory programming and test pro
     16/02/2024 - 14:26:48 - Programmed successfully
     ```
 
-1. After programming, the focusing and test scripts will run. Follow the instructions show to complete the process.
+1. After programming, the the mic test and focusing and test scripts will run. Follow the instructions shown in the terminal to complete the process.
 
-1. The `temp_focus_image.jpg` is continuously updated to show what the camera is seeing. This image can be kept open to help the operator focus the camera lens.
+1. The `focus_image.png` is continuously updated to show what the camera is seeing. This image can be kept open to help the operator focus the camera lens.
 
 1. The `log.txt` file will store a complete history of all programmed boards.

@@ -683,6 +683,9 @@ async def main():
     local state = 'CAPTURE'
     local state_time = 0
     
+    frame.display.power_save(true)
+    frame.camera.power_save(false)
+
     frame.microphone.stop()
     frame.microphone.start { }
 
@@ -716,7 +719,7 @@ async def main():
         end
 
         if frame.time.utc() - last_autoexp_time > 0.1 then
-            frame.camera.auto { }
+            frame.camera.auto { analog_gain_limit=50, shutter_limit=1600 }
             last_autoexp_time = frame.time.utc()
         end
 

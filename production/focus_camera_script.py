@@ -1,58 +1,754 @@
+from aioconsole import ainput
 from frameutils import Bluetooth
+from innowave.code.sfr_factory import get_sfr_score
 import asyncio
-import os
+import matplotlib.pyplot as plt
+import numpy as np
+
+header = bytearray(
+    [
+        0xFF,
+        0xD8,
+        0xFF,
+        0xE0,
+        0x00,
+        0x10,
+        0x4A,
+        0x46,
+        0x49,
+        0x46,
+        0x00,
+        0x01,
+        0x02,
+        0x00,
+        0x00,
+        0x64,
+        0x00,
+        0x64,
+        0x00,
+        0x00,
+        0xFF,
+        0xDB,
+        0x00,
+        0x43,
+        0x00,
+        0x20,
+        0x16,
+        0x18,
+        0x1C,
+        0x18,
+        0x14,
+        0x20,
+        0x1C,
+        0x1A,
+        0x1C,
+        0x24,
+        0x22,
+        0x20,
+        0x26,
+        0x30,
+        0x50,
+        0x34,
+        0x30,
+        0x2C,
+        0x2C,
+        0x30,
+        0x62,
+        0x46,
+        0x4A,
+        0x3A,
+        0x50,
+        0x74,
+        0x66,
+        0x7A,
+        0x78,
+        0x72,
+        0x66,
+        0x70,
+        0x6E,
+        0x80,
+        0x90,
+        0xB8,
+        0x9C,
+        0x80,
+        0x88,
+        0xAE,
+        0x8A,
+        0x6E,
+        0x70,
+        0xA0,
+        0xDA,
+        0xA2,
+        0xAE,
+        0xBE,
+        0xC4,
+        0xCE,
+        0xD0,
+        0xCE,
+        0x7C,
+        0x9A,
+        0xE2,
+        0xF2,
+        0xE0,
+        0xC8,
+        0xF0,
+        0xB8,
+        0xCA,
+        0xCE,
+        0xC6,
+        0xFF,
+        0xDB,
+        0x00,
+        0x43,
+        0x01,
+        0x22,
+        0x24,
+        0x24,
+        0x30,
+        0x2A,
+        0x30,
+        0x5E,
+        0x34,
+        0x34,
+        0x5E,
+        0xC6,
+        0x84,
+        0x70,
+        0x84,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xC6,
+        0xFF,
+        0xC0,
+        0x00,
+        0x11,
+        0x08,
+        0x02,
+        0x00,
+        0x02,
+        0x00,
+        0x03,
+        0x01,
+        0x22,
+        0x00,
+        0x02,
+        0x11,
+        0x01,
+        0x03,
+        0x11,
+        0x01,
+        0xFF,
+        0xC4,
+        0x00,
+        0x1F,
+        0x00,
+        0x00,
+        0x01,
+        0x05,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0A,
+        0x0B,
+        0xFF,
+        0xC4,
+        0x00,
+        0x1F,
+        0x01,
+        0x00,
+        0x03,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x01,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0A,
+        0x0B,
+        0xFF,
+        0xC4,
+        0x00,
+        0xB5,
+        0x10,
+        0x00,
+        0x02,
+        0x01,
+        0x03,
+        0x03,
+        0x02,
+        0x04,
+        0x03,
+        0x05,
+        0x05,
+        0x04,
+        0x04,
+        0x00,
+        0x00,
+        0x01,
+        0x7D,
+        0x01,
+        0x02,
+        0x03,
+        0x00,
+        0x04,
+        0x11,
+        0x05,
+        0x12,
+        0x21,
+        0x31,
+        0x41,
+        0x06,
+        0x13,
+        0x51,
+        0x61,
+        0x07,
+        0x22,
+        0x71,
+        0x14,
+        0x32,
+        0x81,
+        0x91,
+        0xA1,
+        0x08,
+        0x23,
+        0x42,
+        0xB1,
+        0xC1,
+        0x15,
+        0x52,
+        0xD1,
+        0xF0,
+        0x24,
+        0x33,
+        0x62,
+        0x72,
+        0x82,
+        0x09,
+        0x0A,
+        0x16,
+        0x17,
+        0x18,
+        0x19,
+        0x1A,
+        0x25,
+        0x26,
+        0x27,
+        0x28,
+        0x29,
+        0x2A,
+        0x34,
+        0x35,
+        0x36,
+        0x37,
+        0x38,
+        0x39,
+        0x3A,
+        0x43,
+        0x44,
+        0x45,
+        0x46,
+        0x47,
+        0x48,
+        0x49,
+        0x4A,
+        0x53,
+        0x54,
+        0x55,
+        0x56,
+        0x57,
+        0x58,
+        0x59,
+        0x5A,
+        0x63,
+        0x64,
+        0x65,
+        0x66,
+        0x67,
+        0x68,
+        0x69,
+        0x6A,
+        0x73,
+        0x74,
+        0x75,
+        0x76,
+        0x77,
+        0x78,
+        0x79,
+        0x7A,
+        0x83,
+        0x84,
+        0x85,
+        0x86,
+        0x87,
+        0x88,
+        0x89,
+        0x8A,
+        0x92,
+        0x93,
+        0x94,
+        0x95,
+        0x96,
+        0x97,
+        0x98,
+        0x99,
+        0x9A,
+        0xA2,
+        0xA3,
+        0xA4,
+        0xA5,
+        0xA6,
+        0xA7,
+        0xA8,
+        0xA9,
+        0xAA,
+        0xB2,
+        0xB3,
+        0xB4,
+        0xB5,
+        0xB6,
+        0xB7,
+        0xB8,
+        0xB9,
+        0xBA,
+        0xC2,
+        0xC3,
+        0xC4,
+        0xC5,
+        0xC6,
+        0xC7,
+        0xC8,
+        0xC9,
+        0xCA,
+        0xD2,
+        0xD3,
+        0xD4,
+        0xD5,
+        0xD6,
+        0xD7,
+        0xD8,
+        0xD9,
+        0xDA,
+        0xE1,
+        0xE2,
+        0xE3,
+        0xE4,
+        0xE5,
+        0xE6,
+        0xE7,
+        0xE8,
+        0xE9,
+        0xEA,
+        0xF1,
+        0xF2,
+        0xF3,
+        0xF4,
+        0xF5,
+        0xF6,
+        0xF7,
+        0xF8,
+        0xF9,
+        0xFA,
+        0xFF,
+        0xC4,
+        0x00,
+        0xB5,
+        0x11,
+        0x00,
+        0x02,
+        0x01,
+        0x02,
+        0x04,
+        0x04,
+        0x03,
+        0x04,
+        0x07,
+        0x05,
+        0x04,
+        0x04,
+        0x00,
+        0x01,
+        0x02,
+        0x77,
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x11,
+        0x04,
+        0x05,
+        0x21,
+        0x31,
+        0x06,
+        0x12,
+        0x41,
+        0x51,
+        0x07,
+        0x61,
+        0x71,
+        0x13,
+        0x22,
+        0x32,
+        0x81,
+        0x08,
+        0x14,
+        0x42,
+        0x91,
+        0xA1,
+        0xB1,
+        0xC1,
+        0x09,
+        0x23,
+        0x33,
+        0x52,
+        0xF0,
+        0x15,
+        0x62,
+        0x72,
+        0xD1,
+        0x0A,
+        0x16,
+        0x24,
+        0x34,
+        0xE1,
+        0x25,
+        0xF1,
+        0x17,
+        0x18,
+        0x19,
+        0x1A,
+        0x26,
+        0x27,
+        0x28,
+        0x29,
+        0x2A,
+        0x35,
+        0x36,
+        0x37,
+        0x38,
+        0x39,
+        0x3A,
+        0x43,
+        0x44,
+        0x45,
+        0x46,
+        0x47,
+        0x48,
+        0x49,
+        0x4A,
+        0x53,
+        0x54,
+        0x55,
+        0x56,
+        0x57,
+        0x58,
+        0x59,
+        0x5A,
+        0x63,
+        0x64,
+        0x65,
+        0x66,
+        0x67,
+        0x68,
+        0x69,
+        0x6A,
+        0x73,
+        0x74,
+        0x75,
+        0x76,
+        0x77,
+        0x78,
+        0x79,
+        0x7A,
+        0x82,
+        0x83,
+        0x84,
+        0x85,
+        0x86,
+        0x87,
+        0x88,
+        0x89,
+        0x8A,
+        0x92,
+        0x93,
+        0x94,
+        0x95,
+        0x96,
+        0x97,
+        0x98,
+        0x99,
+        0x9A,
+        0xA2,
+        0xA3,
+        0xA4,
+        0xA5,
+        0xA6,
+        0xA7,
+        0xA8,
+        0xA9,
+        0xAA,
+        0xB2,
+        0xB3,
+        0xB4,
+        0xB5,
+        0xB6,
+        0xB7,
+        0xB8,
+        0xB9,
+        0xBA,
+        0xC2,
+        0xC3,
+        0xC4,
+        0xC5,
+        0xC6,
+        0xC7,
+        0xC8,
+        0xC9,
+        0xCA,
+        0xD2,
+        0xD3,
+        0xD4,
+        0xD5,
+        0xD6,
+        0xD7,
+        0xD8,
+        0xD9,
+        0xDA,
+        0xE2,
+        0xE3,
+        0xE4,
+        0xE5,
+        0xE6,
+        0xE7,
+        0xE8,
+        0xE9,
+        0xEA,
+        0xF2,
+        0xF3,
+        0xF4,
+        0xF5,
+        0xF6,
+        0xF7,
+        0xF8,
+        0xF9,
+        0xFA,
+        0xFF,
+        0xDA,
+        0x00,
+        0x0C,
+        0x03,
+        0x01,
+        0x00,
+        0x02,
+        0x11,
+        0x03,
+        0x11,
+        0x00,
+        0x3F,
+        0x00,
+    ]
+)
 
 image_buffer = b""
-done = False
+
+
+def bt601_reverse(in_signal, max_pixel):
+    in_signal = np.array(in_signal, dtype=float) / (max_pixel)
+    out_linear = (in_signal > 0.081) * ((in_signal + 0.099) / 1.099) ** (1 / 0.45) + (
+        in_signal <= 0.081
+    ) * (in_signal / 4.5)
+    return (out_linear * max_pixel).astype(in_signal.dtype)
+
+
+def get_max_pixel(image_dtype):
+    if image_dtype == np.uint8:
+        return 255
+    elif image_dtype == np.uint16:
+        return 2**16 - 1
+    elif image_dtype == np.float:
+        return 1.0
+    else:
+        return None
 
 
 def receive_data(data):
     global image_buffer
-    global done
+    global last_fps_time
+    global fps
 
-    if data[0] == 0x00:
-        done = True
+    if len(data) == 1:
+        with open("focus_image.temp.jpg", "wb") as f:
+            f.write(header + image_buffer)
+            image_buffer = b""
+
+        ### Remove if not using InnoWave IP
+        image = plt.imread("focus_image.temp.jpg")
+        image = bt601_reverse(image, get_max_pixel(image.dtype))
+
+        _, _, _, _, _, _, _, image_overlay = get_sfr_score(
+            image,
+            sfr_threshold=0.2,
+            rotation_threshold=2,  # in degree:
+            ratio_threshold=0.05,  # [0,1]
+            digonal_distance_threshold=20,  # in pixels
+            center_threshold=50,  # in pixels
+            edge_size_threshold=75,  # in pixels
+        )
+
+        plt.imsave("focus_image.png", image_overlay)
+        ###
+
         return
 
     image_buffer += data[1:]
-    print(
-        f"                        Received {str(len(image_buffer)-1)} bytes. Press Ctrl-C when complete      ",
-        end="\r",
-    )
-
-
-async def capture_and_download(b: Bluetooth):
-    global image_buffer
-    global done
-    image_buffer = b""
-    done = False
-
-    await b.send_lua("frame.camera.capture{}")
-
-    for _ in range(3):
-        await b.send_lua("frame.camera.auto{}")
-        await asyncio.sleep(0.1)
-
-    await b.send_lua(
-        "while true do local i=frame.camera.read(frame.bluetooth.max_length()-1) if (i==nil) then break end while true do if pcall(frame.bluetooth.send,'\\x01'..i) then break end end end frame.sleep(0.1); frame.bluetooth.send('\\x00')"
-    )
-
-    while done == False:
-        await asyncio.sleep(0.001)
-
-    with open("temp_focus_image.jpg", "wb") as f:
-        f.write(image_buffer)
-
-
-if __name__ == "__main__":
-    b = Bluetooth()
-
     try:
-        loop = asyncio.new_event_loop()
-        loop.run_until_complete(b.connect(data_response_handler=receive_data))
+        print(
+            f"                        Received {str(len(image_buffer)-1)} bytes. Press enter to finish           ",
+            end="\r",
+        )
 
-        while True:
-            loop.run_until_complete(capture_and_download(b))
+    except BlockingIOError:
+        pass
 
-    except KeyboardInterrupt:
-        os._exit(0)
+
+async def main():
+
+    lua_script = """
+    local state = 'CAPTURE'
+    local state_time = 0
+
+    frame.camera.set_gain(0)
+    frame.camera.set_shutter(550)
+    frame.camera.set_white_balance(255, 255, 255)
+
+    while true do
+        if state == 'CAPTURE' then
+            frame.camera.capture { quality_factor = 50 }
+            state_time = frame.time.utc()
+            state = 'WAIT'
+        elseif state == 'WAIT' then
+            if frame.camera.image_ready() then
+                state = 'READ'
+            end
+        elseif state == 'READ' then
+            local i = frame.camera.read_raw(frame.bluetooth.max_length() - 1)
+            if (i == nil) then
+                state = 'DONE'
+            else
+                while true do
+                    if pcall(frame.bluetooth.send, '0' .. i) then
+                        break
+                    end
+                end
+            end
+        elseif state == 'DONE' then
+            while true do
+                if pcall(frame.bluetooth.send, '0') then
+                    break
+                end
+            end
+            state = 'CAPTURE'
+        end
+    end
+    """
+
+    # Connect to bluetooth and upload file
+    b = Bluetooth()
+    await b.connect(data_response_handler=receive_data)
+
+    await b.upload_file(lua_script, "main.lua")
+    await b.send_reset_signal()
+
+    # Wait until a keypress
+    await ainput("")
+
+    await b.send_break_signal()
+    await b.disconnect()
+
+
+loop = asyncio.new_event_loop()
+loop.run_until_complete(main())

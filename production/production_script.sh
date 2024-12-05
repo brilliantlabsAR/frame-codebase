@@ -103,7 +103,7 @@ do
                 echo "$NOW - Display okay" | tee -a log.txt
 
                 echo -e -n "                        Recording audio\r"
-                python3 test_microphone_script.py
+                python test_microphone_script.py
                 echo -e -n $"\r\033[2K"
                 echo -n "                        Press y if microphone is working, otherwise n"
                 read -s -n1 input
@@ -113,7 +113,7 @@ do
                     echo -e -n $"\r\033[2K"
                     echo "$NOW - Microphone okay" | tee -a log.txt
                                 
-                    python3 focus_camera_script.py 2> /dev/null
+                    python focus_camera_script.py 2> /dev/null
 
                     # Done
                     if [ $? -eq 0 ]; then

@@ -4,3 +4,6 @@
 [submodule "libraries/nrfx"]
 	path = libraries/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
+[submodule "production/innowave"]
+	path = production/innowave
+	url = https://github.com/brilliantlabsAR/innowave-focusing-script.git

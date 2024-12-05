@@ -1,0 +1,6 @@
+-r ./innowave/code/requirements.txt
+aioconsole==0.7.1
+frameutils==0.1.15
+matplotlib==3.9.2
+numpy==2.1.1
+sounddevice==0.5.0

@@ -651,8 +651,8 @@ def receive_data(data):
 
     image_buffer += data[1:]
     print(
-        f"Received {str(len(image_buffer)-1)} bytes. FPS = {fps}. Press enter to finish      ",
-        end="\r",
+        f"\rReceived {str(len(image_buffer)-1)} bytes. FPS = {fps}. Press enter to finish      ",
+        end="",
     )
 
 
@@ -665,6 +665,9 @@ async def main():
 
     frame.display.power_save(true)
     frame.camera.power_save(false)
+
+    -- frame.camera.set_gain(40)
+    -- frame.camera.set_shutter(2500)
 
     while true do
         if state == 'CAPTURE' then
@@ -698,7 +701,10 @@ async def main():
         end
 
         if frame.time.utc() - last_autoexp_time > 0.1 then
-            frame.camera.auto { }
+            local stats = frame.camera.auto { analog_gain_limit=50, shutter_limit=1600 }
+            if stats ~= nil then 
+                print('gain = '..stats['analog_gain']..', shutter = '..stats['shutter']..'        ')
+            end
             last_autoexp_time = frame.time.utc()
         end
     end
@@ -707,7 +713,8 @@ async def main():
     # Connect to bluetooth and upload file
     b = Bluetooth()
     await b.connect(
-        print_response_handler=lambda s: print(s), data_response_handler=receive_data
+        # print_response_handler=lambda s: print("\r" + s, end=""),
+        data_response_handler=receive_data,
     )
 
     print("Uploading script")
