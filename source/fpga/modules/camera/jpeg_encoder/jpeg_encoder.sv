@@ -25,7 +25,7 @@
     output  logic               image_valid_out,    // Set to 1 when compression finished. If 1, size of encoded data is address_out
     output  logic               data_valid_out,     // Qualifier for valid data. Data is invalid if 0.
 
-    input   logic[1:0]          qf_select_in,       // select one of the 4 possible QF
+    input   logic[2:0]          qf_select_in,       // select one of the 8 possible QF
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_in,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_in,
 

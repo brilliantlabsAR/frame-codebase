@@ -24,7 +24,7 @@
 
     output logic start_capture_out,
     // TODO position signals
-    output logic [1:0] compression_factor_out,
+    output logic [2:0] compression_factor_out,
     output logic power_save_enable_out,
     output logic gamma_bypass_out,
 
@@ -151,7 +151,7 @@ always_ff @(negedge clock_in) begin
 
                 // Compression factor
                 QUALITY_FACTOR: begin
-                    compression_factor_out <= operand_in[1:0];
+                    compression_factor_out[2:0] <= operand_in[2:0];
                 end
 
                 // Bypass Gamma for debug

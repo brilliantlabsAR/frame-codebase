@@ -77,7 +77,7 @@ logic[10:0] y_resolution;       // Todo: Make SPI register
 always_comb x_resolution = x_zoom_crop_end - x_zoom_crop_start; // Todo: Make SPI register
 always_comb y_resolution = y_zoom_crop_end - y_zoom_crop_start; // Todo: Make SPI register
 
-logic [1:0] compression_factor;
+logic [2:0] compression_factor;
 logic power_save_enable;
 logic gamma_bypass;
 
