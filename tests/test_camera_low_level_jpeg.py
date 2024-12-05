@@ -727,6 +727,33 @@ async def main():
     size = await rr2_(0x31)
     print(f'Size of ECS data = {size}')
 
+
+
+
+
+
+    # Switch image buffer clock to SPI clock 0x40
+    print('Switch image buffer clock to SPI clock 0x40')
+    time.sleep(0.005)
+    await b.send_lua(f'frame.fpga_write(0x40, 3)')
+    time.sleep(0.005)
+
+    # Power down PLL 0x40
+    print('Power down PLL 0x40')
+    time.sleep(0.005)
+    await b.send_lua(f'frame.fpga_write(0x40, 2)')
+    time.sleep(0.005)
+
+    # Check PLL lock flag
+    print("Check PLL lock flag")
+    while True:
+        lock = await rr_(0x41)
+        if not lock:
+            break
+
+
+
+
     file = "a.jpg"
     j = []
     for i in range(size):
@@ -741,7 +768,33 @@ async def main():
     print(f'Size of ECS data = {size}')
     print(f'JPEG file = {file}')
 
-    
+
+
+
+
+    # Power up PLL 0x40
+    print('Power up PLL 0x40')
+    time.sleep(0.005)
+    await b.send_lua(f'frame.fpga_write(0x40, 3)')
+    time.sleep(0.005)
+
+    # Check PLL lock flag
+    print("Check PLL lock flag")
+    while True:
+        lock = await rr_(0x41)
+        if lock:
+            break
+
+    # Switch image buffer clock back to PLL clock 0x40
+    print('Switch image buffer clock back to PLL clock 0x40')
+    time.sleep(0.005)
+    await b.send_lua(f'frame.fpga_write(0x40, 1)')
+    time.sleep(0.005)
+
+
+
+
+
     await b.upload_file(lua_script, "main.lua")
     print("Send reset")
     await b.send_reset_signal()
