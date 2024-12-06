@@ -67,7 +67,7 @@ logic pll_reset;
 logic jpeg_clock;               // Raw JPEG clock - generated or divided down from pixel clock - goes to clock switch
 logic jpeg_buffer_clock;        // 2x JPEG clock for transpose/zig-zag buffer overclocking -  goes to JPEG
 logic jpeg_slow_clock;          // Raw JPEG clock muxed with SPI clock - goes to JPEG
-logic spi_clock /* synthesis syn_keep=1 nomerge="" */;  // locally routed clock
+logic spi_clock;                // locally routed clock
 
 logic pllpowerdown_n;
 logic image_buffer_read_en;
@@ -229,13 +229,14 @@ The primary clock sources that can connect to the primary clock routing are:
 - Dedicated Clock Input Pins
 - PLL Outputs
 - PCLKDIVSP/ECLKDIV Outputs
-- Internal FPGA Fabric Entries (with minimum general routing)       <<====== AND with spi_clock_en_n
+- Internal FPGA Fabric Entries (with minimum general routing)       <<====== AND with spi_clock_en = ~spi_select_in
 - SGMII-CDR, SerDes/PCS clocks
 - OSC Clock
 */
-logic spi_clock_en_n;
-logic spi_clock_gate_en /* synthesis syn_keep=1 nomerge="" */;
-always_comb spi_clock_gate_en = ~(spi_clock_en_n & spi_select_in);  // trying to make this foolproof
+//logic spi_clock_gate_en /* synthesis syn_keep=1 nomerge="" */;
+//always_comb spi_clock_gate_en = 1;
+logic spi_clock_gate_en;
+always_comb spi_clock_gate_en = ~spi_select_in;
 always_comb spi_clock = spi_clock_in & spi_clock_gate_en;
 
 spi_peripheral spi_peripheral (
@@ -346,7 +347,6 @@ pll_csr pll_csr (
 
     .pllpowerdown_n(pllpowerdown_n),                // pll power down control
     .image_buffer_read_en(image_buffer_read_en),    // seletcs SPI clock to read image buffer when PLL is off
-    .spi_clock_en_n(spi_clock_en_n),                // This register must always be 0! Do not write!
     .pll_locked(pll_locked)                         // PLL lock status - needed in order to safely switch image buffer clocks
 );
 endmodule
