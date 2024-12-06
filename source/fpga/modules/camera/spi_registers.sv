@@ -122,6 +122,16 @@ always_ff @(negedge clock_in) begin
         if (operand_read) begin
             case (opcode_in)
                 // Read data
+                // 
+                // Note: When operand_read==1, last bit of image buffer data has been put
+                // on the SPI bus with the FALLING edge of SPI clock, so now we can update
+                // the address, also FALLING edge of SPI clock, and read out the next 
+                // image buffer data. 
+                // When reading out image buffer data with jpeg clock, the read will take
+                // place over floor((jpeg clock freq.)/(spi clock freq.)) cycles, eg. 36MHz/8MHz
+                // -> 4 cycles. If there are at least 2 cycles, the timing violation for address 
+                // which occurs during SDF simulation can be ignored, since is will occur only 
+                // during the fist cycle, and the address shoould be stable in subsequent cycles.
                 IMAGE_DATA: begin
                     if (image_address_out < image_buffer_total_size) begin 
                         image_address_out <= image_address_out + 1;
