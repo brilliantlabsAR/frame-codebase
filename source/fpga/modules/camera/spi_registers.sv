@@ -32,6 +32,7 @@
     input logic [15:0] final_image_address, // image_total_size_in - 4
     input logic [7:0] image_data_in,
     output logic [15:0] image_address_out,
+    output logic image_address_valid,
 
     input logic [7:0] red_center_metering_in,
     input logic [7:0] green_center_metering_in,
@@ -115,10 +116,12 @@ always_ff @(negedge clock_in) begin
         // TODO position signals
         compression_factor_out <= 0;
         image_address_out <= 0;
+        image_address_valid <= 0;
         gamma_bypass_out <= 0;
     end
 
     else begin
+        image_address_valid <= operand_read & (opcode_in==IMAGE_DATA | opcode_in==COMPRESSED_BYTES | opcode_in==BYTES_REMAINING);
         if (operand_read) begin
             case (opcode_in)
                 // Read data

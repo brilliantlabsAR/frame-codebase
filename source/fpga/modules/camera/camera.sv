@@ -84,6 +84,7 @@ logic gamma_bypass;
 logic image_buffer_ready;               // Ready bit, high when compression finished
 logic [7:0] image_buffer_data;          // Read out data
 logic [15:0] image_buffer_address;      // Read address
+logic image_buffer_address_valid;       // qualifier
 logic [15:0] final_image_address;       // image address JPEG -> Image buffer
 logic [7:0] red_center_metering;
 logic [7:0] green_center_metering;
@@ -117,6 +118,7 @@ spi_registers spi_registers (
     .final_image_address(final_image_address),
     .image_data_in(image_buffer_data),
     .image_address_out(image_buffer_address),
+    .image_address_valid(image_buffer_address_valid),
 
     .red_center_metering_in(red_center_metering),
     .green_center_metering_in(green_center_metering),
@@ -470,6 +472,7 @@ image_buffer image_buffer (
 
     .write_address_in(final_image_address),
     .read_address_in(image_buffer_address),
+    .read_address_valid_in(image_buffer_address_valid),
 
     .write_data_in(final_image_data),
     .read_data_out(image_buffer_data),

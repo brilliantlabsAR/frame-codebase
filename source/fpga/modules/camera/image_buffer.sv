@@ -12,6 +12,7 @@
 
 module inferred_lram (
     input logic clock_in,
+    input logic clock_enable_in,
     input logic [13:0] address_in,
     input logic [31:0] write_data_in,
     output logic [31:0] read_data_out,
@@ -19,7 +20,7 @@ module inferred_lram (
 );
 
 `ifndef RADIANT (* ram_style="huge" *) `endif logic [31:0] mem [0:16383];
-always @(posedge clock_in) begin
+always @(posedge clock_in) if(clock_enable_in) begin
     if (write_enable_in) begin
         mem[address_in] <= write_data_in;
     end
@@ -32,6 +33,7 @@ module image_buffer (
     input logic clock_in,
     input logic [15:0] write_address_in,
     input logic [15:0] read_address_in,
+    input logic read_address_valid_in,
     input logic [31:0] write_data_in,
     output logic [7:0] read_data_out,
     input logic write_read_n_in
@@ -55,6 +57,7 @@ end
 // Large RAM
 inferred_lram inferred_lram (
     .clock_in(clock_in), // Use the faster clock
+    .clock_enable_in(write_read_n_in | read_address_valid_in),
     .address_in(address),
     .write_data_in(write_data_in),
     .read_data_out(read_data),
