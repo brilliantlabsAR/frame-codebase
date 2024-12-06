@@ -24,7 +24,7 @@ module jenc #(
     output  logic                   out_valid,
     input   logic                   out_hold,
 
-    input   logic[1:0]              qf_select,          // select one of the 4 possible QF
+    input   logic[2:0]              qf_select,          // select one of the 8 possible QF
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,

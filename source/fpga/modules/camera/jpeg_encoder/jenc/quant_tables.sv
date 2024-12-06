@@ -12,7 +12,7 @@ module quant_tables #(
     parameter DW = 13       // Data width
 )(
     input   logic               clk,
-    input   logic[1:0]          qf_select, // select one of the 4 possible QF
+    input   logic[2:0]          qf_select, // select one of the 8 possible QF
     input   logic [AW-1:0]      ra,
     input   logic               re,
     output  logic [DW-1:0]      rd[N-1:0]
@@ -21,7 +21,7 @@ module quant_tables #(
 // m = 4096/q(AAN)
 `ifdef INFER_QUANTIZATION_TABLES_ROM
 `include "quant_tables.vh"
-logic[25:0] qt_mem[3:0][63:0]; /* synthesis syn_ramstyle="Block_RAM" */
+logic[25:0] qt_mem[7:0][63:0]; /* synthesis syn_ramstyle="Block_RAM" */
 generate
     for(genvar i=0; i<2; i++) begin : I
         for(genvar j=0; j<32; j++) begin : J
@@ -29,6 +29,11 @@ generate
             always_comb qt_mem[1][32*i + j] = `QT(100, i, j); // QF1 = 100 // FIXME - parametrize
             always_comb qt_mem[2][32*i + j] = `QT(10, i, j); // QF2 =  10 // FIXME - parametrize
             always_comb qt_mem[3][32*i + j] = `QT(25, i, j); // QF3 =  25 // FIXME - parametrize
+            // New: Adding 4 additional tables
+            always_comb qt_mem[4][32*i + j] = `QT(20, i, j); // QF4 =  20 // FIXME - parametrize // for Raj
+            always_comb qt_mem[5][32*i + j] = `QT(30, i, j); // QF5 =  30 // FIXME - parametrize // for Raj
+            always_comb qt_mem[6][32*i + j] = `QT(40, i, j); // QF6 =  40 // FIXME - parametrize // for Raj
+            always_comb qt_mem[7][32*i + j] = `QT(80, i, j); // QF7 =  80 // FIXME - parametrize // for Roie
         end
     end
 endgenerate
@@ -108,7 +113,7 @@ PDP16K_MODE EBR_inst(
         .ADR10  (ra[5]),
         .ADR11  (qf_select[0]),
         .ADR12  (qf_select[1]),
-        .ADR13  (VSS),
+        .ADR13  (qf_select[2]),
         .CLKW   (VSS),
         .CLKR   (clk),
         .CEW    (VSS),
@@ -206,7 +211,43 @@ defparam EBR_inst.INITVAL_1C = QT25_INITVAL_4;
 defparam EBR_inst.INITVAL_1D = QT25_INITVAL_5;
 defparam EBR_inst.INITVAL_1E = QT25_INITVAL_6;
 defparam EBR_inst.INITVAL_1F = QT25_INITVAL_7;
-
+// New: Adding 4 additional tables
+// QF4 = 20
+defparam EBR_inst.INITVAL_20 = QT20_INITVAL_0; // FIXME - parametrize // for Raj
+defparam EBR_inst.INITVAL_21 = QT20_INITVAL_1;
+defparam EBR_inst.INITVAL_22 = QT20_INITVAL_2;
+defparam EBR_inst.INITVAL_23 = QT20_INITVAL_3;
+defparam EBR_inst.INITVAL_24 = QT20_INITVAL_4;
+defparam EBR_inst.INITVAL_25 = QT20_INITVAL_5;
+defparam EBR_inst.INITVAL_26 = QT20_INITVAL_6;
+defparam EBR_inst.INITVAL_27 = QT20_INITVAL_7;
+// QF5 = 30
+defparam EBR_inst.INITVAL_28 = QT30_INITVAL_0; // FIXME - parametrize // for Raj
+defparam EBR_inst.INITVAL_29 = QT30_INITVAL_1;
+defparam EBR_inst.INITVAL_2A = QT30_INITVAL_2;
+defparam EBR_inst.INITVAL_2B = QT30_INITVAL_3;
+defparam EBR_inst.INITVAL_2C = QT30_INITVAL_4;
+defparam EBR_inst.INITVAL_2D = QT30_INITVAL_5;
+defparam EBR_inst.INITVAL_2E = QT30_INITVAL_6;
+defparam EBR_inst.INITVAL_2F = QT30_INITVAL_7;
+// QF6 = 40
+defparam EBR_inst.INITVAL_30 = QT40_INITVAL_0; // FIXME - parametrize // for Raj
+defparam EBR_inst.INITVAL_31 = QT40_INITVAL_1;
+defparam EBR_inst.INITVAL_32 = QT40_INITVAL_2;
+defparam EBR_inst.INITVAL_33 = QT40_INITVAL_3;
+defparam EBR_inst.INITVAL_34 = QT40_INITVAL_4;
+defparam EBR_inst.INITVAL_35 = QT40_INITVAL_5;
+defparam EBR_inst.INITVAL_36 = QT40_INITVAL_6;
+defparam EBR_inst.INITVAL_37 = QT40_INITVAL_7;
+// QF7 = 80
+defparam EBR_inst.INITVAL_38 = QT80_INITVAL_0; // FIXME - parametrize // for Roie
+defparam EBR_inst.INITVAL_39 = QT80_INITVAL_1;
+defparam EBR_inst.INITVAL_3A = QT80_INITVAL_2;
+defparam EBR_inst.INITVAL_3B = QT80_INITVAL_3;
+defparam EBR_inst.INITVAL_3C = QT80_INITVAL_4;
+defparam EBR_inst.INITVAL_3D = QT80_INITVAL_5;
+defparam EBR_inst.INITVAL_3E = QT80_INITVAL_6;
+defparam EBR_inst.INITVAL_3F = QT80_INITVAL_7;
 `endif //INFER_QUANTIZATION_TABLES_ROM
 
 endmodule
