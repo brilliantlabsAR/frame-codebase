@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Tue May 28 13:58:05 2024
+[*] Mon Dec  9 09:38:26 2024
 [*]
 [dumpfile] "simulation/graphics_tb.fst"
-[dumpfile_mtime] "Tue May 28 13:57:44 2024"
-[dumpfile_size] 5006722
+[dumpfile_mtime] "Mon Dec  9 09:37:30 2024"
+[dumpfile_size] 2368568
 [savefile] "graphics_tb.gtkw"
-[timestart] 0
-[size] 2040 1110
-[pos] 7 36
-*-23.109203 17100000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[timestart] 12286030
+[size] 2040 617
+[pos] 8 525
+*-12.109203 12301360 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -41,7 +41,7 @@
 [sst_width] 253
 [signals_width] 383
 [sst_expanded] 1
-[sst_vpaned_height] 443
+[sst_vpaned_height] 214
 @28
 graphics_tb.graphics.spi_clock_in
 graphics_tb.graphics.spi_reset_n_in
@@ -52,9 +52,6 @@ graphics_tb.graphics.display_reset_n_in
 -SPI registers
 @22
 graphics_tb.graphics.op_code_in[7:0]
-@28
-graphics_tb.opcode_valid
-@22
 graphics_tb.graphics.operand_in[7:0]
 @28
 graphics_tb.operand_valid
@@ -62,10 +59,6 @@ graphics_tb.operand_valid
 graphics_tb.operand_count
 @200
 -
-@28
-graphics_tb.graphics.spi_op_code_edge_monitor[1:0]
-graphics_tb.graphics.spi_operand_edge_monitor[1:0]
-@200
 -
 @22
 graphics_tb.graphics.assign_color_index_spi_domain[3:0]

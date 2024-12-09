@@ -1,0 +1,80 @@
+#
+# Authored by: Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
+#
+# CERN Open Hardware Licence Version 2 - Permissive
+#
+# Copyright (C) 2024 Robert Metchev
+#
+
+Available tests:
+- tests/spi: Basic register reads and writes, PLL power up+down, image buffer clock switch
+- tests/camera: Basic image compression through the camera pipeline
+- tests/graphics: Basic graphics
+
+To run one test:
+$> make -C <test dir> <options>
+
+
+Instructions:
+1.) RTL sim with Verilator or Icarus: 64-bit environment. Bypassed Lattice IP in test bench and camera, FPGA cells & components replaced with verilog models.
+$> make clean
+$> make SIM=verilator|icarus
+Result: jpeg_out.jpg
+
+2.) RTL sim with modelsim: *32-bit* environment (see below). Includes CSI and other Lattice IP in test bench and camera.
+$> make ip -C ../../../../radiant/      # This uses ipgen to build Lattice IP 
+$> make clean
+$> make SIM=modelsim
+Result: jpeg_out.jpg
+
+NOTE: 
+Paid license is required to generate CSI DPHY and CSI Rx/Tx IP verilog models. If you have one, and generated the models in a separate repo before, 
+you can copy the rtl/ directory from there to your current working repo:
+$> cp A/source/fpga/radiant/byte_to_pixel_ip/rtl B/source/fpga/radiant/byte_to_pixel_ip/ -r
+$> cp A/source/fpga/radiant/csi2_receiver_ip/rtl B/source/fpga/radiant/csi2_receiver_ip/ -r
+$> cp A/source/fpga/modules/camera/testbenches/csi/source/csi/pixel_to_byte_ip/rtl/ B/source/fpga/modules/camera/testbenches/csi/source/csi/pixel_to_byte_ip/ -r
+$> cp A/source/fpga/modules/camera/testbenches/csi/source/csi/csi2_transmitter_ip/rtl/ B/source/fpga/modules/camera/testbenches/csi/source/csi/csi2_transmitter_ip/ -r
+
+3.) Gate sim with modelsim: *32-bit* environment (see below).
+Required: Gate level netlist (frame_frame_vo.v) and SDF file (frame_frame_vo.sdf)
+
+3a.) No SDF: Same as 2.) with
+$> make clean
+$> make SIM=modelsim .... GATE_SIM=1
+
+3b.) With SDF: Same as 3a.) with
+$> make clean
+$> make SIM=modelsim .... GATE_SIM=1 SDF_ANNO=1
+
+NOTE:
+Lattice IP is internally encryped and thus can be simulated only with the Modelsim simulator provided Lattice. This Modelsim simulator is a 32-bit
+executable and requires a 32-bit Python installation with 32-bit Cocotb and other precompiled 32-bit packages, like OpenCV. 
+Building and installing 32-bit OpenCV has not been part of this project. 
+Note: Only Python 3.7.1 is provided in a 32-bit verion by Anaconda at the time of this note.
+
+https://github.com/cocotb/cocotb/wiki/Tier-2-Setup-Instructions#conda-based-installation-all-os
+
+$> conda create -n py3_32 # use 'sudo conda' to make this a global rather than local environment
+$> conda activate py3_32
+$> conda config --env --set subdir linux-32
+$> conda install python=3 gxx_linux-32
+$>
+$> pip install cocotb  # uses pip from 32-bit Python environment
+$>
+$> make clean
+$> make SIM=modelsim
+
+Verilator or Icarus sim in 64-bit env:
+$> conda activate base
+$> make clean
+$> make SIM=verilator|icarus
+
+
+Debug for jpeg:
+make clean; make SIM=verilator IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=icarus    IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=modelsim  IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG
+make clean; make SIM=modelsim  IMG16X16=1 QF=10 WAVES=1 LOG_LEVEL=DEBUG GATE_SIM=1
+
+w/ adjustable QF: 
+make clean; make SIM=verilator IMG16X16=1 QF=1 QF2=1 WAVES=1 LOG_LEVEL=DEBUG
