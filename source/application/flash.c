@@ -27,6 +27,7 @@
 #include "error_logging.h"
 #include "lfs.h"
 #include "main.h"
+#include "nrf_sdm.h"
 #include "nrf_soc.h"
 #include "nrfx_log.h"
 
@@ -62,9 +63,14 @@ void flash_write(uint32_t address, const uint32_t *data, size_t length)
 
 void flash_wait_until_complete(void)
 {
-    // TODO add a timeout
-    while (flash_is_busy)
+    uint8_t sd_is_enabled = false;
+    sd_softdevice_is_enabled(&sd_is_enabled);
+
+    if (sd_is_enabled == 1)
     {
+        while (flash_is_busy)
+        {
+        }
     }
 }
 

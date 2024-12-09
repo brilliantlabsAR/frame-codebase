@@ -356,7 +356,7 @@ void SD_EVT_IRQHandler(void)
     }
 }
 
-void bluetooth_setup(bool factory_reset, bool *is_paired)
+void bluetooth_setup()
 {
     // Enable the softdevice using internal RC oscillator
     check_error(sd_softdevice_enable(NULL, softdevice_assert_handler));
@@ -432,21 +432,6 @@ void bluetooth_setup(bool factory_reset, bool *is_paired)
     bond.sec_param.kdist_own.enc = 1;
     bond.sec_param.kdist_peer.enc = 1;
     bond.sec_param.kdist_peer.id = 1;
-
-    if (factory_reset)
-    {
-        flash_erase_page(bond_storage);
-        flash_wait_until_complete();
-    }
-
-    // Check if already paired
-    ble_gap_enc_info_t zero_struct;
-    memset(&zero_struct, 0xFF, sizeof(ble_gap_enc_info_t));
-    if (memcmp((void *)bond_storage, &zero_struct, sizeof(ble_gap_enc_info_t)))
-    {
-        LOG("Device is paired");
-        *is_paired = true;
-    }
 
     // Read stored encryption key from memory
     memcpy(&bond.own_key.enc_info,
@@ -576,6 +561,26 @@ void bluetooth_setup(bool factory_reset, bool *is_paired)
 
     // Start advertising
     check_error(sd_ble_gap_adv_start(ble_handles.advertising, 1));
+}
+
+bool bluetooth_is_paired(void)
+{
+    bool is_paired = false;
+
+    ble_gap_enc_info_t zero_struct;
+    memset(&zero_struct, 0xFF, sizeof(ble_gap_enc_info_t));
+    if (memcmp((void *)bond_storage, &zero_struct, sizeof(ble_gap_enc_info_t)))
+    {
+        is_paired = true;
+    }
+
+    return is_paired;
+}
+
+void bluetooth_unpair(void)
+{
+    flash_erase_page(bond_storage);
+    flash_wait_until_complete();
 }
 
 bool bluetooth_is_connected(void)

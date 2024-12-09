@@ -164,6 +164,15 @@ void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
     shutdown(false);
 }
 
+void frame_lite_button_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
+                                         nrfx_gpiote_trigger_t unused_gptiote_trigger,
+                                         void *unused_gptiote_context_pointer)
+{
+    nrfx_gpiote_trigger_disable(FRAME_LITE_BUTTON_PIN);
+    bluetooth_unpair();
+    NVIC_SystemReset();
+}
+
 static void fpga_send_bitstream_bytes(void *context,
                                       void *data,
                                       size_t data_size)
@@ -171,7 +180,7 @@ static void fpga_send_bitstream_bytes(void *context,
     spi_write_raw(FPGA, data, data_size);
 }
 
-static void hardware_setup(bool *factory_reset)
+static void hardware_setup()
 {
     // Configure watchdog
     {
@@ -181,6 +190,20 @@ static void hardware_setup(bool *factory_reset)
     // Configure systick so we can use it for simple delays
     {
         nrfx_systick_init();
+    }
+
+    // Check if Frame or Frame lite
+    {
+        nrf_gpio_cfg_input(FRAME_LITE_HW_DETECT_PIN, NRF_GPIO_PIN_PULLUP);
+
+        if (nrf_gpio_pin_read(FRAME_LITE_HW_DETECT_PIN))
+        {
+            LOG("Running on Frame");
+        }
+        else
+        {
+            LOG("Running on Frame Lite");
+        }
     }
 
     // Configure the I2C and SPI drivers
@@ -299,13 +322,37 @@ static void hardware_setup(bool *factory_reset)
             else
             {
                 LOG("Factory reset");
-                *factory_reset = true;
+                bluetooth_unpair();
                 stay_awake = true;
             }
         }
 
         // Enable the interrupt for catching the next docking event
         nrfx_gpiote_trigger_enable(CASE_DETECT_PIN, true);
+    }
+
+    // Configure the Frame lite button
+    {
+        nrfx_gpiote_input_config_t input_config = {
+            .pull = NRF_GPIO_PIN_PULLUP,
+        };
+
+        nrfx_gpiote_trigger_config_t trigger_config = {
+            .trigger = NRFX_GPIOTE_TRIGGER_HITOLO,
+            .p_in_channel = NULL,
+        };
+
+        nrfx_gpiote_handler_config_t handler_config = {
+            .handler = frame_lite_button_interrupt_handler,
+            .p_context = NULL,
+        };
+
+        check_error(nrfx_gpiote_input_configure(FRAME_LITE_BUTTON_PIN,
+                                                &input_config,
+                                                &trigger_config,
+                                                &handler_config));
+
+        nrfx_gpiote_trigger_enable(FRAME_LITE_BUTTON_PIN, true);
     }
 
     // Load and start the FPGA image
@@ -412,19 +459,14 @@ int main(void)
 {
     LOG("Frame firmware " BUILD_VERSION " (" GIT_COMMIT ")");
 
-    bool factory_reset = false;
-    bool is_paired = false;
+    hardware_setup();
 
-    hardware_setup(&factory_reset);
-
-    bluetooth_setup(factory_reset, &is_paired);
+    bluetooth_setup();
 
     while (1)
     {
         reload_watchdog(NULL, NULL);
 
-        run_lua(factory_reset, is_paired);
-
-        factory_reset = false;
+        run_lua(bluetooth_is_paired());
     }
 }
