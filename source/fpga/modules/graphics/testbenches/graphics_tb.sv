@@ -21,10 +21,9 @@ logic display_clock = 0;
 logic display_reset_n = 0;
 
 logic [7:0] opcode;
-logic opcode_valid = 0;
 logic [7:0] operand;
 logic operand_valid = 0;
-integer operand_count = 0;
+integer operand_count = -1;
 
 initial begin
     #20000
@@ -74,7 +73,6 @@ graphics graphics (
     .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
-    .op_code_valid_in(opcode_valid),
     .operand_in(operand),
     .operand_valid_in(operand_valid),
     .operand_count_in(operand_count),
@@ -100,7 +98,6 @@ task send_opcode(
 );
     begin
         opcode <= data;
-        opcode_valid <= 1;
         #64;
     end
 endtask
@@ -120,9 +117,8 @@ endtask
 
 task done;
     begin
-        opcode_valid <= 0;
         operand_valid <= 0;
-        operand_count <= 0;
+        operand_count <= -1;
         #8;
     end
 endtask
