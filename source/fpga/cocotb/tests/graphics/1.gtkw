@@ -1,23 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Mon Dec  9 23:10:00 2024
+[*] Tue Dec 10 00:07:09 2024
 [*]
-[dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/graphics/dump.fst"
-[dumpfile_mtime] "Mon Dec  9 23:09:53 2024"
-[dumpfile_size] 10734992
+[dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/graphics/sim_build/tb_top.fst"
+[dumpfile_mtime] "Mon Dec  9 23:56:15 2024"
+[dumpfile_size] 101609612
 [savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/graphics/1.gtkw"
-[timestart] 10057370000
-[size] 1654 857
-[pos] 73 12
-*-22.238956 10068592500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
-[treeopen] .
-[treeopen] .tb_top.
-[treeopen] .tb_top.dut.
-[treeopen] .tb_top.dut.graphics.
-[sst_width] 289
+[timestart] 0
+[size] 1850 1016
+[pos] 70 12
+*-33.635811 5180056000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 121
 [signals_width] 326
-[sst_expanded] 1
-[sst_vpaned_height] 265
+[sst_expanded] 0
+[sst_vpaned_height] 326
 @28
 tb_top.dut.graphics.spi_clock_in
 tb_top.dut.graphics.spi_reset_n_in
@@ -25,6 +21,7 @@ tb_top.dut.graphics.display_clock_in
 tb_top.dut.graphics.display_reset_n_in
 @200
 -
+-SPI registers
 @22
 tb_top.dut.graphics.op_code_in[7:0]
 tb_top.dut.graphics.operand_in[7:0]
@@ -54,8 +51,6 @@ tb_top.dut.graphics.sprite_palette_offset_spi_domain[3:0]
 tb_top.dut.graphics.sprite_data_spi_domain[7:0]
 @28
 tb_top.dut.graphics.sprite_data_valid_spi_domain
-tb_top.dut.graphics.psync1_sprite_data_valid.p
-tb_top.dut.graphics.psync1_sprite_data_valid.p_cdc[2:0]
 tb_top.dut.graphics.sprite_data_valid
 @200
 -
@@ -64,12 +59,11 @@ tb_top.dut.graphics.switch_buffer_spi_domain
 tb_top.dut.graphics.switch_buffer
 @200
 -
+-Sprite engine
 @28
 tb_top.dut.graphics.sprite_engine.clock_in
 tb_top.dut.graphics.sprite_engine.reset_n_in
-@29
 tb_top.dut.graphics.sprite_enable_spi_domain
-@28
 tb_top.dut.graphics.sprite_engine.enable_in
 @200
 -
@@ -95,7 +89,7 @@ tb_top.dut.graphics.sprite_engine.pixel_write_data_out[3:0]
 @200
 -
 -Sprite enegine internals
-@100000028
+@23
 tb_top.dut.graphics.sprite_engine.state
 @24
 tb_top.dut.graphics.sprite_engine.current_x_pen_position[9:0]
@@ -112,13 +106,15 @@ tb_top.dut.graphics.display_buffers.reset_n_in
 -
 @28
 tb_top.dut.graphics.display_buffers.pixel_write_enable_in
-@22
+@24
 tb_top.dut.graphics.display_buffers.pixel_write_address_in[17:0]
+@22
 tb_top.dut.graphics.display_buffers.pixel_write_data_in[3:0]
 @200
 -
-@22
+@24
 tb_top.dut.graphics.display_buffers.pixel_read_address_in[17:0]
+@22
 tb_top.dut.graphics.display_buffers.pixel_read_data_out[3:0]
 @200
 -
