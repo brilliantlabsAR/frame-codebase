@@ -40,9 +40,6 @@ module graphics (
 logic [3:0] assign_color_index_spi_domain;
 logic [9:0] assign_color_value_spi_domain;
 logic assign_color_enable_spi_domain;
-
-logic [3:0] assign_color_index;
-logic [9:0] assign_color_value;
 logic assign_color_enable;
 
 logic [9:0] sprite_x_position_spi_domain;     // 0 - 639
@@ -53,150 +50,86 @@ logic [3:0] sprite_palette_offset_spi_domain; // 0 - 15
 logic [7:0] sprite_data_spi_domain;
 logic sprite_data_valid_spi_domain;
 logic sprite_enable_spi_domain;
-
-logic [9:0] sprite_x_position;
-logic [9:0] sprite_y_position;
-logic [9:0] sprite_width;
-logic [4:0] sprite_color_count;
-logic [3:0] sprite_palette_offset;
-logic [7:0] sprite_data;
 logic sprite_data_valid;
 logic sprite_enable;
 
 logic switch_buffer_spi_domain;
 logic switch_buffer;
 
-logic spi_operand_edge_monitor;
-logic spi_operand_edge_monitor_z;
-
 // SPI registers
-always_ff @(negedge spi_clock_in) begin
-    
-    // Always clear flags after the opcode has been handled
-    if (operand_valid_in == 0 || spi_reset_n_in == 0) begin
-        assign_color_enable_spi_domain <= 0;
-        sprite_enable_spi_domain <= 0;
-        switch_buffer_spi_domain <= 0;
-    end
 
-    else begin
         
-        case (op_code_in)
+// Assign color
+always_comb assign_color_enable_spi_domain  = op_code_in == 'h11 & operand_valid_in & operand_count_in == 3;
+// Draw sprite
+always_comb sprite_data_valid_spi_domain    = op_code_in == 'h12 & operand_valid_in & operand_count_in > 7;
+always_comb sprite_enable_spi_domain        = operand_count_in == 8;
+always_comb sprite_enable                   = sprite_enable_spi_domain;
+// Switch buffer
+always_comb switch_buffer_spi_domain        = op_code_in == 'h14 & operand_valid_in;
 
-            // Assign color
-            'h11: begin
-                if (operand_valid_in) begin
-                    case (operand_count_in)
-                        0: assign_color_index_spi_domain <= operand_in[3:0];
-                        1: assign_color_value_spi_domain[9:6] <= operand_in[3:0];
-                        2: assign_color_value_spi_domain[5:3] <= operand_in[2:0];
-                        3: begin
-                            assign_color_value_spi_domain[2:0] <= operand_in[2:0];
-                            assign_color_enable_spi_domain <= 1;
-                        end
-                    endcase
-                end
-                
-                else begin
-                     assign_color_enable_spi_domain <= 0;
-                end
+always_ff @(negedge spi_clock_in) begin
+    case (op_code_in)
+        // Assign color
+        'h11: begin
+            if (operand_valid_in) begin
+                case (operand_count_in)
+                    0: assign_color_index_spi_domain <= operand_in[3:0];
+                    1: assign_color_value_spi_domain[9:6] <= operand_in[3:0];
+                    2: assign_color_value_spi_domain[5:3] <= operand_in[2:0];
+                    3: assign_color_value_spi_domain[2:0] <= operand_in[2:0];
+                endcase
             end
+        end
 
-            // Draw sprite
-            'h12: begin
-                if (operand_valid_in) begin
-                    case (operand_count_in)
-                        0: sprite_x_position_spi_domain <= {operand_in[1:0], 8'b0};
-                        1: sprite_x_position_spi_domain <= {sprite_x_position_spi_domain[9:8], operand_in};
-                        2: sprite_y_position_spi_domain <= {operand_in[1:0], 8'b0};
-                        3: sprite_y_position_spi_domain <= {sprite_y_position_spi_domain[9:8], operand_in};
-                        4: sprite_width_spi_domain <= {operand_in[1:0], 8'b0};
-                        5: sprite_width_spi_domain <= {sprite_width_spi_domain[9:8], operand_in};
-                        6: sprite_color_count_spi_domain <= operand_in[4:0];
-                        7: sprite_palette_offset_spi_domain <= operand_in[3:0];
-                        default begin
-                            sprite_data_spi_domain <= operand_in;        
-                            sprite_data_valid_spi_domain <= 1;
-                            sprite_enable_spi_domain <= 1;
-                        end
-                    endcase
-                end
-
-                else begin
-                    sprite_data_valid_spi_domain <= 0;
-                end
+        // Draw sprite
+        'h12: begin
+            if (operand_valid_in) begin
+                case (operand_count_in)
+                    0: sprite_x_position_spi_domain <= {operand_in[1:0], 8'b0};
+                    1: sprite_x_position_spi_domain <= {sprite_x_position_spi_domain[9:8], operand_in};
+                    2: sprite_y_position_spi_domain <= {operand_in[1:0], 8'b0};
+                    3: sprite_y_position_spi_domain <= {sprite_y_position_spi_domain[9:8], operand_in};
+                    4: sprite_width_spi_domain <= {operand_in[1:0], 8'b0};
+                    5: sprite_width_spi_domain <= {sprite_width_spi_domain[9:8], operand_in};
+                    6: sprite_color_count_spi_domain <= operand_in[4:0];
+                    7: sprite_palette_offset_spi_domain <= operand_in[3:0];
+                    default: sprite_data_spi_domain <= operand_in;        
+                endcase
             end
-
-            // Switch buffer
-            'h14: begin
-                switch_buffer_spi_domain <= 1;
-            end
-
-        endcase
-
-    end
-
+        end
+    endcase
 end
 
-// SPI to display pulse sync
-psync1 psync1_operand_valid_in (
-        .in             (operand_valid_in),
+// SPI to display CDC
+// SPI pulse sync
+psync1 psync1_assign_color_enable (
+        .in             (assign_color_enable_spi_domain),
         .in_clk         (~spi_clock_in),
         .in_reset_n     (spi_reset_n_in),
-        .out            (spi_operand_edge_monitor),
+        .out            (assign_color_enable),
         .out_clk        (display_clock_in),
         .out_reset_n    (display_reset_n_in)
 );
 
-// SPI to display CDC
-always_ff @(posedge display_clock_in) begin
-    
-    // Always clear flags after the opcode has been handled
-    if (display_reset_n_in == 0) begin
-        spi_operand_edge_monitor_z <= 0;
+psync1 psync1_sprite_data_valid (
+        .in             (sprite_data_valid_spi_domain),
+        .in_clk         (~spi_clock_in),
+        .in_reset_n     (spi_reset_n_in),
+        .out            (sprite_data_valid),
+        .out_clk        (display_clock_in),
+        .out_reset_n    (display_reset_n_in)
+);
 
-        assign_color_index <= 0;
-        assign_color_value <= 0;
-        assign_color_enable <= 0;
+psync1 psync1_switch_buffer (
+        .in             (switch_buffer_spi_domain),
+        .in_clk         (~spi_clock_in),
+        .in_reset_n     (spi_reset_n_in),
+        .out            (switch_buffer),
+        .out_clk        (display_clock_in),
+        .out_reset_n    (display_reset_n_in)
+);
 
-        sprite_x_position <= 0;
-        sprite_y_position <= 0;
-        sprite_width <= 0;
-        sprite_color_count <= 0;
-        sprite_palette_offset <= 0;
-        sprite_data <= 0;
-        sprite_data_valid <= 0;
-        sprite_enable <= 0;
-
-        switch_buffer <= 0;
-    end
-
-    else begin
-        spi_operand_edge_monitor_z <= spi_operand_edge_monitor;
-
-        if (spi_operand_edge_monitor) begin
-            assign_color_index <= assign_color_index_spi_domain;
-            assign_color_value <= assign_color_value_spi_domain;
-            assign_color_enable <= assign_color_enable_spi_domain;
-
-            sprite_x_position <= sprite_x_position_spi_domain;
-            sprite_y_position <= sprite_y_position_spi_domain;
-            sprite_width <= sprite_width_spi_domain;
-            sprite_color_count <= sprite_color_count_spi_domain;
-            sprite_palette_offset <= sprite_palette_offset_spi_domain;
-            sprite_data <= sprite_data_spi_domain;
-            sprite_data_valid <= sprite_data_valid_spi_domain;
-            sprite_enable <= sprite_enable_spi_domain;
-
-            switch_buffer <= switch_buffer_spi_domain;
-        end
-
-        if (spi_operand_edge_monitor_z) begin
-            sprite_data_valid <= sprite_data_valid_spi_domain;
-        end
-    end
-
-end
 
 // Feed display buffer from either sprite or vector engine
 logic pixel_write_enable_sprite_to_mux_wire;
@@ -236,14 +169,14 @@ sprite_engine sprite_engine (
     .reset_n_in(display_reset_n_in),
     .enable_in(sprite_enable),
 
-    .x_position_in(sprite_x_position),
-    .y_position_in(sprite_y_position),
-    .width_in(sprite_width),
-    .total_colors_in(sprite_color_count),
-    .color_palette_offset_in(sprite_palette_offset),
+    .x_position_in(sprite_x_position_spi_domain),
+    .y_position_in(sprite_y_position_spi_domain),
+    .width_in(sprite_width_spi_domain),
+    .total_colors_in(sprite_color_count_spi_domain),
+    .color_palette_offset_in(sprite_palette_offset_spi_domain),
 
     .data_valid_in(sprite_data_valid),
-    .data_in(sprite_data),
+    .data_in(sprite_data_spi_domain),
 
     .pixel_write_enable_out(pixel_write_enable_sprite_to_mux_wire),
     .pixel_write_address_out(pixel_write_address_sprite_to_mux_wire),
@@ -279,8 +212,8 @@ color_palette color_palette (
     .yuv_color_out(color_data_palette_to_driver_wire),
 
     .assign_color_enable_in(assign_color_enable),
-    .assign_color_index_in(assign_color_index),
-    .assign_color_value_in(assign_color_value)
+    .assign_color_index_in(assign_color_index_spi_domain),
+    .assign_color_value_in(assign_color_value_spi_domain)
 );
 
 display_driver display_driver (
