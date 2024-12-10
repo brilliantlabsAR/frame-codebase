@@ -67,7 +67,7 @@ logic pll_reset;
 logic jpeg_clock;               // Raw JPEG clock - generated or divided down from pixel clock - goes to clock switch
 logic jpeg_buffer_clock;        // 2x JPEG clock for transpose/zig-zag buffer overclocking -  goes to JPEG
 logic jpeg_slow_clock;          // Raw JPEG clock muxed with SPI clock - goes to JPEG
-logic spi_clock;                // locally routed clock
+logic spi_clock /* synthesis syn_keep=1 nomerge=""*/; // locally routed clock
 
 logic pllpowerdown_n;
 logic image_buffer_read_en;
