@@ -1,0 +1,9 @@
+These tests were out of date, and are superceeded by cocotb tests.
+Last working commit at main if needed for reference:
+
+
+commit 7b3439064a332181ffa4445056b9710929be38b6
+Author: Raj Nakarja <raj@siliconwitchery.com>
+Date:   Tue May 28 15:58:48 2024 +0200
+
+    Updated graphics testbench
