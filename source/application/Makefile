@@ -42,6 +42,7 @@ C_FILES += \
 	lua_libraries/display.c \
 	lua_libraries/file.c \
 	lua_libraries/imu.c \
+	lua_libraries/led.c \
 	lua_libraries/microphone.c \
 	lua_libraries/system.c \
 	lua_libraries/time.c \
@@ -85,6 +86,7 @@ C_FILES += \
 	$(LIBRARIES)/lz4/lz4.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_gpiote.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_pdm.c \
+	$(LIBRARIES)/nrfx/drivers/src/nrfx_pwm.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_rtc.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_saadc.c \
 	$(LIBRARIES)/nrfx/drivers/src/nrfx_spim.c \
