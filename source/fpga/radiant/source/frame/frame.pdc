@@ -86,5 +86,10 @@ set_false_path -from [get_clocks jpeg_clock] -to [get_clocks spi_clock]
 set_false_path -from [get_clocks spi_clock] -to [get_clocks jpeg_clock]
 #   max delay to prevent run away scenic routes
 set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/state*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/psync_frame_start/*/Q]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/psync_frame_start/*/Q*]
 
+#   Display
+set_false_path -from [get_clocks spi_clock] -to [get_clocks display_clock]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/psync_*/*/Q*]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/sprite_*_spi_domain*/Q*]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/assign_*_spi_domain*/Q*]
