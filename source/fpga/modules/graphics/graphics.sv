@@ -28,6 +28,9 @@ module graphics (
     input logic [7:0] operand_in,
     input logic operand_valid_in,
     input logic [31:0] operand_count_in,
+    input logic operand_read,
+    input logic [31:0] rd_operand_count_in,  // was operand_count_out
+    output logic [7:0] response_out,
 
     output logic display_clock_out,
     output logic display_hsync_out,
@@ -36,6 +39,14 @@ module graphics (
     output logic [2:0] display_cb_out,
     output logic [2:0] display_cr_out
 );
+
+// register addresses
+parameter GRAPHICS_ASSIGN_COLOR = 'h11;
+parameter GRAPHICS_DRAW_SPRITE = 'h12;
+parameter GRAPHICS_DRAW_VECTOR = 'h13;
+parameter GRAPHICS_BUFFER_SHOW = 'h14;
+parameter GRAPHICS_DEBUG = 'h18;
+//parameter GRAPHICS_DEBUG2 = 'h19;
 
 logic [3:0] assign_color_index_spi_domain;
 logic [9:0] assign_color_value_spi_domain;
@@ -55,23 +66,23 @@ logic sprite_enable;
 
 logic switch_buffer_spi_domain;
 logic switch_buffer;
+logic [7:0] debug_0;
 
 // SPI registers
 
-        
 // Assign color
-always_comb assign_color_enable_spi_domain  = op_code_in == 'h11 & operand_valid_in & operand_count_in == 3;
+always_comb assign_color_enable_spi_domain  = op_code_in == GRAPHICS_ASSIGN_COLOR & operand_valid_in & operand_count_in == 3;
 // Draw sprite
-always_comb sprite_data_valid_spi_domain    = op_code_in == 'h12 & operand_valid_in & operand_count_in > 7;
+always_comb sprite_data_valid_spi_domain    = op_code_in == GRAPHICS_DRAW_SPRITE & operand_valid_in & operand_count_in > 7;
 always_comb sprite_enable_spi_domain        = operand_count_in == 8;
 always_comb sprite_enable                   = sprite_enable_spi_domain;
 // Switch buffer
-always_comb switch_buffer_spi_domain        = op_code_in == 'h14 & operand_valid_in;
+always_comb switch_buffer_spi_domain        = op_code_in == GRAPHICS_BUFFER_SHOW & operand_valid_in;
 
 always_ff @(negedge spi_clock_in) begin
     case (op_code_in)
         // Assign color
-        'h11: begin
+        GRAPHICS_ASSIGN_COLOR: begin
             if (operand_valid_in) begin
                 case (operand_count_in)
                     0: assign_color_index_spi_domain <= operand_in[3:0];
@@ -83,7 +94,7 @@ always_ff @(negedge spi_clock_in) begin
         end
 
         // Draw sprite
-        'h12: begin
+        GRAPHICS_DRAW_SPRITE: begin
             if (operand_valid_in) begin
                 case (operand_count_in)
                     0: sprite_x_position_spi_domain <= {operand_in[1:0], 8'b0};
@@ -100,6 +111,28 @@ always_ff @(negedge spi_clock_in) begin
         end
     endcase
 end
+
+always_comb
+    case (op_code_in)
+    GRAPHICS_DEBUG: response_out = debug_0;
+/*
+    GRAPHICS_DEBUG2:
+        case(rd_operand_count_in)
+        0: response_out = sprite_x_position_spi_domain >> 8;
+        1: response_out = sprite_x_position_spi_domain;
+        2: response_out = sprite_y_position_spi_domain >> 8;
+        3: response_out = sprite_y_position_spi_domain;
+        4: response_out = sprite_width_spi_domain >> 8;
+        5: response_out = sprite_width_spi_domain;
+        6: response_out = sprite_color_count_spi_domain;
+        7: response_out = sprite_palette_offset_spi_domain;
+        8: response_out = sprite_data_spi_domain;
+        default: response_out = 0;
+        endcase
+*/
+    default: response_out = 0;
+    endcase
+
 
 // SPI to display CDC
 // SPI pulse sync
@@ -201,6 +234,7 @@ display_buffers display_buffers (
     .pixel_read_address_in(read_address_driver_to_buffer_wire),
     .pixel_read_data_out(color_data_buffer_to_palette_wire),
 
+    .debug_0(debug_0),
     .switch_write_buffer_in(switch_buffer)
 );
 

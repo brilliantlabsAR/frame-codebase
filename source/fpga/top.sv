@@ -217,6 +217,7 @@ logic operand_wr_en;
 logic [31:0] rd_operand_count;
 logic [31:0] wr_operand_count;
 
+logic [7:0] response_1;  //  Graphics debug
 logic [7:0] response_2;  // Camera
 logic [7:0] response_3;  // Chip ID
 logic [7:0] response_4;  // PLL CSR
@@ -255,7 +256,7 @@ spi_peripheral spi_peripheral (
     .data_rd_en(operand_rd_en),
     .data_wr_en(operand_wr_en),
 
-    .response_1_in(8'b0),
+    .response_1_in(response_1), // Graphics debug
     .response_2_in(response_2),
     .response_3_in(response_3),
     .response_4_in(response_4)
@@ -273,6 +274,9 @@ graphics graphics (
     .operand_in(operand),
     .operand_valid_in(operand_wr_en),
     .operand_count_in(wr_operand_count),
+    .operand_read(operand_rd_en),
+    .rd_operand_count_in(rd_operand_count),
+    .response_out(response_1),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
