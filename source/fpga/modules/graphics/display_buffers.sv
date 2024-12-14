@@ -252,5 +252,5 @@ always_ff @(posedge clock_in) begin
 
 end
 
-always_comb debug_0 = {buffer_switch_pending, displayed_buffer};
+always_comb debug_0 = {clear_flag, buffer_switch_pending, displayed_buffer};
 endmodule
