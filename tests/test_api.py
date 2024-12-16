@@ -83,6 +83,7 @@ async def main():
     await test.initialize()
 
     # Version
+    await test.lua_is_type("frame.HARDWARE_VERSION", "string")
     await test.lua_has_length("frame.FIRMWARE_VERSION", 12)
     await test.lua_has_length("frame.GIT_TAG", 7)
 

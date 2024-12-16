@@ -157,6 +157,21 @@ void shutdown(bool enable_imu_wakeup)
     }
 }
 
+const char *get_hardware_string(void)
+{
+    const char *frame_lite_string = "Frame Lite";
+    const char *frame_string = "Frame";
+
+    if (nrf_gpio_pin_read(FRAME_LITE_HW_DETECT_PIN))
+    {
+        return frame_lite_string;
+    }
+    else
+    {
+        return frame_string;
+    }
+}
+
 void case_detect_pin_interrupt_handler(nrfx_gpiote_pin_t unused_gptiote_pin,
                                        nrfx_gpiote_trigger_t unused_gptiote_trigger,
                                        void *unused_gptiote_context_pointer)
@@ -196,14 +211,7 @@ static void hardware_setup()
     {
         nrf_gpio_cfg_input(FRAME_LITE_HW_DETECT_PIN, NRF_GPIO_PIN_PULLUP);
 
-        if (nrf_gpio_pin_read(FRAME_LITE_HW_DETECT_PIN))
-        {
-            LOG("Running on Frame");
-        }
-        else
-        {
-            LOG("Running on Frame Lite");
-        }
+        LOG("Running on %s", get_hardware_string());
     }
 
     // Configure the I2C and SPI drivers
