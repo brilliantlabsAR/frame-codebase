@@ -53,6 +53,7 @@ module camera (
 
     // SPI interface
     input logic [7:0] opcode_in,
+    input logic opcode_valid_in,
     input logic [7:0] operand_in,
     input logic operand_read,
     input logic operand_valid_in,
@@ -99,6 +100,7 @@ spi_registers spi_registers (
 
     // SPI interface
     .opcode_in(opcode_in),
+    .opcode_valid_in(opcode_valid_in),
     .operand_in(operand_in),
     .rd_operand_count_in(rd_operand_count_in),
     //.wr_operand_count_in(wr_operand_count),

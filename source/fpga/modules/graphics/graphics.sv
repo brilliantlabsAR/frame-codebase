@@ -25,6 +25,7 @@ module graphics (
     input logic display_reset_n_in,
 
     input logic [7:0] op_code_in,
+    input logic op_code_valid_in,
     input logic [7:0] operand_in,
     input logic operand_valid_in,
     input logic [31:0] operand_count_in,
@@ -45,8 +46,7 @@ parameter GRAPHICS_ASSIGN_COLOR = 'h11;
 parameter GRAPHICS_DRAW_SPRITE = 'h12;
 parameter GRAPHICS_DRAW_VECTOR = 'h13;
 parameter GRAPHICS_BUFFER_SHOW = 'h14;
-parameter GRAPHICS_DEBUG = 'h18;
-//parameter GRAPHICS_DEBUG2 = 'h19;
+parameter GRAPHICS_BUFFER_STATUS = 'h18;
 
 logic [3:0] assign_color_index_spi_domain;
 logic [9:0] assign_color_value_spi_domain;
@@ -66,7 +66,7 @@ logic sprite_enable;
 
 logic switch_buffer_spi_domain;
 logic switch_buffer;
-logic [7:0] debug_0;
+logic [1:0] buffer_status;
 
 // SPI registers
 
@@ -77,7 +77,7 @@ always_comb sprite_data_valid_spi_domain    = op_code_in == GRAPHICS_DRAW_SPRITE
 always_comb sprite_enable_spi_domain        = operand_count_in == 8;
 always_comb sprite_enable                   = sprite_enable_spi_domain;
 // Switch buffer
-always_comb switch_buffer_spi_domain        = op_code_in == GRAPHICS_BUFFER_SHOW & operand_valid_in;
+always_comb switch_buffer_spi_domain        = op_code_in == GRAPHICS_BUFFER_SHOW & op_code_valid_in;
 
 always_ff @(negedge spi_clock_in) begin
     case (op_code_in)
@@ -114,22 +114,7 @@ end
 
 always_comb
     case (op_code_in)
-    GRAPHICS_DEBUG: response_out = debug_0;
-/*
-    GRAPHICS_DEBUG2:
-        case(rd_operand_count_in)
-        0: response_out = sprite_x_position_spi_domain >> 8;
-        1: response_out = sprite_x_position_spi_domain;
-        2: response_out = sprite_y_position_spi_domain >> 8;
-        3: response_out = sprite_y_position_spi_domain;
-        4: response_out = sprite_width_spi_domain >> 8;
-        5: response_out = sprite_width_spi_domain;
-        6: response_out = sprite_color_count_spi_domain;
-        7: response_out = sprite_palette_offset_spi_domain;
-        8: response_out = sprite_data_spi_domain;
-        default: response_out = 0;
-        endcase
-*/
+    GRAPHICS_BUFFER_STATUS: response_out = buffer_status;
     default: response_out = 0;
     endcase
 
@@ -234,7 +219,7 @@ display_buffers display_buffers (
     .pixel_read_address_in(read_address_driver_to_buffer_wire),
     .pixel_read_data_out(color_data_buffer_to_palette_wire),
 
-    .debug_0(debug_0),
+    .buffer_status(buffer_status),
     .switch_write_buffer_in(switch_buffer)
 );
 

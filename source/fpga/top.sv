@@ -211,6 +211,7 @@ DCS #(.DCSMODE("DCS")) DCSInst0 (
 
 // SPI
 logic [7:0] opcode;
+logic opcode_valid;
 logic [7:0] operand;
 logic operand_rd_en;
 logic operand_wr_en;
@@ -250,6 +251,7 @@ spi_peripheral spi_peripheral (
     .spi_data_out(spi_data_out),
 
     .address_out(opcode),
+    .address_valid(opcode_valid),
     .wr_data(operand),
     .rd_byte_count(rd_operand_count),
     .wr_byte_count(wr_operand_count),
@@ -271,6 +273,7 @@ graphics graphics (
     .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
+    .op_code_valid_in(opcode_valid),
     .operand_in(operand),
     .operand_valid_in(operand_wr_en),
     .operand_count_in(wr_operand_count),
@@ -319,6 +322,7 @@ camera camera (
     
     // SPI interface
     .opcode_in(opcode),
+    .opcode_valid_in(opcode_valid),
     .operand_in(operand),
     .rd_operand_count_in(rd_operand_count),
     //.wr_operand_count_in(wr_operand_count),

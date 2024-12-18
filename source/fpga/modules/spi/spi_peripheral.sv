@@ -23,6 +23,7 @@ module spi_peripheral (
     
     // Sub-peripheral interface
     output logic [7:0] address_out,     // was opcode_out
+    output logic address_valid,         // was opcode_valid_out
     output logic [7:0] wr_data,         // was operand_out
     output logic [31:0] rd_byte_count,  // was operand_count_out
     output logic [31:0] wr_byte_count,  // was operand_count_out
@@ -51,6 +52,7 @@ if (!spi_resetn) begin
     bit_index <= 15;
     rd_byte_count <= 0;
     wr_byte_count <= 0;
+    address_valid <= 0;
     data_wr_en <= 0;
     data_rd_en <= 0;
 end else begin
@@ -60,7 +62,8 @@ end else begin
         rd_byte_count <= rd_byte_count + 1;
     end
     else
-        bit_index <= bit_index - 1;
+    bit_index <= bit_index - 1;
+    address_valid <= bit_index == 8;
     data_wr_en <= bit_index == 0;
     data_rd_en <= bit_index == 1;
     if(data_wr_en)

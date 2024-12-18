@@ -16,6 +16,7 @@
 
     // SPI interface
     input logic [7:0] opcode_in,
+    input logic opcode_valid_in,
     input logic [7:0] operand_in,
     input logic operand_read,
     input logic operand_valid_in,
@@ -101,7 +102,7 @@ always_comb
 
 
 // combinatorial!
-always_comb start_capture_out = operand_valid_in & opcode_in == START_CAPTURE;
+always_comb start_capture_out = opcode_valid_in & opcode_in == START_CAPTURE;
 
 // RM - Being extra careful here and putting POWER_SAVE_ENABLE on async reset
 always_ff @(negedge clock_in or negedge reset_n_in)
