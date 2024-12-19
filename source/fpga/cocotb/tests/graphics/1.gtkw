@@ -1,0 +1,166 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Sat Dec 14 12:23:22 2024
+[*]
+[dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/graphics/dump.fst"
+[dumpfile_mtime] "Thu Dec 12 10:35:35 2024"
+[dumpfile_size] 28381783
+[savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/graphics/1.gtkw"
+[timestart] 0
+[size] 1654 975
+[pos] -1 -1
+*-34.635811 5180056000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] .
+[treeopen] .tb_top.
+[treeopen] .tb_top.dut.
+[sst_width] 233
+[signals_width] 326
+[sst_expanded] 1
+[sst_vpaned_height] 326
+@28
+tb_top.dut.graphics.spi_clock_in
+tb_top.dut.graphics.spi_reset_n_in
+tb_top.dut.graphics.display_clock_in
+tb_top.dut.graphics.display_reset_n_in
+@200
+-
+-SPI registers
+@22
+tb_top.dut.graphics.op_code_in[7:0]
+tb_top.dut.graphics.operand_in[7:0]
+@28
+tb_top.dut.graphics.operand_valid_in
+@22
+tb_top.dut.graphics.operand_count_in[31:0]
+@200
+-
+@22
+tb_top.dut.graphics.assign_color_index_spi_domain[3:0]
+tb_top.dut.graphics.assign_color_value_spi_domain[9:0]
+@28
+tb_top.dut.graphics.assign_color_enable_spi_domain
+tb_top.dut.graphics.assign_color_enable
+@200
+-
+@22
+tb_top.dut.graphics.sprite_x_position_spi_domain[9:0]
+tb_top.dut.graphics.sprite_y_position_spi_domain[9:0]
+tb_top.dut.graphics.sprite_width_spi_domain[9:0]
+tb_top.dut.graphics.sprite_color_count_spi_domain[4:0]
+tb_top.dut.graphics.sprite_palette_offset_spi_domain[3:0]
+@200
+-
+@22
+tb_top.dut.graphics.sprite_data_spi_domain[7:0]
+@28
+tb_top.dut.graphics.sprite_data_valid_spi_domain
+tb_top.dut.graphics.sprite_data_valid
+@200
+-
+@28
+tb_top.dut.graphics.switch_buffer_spi_domain
+tb_top.dut.graphics.switch_buffer
+@200
+-
+-Sprite engine
+@28
+tb_top.dut.graphics.sprite_engine.clock_in
+tb_top.dut.graphics.sprite_engine.reset_n_in
+tb_top.dut.graphics.sprite_enable_spi_domain
+tb_top.dut.graphics.sprite_engine.enable_in
+@200
+-
+@22
+tb_top.dut.graphics.sprite_engine.x_position_in[9:0]
+tb_top.dut.graphics.sprite_engine.y_position_in[9:0]
+tb_top.dut.graphics.sprite_engine.width_in[9:0]
+tb_top.dut.graphics.sprite_engine.total_colors_in[4:0]
+tb_top.dut.graphics.sprite_engine.color_palette_offset_in[3:0]
+@200
+-
+@22
+tb_top.dut.graphics.sprite_engine.data_in[7:0]
+@28
+tb_top.dut.graphics.sprite_engine.data_valid_in
+@200
+-
+@28
+tb_top.dut.graphics.sprite_engine.pixel_write_enable_out
+@22
+tb_top.dut.graphics.sprite_engine.pixel_write_address_out[17:0]
+tb_top.dut.graphics.sprite_engine.pixel_write_data_out[3:0]
+@200
+-
+-Sprite enegine internals
+@22
+tb_top.dut.graphics.sprite_engine.state
+@24
+tb_top.dut.graphics.sprite_engine.current_x_pen_position[9:0]
+tb_top.dut.graphics.sprite_engine.current_y_pen_position[9:0]
+@22
+tb_top.dut.graphics.sprite_engine.pixels_remaining[4:0]
+@200
+-
+-Display buffer
+@28
+tb_top.dut.graphics.display_buffers.clock_in
+tb_top.dut.graphics.display_buffers.reset_n_in
+@200
+-
+@28
+tb_top.dut.graphics.display_buffers.pixel_write_enable_in
+@24
+tb_top.dut.graphics.display_buffers.pixel_write_address_in[17:0]
+@22
+tb_top.dut.graphics.display_buffers.pixel_write_data_in[3:0]
+@200
+-
+@24
+tb_top.dut.graphics.display_buffers.pixel_read_address_in[17:0]
+@22
+tb_top.dut.graphics.display_buffers.pixel_read_data_out[3:0]
+@200
+-
+@28
+tb_top.dut.graphics.display_buffers.switch_write_buffer_in
+@200
+-
+-Display buffer internals
+@100000028
+tb_top.dut.graphics.display_buffers.displayed_buffer
+@28
+tb_top.dut.graphics.display_buffers.buffer_switch_pending
+tb_top.dut.graphics.display_buffers.clear_flag
+@200
+-
+@28
+tb_top.dut.display_clock_out
+tb_top.dut.display_hsync_out
+tb_top.dut.display_vsync_out
+@c00022
+#{tb_top.dut.display_y[3:0]_out} tb_top.dut.display_y3_out tb_top.dut.display_y2_out tb_top.dut.display_y1_out tb_top.dut.display_y0_out
+@28
+tb_top.dut.display_y0_out
+tb_top.dut.display_y1_out
+tb_top.dut.display_y2_out
+tb_top.dut.display_y3_out
+@1401200
+-group_end
+@c00029
+#{tb_top.dut.display_cr[2:0]_out} tb_top.dut.display_cr2_out tb_top.dut.display_cr1_out tb_top.dut.display_cr0_out
+@29
+tb_top.dut.display_cr0_out
+tb_top.dut.display_cr1_out
+tb_top.dut.display_cr2_out
+@1401201
+-group_end
+@c00028
+#{tb_top.dut.display_cb[2:0]_out} tb_top.dut.display_cb2_out tb_top.dut.display_cb1_out tb_top.dut.display_cb0_out
+@28
+tb_top.dut.display_cb0_out
+tb_top.dut.display_cb1_out
+tb_top.dut.display_cb2_out
+@1401200
+-group_end
+[pattern_trace] 1
+[pattern_trace] 0
