@@ -26,6 +26,8 @@
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
+    input   logic               slow_clock,
+    input   logic               slow_reset_n,
     input   logic               clk,
     input   logic               resetn
 );

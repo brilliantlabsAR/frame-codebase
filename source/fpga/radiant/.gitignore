@@ -11,6 +11,7 @@ reportview.xml
 !/pll_ip/*.xml
 !/pll_ip/*.cfg
 !/pll_ip/*.ipx
+!/pll_ip/Makefile
 
 /byte_to_pixel_ip/*
 !/byte_to_pixel_ip/*.xml
@@ -21,23 +22,6 @@ reportview.xml
 !/csi2_receiver_ip/*.xml
 !/csi2_receiver_ip/*.cfg
 !/csi2_receiver_ip/*.ipx
-
-/huffman_codes_rom/*/*
-!/huffman_codes_rom/*/*.xml
-!/huffman_codes_rom/*/*.cfg
-!/huffman_codes_rom/*/*.ipx
-!/huffman_codes_rom/*/*.txt
-/huffman_codes_rom/*/dummy_file.txt
-
-/jenc/*/*
-!/jenc/*/*.xml
-!/jenc/*/*.cfg
-!/jenc/*/*.ipx
-
-/jisp/*/*
-!/jisp/*/*.xml
-!/jisp/*/*.cfg
-!/jisp/*/*.ipx
 
 # Logs and reports
 radiantc.*
