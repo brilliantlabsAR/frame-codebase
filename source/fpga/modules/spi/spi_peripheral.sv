@@ -62,7 +62,7 @@ end else begin
         rd_byte_count <= rd_byte_count + 1;
     end
     else
-    bit_index <= bit_index - 1;
+        bit_index <= bit_index - 1;
     address_valid <= bit_index == 8;
     data_wr_en <= bit_index == 0;
     data_rd_en <= bit_index == 1;
