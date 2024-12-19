@@ -85,6 +85,11 @@ class SpiTransactor:
         await self.source.write([address] + data, burst=True)
         _ = await self.source.read() # flush read queue
 
+    async def spi_command(self, address):
+        self.log.info(f"SPI COMMAND: ADDRESS=0x{address:02x}")
+        await self.source.write([address], burst=True)
+        _ = await self.source.read() # flush read queue
+
     async def spi_read(self, address, n=1):
         d = [address] + [0]*n
         await self.source.write([address] + [0]*n, burst=True)

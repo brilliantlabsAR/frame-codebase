@@ -211,12 +211,14 @@ DCS #(.DCSMODE("DCS")) DCSInst0 (
 
 // SPI
 logic [7:0] opcode;
+logic opcode_valid;
 logic [7:0] operand;
 logic operand_rd_en;
 logic operand_wr_en;
 logic [31:0] rd_operand_count;
 logic [31:0] wr_operand_count;
 
+logic [7:0] response_1;  //  Graphics debug
 logic [7:0] response_2;  // Camera
 logic [7:0] response_3;  // Chip ID
 logic [7:0] response_4;  // PLL CSR
@@ -249,13 +251,14 @@ spi_peripheral spi_peripheral (
     .spi_data_out(spi_data_out),
 
     .address_out(opcode),
+    .address_valid(opcode_valid),
     .wr_data(operand),
     .rd_byte_count(rd_operand_count),
     .wr_byte_count(wr_operand_count),
     .data_rd_en(operand_rd_en),
     .data_wr_en(operand_wr_en),
 
-    .response_1_in(8'b0),
+    .response_1_in(response_1), // Graphics debug
     .response_2_in(response_2),
     .response_3_in(response_3),
     .response_4_in(response_4)
@@ -270,9 +273,13 @@ graphics graphics (
     .display_reset_n_in(display_reset_n),
 
     .op_code_in(opcode),
+    .op_code_valid_in(opcode_valid),
     .operand_in(operand),
     .operand_valid_in(operand_wr_en),
     .operand_count_in(wr_operand_count),
+    .operand_read(operand_rd_en),
+    .rd_operand_count_in(rd_operand_count),
+    .response_out(response_1),
 
     .display_clock_out(display_clock_out),
     .display_hsync_out(display_hsync_out),
@@ -315,6 +322,7 @@ camera camera (
     
     // SPI interface
     .opcode_in(opcode),
+    .opcode_valid_in(opcode_valid),
     .operand_in(operand),
     .rd_operand_count_in(rd_operand_count),
     //.wr_operand_count_in(wr_operand_count),

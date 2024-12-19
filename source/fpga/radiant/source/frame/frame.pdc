@@ -90,6 +90,7 @@ set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/psync_frame
 
 #   Display
 set_false_path -from [get_clocks spi_clock] -to [get_clocks display_clock]
+set_false_path -from [get_clocks display_clock] -to [get_clocks spi_clock]
 set_max_delay 15.0 -from [get_pins -hierarchical graphics/psync_*/*/Q*]
 set_max_delay 15.0 -from [get_pins -hierarchical graphics/sprite_*_spi_domain*/Q*]
 set_max_delay 15.0 -from [get_pins -hierarchical graphics/assign_*_spi_domain*/Q*]

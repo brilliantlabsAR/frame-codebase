@@ -93,7 +93,7 @@ class JpegTester():
         # 1. Set compression factor and kick off capture flag
         qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([50, 100, 10, 25,   20, 30, 40, 80])}[self.qf]
         await self.spi.spi_write(0x26, qf_select)
-        await self.spi.spi_write(0x20, 1)
+        await self.spi.spi_command(0x20)
         if os.environ.get('GAMMA_BYPASS', '') == '1':
             await self.spi.spi_write(0x32, 1)
 
