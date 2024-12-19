@@ -711,9 +711,8 @@ async def main():
 
     # Start encode
     print('Start encode')
-    time.sleep(0.005)
-    await b.send_lua(f'frame.fpga_write(0x20, 1)')
-    time.sleep(0.005)
+    await b.send_lua(f'frame.fpga_write(0x20, "")')
+    time.sleep(0.05)
 
 
     # Check Done flag
