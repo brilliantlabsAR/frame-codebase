@@ -116,42 +116,32 @@ always_ff @(negedge clock_in) begin
     if (reset_n_in == 0) begin
         // TODO position signals
         compression_factor_out <= 0;
-        image_address_out <= 0;
         image_address_valid <= 0;
         gamma_bypass_out <= 0;
     end
 
     else begin
         image_address_valid <= operand_read & (opcode_in==IMAGE_DATA | opcode_in==COMPRESSED_BYTES | opcode_in==BYTES_REMAINING);
-        if (operand_read) begin
-            case (opcode_in)
-                // Read data
-                // 
-                // Note: When operand_read==1, last bit of image buffer data has been put
-                // on the SPI bus with the FALLING edge of SPI clock, so now we can update
-                // the address, also FALLING edge of SPI clock, and read out the next 
-                // image buffer data. 
-                // When reading out image buffer data with jpeg clock, the read will take
-                // place over floor((jpeg clock freq.)/(spi clock freq.)) cycles, eg. 36MHz/8MHz
-                // -> 4 cycles. If there are at least 2 cycles, the timing violation for address 
-                // which occurs during SDF simulation can be ignored, since is will occur only 
-                // during the fist cycle, and the address shoould be stable in subsequent cycles.
-                IMAGE_DATA: begin
-                    if (image_address_out < image_buffer_total_size) begin 
-                        image_address_out <= image_address_out + 1;
-                    end
-                end
-            endcase
-        end
+
+        if (start_capture_out) // Capture command
+            image_address_out <= 0;
+        else if (operand_read & opcode_in == IMAGE_DATA & image_address_out < image_buffer_total_size)
+            // Read data
+            // 
+            // Note: When operand_read==1, last bit of image buffer data has been put
+            // on the SPI bus with the FALLING edge of SPI clock, so now we can update
+            // the address, also FALLING edge of SPI clock, and read out the next 
+            // image buffer data. 
+            // When reading out image buffer data with jpeg clock, the read will take
+            // place over floor((jpeg clock freq.)/(spi clock freq.)) cycles, eg. 36MHz/8MHz
+            // -> 4 cycles. If there are at least 2 cycles, the timing violation for address 
+            // which occurs during SDF simulation can be ignored, since is will occur only 
+            // during the fist cycle, and the address shoould be stable in subsequent cycles.
+            image_address_out <= image_address_out + 1;
 
         if (operand_valid_in) begin
 
             case (opcode_in)
-
-                // Capture
-                START_CAPTURE: begin
-                    image_address_out <= 0;
-                end
 
                 // Zoom
                 ZOOM: begin
@@ -182,3 +172,4 @@ always_ff @(negedge clock_in) begin
 end
 
 endmodule
+
