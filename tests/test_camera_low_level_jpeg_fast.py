@@ -168,10 +168,10 @@ header = bytearray(
         0x00,
         0x11,
         0x08,
+        0x02,
         0x00,
-        0xC8,
+        0x02,
         0x00,
-        0xC8,
         0x03,
         0x01,
         0x22,
@@ -714,13 +714,13 @@ async def main():
             state = 'CAPTURE'
         end
 
-        -- if frame.time.utc() - last_autoexp_time > 0.1 then
-            -- local stats = frame.camera.auto { analog_gain_limit=50, shutter_limit=1600 }
+        if frame.time.utc() - last_autoexp_time > 0.1 then
+            local stats = frame.camera.auto { analog_gain_limit=50, shutter_limit=1600 }
             -- if stats ~= nil then 
             --     print('gain = '..stats['analog_gain']..', shutter = '..stats['shutter']..'        ')
             -- end
             last_autoexp_time = frame.time.utc()
-        -- end
+        end
     end
     """
 
