@@ -61,23 +61,10 @@ module camera (
     output logic [7:0] response_out
 );
 
-logic start_capture_spi_clock_domain;;
+logic start_capture_spi_clock_domain;
 logic start_capture_pixel_clock_domain;
 
-//logic [10:0] x_resolution = 512;
-//logic [10:0] y_resolution = 512;
-//logic [10:0] x_pan = 0;
-
-logic[10:0] x_zoom_crop_start;  // Todo: Make SPI register
-logic[10:0] x_zoom_crop_end;    // Todo: Make SPI register
-logic[10:0] y_zoom_crop_start;  // Todo: Make SPI register
-logic[10:0] y_zoom_crop_end;    // Todo: Make SPI register
-logic[10:0] x_resolution;       // Todo: Make SPI register
-logic[10:0] y_resolution;       // Todo: Make SPI register
-
-always_comb x_resolution = x_zoom_crop_end - x_zoom_crop_start; // Todo: Make SPI register
-always_comb y_resolution = y_zoom_crop_end - y_zoom_crop_start; // Todo: Make SPI register
-
+logic [10:0] resolution = 512; // TODO make this an SPI register
 logic [2:0] compression_factor;
 logic power_save_enable;
 logic gamma_bypass;
@@ -103,15 +90,12 @@ spi_registers spi_registers (
     .opcode_valid_in(opcode_valid_in),
     .operand_in(operand_in),
     .rd_operand_count_in(rd_operand_count_in),
-    //.wr_operand_count_in(wr_operand_count),
     .operand_read(operand_read),
     .operand_valid_in(operand_valid_in),
     .response_out(response_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-    // .x_resolution_out(x_resolution),
-    // .y_resolution_out(y_resolution),
-    // .x_pan_out(x_pan),
+	// TODO .resolution_out(resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
     .gamma_bypass_out(gamma_bypass),
@@ -239,62 +223,6 @@ image_gen image_gen (
 );
 `endif // TESTBENCH
 
-logic [9:0] panned_data;
-logic panned_line_valid;
-logic panned_frame_valid;
-
-logic[10:0] x_pan_crop_start;   // Todo: Make SPI register
-logic[10:0] x_pan_crop_end;     // Todo: Make SPI register
-logic[10:0] y_pan_crop_start;   // Todo: Make SPI register
-logic[10:0] y_pan_crop_end;     // Todo: Make SPI register
-
-`ifdef COCOTB_SIM
-`ifndef IMAGE_X_SIZE
-`define IMAGE_X_SIZE 200
-`endif
-`ifndef IMAGE_Y_SIZE
-`define IMAGE_Y_SIZE 200
-`endif
-always_comb x_pan_crop_start    = 1;
-always_comb x_pan_crop_end      = x_pan_crop_start + `IMAGE_X_SIZE + 2;
-always_comb y_pan_crop_start    = 1;
-always_comb y_pan_crop_end      = y_pan_crop_start + `IMAGE_Y_SIZE + 2;
-`else
-`ifdef TESTBENCH
-always_comb x_pan_crop_start    = 10;
-always_comb x_pan_crop_end      = 25;
-always_comb y_pan_crop_start    = 12;
-always_comb y_pan_crop_end      = 24;
-`else
-always_comb x_pan_crop_start    = 284;
-always_comb x_pan_crop_end      = 1004;
-always_comb y_pan_crop_start    = 4;
-always_comb y_pan_crop_end      = 724;
-`endif
-`endif
-
-crop pan_crop (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
-
-    .red_data_in(byte_to_pixel_data),
-    .green_data_in('0),
-    .blue_data_in('0),
-    .line_valid_in(byte_to_pixel_line_valid),
-    .frame_valid_in(byte_to_pixel_frame_valid),
-
-    .x_crop_start(x_pan_crop_start),
-    .x_crop_end(x_pan_crop_end),
-    .y_crop_start(y_pan_crop_start),
-    .y_crop_end(y_pan_crop_end),
-
-    .red_data_out(panned_data),
-    .green_data_out( ),
-    .blue_data_out( ),
-    .line_valid_out(panned_line_valid),
-    .frame_valid_out(panned_frame_valid)
-);
-
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
 logic [9:0] debayered_blue_data;
@@ -305,12 +233,12 @@ debayer debayer (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .x_crop_start_lsb(x_pan_crop_start[0]),
-    .y_crop_start_lsb(y_pan_crop_start[0]),
+    .x_crop_start_lsb(0),
+    .y_crop_start_lsb(0),
 
-    .bayer_data_in(panned_data),
-    .line_valid_in(panned_line_valid),
-    .frame_valid_in(panned_frame_valid),
+    .bayer_data_in(byte_to_pixel_data),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
 
     .red_data_out(debayered_red_data),
     .green_data_out(debayered_green_data),
@@ -371,25 +299,10 @@ logic [9:0] zoomed_blue_data;
 logic zoomed_line_valid;
 logic zoomed_frame_valid;
 
-`ifdef COCOTB_SIM
-// after debayer
-always_comb x_zoom_crop_start    = 0;
-always_comb x_zoom_crop_end      = x_pan_crop_end - x_pan_crop_start - 2;
-always_comb y_zoom_crop_start    = 0;
-always_comb y_zoom_crop_end      = y_pan_crop_end - y_pan_crop_start - 2;
-`else
-`ifdef TESTBENCH
-always_comb x_zoom_crop_start    = 0;
-always_comb x_zoom_crop_end      = 15;
-always_comb y_zoom_crop_start    = 0;
-always_comb y_zoom_crop_end      = 12;
-`else
-always_comb x_zoom_crop_start    = 260;
-always_comb x_zoom_crop_end      = 460;
-always_comb y_zoom_crop_start    = 260;
-always_comb y_zoom_crop_end      = 460;
-`endif
-`endif
+logic [10:0] resolution_crop_start;
+logic [10:0] resolution_crop_end;
+always_comb resolution_crop_start = (720 >> 1) - (resolution >> 1);
+always_comb resolution_crop_end = (720 >> 1) + (resolution >> 1);
 
 crop zoom_crop (
     .clock_in(pixel_clock_in),
@@ -401,10 +314,10 @@ crop zoom_crop (
     .line_valid_in(debayered_line_valid),
     .frame_valid_in(debayered_frame_valid),
 
-    .x_crop_start(x_zoom_crop_start),
-    .x_crop_end(x_zoom_crop_end),
-    .y_crop_start(y_zoom_crop_start),
-    .y_crop_end(y_zoom_crop_end),
+    .x_crop_start(resolution_crop_start),
+    .x_crop_end(resolution_crop_end),
+    .y_crop_start(resolution_crop_start),
+    .y_crop_end(resolution_crop_end),
 
     .red_data_out(zoomed_red_data),
     .green_data_out(zoomed_green_data),
@@ -436,7 +349,6 @@ gamma_correction gamma_correction (
 );
 
 logic [31:0] final_image_data;          // image data JPEG -> Image buffer
-//logic [15:0] final_image_address;       // image address JPEG -> Image buffer
 logic final_image_data_valid;           // qualifier
 logic final_image_ready;                // Ready bit, high when compression finished
 
