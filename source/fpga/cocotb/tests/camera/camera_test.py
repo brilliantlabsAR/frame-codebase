@@ -90,15 +90,19 @@ class JpegTester():
 
     async def initialize(self):
         """ Initialize Jpeg core"""
-        # 1. Set compression factor and kick off capture flag
+        # 1. Set compression factor
         qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([50, 100, 10, 25,   20, 30, 40, 80])}[self.qf]
         await self.spi.spi_write(0x26, qf_select)
-        await self.spi.spi_command(0x20)
+
         if os.environ.get('GAMMA_BYPASS', '') == '1':
             await self.spi.spi_write(0x32, 1)
 
-        size = int(os.environ.get("IMAGE_X_SIZE"))
-        await self.spi.spi_write(0x23, [size >> 8, size & 0xFF])
+        size = int(os.environ.get("IMAGE_X_SIZE", 512))
+        if not size == 512:
+            await self.spi.spi_write(0x23, [size >> 8, size & 0xFF])
+
+        # kick off capture flag
+        await self.spi.spi_command(0x20)
 
     async def send_bayer(self):
 	    # send RGB

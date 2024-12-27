@@ -44,7 +44,7 @@ module camera (
     input logic byte_to_pixel_frame_valid,
     input logic byte_to_pixel_line_valid,
     input logic [9:0] byte_to_pixel_data,
-`endif
+`endif // NO_MIPI_IP_SIM
 
     // SPI interface
     input logic [7:0] opcode_in,
@@ -92,7 +92,7 @@ spi_registers spi_registers (
     .response_out(response_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-	.resolution_out(resolution),
+    .resolution_out(resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
     .gamma_bypass_out(gamma_bypass),
@@ -212,12 +212,12 @@ logic cropped_frame_valid;
 logic [9:0] resolution_crop_start;
 logic [9:0] resolution_crop_end;
 
-`ifndef IMAGE_X_SIZE
-`define IMAGE_X_SIZE 720
+`ifndef SENSOR_X_SIZE
+`define SENSOR_X_SIZE 722
 `endif
 
-always_comb resolution_crop_start = (`IMAGE_X_SIZE >> 1) - (resolution >> 1);
-always_comb resolution_crop_end = (`IMAGE_X_SIZE >> 1) + (resolution >> 1) + 2;
+always_comb resolution_crop_start = (`SENSOR_X_SIZE - resolution - 2) >> 1;
+always_comb resolution_crop_end = resolution_crop_start + resolution + 2;
 
 crop crop (
     .clock_in(pixel_clock_in),
