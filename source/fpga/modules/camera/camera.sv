@@ -64,7 +64,7 @@ module camera (
 logic start_capture_spi_clock_domain;
 logic start_capture_pixel_clock_domain;
 
-logic [10:0] resolution = 512; // TODO make this an SPI register
+logic [10:0] resolution = 720; // TODO make this an SPI register
 logic [2:0] compression_factor;
 logic power_save_enable;
 logic gamma_bypass;
