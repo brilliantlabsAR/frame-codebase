@@ -20,10 +20,6 @@
 `include "modules/camera/spi_registers.sv"
 `endif
 
-`ifdef TESTBENCH
-`include "modules/camera/testbenches/image_gen.sv"
-`endif
-
 module camera (
     input logic global_reset_n_in,
     
@@ -45,11 +41,10 @@ module camera (
     inout wire mipi_data_p_in,
     inout wire mipi_data_n_in,
 `else
-    // for NO_MIPI_IP_SIM
     input logic byte_to_pixel_frame_valid,
     input logic byte_to_pixel_line_valid,
     input logic [9:0] byte_to_pixel_data,
-`endif //NO_MIPI_IP_SIM
+`endif
 
     // SPI interface
     input logic [7:0] opcode_in,
@@ -58,13 +53,14 @@ module camera (
     input logic operand_read,
     input logic operand_valid_in,
     input logic [31:0] rd_operand_count_in,
+    input logic [31:0] wr_operand_count_in,
     output logic [7:0] response_out
 );
 
 logic start_capture_spi_clock_domain;
 logic start_capture_pixel_clock_domain;
 
-logic [10:0] resolution = 720; // TODO make this an SPI register
+logic [9:0] resolution;
 logic [2:0] compression_factor;
 logic power_save_enable;
 logic gamma_bypass;
@@ -90,12 +86,13 @@ spi_registers spi_registers (
     .opcode_valid_in(opcode_valid_in),
     .operand_in(operand_in),
     .rd_operand_count_in(rd_operand_count_in),
+    .wr_operand_count_in(wr_operand_count_in),
     .operand_read(operand_read),
     .operand_valid_in(operand_valid_in),
     .response_out(response_out),
 
     .start_capture_out(start_capture_spi_clock_domain),
-	// TODO .resolution_out(resolution),
+	.resolution_out(resolution),
     .compression_factor_out(compression_factor),
     .power_save_enable_out(power_save_enable),
     .gamma_bypass_out(gamma_bypass),
@@ -128,10 +125,7 @@ psync1 psync1_operand_valid_in (
 logic [9:0] byte_to_pixel_data;
 logic byte_to_pixel_line_valid;
 logic byte_to_pixel_frame_valid;
-`endif //NO_MIPI_IP_SIM
 
-`ifndef NO_MIPI_IP_SIM
-`ifdef RADIANT
 logic mipi_byte_clock;
 logic mipi_byte_reset_n;
 
@@ -209,19 +203,39 @@ byte_to_pixel_ip byte_to_pixel_ip (
     .lv_o(byte_to_pixel_line_valid),
     .pd_o(byte_to_pixel_data)
 );
-`endif // RADIANT
-`endif //NO_MIPI_IP_SIM
+`endif // NO_MIPI_IP_SIM
 
-`ifdef TESTBENCH // TESTBENCH
-image_gen image_gen (
+logic [9:0] cropped_pixel_data;
+logic cropped_line_valid;
+logic cropped_frame_valid;
+
+logic [9:0] resolution_crop_start;
+logic [9:0] resolution_crop_end;
+
+`ifndef IMAGE_X_SIZE
+`define IMAGE_X_SIZE 720
+`endif
+
+always_comb resolution_crop_start = (`IMAGE_X_SIZE >> 1) - (resolution >> 1);
+always_comb resolution_crop_end = (`IMAGE_X_SIZE >> 1) + (resolution >> 1) + 2;
+
+crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
 
-    .bayer_data_out(byte_to_pixel_data),
-    .line_valid_out(byte_to_pixel_line_valid),
-    .frame_valid_out(byte_to_pixel_frame_valid)
+    .pixel_data_in(byte_to_pixel_data),
+    .line_valid_in(byte_to_pixel_line_valid),
+    .frame_valid_in(byte_to_pixel_frame_valid),
+
+    .x_crop_start(resolution_crop_start),
+    .x_crop_end(resolution_crop_end),
+    .y_crop_start(resolution_crop_start),
+    .y_crop_end(resolution_crop_end),
+
+    .pixel_data_out(cropped_pixel_data),
+    .line_valid_out(cropped_line_valid),
+    .frame_valid_out(cropped_frame_valid)
 );
-`endif // TESTBENCH
 
 logic [9:0] debayered_red_data;
 logic [9:0] debayered_green_data;
@@ -233,12 +247,12 @@ debayer debayer (
     .pixel_clock_in(pixel_clock_in),
     .pixel_reset_n_in(pixel_reset_n_in),
 
-    .x_crop_start_lsb(0),
-    .y_crop_start_lsb(0),
+    .x_crop_start_lsb(resolution_crop_start[0]),
+    .y_crop_start_lsb(resolution_crop_start[0]),
 
-    .bayer_data_in(byte_to_pixel_data),
-    .line_valid_in(byte_to_pixel_line_valid),
-    .frame_valid_in(byte_to_pixel_frame_valid),
+    .bayer_data_in(cropped_pixel_data),
+    .line_valid_in(cropped_line_valid),
+    .frame_valid_in(cropped_frame_valid),
 
     .red_data_out(debayered_red_data),
     .green_data_out(debayered_green_data),
@@ -293,38 +307,6 @@ always @(posedge spi_clock_in) begin : metering_cdc
     average_metering_ready_spi_clock_domain <= average_metering_ready_metastable;
 end
 
-logic [9:0] zoomed_red_data;
-logic [9:0] zoomed_green_data;
-logic [9:0] zoomed_blue_data;
-logic zoomed_line_valid;
-logic zoomed_frame_valid;
-
-logic [10:0] resolution_crop_start;
-logic [10:0] resolution_crop_end;
-always_comb resolution_crop_start = (720 >> 1) - (resolution >> 1);
-always_comb resolution_crop_end = (720 >> 1) + (resolution >> 1);
-
-crop zoom_crop (
-    .clock_in(pixel_clock_in),
-    .reset_n_in(pixel_reset_n_in),
-
-    .red_data_in(debayered_red_data),
-    .green_data_in(debayered_green_data),
-    .blue_data_in(debayered_blue_data),
-    .line_valid_in(debayered_line_valid),
-    .frame_valid_in(debayered_frame_valid),
-
-    .x_crop_start(resolution_crop_start),
-    .x_crop_end(resolution_crop_end),
-    .y_crop_start(resolution_crop_start),
-    .y_crop_end(resolution_crop_end),
-
-    .red_data_out(zoomed_red_data),
-    .green_data_out(zoomed_green_data),
-    .blue_data_out(zoomed_blue_data),
-    .line_valid_out(zoomed_line_valid),
-    .frame_valid_out(zoomed_frame_valid)
-);
 
 logic [7:0] gamma_corrected_red_data;
 logic [7:0] gamma_corrected_green_data;
@@ -335,11 +317,11 @@ logic gamma_corrected_frame_valid;
 gamma_correction gamma_correction (
     .clock_in(pixel_clock_in),
 
-    .red_data_in(zoomed_red_data[9:2]),
-    .green_data_in(zoomed_green_data[9:2]),
-    .blue_data_in(zoomed_blue_data[9:2]),
-    .line_valid_in(zoomed_line_valid),
-    .frame_valid_in(zoomed_frame_valid),
+    .red_data_in(debayered_red_data[9:2]),
+    .green_data_in(debayered_green_data[9:2]),
+    .blue_data_in(debayered_blue_data[9:2]),
+    .line_valid_in(debayered_line_valid),
+    .frame_valid_in(debayered_frame_valid),
 
     .red_data_out(gamma_corrected_red_data),
     .green_data_out(gamma_corrected_green_data),
@@ -362,11 +344,11 @@ jpeg_encoder jpeg_encoder (
     .jpeg_slow_clock_in(jpeg_slow_clock_in),
     .jpeg_slow_reset_n_in(jpeg_slow_reset_n_in),
 
-    .red_data_in(gamma_bypass ? zoomed_red_data : {gamma_corrected_red_data, 2'b0}),
-    .green_data_in(gamma_bypass ? zoomed_green_data : {gamma_corrected_green_data, 2'b0}),
-    .blue_data_in(gamma_bypass ? zoomed_blue_data : {gamma_corrected_blue_data, 2'b0}),
-    .line_valid_in(gamma_bypass ? zoomed_line_valid : gamma_corrected_line_valid),
-    .frame_valid_in(gamma_bypass ? zoomed_frame_valid : gamma_corrected_frame_valid),
+    .red_data_in(gamma_bypass ? debayered_red_data : {gamma_corrected_red_data, 2'b0}),
+    .green_data_in(gamma_bypass ? debayered_green_data : {gamma_corrected_green_data, 2'b0}),
+    .blue_data_in(gamma_bypass ? debayered_blue_data : {gamma_corrected_blue_data, 2'b0}),
+    .line_valid_in(gamma_bypass ? debayered_line_valid : gamma_corrected_line_valid),
+    .frame_valid_in(gamma_bypass ? debayered_frame_valid : gamma_corrected_frame_valid),
 
     .start_capture_in(start_capture_pixel_clock_domain),
     .x_size_in(resolution),

@@ -97,6 +97,9 @@ class JpegTester():
         if os.environ.get('GAMMA_BYPASS', '') == '1':
             await self.spi.spi_write(0x32, 1)
 
+        size = int(os.environ.get("IMAGE_X_SIZE"))
+        await self.spi.spi_write(0x23, [size >> 8, size & 0xFF])
+
     async def send_bayer(self):
 	    # send RGB
         await RisingEdge(self.dut.camera_pixel_clock)

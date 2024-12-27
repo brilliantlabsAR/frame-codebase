@@ -21,10 +21,11 @@
     input logic operand_read,
     input logic operand_valid_in,
     input logic [31:0] rd_operand_count_in,
+    input logic [31:0] wr_operand_count_in,
     output logic [7:0] response_out,
 
     output logic start_capture_out,
-    // TODO position signals
+    output logic [9:0] resolution_out,
     output logic [2:0] compression_factor_out,
     output logic power_save_enable_out,
     output logic gamma_bypass_out,
@@ -47,8 +48,7 @@
 parameter START_CAPTURE     = 'h20; // WO + reset
 parameter BYTES_REMAINING   = 'h21; // RO
 parameter IMAGE_DATA        = 'h22; // RO + increment
-parameter ZOOM              = 'h23; // WO
-parameter PAN               = 'h24; // WO
+parameter RESOLUTION        = 'h23; // WO
 parameter METERING          = 'h25; // RO
 parameter QUALITY_FACTOR    = 'h26; // WO
 parameter POWER_SAVE_ENABLE = 'h28; // WO
@@ -114,7 +114,7 @@ else if (operand_valid_in & opcode_in==POWER_SAVE_ENABLE)
 always_ff @(negedge clock_in) begin
     
     if (reset_n_in == 0) begin
-        // TODO position signals
+        resolution_out <= 512;
         compression_factor_out <= 0;
         image_address_valid <= 0;
         gamma_bypass_out <= 0;
@@ -143,14 +143,12 @@ always_ff @(negedge clock_in) begin
 
             case (opcode_in)
 
-                // Zoom
-                ZOOM: begin
-                    // zoom_factor <= operand_in; // TODO
-                end
-
-                // Pan
-                PAN: begin
-                    // pan_level <= operand_in; // TODO
+                // Resolution
+                RESOLUTION: begin
+                    case (wr_operand_count_in)
+                        0: resolution_out <= {operand_in[1:0], 8'b0};
+                        default: resolution_out <= {resolution_out[9:8], operand_in};
+                    endcase
                 end
 
                 // Compression factor

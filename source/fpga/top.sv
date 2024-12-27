@@ -325,7 +325,7 @@ camera camera (
     .opcode_valid_in(opcode_valid),
     .operand_in(operand),
     .rd_operand_count_in(rd_operand_count),
-    //.wr_operand_count_in(wr_operand_count),
+    .wr_operand_count_in(wr_operand_count),
     .operand_read(operand_rd_en),
     .operand_valid_in(operand_wr_en),
 
