@@ -219,6 +219,9 @@ logic [9:0] resolution_crop_end;
 always_comb resolution_crop_start = (`SENSOR_X_SIZE - resolution - 2) >> 1;
 always_comb resolution_crop_end = resolution_crop_start + resolution + 2;
 
+always @(negedge spi_clock_in) if (start_capture_spi_clock_domain) 
+    assert (resolution <= `SENSOR_X_SIZE - 2) else $fatal(1, "Incorrect sensor vs. image dimensions!");
+
 crop crop (
     .clock_in(pixel_clock_in),
     .reset_n_in(pixel_reset_n_in),
