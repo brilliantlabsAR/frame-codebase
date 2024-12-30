@@ -671,6 +671,14 @@ async def main():
     -- frame.camera.set_gain(40)
     -- frame.camera.set_shutter(2500)
 
+    -- pan
+    -- frame.camera.write_register(0x3810, 0x01) -- Horizontal ISP offset [15:8]
+    -- frame.camera.write_register(0x3811, 0x1C) -- Horizontal ISP offset [7:0]
+
+    -- 720 mode
+    -- frame.fpga_write(0x23, '\\x02\\xD0')
+    -- frame.fpga_write(0x26, '\\x04')
+
     while true do
         if state == 'CAPTURE' then
             frame.fpga_write(0x20, 1)
