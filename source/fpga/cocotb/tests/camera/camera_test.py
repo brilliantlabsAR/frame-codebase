@@ -91,7 +91,7 @@ class JpegTester():
     async def initialize(self):
         """ Initialize Jpeg core"""
         # 1. Set compression factor
-        qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([50, 100, 10, 25,   20, 30, 40, 80])}[self.qf]
+        qf_select = {int(os.environ.get(f'QF{i}', q)): i for i, q in enumerate([15, 20, 25, 30, 35, 40, 50, 60])}[self.qf]
         await self.spi.spi_write(0x26, qf_select)
 
         if os.environ.get('GAMMA_BYPASS', '') == '1':

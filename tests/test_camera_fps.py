@@ -642,7 +642,7 @@ def receive_data(data):
     global fps
 
     if len(data) == 1:
-        with open("temp_focus_image.jpg", "wb") as f:
+        with open("test_camera_fps_image.jpg", "wb") as f:
             f.write(header + image_buffer)
             image_buffer = b""
             fps = 1 / (time.time() - last_fps_time)
