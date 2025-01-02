@@ -98,8 +98,7 @@ class JpegTester():
             await self.spi.spi_write(0x32, 1)
 
         size = int(os.environ.get("IMAGE_X_SIZE", 512))
-        if not size == 512:
-            await self.spi.spi_write(0x23, [size >> 8, size & 0xFF])
+        await self.spi.spi_write(0x23, [size >> 8, size & 0xFF])
 
         # kick off capture flag
         await self.spi.spi_command(0x20)
