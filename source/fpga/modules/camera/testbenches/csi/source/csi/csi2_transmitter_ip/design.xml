@@ -3,11 +3,11 @@
     <ipxact:vendor>latticesemi.com</ipxact:vendor>
     <ipxact:library>ip</ipxact:library>
     <ipxact:name>csi2_transmitter_ip</ipxact:name>
-    <ipxact:version>1.9.0</ipxact:version>
+    <ipxact:version>1.9.2</ipxact:version>
     <ipxact:componentInstances>
         <ipxact:componentInstance>
             <ipxact:instanceName>lscc_dphy_tx_inst</ipxact:instanceName>
-            <ipxact:componentRef library="ip" name="dphy_tx" vendor="latticesemi.com" version="1.9.0">
+            <ipxact:componentRef library="ip" name="dphy_tx" vendor="latticesemi.com" version="1.9.2">
                 <ipxact:configurableElementValues>
                     <ipxact:configurableElementValue referenceId="FAMILY">LIFCL</ipxact:configurableElementValue>
                     <ipxact:configurableElementValue referenceId="DEVICE">LIFCL-17</ipxact:configurableElementValue>
