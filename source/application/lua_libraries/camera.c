@@ -32,6 +32,7 @@
 #include "lua.h"
 #include "nrfx_systick.h"
 #include "spi.h"
+#include "nrfx_log.h"
 
 static bool camera_is_asleep = false;
 
@@ -57,9 +58,16 @@ static struct camera_auto_last_values
     .blue_gain = 2.2f,
 };
 
-static lua_Integer camera_quality_factor = 50;
-static size_t jpeg_header_bytes_sent_out = 0;
-static size_t jpeg_footer_bytes_sent_out = 0;
+static struct camera_capture_settings
+{
+    uint16_t resolution;
+    uint8_t quality_factor;
+} capture_settings;
+
+static size_t header_bytes_sent_out;
+static size_t data_bytes_remaining;
+static size_t data_bytes_sent_out;
+static size_t footer_bytes_sent_out;
 
 static int lua_camera_capture(lua_State *L)
 {
@@ -68,40 +76,147 @@ static int lua_camera_capture(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    lua_Integer quality_factor = 50;
+    uint16_t resolution = 512;
 
-    if (lua_getfield(L, 1, "quality_factor") != LUA_TNIL)
+    if (lua_getfield(L, 1, "resolution") != LUA_TNIL)
     {
-        quality_factor = luaL_checkinteger(L, -1);
+        resolution = luaL_checkinteger(L, -1);
 
-        switch (quality_factor)
+        if (resolution < 100 || resolution > 720 || resolution % 2 != 0)
         {
-        case 100:
-            spi_write(FPGA, 0x26, (uint8_t *)"\x01", 1);
-            break;
-
-        case 50:
-            spi_write(FPGA, 0x26, (uint8_t *)"\x00", 1);
-            break;
-
-        case 25:
-            spi_write(FPGA, 0x26, (uint8_t *)"\x03", 1);
-            break;
-
-        case 10:
-            spi_write(FPGA, 0x26, (uint8_t *)"\x02", 1);
-            break;
-
-        default:
-            luaL_error(L, "quality_factor must be either 100, 50, 25 or 10");
-            break;
+            luaL_error(L, "resolution value must be a multiple of 2 between 100 and 720");
         }
     }
 
+    uint8_t quality_level = 6;
+
+    if (lua_getfield(L, 1, "quality") != LUA_TNIL)
+    {
+        const char *string = luaL_checkstring(L, -1);
+
+        if (strcmp(string, "VERY_HIGH") == 0)
+        {
+            if (resolution <= 256)
+            {
+                quality_level = 7;
+            }
+            else if (resolution <= 512)
+            {
+                quality_level = 6;
+            }
+            else
+            {
+                quality_level = 5;
+            }
+        }
+        else if (strcmp(string, "HIGH") == 0)
+        {
+            if (resolution <= 256)
+            {
+                quality_level = 6;
+            }
+            else if (resolution <= 512)
+            {
+                quality_level = 5;
+            }
+            else
+            {
+                quality_level = 4;
+            }
+        }
+        else if (strcmp(string, "MEDIUM") == 0)
+        {
+            if (resolution <= 256)
+            {
+                quality_level = 5;
+            }
+            else if (resolution <= 512)
+            {
+                quality_level = 4;
+            }
+            else
+            {
+                quality_level = 3;
+            }
+        }
+        else if (strcmp(string, "LOW") == 0)
+        {
+            if (resolution <= 256)
+            {
+                quality_level = 4;
+            }
+            else if (resolution <= 512)
+            {
+                quality_level = 3;
+            }
+            else
+            {
+                quality_level = 2;
+            }
+        }
+        else if (strcmp(string, "VERY_LOW") == 0)
+        {
+            if (resolution <= 256)
+            {
+                quality_level = 3;
+            }
+            else if (resolution <= 512)
+            {
+                quality_level = 2;
+            }
+            else
+            {
+                quality_level = 1;
+            }
+        }
+        else
+        {
+            luaL_error(L, "quality must be either VERY_HIGH, HIGH, MEDIUM, LOW or VERY_LOW");
+        }
+    }
+
+    header_bytes_sent_out = 0;
+    data_bytes_remaining = 0;
+    data_bytes_sent_out = 0;
+    footer_bytes_sent_out = 0;
+
+    capture_settings.resolution = resolution;
+    uint8_t resolution_bytes[2] = {(uint8_t)(resolution >> 8), (uint8_t)(resolution & 0xFF)};
+    spi_write(FPGA, 0x23, resolution_bytes, sizeof(resolution_bytes));
+
+    // These should match the indexed tables in quant_tables.sv
+    switch (quality_level)
+    {
+    case 7:
+        capture_settings.quality_factor = 60;
+        break;
+    case 6:
+        capture_settings.quality_factor = 50;
+        break;
+    case 5:
+        capture_settings.quality_factor = 40;
+        break;
+    case 4:
+        capture_settings.quality_factor = 35;
+        break;
+    case 3:
+        capture_settings.quality_factor = 30;
+        break;
+    case 2:
+        capture_settings.quality_factor = 25;
+        break;
+    case 1:
+        capture_settings.quality_factor = 20;
+        break;
+    case 0:
+        capture_settings.quality_factor = 15;
+        break;
+    }
+
+    spi_write(FPGA, 0x26, &quality_level, sizeof(quality_level));
+
     spi_write(FPGA, 0x20, NULL, 0);
-    camera_quality_factor = quality_factor;
-    jpeg_header_bytes_sent_out = 0;
-    jpeg_footer_bytes_sent_out = 0;
+
     return 0;
 }
 
@@ -112,133 +227,135 @@ static int lua_camera_image_ready(lua_State *L)
         luaL_error(L, "camera is asleep");
     }
 
-    uint8_t data[1] = {0};
+    uint8_t data[2];
 
-    spi_read(FPGA, 0x27, (uint8_t *)data, sizeof(data));
+    spi_read(FPGA, 0x30, (uint8_t *)data, sizeof(data));
 
-    lua_pushboolean(L, data[0] == 1);
+    if (data[0] != 0)
+    {
+        spi_read(FPGA, 0x31, (uint8_t *)data, sizeof(data));
+
+        data_bytes_remaining = (size_t)data[1] << 8 | (size_t)data[0];
+
+        lua_pushboolean(L, true);
+        return 1;
+    }
+
+    lua_pushboolean(L, false);
     return 1;
 }
 
-static uint16_t get_bytes_available(void)
+static int scale_mult(int q, float scale)
 {
-    uint8_t data[2] = {0, 0};
+    float t = (scale * q + 50) / 100; // Round
+    if (t < 1)                        // Prevent divide by 0 error
+        t = 1;
+    else if (t > 255) // Prevent overflow
+        t = 255;
+    return (int)t;
+}
 
-    spi_read(FPGA, 0x21, (uint8_t *)data, sizeof(data));
+static void generate_jpeg_header(int resolution, int qf, uint8_t *header_data)
+{
+    uint8_t header[] = {255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 2, 0, 0, 100, 0, 100, 0, 0, 255, 219, 0, 67, 0, 16, 11, 12, 14, 12, 10, 16, 14, 13, 14, 18, 17, 16, 19, 24, 40, 26, 24, 22, 22, 24, 49, 35, 37, 29, 40, 58, 51, 61, 60, 57, 51, 56, 55, 64, 72, 92, 78, 64, 68, 87, 69, 55, 56, 80, 109, 81, 87, 95, 98, 103, 104, 103, 62, 77, 113, 121, 112, 100, 120, 92, 101, 103, 99, 255, 219, 0, 67, 1, 17, 18, 18, 24, 21, 24, 47, 26, 26, 47, 99, 66, 56, 66, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 255, 192, 0, 17, 8, 0, 0, 0, 0, 3, 1, 34, 0, 2, 17, 1, 3, 17, 1, 255, 196, 0, 31, 0, 0, 1, 5, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 255, 196, 0, 31, 1, 0, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 255, 196, 0, 181, 16, 0, 2, 1, 3, 3, 2, 4, 3, 5, 5, 4, 4, 0, 0, 1, 125, 1, 2, 3, 0, 4, 17, 5, 18, 33, 49, 65, 6, 19, 81, 97, 7, 34, 113, 20, 50, 129, 145, 161, 8, 35, 66, 177, 193, 21, 82, 209, 240, 36, 51, 98, 114, 130, 9, 10, 22, 23, 24, 25, 26, 37, 38, 39, 40, 41, 42, 52, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, 131, 132, 133, 134, 135, 136, 137, 138, 146, 147, 148, 149, 150, 151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178, 179, 180, 181, 182, 183, 184, 185, 186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213, 214, 215, 216, 217, 218, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 255, 196, 0, 181, 17, 0, 2, 1, 2, 4, 4, 3, 4, 7, 5, 4, 4, 0, 1, 2, 119, 0, 1, 2, 3, 17, 4, 5, 33, 49, 6, 18, 65, 81, 7, 97, 113, 19, 34, 50, 129, 8, 20, 66, 145, 161, 177, 193, 9, 35, 51, 82, 240, 21, 98, 114, 209, 10, 22, 36, 52, 225, 37, 241, 23, 24, 25, 26, 38, 39, 40, 41, 42, 53, 54, 55, 56, 57, 58, 67, 68, 69, 70, 71, 72, 73, 74, 83, 84, 85, 86, 87, 88, 89, 90, 99, 100, 101, 102, 103, 104, 105, 106, 115, 116, 117, 118, 119, 120, 121, 122, 130, 131, 132, 133, 134, 135, 136, 137, 138, 146, 147, 148, 149, 150, 151, 152, 153, 154, 162, 163, 164, 165, 166, 167, 168, 169, 170, 178, 179, 180, 181, 182, 183, 184, 185, 186, 194, 195, 196, 197, 198, 199, 200, 201, 202, 210, 211, 212, 213, 214, 215, 216, 217, 218, 226, 227, 228, 229, 230, 231, 232, 233, 234, 242, 243, 244, 245, 246, 247, 248, 249, 250, 255, 218, 0, 12, 3, 1, 0, 2, 17, 3, 17, 0, 63, 0};
 
-    uint16_t bytes_available = (uint16_t)data[0] << 8 |
-                               (uint16_t)data[1];
+    float scale;
 
-    return bytes_available;
+    if (qf < 50)
+        scale = 5000 / qf;
+    else
+        scale = 200 - 2 * qf;
+
+    for (int i = 25; i <= 88; i++)
+        header[i] = scale_mult(header[i], scale);
+    for (int i = 93; i <= 156; i++)
+        header[i] = scale_mult(header[i], scale);
+
+    header[163] = (resolution >> 8) & 0xff;
+    header[164] = resolution & 0xff;
+    header[165] = (resolution >> 8) & 0xff;
+    header[166] = resolution & 0xff;
+
+    memcpy(header_data, header, sizeof(header));
 }
 
 static int lua_camera_read(lua_State *L)
 {
     lua_Integer bytes_requested = luaL_checkinteger(L, 1);
+
     if (bytes_requested <= 0)
     {
         luaL_error(L, "bytes must be greater than 0");
     }
 
-    size_t bytes_remaining = bytes_requested;
+    size_t remaining = bytes_requested;
 
     uint8_t *payload = malloc(bytes_requested);
+
     if (payload == NULL)
     {
         luaL_error(L, "bytes requested is too large");
     }
 
-    // TODO this ends up placing the arrays in RAM. Make it static somehow
-    uint8_t *jpeg_header = NULL;
-    size_t jpeg_header_length = 0;
-
-    switch (camera_quality_factor)
-    {
-    case 100:
-        jpeg_header = (uint8_t *)jpeg_header_qf_100;
-        jpeg_header_length = sizeof(jpeg_header_qf_100);
-        break;
-
-    case 50:
-        jpeg_header = (uint8_t *)jpeg_header_qf_50;
-        jpeg_header_length = sizeof(jpeg_header_qf_50);
-        break;
-
-    case 25:
-        jpeg_header = (uint8_t *)jpeg_header_qf_25;
-        jpeg_header_length = sizeof(jpeg_header_qf_25);
-        break;
-
-    case 10:
-        jpeg_header = (uint8_t *)jpeg_header_qf_10;
-        jpeg_header_length = sizeof(jpeg_header_qf_10);
-        break;
-
-    default:
-        error_with_message("Invalid camera_quality_factor");
-        break;
-    }
+    uint8_t *header = malloc(623);
+    generate_jpeg_header(capture_settings.resolution, capture_settings.quality_factor, header);
 
     // Append JPEG header data
-    if (jpeg_header_bytes_sent_out < jpeg_header_length)
+    if (header_bytes_sent_out < sizeof(header))
     {
         size_t length =
-            jpeg_header_length - jpeg_header_bytes_sent_out < bytes_requested
-                ? jpeg_header_length - jpeg_header_bytes_sent_out
+            sizeof(header) - header_bytes_sent_out < bytes_requested
+                ? sizeof(header) - header_bytes_sent_out
                 : bytes_requested;
 
-        memcpy(payload, jpeg_header + jpeg_header_bytes_sent_out, length);
+        memcpy(payload, header + header_bytes_sent_out, length);
 
-        jpeg_header_bytes_sent_out += length;
-        bytes_remaining -= length;
+        header_bytes_sent_out += length;
+        remaining -= length;
     }
 
+    // Append image data
     else
     {
-        uint16_t image_bytes_available = get_bytes_available();
-
-        // Append image data
-        if (image_bytes_available > 0)
+        if (data_bytes_remaining > 0)
         {
-            if (bytes_remaining > 0)
+            if (remaining > 0)
             {
-
-                // append image data
-                size_t length = bytes_remaining < image_bytes_available
-                                    ? bytes_remaining
-                                    : image_bytes_available;
+                size_t length = remaining < data_bytes_remaining
+                                    ? remaining
+                                    : data_bytes_remaining;
 
                 spi_read(FPGA,
                          0x22,
-                         payload + bytes_requested - bytes_remaining,
+                         payload + bytes_requested - remaining,
                          length);
 
-                bytes_remaining -= length;
+                remaining -= length;
+                data_bytes_remaining -= length;
             }
         }
 
+        // Append footer
         else
         {
-            // append footer 0xFF
-            if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 0)
+            if (remaining > 0 && footer_bytes_sent_out == 0)
             {
-                payload[bytes_requested - bytes_remaining] = 0xFF;
-                jpeg_footer_bytes_sent_out++;
-                bytes_remaining--;
+                payload[bytes_requested - remaining] = 0xFF;
+                footer_bytes_sent_out++;
+                remaining--;
             }
 
-            // append footer 0xD9
-            if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 1)
+            if (remaining > 0 && footer_bytes_sent_out == 1)
             {
-                payload[bytes_requested - bytes_remaining] = 0xD9;
-                jpeg_footer_bytes_sent_out++;
-                bytes_remaining--;
+                payload[bytes_requested - remaining] = 0xD9;
+                footer_bytes_sent_out++;
+                remaining--;
             }
         }
     }
 
-    // Return nill if nothing was written to payload
-    if (bytes_remaining == bytes_requested)
+    // Return nil if nothing was written to payload
+    if (remaining == bytes_requested)
     {
         lua_pushnil(L);
     }
@@ -246,9 +363,10 @@ static int lua_camera_read(lua_State *L)
     // Otherwise return payload
     else
     {
-        lua_pushlstring(L, (char *)payload, bytes_requested - bytes_remaining);
+        lua_pushlstring(L, (char *)payload, bytes_requested - remaining);
     }
 
+    free(header);
     free(payload);
     return 1;
 }
@@ -261,7 +379,7 @@ static int lua_camera_read_raw(lua_State *L)
         luaL_error(L, "bytes must be greater than 0");
     }
 
-    size_t bytes_remaining = bytes_requested;
+    size_t remaining = bytes_requested;
 
     uint8_t *payload = malloc(bytes_requested);
     if (payload == NULL)
@@ -269,49 +387,45 @@ static int lua_camera_read_raw(lua_State *L)
         luaL_error(L, "bytes requested is too large");
     }
 
-    uint16_t image_bytes_available = get_bytes_available();
-
     // Append image data
-    if (image_bytes_available > 0)
+    if (data_bytes_remaining > 0)
     {
-        if (bytes_remaining > 0)
+        if (remaining > 0)
         {
-
-            // append image data
-            size_t length = bytes_remaining < image_bytes_available
-                                ? bytes_remaining
-                                : image_bytes_available;
+            size_t length = remaining < data_bytes_remaining
+                                ? remaining
+                                : data_bytes_remaining;
 
             spi_read(FPGA,
                      0x22,
-                     payload + bytes_requested - bytes_remaining,
+                     payload + bytes_requested - remaining,
                      length);
 
-            bytes_remaining -= length;
+            remaining -= length;
+            data_bytes_remaining -= length;
         }
     }
 
+    // Append footer
     else
     {
-        // append footer 0xFF
-        if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 0)
+        if (remaining > 0 && footer_bytes_sent_out == 0)
         {
-            payload[bytes_requested - bytes_remaining] = 0xFF;
-            jpeg_footer_bytes_sent_out++;
-            bytes_remaining--;
+            payload[bytes_requested - remaining] = 0xFF;
+            footer_bytes_sent_out++;
+            remaining--;
         }
 
-        // append footer 0xD9
-        if (bytes_remaining > 0 && jpeg_footer_bytes_sent_out == 1)
+        if (remaining > 0 && footer_bytes_sent_out == 1)
         {
-            payload[bytes_requested - bytes_remaining] = 0xD9;
-            jpeg_footer_bytes_sent_out++;
-            bytes_remaining--;
+            payload[bytes_requested - remaining] = 0xD9;
+            footer_bytes_sent_out++;
+            remaining--;
         }
     }
 
-    // Return nill if nothing was written to payload
-    if (bytes_remaining == bytes_requested)
+    // Return nil if nothing was written to payload
+    if (remaining == bytes_requested)
     {
         lua_pushnil(L);
     }
@@ -319,7 +433,7 @@ static int lua_camera_read_raw(lua_State *L)
     // Otherwise return payload
     else
     {
-        lua_pushlstring(L, (char *)payload, bytes_requested - bytes_remaining);
+        lua_pushlstring(L, (char *)payload, bytes_requested - remaining);
     }
 
     free(payload);
@@ -412,7 +526,7 @@ static int lua_camera_auto(lua_State *L)
             analog_gain_limit = luaL_checknumber(L, -1);
             if (analog_gain_limit < 1.0 || analog_gain_limit > 248.0)
             {
-                luaL_error(L, "analog_gain_limit must be between 0 and 248");
+                luaL_error(L, "analog_gain_limit must be between 1 and 248");
             }
 
             lua_pop(L, 1);
