@@ -54,7 +54,7 @@ async def main():
     frame.display.power_save(true)
     frame.camera.power_save(false)
 
-    frame.camera.set_gain(40)
+    frame.camera.set_gain(1)
     frame.camera.set_shutter(2500)
 
     frame.camera.capture { resolution = 100, quality = 'VERY_HIGH' }; transfer()
