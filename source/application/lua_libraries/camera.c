@@ -374,7 +374,7 @@ static int lua_camera_read(lua_State *L)
             header[i] = (uint8_t)t;
         }
 
-        for (int i = 93; i <= 156; i++)
+        for (int i = 94; i <= 157; i++)
         {
             float t = (scale * header[i] + 50) / 100;
 
