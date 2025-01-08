@@ -71,8 +71,9 @@
                 "BMPGDBSerialPort": "/dev/ttyACM0",
             },
             "osx": {
-                // "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
-                "BMPGDBSerialPort": "/dev/cu.usbmodem72AE30F31",
+                // TODO find a way to make this automatic
+                "BMPGDBSerialPort": "/dev/cu.usbmodem72AE45F31",
+                // "BMPGDBSerialPort": "/dev/cu.usbmodem72AE30F31",
             }
         },
         {
