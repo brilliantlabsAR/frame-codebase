@@ -27,6 +27,8 @@
 
     input   logic[$clog2(SENSOR_X_SIZE)-1:0] x_size_m1,
     input   logic[$clog2(SENSOR_Y_SIZE)-1:0] y_size_m1,
+    input   logic               slow_clock,
+    input   logic               slow_reset_n,
     input   logic               clk,
     input   logic               resetn
 );
@@ -39,18 +41,6 @@ localparam UV_LINE_BUF_SIZE = SENSOR_X_SIZE/2;
 localparam Y_LINE_BUF_HEIGHT = 16;
 localparam UV_LINE_BUF_HEIGHT = 8;
 
-// FIFO logic
-logic[1:0] wptr, rptr;
-logic full, empty;
-always_comb empty = wptr==rptr;
-always_comb full = wptr[1]!=rptr[1] & wptr[0]==rptr[0];
-
-always @(posedge clk)
-if (!resetn)
-    wptr <= 0;
-else if (!full & yuvrgb_in_valid[0] & (yuvrgb_in_line_count[3:0]==15 | yuvrgb_in_line_count==y_size_m1) & yuvrgb_in_pixel_count==x_size_m1)
-    wptr <= wptr + 1;
-    
 /* Order of reading 8x8 MCUs
 420:    Y:  0 1     U:  4       V:  5
             2 3  
@@ -67,16 +57,28 @@ logic[$clog2(6)-1:0]        mcu_count, mcu_count_0;
 logic[2:0]                  mcu_line_count; // 8 bytes at a time
 logic[(8*DW)-1:0]           rd_y, rd_uv;
 
+// FIFO logic
+logic[1:0] wptr, rptr;
+logic full, empty;
+
+afifo #(.ASIZE(1)) afifo(
+    .i_wclk(clk),
+    .i_wrst_n(resetn), 
+    .i_wr(!full & yuvrgb_in_valid[0] & (yuvrgb_in_line_count[3:0]==15 | yuvrgb_in_line_count==y_size_m1) & yuvrgb_in_pixel_count==x_size_m1),
+    .i_wdata('0),
+    .o_wfull(full),
+    .i_rclk(slow_clock),
+    .i_rrst_n(slow_reset_n),
+    .i_rd(!di_hold & !empty & mcu_line_count == 7 & mcu_count == 5 & block_count == (x_size_m1 >> 4)),
+    .o_rdata(),
+    .o_rempty(empty),
+    .*
+);
+
 always_comb yuvrgb_in_hold = full;
 
-always @(posedge clk)
-if (!resetn)
-    rptr <= 0;
-else if (!di_hold & !empty & mcu_line_count == 7 & mcu_count == 5 & block_count == (x_size_m1 >> 4))
-    rptr <= rptr + 1;
-
-always @(posedge clk)
-if (!resetn) begin
+always @(posedge slow_clock)
+if (!slow_reset_n) begin
     mcu_count <= 0;
     mcu_line_count <= 0;
     block_count <= 0;
@@ -151,7 +153,7 @@ logic re_luma;
 always_comb re_luma = !di_hold & !empty & mcu_count <= 3;
 
 // delay gray out
-always @(posedge clk) if (re_luma) luma_gray_out_z1 <= luma_gray_out_x | luma_gray_out_y;
+always @(posedge slow_clock) if (re_luma) luma_gray_out_z1 <= luma_gray_out_x | luma_gray_out_y;
 
 `ifndef USE_LATTICE_EBR
 dp_ram_be  #(
@@ -165,7 +167,7 @@ dp_ram_be  #(
     .ra     (ra_luma),
     .re     (re_luma),
     .rd     (rd_y),
-    .rclk   (clk),
+    .rclk   (slow_clock),
     .wclk   (clk)
 );
 `else
@@ -179,7 +181,7 @@ ram_dp_w64_b8_d2880_EBR y_buf (
     .rd_en_i    (re_luma), 
     .rd_data_o  (rd_y), 
     .wr_clk_i   (clk), 
-    .rd_clk_i   (clk)
+    .rd_clk_i   (slow_clock)
 );
 `endif //USE_LATTICE_EBR
 
@@ -218,7 +220,7 @@ dp_ram_be  #(
     .ra     (ra_chroma),
     .re     (!di_hold & !empty & mcu_count > 3 ),
     .rd     (rd_uv),
-    .rclk   (clk),
+    .rclk   (slow_clock),
     .wclk   (clk)
 );
 `else
@@ -232,12 +234,12 @@ ram_dp_w64_b8_d1440_EBR uv_buf (
     .rd_en_i    (!di_hold & !empty & mcu_count > 3), 
     .rd_data_o  (rd_uv), 
     .wr_clk_i   (clk), 
-    .rd_clk_i   (clk)
+    .rd_clk_i   (slow_clock)
 );
 `endif //USE_LATTICE_EBR
 
 // data out reg & mux
-always @(posedge clk)
+always @(posedge slow_clock)
 if (!di_hold & !empty)
     mcu_count_0 <= mcu_count;
 
@@ -245,13 +247,13 @@ always_comb
     for (int i=0; i<8; i++)
         di[i] = mcu_count_0 < 4 ? luma_gray_out_z1? 0 : rd_y[i*8 +: 8] : rd_uv[i*8 +: 8];
 
-always @(posedge clk)
-if (!resetn) 
+always @(posedge slow_clock)
+if (!slow_reset_n) 
     di_valid <= 0;
 else if (!di_hold)
     di_valid <= !empty;
 
-always @(posedge clk)
+always @(posedge slow_clock)
 if (!di_hold & !empty)
     di_cnt <= mcu_line_count;
 

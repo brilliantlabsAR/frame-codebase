@@ -1,5 +1,5 @@
 /*
- * Authored by: Robert Metchev / Chips & Scripts (rmetchev@ieee.org)
+ * Authored by: Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
  *
  * CERN Open Hardware Licence Version 2 - Permissive
  *
@@ -22,7 +22,7 @@ module ff00 (
     input   logic                   resetn
 );
 
-always_comb if (resetn) assert (in_nbytes < 5) else $error();
+always_comb if (in_valid) assert (in_nbytes < 5) else $error();
 
 // 1.   Find 0xFF
 logic [3:0]             s_ff;

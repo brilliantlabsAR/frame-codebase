@@ -87,6 +87,7 @@ module display_buffers (
     input logic [17:0] pixel_read_address_in,
     output logic [3:0] pixel_read_data_out,
 
+    output logic [1:0] buffer_status,
     input logic switch_write_buffer_in
 );
 
@@ -251,4 +252,5 @@ always_ff @(posedge clock_in) begin
 
 end
 
+always_comb buffer_status = {(clear_flag | buffer_switch_pending), displayed_buffer};
 endmodule

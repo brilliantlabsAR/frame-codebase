@@ -28,44 +28,34 @@
     output logic [3:0] pixel_write_data_out
  );
 
-enum {IDLE, NEW_PIXELS, DRAW, HOLD_OUTPUT_DATA, WAIT_FOR_NEW_PIXELS} state;
+enum {NEW_PIXELS, DRAW, HOLD_OUTPUT_DATA, WAIT_FOR_NEW_PIXELS} state;
 logic [9:0] current_x_pen_position;
 logic [9:0] current_y_pen_position;
 logic [4:0] pixels_remaining;
 
 always_ff @(posedge clock_in) begin
 
-    if (reset_n_in == 0 || enable_in == 0) begin
+    if (reset_n_in == 0) begin
         pixel_write_enable_out <= 0;
-        state <= IDLE;
+        state <= NEW_PIXELS;
     end
 
     else begin
 
         case (state)
-
-            IDLE: begin
+            NEW_PIXELS: if (data_valid_in) begin
                 if (enable_in) begin 
                     current_x_pen_position <= x_position_in;
                     current_y_pen_position <= y_position_in;
-                    state <= NEW_PIXELS;
                 end
-            end
-
-            NEW_PIXELS: begin
                 case (total_colors_in)
                     2: pixels_remaining <= 8;
                     4: pixels_remaining <= 4;
                     16: pixels_remaining <= 2;
                 endcase
 
-                if (data_valid_in) begin
-                    state <= DRAW;
-                end
+                state <= DRAW;
 
-                if (enable_in == 0) begin
-                    state <= IDLE;
-                end
             end
 
             DRAW: begin

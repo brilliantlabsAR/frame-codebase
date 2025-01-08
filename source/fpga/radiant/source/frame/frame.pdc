@@ -3,10 +3,11 @@
 #
 # Authored by: Rohit Rathnam / Silicon Witchery AB (rohit@siliconwitchery.com)
 #              Raj Nakarja / Brilliant Labs Limited (raj@brilliant.xyz)
+#              Robert Metchev / Raumzeit Technologies (robert@raumzeit.co)
 #
 # CERN Open Hardware Licence Version 2 - Permissive
 #
-# Copyright © 2023 Brilliant Labs Limited
+# Copyright © 2024 Brilliant Labs Limited
 #
 
 # SPI to nRF
@@ -18,6 +19,9 @@ ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_select_in]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_clock_in]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_data_in]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports spi_data_out]
+
+# Need to create a clock on spi_clock_in pin
+create_clock -name {spi_clock} -period 125.0 [get_ports {spi_clock_in}]
 
 # Display interface
 ldc_set_location -site {G5} [get_ports display_clock_out]
@@ -52,17 +56,41 @@ ldc_set_location -site {B5} [get_ports camera_clock_out]
 ldc_set_port -iobuf {IO_TYPE=LVCMOS18} [get_ports camera_clock_out]
 ldc_set_sysconfig {JTAG_PORT=DISABLE SLAVE_I2C_PORT=ENABLE}
 
-# False paths between clocks for timing
-set_false_path -from [get_clocks spi_peripheral_clock] -to [get_clocks camera_pixel_clock]
-set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks spi_peripheral_clock]
-set_false_path -from [get_clocks jpeg_buffer_clock] -to [get_clocks camera_pixel_clock]
-set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks jpeg_buffer_clock]
+# False paths between JPEG clocks for timing
+# Clocks:
+#   spi_clock_in
+#   jpeg_clock
+#   camera_pixel_clock
+#   jpeg_buffer_clock
 
-# max delay to prevent run away scenic routes
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/*/afifo/*/Q*]
+# OSC clock is a muxed path and is redundant with jpeg_clock, so lets remove it from the equation
+set_false_path -from [get_clocks osc_clock]
 
-set_max_delay 10.0 -from [get_pins -hierarchical camera/spi_registers/quality_factor_out*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/spi_registers/start_capture_out*/Q*]
+#   MCU buffer FIFO CDC
+set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks jpeg_clock]
+set_false_path -from [get_clocks camera_pixel_clock] -to [get_clocks spi_clock]
+set_false_path -from [get_clocks jpeg_clock] -to [get_clocks camera_pixel_clock]
+set_false_path -from [get_clocks spi_clock]  -to [get_clocks camera_pixel_clock]
+#   max delay to prevent run away scenic routes
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/jisp/mcu_buffer/afifo/*/Q*]
 
+#   ZigZag + Transpose CDC
+set_false_path -from [get_clocks jpeg_clock] -to [get_clocks jpeg_buffer_clock]
+set_false_path -from [get_clocks spi_clock] -to [get_clocks jpeg_buffer_clock]
+#   max delay to prevent run away scenic routes
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/zigzag/afifo/*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jenc/dct_2d/transpose/afifo/*/Q*]
+
+#   JPEG FSM
+set_false_path -from [get_clocks jpeg_clock] -to [get_clocks spi_clock]
+set_false_path -from [get_clocks spi_clock] -to [get_clocks jpeg_clock]
+#   max delay to prevent run away scenic routes
 set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/state*/Q*]
-set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/jenc_cdc/out_size*/Q*]
+set_max_delay 10.0 -from [get_pins -hierarchical camera/jpeg_encoder/psync_frame_start/*/Q*]
+
+#   Display
+set_false_path -from [get_clocks spi_clock] -to [get_clocks display_clock]
+set_false_path -from [get_clocks display_clock] -to [get_clocks spi_clock]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/psync_*/*/Q*]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/sprite_*_spi_domain*/Q*]
+set_max_delay 15.0 -from [get_pins -hierarchical graphics/assign_*_spi_domain*/Q*]

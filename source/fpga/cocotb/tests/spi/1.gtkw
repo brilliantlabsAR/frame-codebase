@@ -1,0 +1,96 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Wed Oct 23 13:14:06 2024
+[*]
+[dumpfile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/dump.fst"
+[dumpfile_mtime] "Wed Oct 23 13:12:24 2024"
+[dumpfile_size] 179975
+[savefile] "/home/rmetchev/workspace/frame-codebase-5/source/fpga/cocotb/tests/spi/spi.gtkw"
+[timestart] 0
+[size] 1612 1012
+[pos] 0 6
+*-24.814211 124838000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] .
+[treeopen] .tb_top.
+[treeopen] .tb_top.dut.
+[treeopen] .tb_top.dut.camera.
+[treeopen] .tb_top.dut.graphics.
+[treeopen] .tb_top.dut.graphics.display_buffers.
+[sst_width] 289
+[signals_width] 302
+[sst_expanded] 1
+[sst_vpaned_height] 288
+@28
+tb_top.dut.spi_peripheral.spi_select_in
+tb_top.dut.spi_peripheral.spi_data_in
+tb_top.dut.spi_peripheral.spi_data_out
+tb_top.dut.spi_peripheral.spi_clock_in
+@200
+-
+@28
+tb_top.dut.pllpowerdown_n
+tb_top.dut.pll_locked
+tb_top.dut.pll_reset
+tb_top.dut.global_reset_n
+tb_top.dut.camera_pixel_reset_n
+tb_top.dut.camera_pixel_clock
+@200
+-
+@22
+tb_top.dut.camera.image_buffer.read_address_in[15:0]
+tb_top.dut.camera.image_buffer.write_address_in[15:0]
+@28
+tb_top.dut.camera.image_buffer.write_read_n_in
+tb_top.dut.camera.image_buffer.clock_in
+@c00022
+tb_top.dut.camera.spi_registers.response_out[7:0]
+@28
+(0)tb_top.dut.camera.spi_registers.response_out[7:0]
+(1)tb_top.dut.camera.spi_registers.response_out[7:0]
+(2)tb_top.dut.camera.spi_registers.response_out[7:0]
+(3)tb_top.dut.camera.spi_registers.response_out[7:0]
+(4)tb_top.dut.camera.spi_registers.response_out[7:0]
+(5)tb_top.dut.camera.spi_registers.response_out[7:0]
+(6)tb_top.dut.camera.spi_registers.response_out[7:0]
+(7)tb_top.dut.camera.spi_registers.response_out[7:0]
+@1401200
+-group_end
+@200
+-
+@28
+tb_top.dut.jpeg_buffer_clock
+tb_top.dut.jpeg_slow_clock
+@200
+-
+@22
+tb_top.dut.graphics.assign_color_index_spi_domain[3:0]
+tb_top.dut.graphics.assign_color_index[3:0]
+tb_top.dut.graphics.assign_color_value_spi_domain[9:0]
+tb_top.dut.graphics.assign_color_value[9:0]
+@28
+tb_top.dut.graphics.assign_color_enable_spi_domain
+tb_top.dut.graphics.assign_color_enable
+@200
+-
+@28
+tb_top.dut.graphics.sprite_data_valid_spi_domain
+tb_top.dut.graphics.sprite_data_valid
+tb_top.dut.graphics.sprite_enable_spi_domain
+tb_top.dut.graphics.sprite_enable
+@200
+-
+@28
+tb_top.dut.graphics.operand_valid_in
+tb_top.dut.graphics.spi_operand_edge_monitor
+tb_top.dut.graphics.spi_operand_edge_monitor_z
+tb_top.dut.graphics.sprite_data_valid_spi_domain
+tb_top.dut.graphics.sprite_data_valid
+@200
+-
+@29
+tb_top.dut.graphics.switch_buffer
+@28
+tb_top.dut.graphics.display_buffers.buffer_switch_pending
+tb_top.dut.graphics.switch_buffer_spi_domain
+[pattern_trace] 1
+[pattern_trace] 0

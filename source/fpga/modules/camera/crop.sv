@@ -14,27 +14,23 @@
     input logic clock_in,
     input logic reset_n_in,
 
-    input logic [9:0] red_data_in,
-    input logic [9:0] green_data_in,
-    input logic [9:0] blue_data_in,
+    input logic [9:0] pixel_data_in,
     input logic line_valid_in,
     input logic frame_valid_in,
 
-    input logic [10:0] x_crop_start,
-    input logic [10:0] x_crop_end,
-    input logic [10:0] y_crop_start,
-    input logic [10:0] y_crop_end,
+    input logic [9:0] x_crop_start,
+    input logic [9:0] x_crop_end,
+    input logic [9:0] y_crop_start,
+    input logic [9:0] y_crop_end,
 
-    output logic [9:0] red_data_out,
-    output logic [9:0] green_data_out,
-    output logic [9:0] blue_data_out,
+    output logic [9:0] pixel_data_out,
     output logic line_valid_out,
     output logic frame_valid_out
 );
 
-// Allows max 2048 x 2048 pixel input
-logic [10:0] x_counter;
-logic [10:0] y_counter;
+// Allows max 1024 x 1024 pixel input
+logic [9:0] x_counter;
+logic [9:0] y_counter;
 
 logic previous_line_valid;
 
@@ -77,18 +73,14 @@ always_ff @(posedge clock_in) begin
            y_counter < y_crop_end) begin
 
             line_valid_out <= 1;
-            red_data_out <= red_data_in;
-            green_data_out <= green_data_in;
-            blue_data_out <= blue_data_in;
+            pixel_data_out <= pixel_data_in;
 
         end
 
         else begin
             
             line_valid_out <= 0;
-            red_data_out <= 0;
-            green_data_out <= 0;
-            blue_data_out <= 0;
+            pixel_data_out <= 0;
 
         end
 
