@@ -55,7 +55,7 @@ async def main():
     frame.camera.power_save(false)
 
     frame.camera.set_gain(1)
-    frame.camera.set_shutter(2500)
+    frame.camera.set_shutter(1500)
 
     frame.camera.capture { resolution = 100, quality = 'VERY_HIGH' }; transfer()
     frame.camera.capture { resolution = 100, quality = 'HIGH' }; transfer()
@@ -80,6 +80,14 @@ async def main():
     frame.camera.capture { resolution = 720, quality = 'MEDIUM' }; transfer()
     frame.camera.capture { resolution = 720, quality = 'LOW' }; transfer()
     frame.camera.capture { resolution = 720, quality = 'VERY_LOW' }; transfer()
+
+    frame.camera.capture { resolution = 720, pan = -140 }; transfer()
+    frame.camera.capture { resolution = 720, pan = -75 }; transfer()
+    frame.camera.capture { resolution = 720, pan = 0 }; transfer()
+    frame.camera.capture { resolution = 720, pan = 75 }; transfer()
+    frame.camera.capture { resolution = 720, pan = 140 }; transfer()
+
+    frame.camera.capture { }; transfer()
 
     print("Done - Press enter to finish")
     """

@@ -175,19 +175,40 @@ async def main():
     await test.lua_send("frame.sleep(0.05)")
     await test.lua_equals("frame.camera.image_ready()", "true")
 
-    ## Capture in different modes
-    await test.lua_send("frame.camera.capture{quality_factor=10}")
-    await test.lua_send("frame.sleep(0.1)")
-    await test.lua_send("frame.camera.capture{quality_factor=25}")
-    await test.lua_send("frame.sleep(0.1)")
-    await test.lua_send("frame.camera.capture{quality_factor=50}")
-    await test.lua_send("frame.sleep(0.1)")
-    await test.lua_send("frame.camera.capture{quality_factor=100}")
-    await test.lua_send("frame.sleep(0.1)")
-    await test.lua_error("frame.camera.capture{quality_factor=75}")
+    ## Capture in different resolutions
+    await test.lua_send("frame.camera.capture { resolution = 100 }")
+    await test.lua_send("frame.camera.capture { resolution = 256 }")
+    await test.lua_send("frame.camera.capture { resolution = 512 }")
+    await test.lua_send("frame.camera.capture { resolution = 720 }")
+
+    await test.lua_error("frame.camera.capture { resolution = 80 }")
+    await test.lua_error("frame.camera.capture { resolution = 513 }")
+    await test.lua_error("frame.camera.capture { resolution = 721 }")
+
+    ## Capture in different quality
+    await test.lua_send("frame.camera.capture { quality = 'VERY_HIGH' }")
+    await test.lua_send("frame.camera.capture { quality = 'HIGH' }")
+    await test.lua_send("frame.camera.capture { quality = 'MEDIUM' }")
+    await test.lua_send("frame.camera.capture { quality = 'LOW' }")
+    await test.lua_send("frame.camera.capture { quality = 'VERY_LOW' }")
+
+    await test.lua_error("frame.camera.capture { quality = 50 }")
+    await test.lua_error("frame.camera.capture { quality = 'BAD' }")
+
+    ## Capture with different pan amounts
+    await test.lua_send("frame.camera.capture { pan = -140 }")
+    await test.lua_send("frame.camera.capture { pan = -75 }")
+    await test.lua_send("frame.camera.capture { pan = 0 }")
+    await test.lua_send("frame.camera.capture { pan = 75 }")
+    await test.lua_send("frame.camera.capture { pan = 140 }")
+
+    await test.lua_error("frame.camera.capture { pan = -141 }")
+    await test.lua_error("frame.camera.capture { pan = 200 }")
 
     ## Read
+    await test.lua_send("frame.sleep(0.1)")
     await test.lua_equals("#frame.camera.read(123)", "123")
+    await test.lua_equals("#frame.camera.read_raw(54)", "54")
 
     ## Test sleep prevents captures
     await test.lua_send("frame.camera.power_save(true)")
@@ -195,9 +216,6 @@ async def main():
     await test.lua_send("frame.camera.power_save(false)")
     await test.lua_send("frame.sleep(0.1)")
     await test.lua_send("frame.camera.capture{}")
-
-    ## Zoom & pan
-    # TODO
 
     ## Manual exposure & gain
     # TODO

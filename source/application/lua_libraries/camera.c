@@ -87,6 +87,18 @@ static int lua_camera_capture(lua_State *L)
         }
     }
 
+    int16_t pan = 0;
+
+    if (lua_getfield(L, 1, "pan") != LUA_TNIL)
+    {
+        pan = luaL_checkinteger(L, -1) * 2;
+
+        if (pan < -280 || pan > 280)
+        {
+            luaL_error(L, "pan value must be value between -140 and 140");
+        }
+    }
+
     uint8_t quality_level = 6;
 
     if (lua_getfield(L, 1, "quality") != LUA_TNIL)
@@ -179,10 +191,18 @@ static int lua_camera_capture(lua_State *L)
     data_bytes_sent_out = 0;
     footer_bytes_sent_out = 0;
 
+    // Apply resolution
     capture_settings.resolution = resolution;
     uint8_t resolution_bytes[2] = {(uint8_t)(resolution >> 8), (uint8_t)(resolution & 0xFF)};
     spi_write(FPGA, 0x23, resolution_bytes, sizeof(resolution_bytes));
 
+    // Apply pan
+    // Normalize pan to center of sensor with correct offset for 720 native resolution
+    pan += (1280 / 2) - (720 / 2);
+    check_error(i2c_write(CAMERA, 0x3810, 0xFF, pan >> 8).fail);
+    check_error(i2c_write(CAMERA, 0x3811, 0xFF, pan).fail);
+
+    // Apply quality
     // These should match the indexed tables in quant_tables.sv
     switch (quality_level)
     {
@@ -214,6 +234,7 @@ static int lua_camera_capture(lua_State *L)
 
     spi_write(FPGA, 0x26, &quality_level, sizeof(quality_level));
 
+    // Start capture
     spi_write(FPGA, 0x20, NULL, 0);
 
     return 0;
