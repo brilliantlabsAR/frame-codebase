@@ -31,7 +31,11 @@
 #define BLE_PREFERRED_MAX_MTU 247
 extern uint16_t ble_negotiated_mtu;
 
-void bluetooth_setup(bool factory_reset, bool *is_paired);
+void bluetooth_setup(void);
+
+bool bluetooth_is_paired(void);
+
+void bluetooth_unpair(void);
 
 bool bluetooth_is_connected(void);
 

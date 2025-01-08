@@ -23,10 +23,14 @@
  */
 
 #include "lua.h"
+#include "main.h"
 
 void lua_open_version_library(lua_State *L)
 {
     lua_getglobal(L, "frame");
+
+    lua_pushstring(L, get_hardware_string());
+    lua_setfield(L, -2, "HARDWARE_VERSION");
 
     lua_pushstring(L, BUILD_VERSION);
     lua_setfield(L, -2, "FIRMWARE_VERSION");

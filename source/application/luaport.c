@@ -63,7 +63,7 @@ void lua_break_signal_interrupt(void)
                 1);
 }
 
-void run_lua(bool factory_reset, bool is_paired)
+void run_lua(bool is_paired)
 {
     lua_State *L = luaL_newstate();
     L_global = L; // Only used for interrupts
@@ -98,8 +98,9 @@ void run_lua(bool factory_reset, bool is_paired)
     lua_open_microphone_library(L);
     lua_open_imu_library(L);
     lua_open_time_library(L);
+    lua_open_led_library(L);
 
-    lua_open_file_library(L, factory_reset);
+    lua_open_file_library(L, !is_paired);
 
     // Make sure the above functions cleared up the stack correctly
     if (lua_gettop(L) != 0)

@@ -701,9 +701,15 @@ async def main():
     local state = 'CAPTURE'
     local state_time = 0
 
-    frame.camera.set_gain(0)
-    frame.camera.set_shutter(550)
-    frame.camera.set_white_balance(255, 255, 255)
+    if frame.HARDWARE_VERSION == 'Frame Lite' then  
+        frame.camera.set_gain(0)
+        frame.camera.set_shutter(330)
+        frame.camera.set_white_balance(255, 120, 220)
+    else
+        frame.camera.set_gain(0)
+        frame.camera.set_shutter(550)
+        frame.camera.set_white_balance(255, 255, 255)
+    end
 
     while true do
         if state == 'CAPTURE' then

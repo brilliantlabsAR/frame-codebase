@@ -38,4 +38,4 @@ void lua_write_to_repl(uint8_t *buffer, uint8_t length);
 
 void lua_break_signal_interrupt(void);
 
-void run_lua(bool factory_reset, bool is_paired);
+void run_lua(bool is_paired);
