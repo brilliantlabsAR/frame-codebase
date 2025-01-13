@@ -966,9 +966,9 @@ static int lua_camera_set_gain(lua_State *L)
 
     lua_Integer sensor_gain = luaL_checkinteger(L, 1);
 
-    if (sensor_gain < 0 || sensor_gain > 0xF8)
+    if (sensor_gain < 1 || sensor_gain > 0xF8)
     {
-        return luaL_error(L, "gain must be between 0 and 248");
+        return luaL_error(L, "gain must be between 1 and 248");
     }
 
     check_error(i2c_write(CAMERA, 0x350B, 0xFF, sensor_gain).fail);
