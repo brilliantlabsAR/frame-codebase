@@ -63,24 +63,6 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
 ## Getting started with FPGA development
 
-For quickly getting up and running, the accelerators which run on the FPGA are already pre-built and bundled within this repo. If you wish to modify the FPGA RTL, you will need to rebuild the `fpga_application.h` file which contains the entire FPGA application.
+The complete FPGA architecture is described in the documentation [here](docs/fpga-architecture.md).
 
-1. Ensure you have the [Yosys](https://github.com/YosysHQ/yosys) installed.
-
-1. Ensure you have the [Project Oxide](https://github.com/gatecat/prjoxide) installed.
-
-1. Ensure you have the [nextpnr](https://github.com/YosysHQ/nextpnr) installed.
-
-1. **MacOS users** can do the above three steps in one using [Homebrew](https://brew.sh).
-
-    ```sh
-    brew install --HEAD siliconwitchery/oss-fpga/nextpnr-nexus
-    ```
-
-1. You should now be able to rebuild the project by calling `make`:
-
-    ```sh
-    make fpga/fpga_application.h
-    ```
-
-To understand more around how the FPGA RTL works. Check the documentation [here](docs/fpga-architecture.md).
+The FPGA RTL is prebuilt and included in `fpga_application.h` for convenience. If you wish to modify the FPGA RTL, follow the instructions [here](docs/fpga-toolchain-setup.md).
