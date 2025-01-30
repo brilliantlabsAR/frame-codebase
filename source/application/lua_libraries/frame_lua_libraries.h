@@ -33,6 +33,7 @@ void lua_bluetooth_data_interrupt(uint8_t *data, size_t length);
 
 void lua_open_bluetooth_library(lua_State *L);
 void lua_open_camera_library(lua_State *L);
+void lua_open_compression_library(lua_State *L);
 void lua_open_display_library(lua_State *L);
 void lua_open_imu_library(lua_State *L);
 void lua_open_led_library(lua_State *L);
