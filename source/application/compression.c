@@ -25,6 +25,45 @@
 #include <stdlib.h>
 #include "compression.h"
 #include "lz4.h"
+#include "nrfx_log.h"
+
+#define LZ4F_MAGICNUMBER 0x184D2204U
+#define LZ4F_MAGIC_SKIPPABLE_START 0x184D2A50U
+#define LZ4F_MIN_SIZE_TO_KNOW_HEADER_LENGTH 5
+#define LZ4F_HEADER_SIZE_MIN 7
+
+static uint32_t LZ4F_readLE32(const void *src)
+{
+    const uint8_t *const srcPtr = (const uint8_t *)src;
+    uint32_t value32 = srcPtr[0];
+    value32 |= ((uint32_t)srcPtr[1]) << 8;
+    value32 |= ((uint32_t)srcPtr[2]) << 16;
+    value32 |= ((uint32_t)srcPtr[3]) << 24;
+    return value32;
+}
+
+size_t LZ4F_headerSize(const void *src, size_t srcSize)
+{
+    /* minimal srcSize to determine header size */
+    if (srcSize < LZ4F_MIN_SIZE_TO_KNOW_HEADER_LENGTH)
+        return -20;
+
+    /* special case : skippable frames */
+    if ((LZ4F_readLE32(src) & 0xFFFFFFF0U) == LZ4F_MAGIC_SKIPPABLE_START)
+        return 8;
+
+    /* control magic number */
+    if (LZ4F_readLE32(src) != LZ4F_MAGICNUMBER)
+        return -21;
+
+    /* Frame Header Size */
+    {
+        uint8_t const FLG = ((const uint8_t *)src)[4];
+        uint32_t const contentSizeFlag = (FLG >> 3) & 0x01;
+        uint32_t const dictIDFlag = FLG & 0x01;
+        return LZ4F_HEADER_SIZE_MIN + (contentSizeFlag ? 8 : 0) + (dictIDFlag ? 4 : 0);
+    }
+}
 
 int compression_decompress(size_t destination_size,
                            const void *source,
@@ -34,18 +73,24 @@ int compression_decompress(size_t destination_size,
 {
     int status = 0;
 
+    size_t header_size = LZ4F_headerSize(source, source_size);
+
+    if (header_size < 0)
+    {
+        return header_size;
+    }
+
     char *output_buffer = malloc(destination_size);
+
     if (output_buffer == NULL)
     {
         return -1;
     }
 
-    // TODO the frame header might not be 7
-    char *block_pointer = (char *)source + 7;
+    char *block_pointer = (char *)source + header_size;
 
     while (1)
     {
-
         int current_block_size = ((uint8_t)block_pointer[0]) +
                                  ((uint8_t)block_pointer[1] << 8) +
                                  ((uint8_t)block_pointer[2] << 16) +
