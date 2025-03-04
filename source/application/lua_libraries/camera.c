@@ -50,11 +50,11 @@ static struct camera_auto_last_values
     double green_gain;
     double blue_gain;
 } last = {
-    .shutter = 500.0f,
+    .shutter = 4096.0f,
     .analog_gain = 1.0f,
-    .red_gain = 1.9f,
-    .green_gain = 1.0f,
-    .blue_gain = 2.2f,
+    .red_gain = 121.6f,
+    .green_gain = 64.0f,
+    .blue_gain = 140.8f,
 };
 
 static struct camera_capture_settings
@@ -564,8 +564,9 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.18;
     double exposure_speed = 0.50;
-    double shutter_limit = 1600.0;
-    double analog_gain_limit = 60.0;
+    double shutter_limit = 8192.0;
+    double analog_gain_limit = 16.0;
+    double rgb_gain_limit = 141.0;
 
     // Default white balance settings
     double white_balance_speed = 0.5;
@@ -655,6 +656,17 @@ static int lua_camera_auto(lua_State *L)
 
             lua_pop(L, 1);
         }
+
+        if (lua_getfield(L, 1, "rgb_gain_limit") != LUA_TNIL)
+        {
+            rgb_gain_limit = luaL_checknumber(L, -1);
+            if (rgb_gain_limit < 0.0 || rgb_gain_limit > 1023.0)
+            {
+                luaL_error(L, "rgb_gain_limit must be between 0 and 1023");
+            }
+
+            lua_pop(L, 1);
+        }
     }
 
     // Get current brightness from FPGA
@@ -667,6 +679,25 @@ static int lua_camera_auto(lua_State *L)
     double matrix_r = metering_data[3] / 255.0f;
     double matrix_g = metering_data[4] / 255.0f;
     double matrix_b = metering_data[5] / 255.0f;
+
+    if (spot_r == 0.0) {
+        spot_r = 0.0001;
+    }
+    if (spot_g == 0.0) {
+        spot_g = 0.0001;
+    }
+    if (spot_b == 0.0) {
+        spot_b = 0.0001;
+    }
+    if (matrix_r == 0.0) {
+        matrix_r = 0.0001;
+    }
+    if (matrix_g == 0.0) {
+        matrix_g = 0.0001;
+    }
+    if (matrix_b == 0.0) {
+        matrix_b = 0.0001;
+    }
 
     double spot_average = (spot_r + spot_g + spot_b) / 3.0;
     double matrix_average = (matrix_r + matrix_g + matrix_b) / 3.0;
@@ -777,19 +808,6 @@ static int lua_camera_auto(lua_State *L)
     double blending_factor = (scene_brightness - white_balance_min_activation) /
                              (white_balance_max_activation -
                               white_balance_min_activation);
-
-    if (red_gain > 1023.0)
-    {
-        red_gain = 1023.0;
-    }
-    if (green_gain > 1023.0)
-    {
-        green_gain = 1023.0;
-    }
-    if (blue_gain > 1023.0)
-    {
-        blue_gain = 1023.0;
-    }
     if (blending_factor > 1.0)
     {
         blending_factor = 1.0;
@@ -811,9 +829,51 @@ static int lua_camera_auto(lua_State *L)
                          (blue_gain - last.blue_gain) +
                      last.blue_gain;
 
-    uint16_t red_gain_uint16 = (uint16_t)(last.red_gain * 256.0);
-    uint16_t green_gain_uint16 = (uint16_t)(last.green_gain * 256.0);
-    uint16_t blue_gain_uint16 = (uint16_t)(last.blue_gain * 256.0);
+    double max_rgb_gain = last.red_gain > last.green_gain
+                            ? (last.red_gain > last.blue_gain
+                                ? last.red_gain
+                                : last.blue_gain)
+                            : (last.green_gain > last.blue_gain
+                                ? last.green_gain
+                                : last.blue_gain);
+
+    // Scale per-channel gains so the largest channel is at most rgb_gain_limit
+    if (max_rgb_gain > rgb_gain_limit)
+    {
+        double scale_factor = rgb_gain_limit / max_rgb_gain;
+        last.red_gain *= scale_factor;
+        last.green_gain *= scale_factor;
+        last.blue_gain *= scale_factor;
+    }
+
+    if (last.red_gain > 1023.0)
+    {
+        last.red_gain = 1023.0;
+    }
+    if (last.red_gain <= 0.0)
+    {
+        last.red_gain = 0.0001;
+    }
+    if (last.green_gain > 1023.0)
+    {
+        last.green_gain = 1023.0;
+    }
+    if (last.green_gain <= 0.0)
+    {
+        last.green_gain = 0.0001;
+    }
+    if (last.blue_gain > 1023.0)
+    {
+        last.blue_gain = 1023.0;
+    }
+    if (last.blue_gain <= 0.0)
+    {
+        last.blue_gain = 0.0001;
+    }
+
+    uint16_t red_gain_uint16 = (uint16_t)(last.red_gain);
+    uint16_t green_gain_uint16 = (uint16_t)(last.green_gain);
+    uint16_t blue_gain_uint16 = (uint16_t)(last.blue_gain);
 
     check_error(i2c_write(CAMERA, 0x5180, 0x03, red_gain_uint16 >> 8).fail);
     check_error(i2c_write(CAMERA, 0x5181, 0xFF, red_gain_uint16).fail);
