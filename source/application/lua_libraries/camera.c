@@ -50,7 +50,7 @@ static struct camera_auto_last_values
     double green_gain;
     double blue_gain;
 } last = {
-    .shutter = 4096.0f,
+    .shutter = 1600.0f,
     .analog_gain = 1.0f,
     .red_gain = 121.6f,
     .green_gain = 64.0f,
@@ -800,6 +800,10 @@ static int lua_camera_auto(lua_State *L)
                                 ? matrix_g / last.green_gain
                                 : matrix_b / last.blue_gain);
 
+    // scale normalized RGB values to the gain scale
+    max_rgb *= 256.0;
+
+    // target per-channel gains that we blend towards
     double red_gain = max_rgb / matrix_r * last.red_gain;
     double green_gain = max_rgb / matrix_g * last.green_gain;
     double blue_gain = max_rgb / matrix_b * last.blue_gain;
