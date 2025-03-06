@@ -564,7 +564,7 @@ static int lua_camera_auto(lua_State *L)
     camera_metering_mode_t metering = AVERAGE;
     double target_exposure = 0.18;
     double exposure_speed = 0.50;
-    double shutter_limit = 8192.0;
+    double shutter_limit = 3072.0;
     double analog_gain_limit = 16.0;
     double rgb_gain_limit = 141.0;
 
