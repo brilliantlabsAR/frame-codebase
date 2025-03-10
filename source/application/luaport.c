@@ -75,22 +75,20 @@ int show_pairing_screen(bool is_paired)
          status = luaL_dostring(L_global, "frame.display.text('Ready to Pair', 200, 140);"
                                       "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'GREEN' });"
                                       "frame.display.show();");
-        return status;
     }
     else
     {
          status = luaL_dostring(L_global, "frame.display.text('Frame is Paired', 185, 140);"
                                       "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
                                       "frame.display.show();");
-        return status;
     }
-
 
     if (status != LUA_OK)
     {
         lua_pop(L_global, -1);
         error();
     }
+    return status;
 }
 
 void run_lua(bool is_paired)
