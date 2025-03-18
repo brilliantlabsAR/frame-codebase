@@ -331,7 +331,7 @@ static void hardware_setup()
             {
                 LOG("Factory reset");
                 bluetooth_unpair();
-                stay_awake = true;
+                // stay_awake = true;
             }
         }
 
