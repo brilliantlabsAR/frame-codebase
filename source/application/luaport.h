@@ -40,4 +40,4 @@ void lua_break_signal_interrupt(void);
 
 void run_lua(bool is_paired);
 
-int show_pairing_screen(bool is_paired);
+int show_pairing_screen(bool is_paired, bool is_update);

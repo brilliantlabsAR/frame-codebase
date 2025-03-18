@@ -63,14 +63,19 @@ void lua_break_signal_interrupt(void)
                 1);
 }
 
-int show_pairing_screen(bool is_paired)
+int show_pairing_screen(bool is_paired, bool is_update)
 {
     int status;
     if(L_global == NULL)
     {
         return LUA_ERRRUN;
     }
-    if (!is_paired)
+    if (is_update)
+    {
+        status = luaL_dostring(L_global, "frame.display.text('Frame Update', 200, 140);"
+                                       "frame.display.show();");
+    }
+    else if (!is_paired)
     {
          status = luaL_dostring(L_global, "frame.display.text('Ready to Pair', 200, 140);"
                                       "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'GREEN' });"
@@ -155,7 +160,7 @@ void run_lua(bool is_paired)
     }
 
     // Show splash screen
-    status = show_pairing_screen(is_paired);
+    status = show_pairing_screen(is_paired, false);
 
 
     //  Run REPL

@@ -36,6 +36,12 @@
 
 static int lua_update(lua_State *L)
 {
+    int status = show_pairing_screen(false, true);
+    if (status != LUA_OK)
+    {
+        const char *lua_error = lua_tostring(L, -1);
+        luaL_error(L, "%s", lua_error);
+    }
     check_error(sd_power_gpregret_set(0, 0xB1));
     NVIC_SystemReset();
     return 0;
