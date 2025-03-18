@@ -50,7 +50,7 @@ static struct camera_auto_last_values
     double green_gain;
     double blue_gain;
 } last = {
-    .shutter = 1600.0f,
+    .shutter = 4096.0f,
     .analog_gain = 1.0f,
     .red_gain = 121.6f,
     .green_gain = 64.0f,
@@ -561,12 +561,12 @@ static int lua_camera_auto(lua_State *L)
     }
 
     // Default auto exposure settings
-    camera_metering_mode_t metering = AVERAGE;
-    double target_exposure = 0.18;
-    double exposure_speed = 0.50;
-    double shutter_limit = 3072.0;
+    camera_metering_mode_t metering = CENTER_WEIGHTED;
+    double target_exposure = 0.1;
+    double exposure_speed = 0.45;
+    double shutter_limit = 16383.0;
     double analog_gain_limit = 16.0;
-    double rgb_gain_limit = 141.0;
+    double rgb_gain_limit = 287.0;
 
     // Default white balance settings
     double white_balance_speed = 0.5;
