@@ -50,7 +50,7 @@ static struct camera_auto_last_values
     double green_gain;
     double blue_gain;
 } last = {
-    .shutter = 1600.0f,
+    .shutter = 4096.0f,
     .analog_gain = 1.0f,
     .red_gain = 121.6f,
     .green_gain = 64.0f,
