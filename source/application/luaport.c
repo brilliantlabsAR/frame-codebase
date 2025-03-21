@@ -63,6 +63,39 @@ void lua_break_signal_interrupt(void)
                 1);
 }
 
+int show_pairing_screen(bool is_paired, bool is_update)
+{
+    int status;
+    if(L_global == NULL)
+    {
+        return LUA_ERRRUN;
+    }
+    if (is_update)
+    {
+        status = luaL_dostring(L_global, "frame.display.text('Frame Update', 200, 140);"
+                                       "frame.display.show();");
+    }
+    else if (!is_paired)
+    {
+         status = luaL_dostring(L_global, "frame.display.text('Ready to Pair', 200, 140);"
+                                      "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'GREEN' });"
+                                      "frame.display.show();");
+    }
+    else
+    {
+         status = luaL_dostring(L_global, "frame.display.text('Frame is Paired', 185, 140);"
+                                      "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
+                                      "frame.display.show();");
+    }
+
+    if (status != LUA_OK)
+    {
+        lua_pop(L_global, -1);
+        error();
+    }
+    return status;
+}
+
 void run_lua(bool is_paired)
 {
     lua_State *L = luaL_newstate();
@@ -127,24 +160,8 @@ void run_lua(bool is_paired)
     }
 
     // Show splash screen
-    if (!is_paired)
-    {
-        status = luaL_dostring(L, "frame.display.text('Ready to Pair', 200, 140);"
-                                  "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'GREEN' });"
-                                  "frame.display.show();");
-    }
-    else
-    {
-        status = luaL_dostring(L, "frame.display.text('Frame is Paired', 185, 140);"
-                                  "frame.display.text('Frame '..frame.bluetooth.address():sub(-2, -1), 245, 210, { color = 'ORANGE' });"
-                                  "frame.display.show();");
-    }
+    status = show_pairing_screen(is_paired, false);
 
-    if (status != LUA_OK)
-    {
-        lua_pop(L, -1);
-        error();
-    }
 
     //  Run REPL
     while (true)

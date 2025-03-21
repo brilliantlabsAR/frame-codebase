@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include "bluetooth.h"
 #include "nrfx_log.h"
-
+#include "lua.h"
 #define lua_writestring(s, l) bluetooth_send_data((uint8_t *)s, l)
 #define lua_writeline()
 #define lua_writestringerror(s, p) printf(s, p)
@@ -39,3 +39,5 @@ void lua_write_to_repl(uint8_t *buffer, uint8_t length);
 void lua_break_signal_interrupt(void);
 
 void run_lua(bool is_paired);
+
+int show_pairing_screen(bool is_paired, bool is_update);

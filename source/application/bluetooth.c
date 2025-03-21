@@ -332,6 +332,8 @@ void SD_EVT_IRQHandler(void)
                     bond_storage,
                     (uint32_t *)&bond.keyset.keys_own.p_enc_key->enc_info,
                     sizeof(bond.keyset.keys_own.p_enc_key->enc_info));
+
+                status = show_pairing_screen(true, false);
             }
 
             break;
