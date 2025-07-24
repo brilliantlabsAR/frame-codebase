@@ -6,7 +6,7 @@ Welcome to the complete codebase of the Frame hardware. For regular usage, check
 
 The codebase is split into three sections. The **nRF52 Application**, the **nRF52 Bootloader**, and the **FPGA RTL**. 
 
-The nRF52 is designed to handle the overall system operation. It runs Lua, as well as handle Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
+The nRF52 is designed to handle the overall system operation. It runs Lua, as well as handles Bluetooth networking, AI tasks and power management. The FPGA meanwhile, simply handles acceleration of the graphics and camera.
 
 ![Frame system architecture diagram](docs/diagrams/frame-system-architecture.drawio.png)
 
@@ -49,7 +49,7 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
 
     Try running the `Build` task. The project should build normally.
 
-    You many need to unlock the device by using the `Erase` task before programming or debugging.
+    You may need to unlock the device by using the `Erase` task before programming or debugging.
 
 1. To enable IntelliSense, be sure to select the correct compiler from within VSCode. `Ctrl-Shift-P` (`Cmd-Shift-P` on MacOS) → `C/C++: Select IntelliSense Configuration` → `Use arm-none-eabi-gcc`.
 
