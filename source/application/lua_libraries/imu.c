@@ -29,6 +29,7 @@
 #include "lauxlib.h"
 #include "lua.h"
 #include "main.h"
+#include "nrf_soc.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_systick.h"
 #include "pinout.h"
@@ -109,7 +110,7 @@ static imu_values_t get_imu_data(void)
     check_error(i2c_write(MAGNETOMETER, 0x1B, 0x80, 0x80).fail);
     check_error(i2c_write(MAGNETOMETER, 0x1D, 0x40, 0x40).fail);
 
-    // Wait until data is ready
+    // Wait until data is ready - power optimized
     while (true)
     {
         if (not_real_hardware)
@@ -122,7 +123,9 @@ static imu_values_t get_imu_data(void)
             break;
         }
 
-        nrfx_systick_delay_ms(1);
+        // Power optimization: Use event-driven sleep instead of delay
+        // This allows CPU to sleep between magnetometer polls
+        check_error(sd_app_evt_wait());
     }
 
     // Read magnetometer (14 bit signed integers)
