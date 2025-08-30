@@ -39,6 +39,13 @@ static volatile char repl_buffer[BLE_PREFERRED_MAX_MTU];
 
 void lua_write_to_repl(uint8_t *buffer, uint8_t length)
 {
+    // Bounds check to prevent buffer overflow (CVE-PENDING)
+    // Buffer size is BLE_PREFERRED_MAX_MTU (247), length can be 0-255
+    if (length >= BLE_PREFERRED_MAX_MTU)
+    {
+        length = BLE_PREFERRED_MAX_MTU - 1; // Reserve space for null terminator
+    }
+
     // Loop copy because memcpy isn't compatible with volatile
     for (size_t buffer_index = 0; buffer_index < length; buffer_index++)
     {
