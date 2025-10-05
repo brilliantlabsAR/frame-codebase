@@ -23,17 +23,15 @@ The nRF52 is designed to handle the overall system operation. It runs Lua, as we
     ./nrfutil install nrf5sdk-tools
     ```
 
-1. Clone this repository and initialize any submodules:
+1. Clone this repository with submodules:
 
     ```sh
-    git clone https://github.com/brilliantlabsAR/frame-codebase.git
+    git clone --recurse-submodules https://github.com/brilliantlabsAR/frame-codebase.git brilliantlabs-frame-codebase
     
-    cd frame-codebase
-
-    git submodule update --init
+    cd brilliantlabs-frame-codebase
     ```
 
-1. You should now be able to build and flash the project to an [nRF52840 DK](https://www.nordicsemi.com/Products/Development-hardware/nRF52840-DK) by calling the following commands from the `frame-codebase` folder.
+1. You should now be able to build and flash the project to an [nRF52840 DK](https://www.nordicsemi.com/Products/Development-hardware/nRF52840-DK) by calling the following commands from the `brilliantlabs-frame-codebase` folder.
 
     ```sh
     make release
