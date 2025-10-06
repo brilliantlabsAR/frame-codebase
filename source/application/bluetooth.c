@@ -446,12 +446,13 @@ void bluetooth_setup()
     bond.keyset.keys_peer.p_id_key = &bond.peer_id_key;
     bond.keyset.keys_peer.p_pk = &bond.peer_private_key;
 
-    // Set connection parameters
+    // Set connection parameters - maximum power optimization
+    // Ultra-low power: Wake only once per second or less
     ble_gap_conn_params_t gap_conn_params = {0};
-    gap_conn_params.min_conn_interval = (15 * 1000) / 1250;
-    gap_conn_params.max_conn_interval = (15 * 1000) / 1250;
-    gap_conn_params.slave_latency = 0;
-    gap_conn_params.conn_sup_timeout = (2000 * 1000) / 10000;
+    gap_conn_params.min_conn_interval = (1000 * 1000) / 1250; // 1000ms = 1 second
+    gap_conn_params.max_conn_interval = (2000 * 1000) / 1250; // 2000ms = 2 seconds max
+    gap_conn_params.slave_latency = 4;                        // Skip 4 additional events  
+    gap_conn_params.conn_sup_timeout = (8000 * 1000) / 10000; // 8s timeout
     check_error(sd_ble_gap_ppcp_set(&gap_conn_params));
 
     // Create the service UUIDs
@@ -554,7 +555,7 @@ void bluetooth_setup()
     adv_params.properties.type = BLE_GAP_ADV_TYPE_CONNECTABLE_SCANNABLE_UNDIRECTED;
     adv_params.primary_phy = BLE_GAP_PHY_1MBPS;
     adv_params.secondary_phy = BLE_GAP_PHY_1MBPS;
-    adv_params.interval = (20 * 1000) / 625;
+    adv_params.interval = (2000 * 1000) / 625;  // 2000ms = 2 seconds (maximum power saving)
 
     // Configure the advertising set
     check_error(sd_ble_gap_adv_set_configure(&ble_handles.advertising,

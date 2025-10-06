@@ -36,6 +36,7 @@
 #include "nrf_clock.h"
 #include "nrf_gpio.h"
 #include "nrf_sdm.h"
+#include "nrf_soc.h"
 #include "nrf.h"
 #include "nrfx_gpiote.h"
 #include "nrfx_log.h"
@@ -476,5 +477,9 @@ int main(void)
         reload_watchdog(NULL, NULL);
 
         run_lua(bluetooth_is_paired());
+
+        // Power optimization: Put CPU to sleep until next event
+        // This prevents busy-wait loop that drains battery
+        check_error(sd_app_evt_wait());
     }
 }
